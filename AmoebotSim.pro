@@ -4,14 +4,14 @@ CONFIG  += c++11
 TARGET    = AmoebotSim
 TEMPLATE  = app
 
-QMAKE_INFO_PLIST = Info.plist
+QMAKE_INFO_PLIST = res/Info.plist
 
 SOURCES +=\
-        main.cpp\
-        mainwindow.cpp
+        main/main.cpp\
+        main/mainwindow.cpp
 
 HEADERS +=\
-        mainwindow.h
+        main/mainwindow.h
 
 FORMS   +=\
-        mainwindow.ui
+        main/mainwindow.ui
