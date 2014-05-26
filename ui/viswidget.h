@@ -13,7 +13,7 @@ public:
     virtual ~VisWidget();
 
 protected:
-    void logGlError(quint64 line);
+    void logGlError(uint64_t line);
 
     void initializeGL();
     void resizeGL(int width, int height);

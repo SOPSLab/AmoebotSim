@@ -1,16 +1,23 @@
-#include "viswidget.h"
+#include <QGLFormat>
 
-#ifdef __APPLE__
-#include <glu.h>
-#else
-#include <GL/glu.h>
-#endif
+#include "viswidget.h"
 
 VisWidget::VisWidget(QWidget *parent)
     : QGLWidget(parent)
 {
+    if(!QGLFormat::openGLVersionFlags() & QGLFormat::OpenGL_Version_2_1) {
+        qFatal("OpenGL 2.1 required but not supported.");
+    }
+
+    QGLFormat format;
+    format.setAlpha(true);
+    format.setDepth(false);
+    format.setStencil(false);
+    format.setVersion(2, 1);
+    setFormat(format);
+
     updateTimer.setInterval(33);
-    connect(&updateTimer, SIGNAL(timeout()), this, SLOT(update()));
+    connect(&updateTimer, SIGNAL(timeout()), this, SLOT(updateGL()));
     updateTimer.start();
 }
 
@@ -19,7 +26,7 @@ VisWidget::~VisWidget()
 
 }
 
-void VisWidget::logGlError(quint64 line)
+void VisWidget::logGlError(uint64_t line)
 {
     GLenum error = glGetError();
     if(error == GL_INVALID_ENUM) {
@@ -55,6 +62,8 @@ void VisWidget::initializeGL()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glMatrixMode(GL_PROJECTION);
+
+    logGlError(__LINE__);
 }
 
 void VisWidget::resizeGL(int width, int height)
