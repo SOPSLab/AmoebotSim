@@ -1,7 +1,5 @@
-#include <qapplication.h>
 #include <QFont>
 #include <QFontMetrics>
-#include <QKeyEvent>
 #include <QScrollBar>
 
 #include "consolewidget.h"
@@ -13,13 +11,25 @@ ConsoleWidget::ConsoleWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
-//    QFont font = config.global.font;
-//    ui->inputLineEdit->setFont(font);
+#ifdef Q_OS_MAC
+    QString fontFamily("Menlo");
+    int fontSize = 12;
+#else
+    QString fontFamily("Consolas");
+    int fontSize = 8;
+#endif
 
-//    ui->logTextBrowser->setFont(font);
-//    QString tabWidth = QString("a").repeated(config.global.tabStopWidth);
-//    ui->logTextBrowser->setTabStopWidth(QFontMetrics(config.global.font).boundingRect(tabWidth).width());
+    QFont font = QFont(fontFamily);
+    font.setStyleHint(QFont::TypeWriter);
+    font.setPointSize(fontSize);
 
+    QString tabWidthString = QString("aaaa");
+    int tabWidth = QFontMetrics(font).boundingRect(tabWidthString).width();
+
+    ui->inputLineEdit->setFont(font);
+
+    ui->logTextBrowser->setFont(font);
+    ui->logTextBrowser->setTabStopWidth(tabWidth);
     ui->logTextBrowser->setLineWrapMode(QTextBrowser::LineWrapMode::NoWrap);
 }
 

@@ -4,10 +4,6 @@
 #include <QColor>
 #include <QWidget>
 
-//#include "helper/config.h"
-
-class QPushButton;
-
 namespace Ui {
 class ConsoleWidget;
 }
@@ -34,8 +30,6 @@ protected:
 
 private:
     Ui::ConsoleWidget *ui;
-
-//    const Config& config = Config::get();
 };
 
 #endif // CONSOLEWIDGET_H

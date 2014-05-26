@@ -16,7 +16,7 @@ VisWidget::VisWidget(QWidget *parent)
     format.setVersion(2, 1);
     setFormat(format);
 
-    updateTimer.setInterval(33);
+    updateTimer.setInterval(updateTimerInterval);
     connect(&updateTimer, SIGNAL(timeout()), this, SLOT(updateGL()));
     updateTimer.start();
 }
@@ -90,6 +90,7 @@ void VisWidget::loadTexture(GLuint& tex, const QString fileName, const bool fill
     if (!image.load(fileName)) {
         qFatal("Image \"%s\" not found.", fileName.toStdString().c_str());
     }
+
     image = QGLWidget::convertToGLFormat(image);
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);

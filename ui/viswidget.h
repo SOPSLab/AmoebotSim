@@ -25,6 +25,7 @@ public slots:
     void tick();
 
 protected:
+    static constexpr int updateTimerInterval = 33;
     QTimer updateTimer;
 };
 
