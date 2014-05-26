@@ -5,6 +5,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = AmoebotSim
 TEMPLATE = app
 
+QMAKE_INFO_PLIST = Info.plist
+
 
 SOURCES += main.cpp\
         mainwindow.cpp
