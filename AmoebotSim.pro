@@ -8,10 +8,10 @@ QMAKE_INFO_PLIST = res/Info.plist
 
 SOURCES +=\
         main/main.cpp\
-        main/mainwindow.cpp
+        ui/mainwindow.cpp
 
 HEADERS +=\
-        main/mainwindow.h
+        ui/mainwindow.h
 
 FORMS   +=\
-        main/mainwindow.ui
+        ui/mainwindow.ui
