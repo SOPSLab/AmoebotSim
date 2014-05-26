@@ -1,16 +1,17 @@
-QT       += core gui
+QT      += core gui opengl script widgets
+CONFIG  += c++11
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
-TARGET = AmoebotSim
-TEMPLATE = app
+TARGET    = AmoebotSim
+TEMPLATE  = app
 
 QMAKE_INFO_PLIST = Info.plist
 
-
-SOURCES += main.cpp\
+SOURCES +=\
+        main.cpp\
         mainwindow.cpp
 
-HEADERS  += mainwindow.h
+HEADERS +=\
+        mainwindow.h
 
-FORMS    += mainwindow.ui
+FORMS   +=\
+        mainwindow.ui
