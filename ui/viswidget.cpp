@@ -1,4 +1,5 @@
 #include <array>
+#include <cmath>
 
 #include <QGLContext>
 #include <QGLFormat>
@@ -23,7 +24,7 @@ VisWidget::VisWidget(QWidget *parent)
     format.setVersion(2, 1);
     setFormat(format);
 
-    updateTimer.setInterval(updateTimerInterval);
+    updateTimer.setInterval(ceil(1000.0f / updateRate));
     connect(&updateTimer, SIGNAL(timeout()), this, SLOT(updateGL()));
     updateTimer.start();
 }
@@ -109,16 +110,19 @@ void VisWidget::setupCamera()
 {
     const float halfZoomRec = 0.5f / zoom;
 
-    const float left = focusPos.x() - halfZoomRec * width();
-    const float right = focusPos.x() + halfZoomRec * width();
-    const float bottom = focusPos.y() + halfZoomRec * height();
-    const float top = focusPos.y() - halfZoomRec * height();
+    const float left    = focusPos.x() - halfZoomRec * width();
+    const float right   = focusPos.x() + halfZoomRec * width();
+    const float bottom  = focusPos.y() + halfZoomRec * height();
+    const float top     = focusPos.y() - halfZoomRec * height();
 
     const float width = right - left;
     const float widthSum = right + left;
     const float height = top - bottom;
     const float heightSum = top + bottom;
 
+    // setup (transposed) orthographic projection matrix
+    // see: http://en.wikipedia.org/wiki/Orthographic_projection_(geometry)
+    // and: http://www.khronos.org/opengles/sdk/1.1/docs/man/glLoadMatrix.xml
     const std::array<float, 16> orthMatrix =
     {{
         2.0f / width,       0,                      0, 0,
@@ -148,7 +152,7 @@ void VisWidget::drawGrid()
 void VisWidget::mousePressEvent(QMouseEvent* e)
 {
     if(e->buttons() & Qt::LeftButton) {
-        lastMousePos = e->screenPos();
+        lastMousePos = e->localPos();
         e->accept();
     }
 }
@@ -156,10 +160,10 @@ void VisWidget::mousePressEvent(QMouseEvent* e)
 void VisWidget::mouseMoveEvent(QMouseEvent* e)
 {
     if(e->buttons() & Qt::LeftButton) {
-        QPointF offset = lastMousePos - e->screenPos();
+        QPointF offset = lastMousePos - e->localPos();
         QPointF scaledOffset = offset / zoom;
         focusPos += QPointF(scaledOffset.x(), scaledOffset.y());
-        lastMousePos = e->screenPos();
+        lastMousePos = e->localPos();
         e->accept();
     }
 }

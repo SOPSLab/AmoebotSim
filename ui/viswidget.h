@@ -39,7 +39,7 @@ public slots:
     void tick();
 
 protected:
-    static constexpr int updateTimerInterval = 33;
+    static constexpr float updateRate = 40.0f;
     static constexpr float zoomMin = 40.0f;
     static constexpr float zoomMax = 200.0f;
     static constexpr float zoomInit = 50.0f;
