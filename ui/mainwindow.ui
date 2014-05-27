@@ -49,22 +49,6 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="VisWidget" name="visWidget" native="true">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>768</width>
-        <height>768</height>
-       </size>
-      </property>
-     </widget>
-    </item>
-    <item>
      <widget class="ConsoleWidget" name="consoleWidget" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Fixed" vsizetype="MinimumExpanding">
@@ -99,12 +83,6 @@
    <class>ConsoleWidget</class>
    <extends>QWidget</extends>
    <header>ui/consolewidget.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>VisWidget</class>
-   <extends>QWidget</extends>
-   <header>ui/viswidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
