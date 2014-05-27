@@ -7,6 +7,8 @@
 
 #include "viswindow.h"
 
+const float VisWindow::triangleHeight = sqrtf(0.75f);
+
 VisWindow::VisWindow(QScreen* screen) :
     GLWindow(screen),
     zoom(zoomInit)
@@ -45,6 +47,10 @@ void VisWindow::paintGL()
     glClear(GL_COLOR_BUFFER_BIT);
     setupCamera();
     drawGrid();
+
+    drawParticle(0, 0, 1);
+    drawParticle(-1, 1);
+    drawParticle(1, 0, 5);
 }
 
 void VisWindow::loadTextures()
@@ -71,22 +77,22 @@ void VisWindow::setupCamera()
     const float halfZoomRec = 0.5f / zoom;
     view.left    = focusPos.x() - halfZoomRec * width();
     view.right   = focusPos.x() + halfZoomRec * width();
-    view.bottom  = focusPos.y() + halfZoomRec * height();
-    view.top     = focusPos.y() - halfZoomRec * height();
+    view.bottom  = focusPos.y() - halfZoomRec * height();
+    view.top     = focusPos.y() + halfZoomRec * height();
 
     glLoadIdentity();
-    glOrtho(view.left, view.right, view.bottom, view.top, -1, 1);
+    glOrtho(view.left, view.right, view.bottom, view.top, 1, -1);
 }
 
 void VisWindow::drawGrid()
 {
     // Textures have to contain an integer number of pixels, but a triangle in our grid has irrational height.
     // Still, we want to tile / repeat the texture to get a background grid.
-    // Hence, the part of the grid in gridTex contains a part of the grid that can be tiled
-    // and this part is slightly distorted (barely noticable, but it's there).
-    // The following value represents the undistorted size of the part of the grid contained
+    // Hence, the grid texture contains a part of the grid that can be tiled
+    // but is slightly distorted (barely noticable, but it's there).
+    // The following value represents the undistorted height of the part of the grid contained in the texture
     // and has to be considered below in order to distord the texture.
-    const float texHeight = 2.0f * sqrtf(0.75);
+    const float gridTexHeight = 2.0f * triangleHeight;
 
     // Coordinate sytem voodoo:
     // Calculates the texture coordinates of the corners of the shown part of the grid.
@@ -94,10 +100,10 @@ void VisWindow::drawGrid()
     Quad gridTexCoords;
     gridTexCoords.left = fmodf(view.left, 1.0f);
     gridTexCoords.right = gridTexCoords.left + view.right - view.left;
-    gridTexCoords.bottom = fmodf(view.bottom, texHeight);
+    gridTexCoords.bottom = fmodf(view.bottom, gridTexHeight);
     gridTexCoords.top = gridTexCoords.bottom + view.top - view.bottom;
-    gridTexCoords.bottom /= texHeight;
-    gridTexCoords.top /= texHeight;
+    gridTexCoords.bottom /= gridTexHeight;
+    gridTexCoords.top /= gridTexHeight;
 
     // Draw screen-filling quad with gridTex according to above texture coordinates.
     gridTex->bind();
@@ -113,6 +119,21 @@ void VisWindow::drawGrid()
     glEnd();
 }
 
+void VisWindow::drawParticle(const int x, const int y)
+{
+    particleTex->bind();
+    particleQuad(gridToWorld(x, y));
+}
+
+void VisWindow::drawParticle(const int x, const int y, const int dir)
+{
+    particleLineTex[dir]->bind();
+    particleQuad(gridToWorld(x, y));
+
+    particleTex->bind();
+    particleQuad(gridToWorld(x, y, dir));
+}
+
 void VisWindow::mousePressEvent(QMouseEvent* e)
 {
     if(e->buttons() & Qt::LeftButton) {
@@ -126,7 +147,7 @@ void VisWindow::mouseMoveEvent(QMouseEvent* e)
     if(e->buttons() & Qt::LeftButton) {
         QPointF offset = lastMousePos - e->localPos();
         QPointF scaledOffset = offset / zoom;
-        focusPos += QPointF(scaledOffset.x(), scaledOffset.y());
+        focusPos += QPointF(scaledOffset.x(), -scaledOffset.y());
         lastMousePos = e->localPos();
         e->accept();
     }
