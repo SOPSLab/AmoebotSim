@@ -117,23 +117,8 @@ void VisWidget::setupCamera()
     view.bottom  = focusPos.y() + halfZoomRec * height();
     view.top     = focusPos.y() - halfZoomRec * height();
 
-    // setup (transposed) orthographic projection matrix
-    // see: http://en.wikipedia.org/wiki/Orthographic_projection_(geometry)
-    // and: http://www.khronos.org/opengles/sdk/1.1/docs/man/glLoadMatrix.xml
-    const float width = view.right - view.left;
-    const float widthSum = view.right + view.left;
-    const float height = view.top - view.bottom;
-    const float heightSum = view.top + view.bottom;
-
-    const std::array<float, 16> orthMatrix =
-    {{
-        2.0f / width,       0,                      0, 0,
-        0,                  2.0f / height,          0, 0,
-        0,                  0,                      1, 0,
-        -widthSum / width,  -heightSum / height,    0, 1
-    }};
-
-    glLoadMatrixf(&orthMatrix[0]);
+    glLoadIdentity();
+    glOrtho(view.left, view.right, view.bottom, view.top, -1, 1);
 }
 
 void VisWidget::drawGrid()
