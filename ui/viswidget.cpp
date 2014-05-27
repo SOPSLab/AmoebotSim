@@ -1,10 +1,16 @@
+#include <array>
+
 #include <QGLContext>
 #include <QGLFormat>
+#include <QMouseEvent>
+#include <QPointF>
+#include <QWheelEvent>
 
 #include "viswidget.h"
 
 VisWidget::VisWidget(QWidget *parent)
-    : QGLWidget(parent)
+    : QGLWidget(parent),
+      zoom(zoomInit)
 {
     if(!QGLFormat::openGLVersionFlags() & QGLFormat::OpenGL_Version_2_1) {
         qFatal("OpenGL 2.1 required but not supported.");
@@ -77,18 +83,8 @@ void VisWidget::resizeGL(int width, int height)
 void VisWidget::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT);
-    glRotatef(0.2, 0, 0, 1);
-    glBindTexture(GL_TEXTURE_2D, gridTex);
-    glBegin(GL_QUADS);
-    glTexCoord2d(0, 0);
-    glVertex2d(-0.5, -0.5);
-    glTexCoord2d(1, 0);
-    glVertex2d(0.5, -0.5);
-    glTexCoord2d(1, 1);
-    glVertex2d(0.5, 0.5);
-    glTexCoord2d(0, 1);
-    glVertex2d(-0.5, 0.5);
-    glEnd();
+    setupCamera();
+    drawGrid();
 }
 
 void VisWidget::loadTextures()
@@ -107,6 +103,76 @@ GLuint VisWidget::loadTexture(const QString fileName)
         qFatal("Image \"%s\" not found.", fileName.toStdString().c_str());
     }
     return bindTexture(image, GL_TEXTURE_2D, GL_RGBA, QGLContext::LinearFilteringBindOption | QGLContext::MipmapBindOption);
+}
+
+void VisWidget::setupCamera()
+{
+    const float halfZoomRec = 0.5f / zoom;
+
+    const float left = focusPos.x() - halfZoomRec * width();
+    const float right = focusPos.x() + halfZoomRec * width();
+    const float bottom = focusPos.y() + halfZoomRec * height();
+    const float top = focusPos.y() - halfZoomRec * height();
+
+    const float width = right - left;
+    const float widthSum = right + left;
+    const float height = top - bottom;
+    const float heightSum = top + bottom;
+
+    const std::array<float, 16> orthMatrix =
+    {{
+        2.0f / width,       0,                      0, 0,
+        0,                  2.0f / height,          0, 0,
+        0,                  0,                      1, 0,
+        -widthSum / width,  -heightSum / height,    0, 1
+    }};
+
+    glLoadMatrixf(&orthMatrix[0]);
+}
+
+void VisWidget::drawGrid()
+{
+    glBindTexture(GL_TEXTURE_2D, gridTex);
+    glBegin(GL_QUADS);
+    glTexCoord2d(0, 0);
+    glVertex2d(-1, -1);
+    glTexCoord2d(1, 0);
+    glVertex2d(1, -1);
+    glTexCoord2d(1, 1);
+    glVertex2d(1, 1);
+    glTexCoord2d(0, 1);
+    glVertex2d(-1, 1);
+    glEnd();
+}
+
+void VisWidget::mousePressEvent(QMouseEvent* e)
+{
+    if(e->buttons() & Qt::LeftButton) {
+        lastMousePos = e->screenPos();
+        e->accept();
+    }
+}
+
+void VisWidget::mouseMoveEvent(QMouseEvent* e)
+{
+    if(e->buttons() & Qt::LeftButton) {
+        QPointF offset = lastMousePos - e->screenPos();
+        QPointF scaledOffset = offset / zoom;
+        focusPos += QPointF(scaledOffset.x(), scaledOffset.y());
+        lastMousePos = e->screenPos();
+        e->accept();
+    }
+}
+
+void VisWidget::wheelEvent(QWheelEvent* e)
+{
+    zoom += e->angleDelta().y() / zoomAttenuation;
+    if(zoom < zoomMin) {
+        zoom = zoomMin;
+    } else if(zoom > zoomMax) {
+        zoom = zoomMax;
+    }
+    e->accept();
 }
 
 void VisWidget::tick()
