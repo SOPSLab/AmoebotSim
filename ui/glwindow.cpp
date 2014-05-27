@@ -40,7 +40,7 @@ GLWindow::GLWindow(QScreen* screen) :
     // timer that continuesly triggers painting
     updateTimer = new QTimer(this);
     connect(updateTimer, &QTimer::timeout, this, &GLWindow::paint);
-    updateTimer->start(1000.0f / 60.0f);
+    updateTimer->start(15);
 }
 
 void GLWindow::resize()
