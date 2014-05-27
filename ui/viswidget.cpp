@@ -24,7 +24,7 @@ VisWidget::VisWidget(QWidget *parent)
     format.setVersion(2, 1);
     setFormat(format);
 
-    updateTimer.setInterval(ceil(1000.0f / updateRate));
+    updateTimer.setInterval(ceilf(1000.0f / updateRate));
     connect(&updateTimer, SIGNAL(timeout()), this, SLOT(updateGL()));
     updateTimer.start();
 }
@@ -91,6 +91,8 @@ void VisWidget::paintGL()
 void VisWidget::loadTextures()
 {
     gridTex = loadTexture(":/textures/grid.png");
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     particleTex = loadTexture(":textures/particle.png");
     for(int i = 0; i < 6; i++) {
         particleLineTex[i] = loadTexture(QString(":/textures/particleLine%1.png").arg(i));
@@ -110,19 +112,19 @@ void VisWidget::setupCamera()
 {
     const float halfZoomRec = 0.5f / zoom;
 
-    const float left    = focusPos.x() - halfZoomRec * width();
-    const float right   = focusPos.x() + halfZoomRec * width();
-    const float bottom  = focusPos.y() + halfZoomRec * height();
-    const float top     = focusPos.y() - halfZoomRec * height();
-
-    const float width = right - left;
-    const float widthSum = right + left;
-    const float height = top - bottom;
-    const float heightSum = top + bottom;
+    view.left    = focusPos.x() - halfZoomRec * width();
+    view.right   = focusPos.x() + halfZoomRec * width();
+    view.bottom  = focusPos.y() + halfZoomRec * height();
+    view.top     = focusPos.y() - halfZoomRec * height();
 
     // setup (transposed) orthographic projection matrix
     // see: http://en.wikipedia.org/wiki/Orthographic_projection_(geometry)
     // and: http://www.khronos.org/opengles/sdk/1.1/docs/man/glLoadMatrix.xml
+    const float width = view.right - view.left;
+    const float widthSum = view.right + view.left;
+    const float height = view.top - view.bottom;
+    const float heightSum = view.top + view.bottom;
+
     const std::array<float, 16> orthMatrix =
     {{
         2.0f / width,       0,                      0, 0,
@@ -136,16 +138,26 @@ void VisWidget::setupCamera()
 
 void VisWidget::drawGrid()
 {
+    const float texHeight = 2.0f * sqrtf(0.75);
+
+    Quad gridTexCoords;
+    gridTexCoords.left = fmodf(view.left, 1.0f);
+    gridTexCoords.right = gridTexCoords.left + view.right - view.left;
+    gridTexCoords.bottom = fmodf(view.bottom, texHeight);
+    gridTexCoords.top = gridTexCoords.bottom + view.top - view.bottom;
+    gridTexCoords.bottom /= texHeight;
+    gridTexCoords.top /= texHeight;
+
     glBindTexture(GL_TEXTURE_2D, gridTex);
     glBegin(GL_QUADS);
-    glTexCoord2d(0, 0);
-    glVertex2d(-1, -1);
-    glTexCoord2d(1, 0);
-    glVertex2d(1, -1);
-    glTexCoord2d(1, 1);
-    glVertex2d(1, 1);
-    glTexCoord2d(0, 1);
-    glVertex2d(-1, 1);
+    glTexCoord2d(gridTexCoords.left, gridTexCoords.bottom);
+    glVertex2f(view.left, view.bottom);
+    glTexCoord2d(gridTexCoords.right, gridTexCoords.bottom);
+    glVertex2f(view.right, view.bottom);
+    glTexCoord2d(gridTexCoords.right, gridTexCoords.top);
+    glVertex2f(view.right, view.top);
+    glTexCoord2d(gridTexCoords.left, gridTexCoords.top);
+    glVertex2f(view.left, view.top);
     glEnd();
 }
 

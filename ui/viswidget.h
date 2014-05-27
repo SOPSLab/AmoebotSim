@@ -14,6 +14,14 @@ class VisWidget : public QGLWidget
 {
     Q_OBJECT
 
+    struct Quad
+    {
+        float left;
+        float right;
+        float bottom;
+        float top;
+    };
+
 public:
     explicit VisWidget(QWidget *parent = 0);
     virtual ~VisWidget();
@@ -54,6 +62,7 @@ protected:
     QPointF focusPos;
     QPointF lastMousePos;
     float zoom;
+    Quad view;
 };
 
 #endif // VISWIDGET_H
