@@ -1,3 +1,4 @@
+#include <QGLContext>
 #include <QGLFormat>
 
 #include "viswidget.h"
@@ -63,6 +64,8 @@ void VisWidget::initializeGL()
     glLoadIdentity();
     glMatrixMode(GL_PROJECTION);
 
+    loadTextures();
+
     logGlError(__LINE__);
 }
 
@@ -74,37 +77,36 @@ void VisWidget::resizeGL(int width, int height)
 void VisWidget::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT);
-    glColor3d(1, 0, 0);
     glRotatef(0.2, 0, 0, 1);
+    glBindTexture(GL_TEXTURE_2D, gridTex);
     glBegin(GL_QUADS);
+    glTexCoord2d(0, 0);
     glVertex2d(-0.5, -0.5);
+    glTexCoord2d(1, 0);
     glVertex2d(0.5, -0.5);
+    glTexCoord2d(1, 1);
     glVertex2d(0.5, 0.5);
+    glTexCoord2d(0, 1);
     glVertex2d(-0.5, 0.5);
     glEnd();
 }
 
-void VisWidget::loadTexture(GLuint& tex, const QString fileName, const bool filled)
+void VisWidget::loadTextures()
+{
+    gridTex = loadTexture(":/textures/grid.png");
+    particleTex = loadTexture(":textures/particle.png");
+    for(int i = 0; i < 6; i++) {
+        particleLineTex[i] = loadTexture(QString(":/textures/particleLine%1.png").arg(i));
+    }
+}
+
+GLuint VisWidget::loadTexture(const QString fileName)
 {
     QImage image;
     if (!image.load(fileName)) {
         qFatal("Image \"%s\" not found.", fileName.toStdString().c_str());
     }
-
-    image = QGLWidget::convertToGLFormat(image);
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-    if(filled) {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    } else {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    }
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width(), image.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
-    logGlError(__LINE__);
+    return bindTexture(image, GL_TEXTURE_2D, GL_RGBA, QGLContext::LinearFilteringBindOption | QGLContext::MipmapBindOption);
 }
 
 void VisWidget::tick()

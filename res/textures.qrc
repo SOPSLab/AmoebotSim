@@ -1,0 +1,12 @@
+<RCC>
+    <qresource>
+        <file>textures/grid.png</file>
+        <file>textures/particle.png</file>
+        <file>textures/particleLine0.png</file>
+        <file>textures/particleLine1.png</file>
+        <file>textures/particleLine2.png</file>
+        <file>textures/particleLine3.png</file>
+        <file>textures/particleLine4.png</file>
+        <file>textures/particleLine5.png</file>
+    </qresource>
+</RCC>

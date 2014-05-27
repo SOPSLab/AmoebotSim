@@ -1,6 +1,8 @@
 #ifndef VISWIDGET_H
 #define VISWIDGET_H
 
+#include <array>
+
 #include <QGLWidget>
 #include <QTimer>
 
@@ -18,15 +20,21 @@ protected:
     void initializeGL();
     void resizeGL(int width, int height);
     void paintGL();
-    
-    void loadTexture(GLuint& tex, const QString fileName, const bool filled);
+
+    void loadTextures();
+    GLuint loadTexture(const QString fileName);
 
 public slots:
     void tick();
 
 protected:
     static constexpr int updateTimerInterval = 33;
+
     QTimer updateTimer;
+
+    GLuint gridTex;
+    GLuint particleTex;
+    std::array<GLuint, 6> particleLineTex;
 };
 
 #endif // VISWIDGET_H

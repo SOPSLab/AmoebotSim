@@ -22,3 +22,6 @@ HEADERS +=\
 FORMS   +=\
     ui/mainwindow.ui \
     ui/consolewidget.ui
+
+RESOURCES += \
+    res/textures.qrc
