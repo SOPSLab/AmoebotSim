@@ -51,6 +51,9 @@ void GLWindow::resize()
         initialized = true;
     }
     resizeGL();
+    if(isVisible()) {
+        context->swapBuffers(this);
+    }
 }
 
 void GLWindow::paint()

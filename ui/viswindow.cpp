@@ -40,6 +40,7 @@ void VisWindow::initializeGL()
 void VisWindow::resizeGL()
 {
     glViewport(0, 0, width(), height());
+    paintGL();
 }
 
 void VisWindow::paintGL()
