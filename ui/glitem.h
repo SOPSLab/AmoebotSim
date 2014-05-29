@@ -14,12 +14,16 @@ public:
 protected slots:
     virtual void sync() = 0;
     virtual void initialize() = 0;
-    virtual void paint(const int width, const int height) = 0;
+    virtual void paint() = 0;
 
 private slots:
     void handleWindowChanged(QQuickWindow* window);
 
     void delegatePaint();
+
+protected:
+    int width() const;
+    int height() const;
 
 protected:
     QOpenGLFunctions_2_0* glfn;

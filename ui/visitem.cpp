@@ -25,11 +25,11 @@ void VisItem::initialize()
     loadTextures();
 }
 
-void VisItem::paint(const int width, const int height)
+void VisItem::paint()
 {
     glfn->glUseProgram(0);
 
-    glfn->glViewport(0, 0, width, height);
+    glfn->glViewport(0, 0, width(), height());
 
     glfn->glDisable(GL_DEPTH_TEST);
     glfn->glDisable(GL_CULL_FACE);
@@ -43,7 +43,7 @@ void VisItem::paint(const int width, const int height)
     glfn->glClear(GL_COLOR_BUFFER_BIT);
     glfn->glColor4f(1, 1, 1, 1);
 
-    setupCamera(width, height);
+    setupCamera();
 
     drawGrid();
 
@@ -70,15 +70,9 @@ void VisItem::loadTextures()
     }
 }
 
-void VisItem::setupCamera(const int width, const int height)
+void VisItem::setupCamera()
 {
-    // setup view according to zoom and so that the focusPoint is in the middle
-    const float halfZoomRec = 0.5f / zoom;
-    view.left    = focusPos.x() - halfZoomRec * width;
-    view.right   = focusPos.x() + halfZoomRec * width;
-    view.bottom  = focusPos.y() - halfZoomRec * height;
-    view.top     = focusPos.y() + halfZoomRec * height;
-
+    Quad view = calculateView(focusPos, zoom, width(), height());
     glfn->glMatrixMode(GL_MODELVIEW);
     glfn->glLoadIdentity();
     glfn->glMatrixMode(GL_PROJECTION);
@@ -95,6 +89,8 @@ void VisItem::drawGrid()
     // The following value represents the undistorted height of the part of the grid contained in the texture
     // and has to be considered below in order to distord the texture.
     const float gridTexHeight = 2.0f * triangleHeight;
+
+    Quad view = calculateView(focusPos, zoom, width(), height());
 
     // Coordinate sytem voodoo:
     // Calculates the texture coordinates of the corners of the shown part of the grid.
@@ -136,6 +132,18 @@ void VisItem::drawParticle(const int x, const int y, const int dir)
     particleQuad(gridToWorld(x, y, dir));
 }
 
+VisItem::Quad VisItem::calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight)
+{
+    // setup view according to zoom and so that the focusPoint is in the middle
+    const float halfZoomRec = 0.5f / zoom;
+    Quad view;
+    view.left    = focusPos.x() - halfZoomRec * viewportWidth;
+    view.right   = focusPos.x() + halfZoomRec * viewportWidth;
+    view.bottom  = focusPos.y() - halfZoomRec * viewportHeight;
+    view.top     = focusPos.y() + halfZoomRec * viewportHeight;
+    return view;
+}
+
 void VisItem::mousePressEvent(QMouseEvent* e)
 {
     if(e->buttons() & Qt::LeftButton) {
@@ -161,6 +169,13 @@ void VisItem::mouseMoveEvent(QMouseEvent* e)
 
 void VisItem::wheelEvent(QWheelEvent* e)
 {
+    Quad view = calculateView(focusPosGui, zoomGui, width(), height());
+    QPointF mousePos(QPointF(e->posF().x(), height() - e->posF().y()));
+
+    // remember world space coordinate of the point under the cursor before changing zoom
+    QPointF oldPos = QPointF(view.left, view.bottom) + mousePos / zoomGui;
+
+    // update zoom
     zoomGui += e->angleDelta().y() / zoomAttenuation;
     if(zoomGui < zoomMin) {
         zoomGui = zoomMin;
@@ -168,6 +183,13 @@ void VisItem::wheelEvent(QWheelEvent* e)
         zoomGui = zoomMax;
     }
     e->accept();
+
+    // calculate new world space coordinate of the point under the cursor
+    view = calculateView(focusPosGui, zoomGui, width(), height());
+    QPointF newPos = QPointF(view.left, view.bottom) + mousePos / zoomGui;
+
+    // move the focus point so that the point under the cursor remains unchanged
+    focusPosGui = focusPosGui + oldPos - newPos;
 
     if(window()) {
         window()->update();

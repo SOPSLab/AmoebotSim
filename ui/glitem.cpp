@@ -46,8 +46,15 @@ void GLItem::delegatePaint()
         initialized = true;
     }
 
-    auto ratio = window()->devicePixelRatio();
-    int width = int(ratio * window()->width());
-    int height = int(ratio * window()->height());
-    paint(width, height);
+    paint();
+}
+
+int GLItem::width() const
+{
+    return window()->devicePixelRatio() * window()->width();
+}
+
+int GLItem::height() const
+{
+    return window()->devicePixelRatio() * window()->height();
 }

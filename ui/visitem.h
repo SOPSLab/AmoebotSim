@@ -31,15 +31,16 @@ public:
 protected slots:
     virtual void sync();
     virtual void initialize();
-    virtual void paint(const int width, const int height);
+    virtual void paint();
 
 protected:
     void loadTextures();
-    void setupCamera(const int width, const int height);
+    void setupCamera();
     void drawGrid();
     void drawParticle(const int x, const int y);
     void drawParticle(const int x, const int y, const int dir);
 
+    static Quad calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight);
     inline static QPointF gridToWorld(const int x, const int y);
     inline static QPointF gridToWorld(const int x, const int y, const int dir);
     inline void particleQuad(const QPointF p);
@@ -66,14 +67,10 @@ protected:
     // and the remaining variables are used by the render thread
     // variables with the same prefix are synchronized between the threads
     QPointF lastMousePosGui;
-
     QPointF focusPosGui;
     QPointF focusPos;
-
     float zoomGui;
     float zoom;
-
-    Quad view;
 };
 
 QPointF VisItem::gridToWorld(const int x, const int y)
