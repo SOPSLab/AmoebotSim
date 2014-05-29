@@ -1,20 +1,21 @@
-#ifndef VISWINDOW_H
-#define VISWINDOW_H
+#ifndef VISITEM_H
+#define VISITEM_H
 
 #include <array>
 
+#include <QOpenGLFunctions_2_0>
+#include <QOpenGLTexture>
 #include <QPointF>
 
-#include "glwindow.h"
+#include "glitem.h"
 
 class QMouseEvent;
 class QOpenGLTexture;
 class QWheelEvent;
 
-class VisWindow : public GLWindow
+class VisItem : public GLItem
 {
     Q_OBJECT
-
 protected:
     struct Quad
     {
@@ -25,26 +26,27 @@ protected:
     };
 
 public:
-    explicit VisWindow(QScreen* screen = 0);
+    explicit VisItem(QQuickItem* parent = 0);
+
+protected slots:
+    virtual void sync();
+    virtual void initialize();
+    virtual void paint(const int width, const int height);
 
 protected:
-    virtual void initializeGL();
-    virtual void resizeGL();
-    virtual void paintGL();
-
     void loadTextures();
-    void setupCamera();
+    void setupCamera(const int width, const int height);
     void drawGrid();
     void drawParticle(const int x, const int y);
     void drawParticle(const int x, const int y, const int dir);
 
+    inline static QPointF gridToWorld(const int x, const int y);
+    inline static QPointF gridToWorld(const int x, const int y, const int dir);
+    inline void particleQuad(const QPointF p);
+
     void mousePressEvent(QMouseEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
     void wheelEvent(QWheelEvent* e);
-
-    inline QPointF gridToWorld(const int x, const int y);
-    inline QPointF gridToWorld(const int x, const int y, const int dir);
-    inline void particleQuad(const QPointF p);
 
 protected:
     static constexpr float zoomMin = 10.0f;
@@ -59,18 +61,27 @@ protected:
     QOpenGLTexture* particleTex;
     std::array<QOpenGLTexture*, 6> particleLineTex;
 
+    // these variables are used by two threads
+    // variables with suffix Gui are used by the gui thread
+    // and the remaining variables are used by the render thread
+    // variables with the same prefix are synchronized between the threads
+    QPointF lastMousePosGui;
+
+    QPointF focusPosGui;
     QPointF focusPos;
-    QPointF lastMousePos;
+
+    float zoomGui;
     float zoom;
+
     Quad view;
 };
 
-QPointF VisWindow::gridToWorld(const int x, const int y)
+QPointF VisItem::gridToWorld(const int x, const int y)
 {
     return QPointF(x + 0.5f * y, y * triangleHeight);
 }
 
-QPointF VisWindow::gridToWorld(const int x, const int y, const int dir)
+QPointF VisItem::gridToWorld(const int x, const int y, const int dir)
 {
     Q_ASSERT(0 <= dir && dir <= 5);
 
@@ -96,18 +107,18 @@ QPointF VisWindow::gridToWorld(const int x, const int y, const int dir)
     return gridToWorld(0, 0);
 }
 
-void VisWindow::particleQuad(const QPointF p)
+void VisItem::particleQuad(const QPointF p)
 {
-    glBegin(GL_QUADS);
-    glTexCoord2d(0, 1);
-    glVertex2f(p.x() - 1.0f, p.y() - 1.0f);
-    glTexCoord2d(1, 1);
-    glVertex2f(p.x() + 1.0f, p.y() - 1.0f);
-    glTexCoord2d(1, 0);
-    glVertex2f(p.x() + 1.0f, p.y() + 1.0f);
-    glTexCoord2d(0, 0);
-    glVertex2f(p.x() - 1.0f, p.y() + 1.0f);
-    glEnd();
+    glfn->glBegin(GL_QUADS);
+    glfn->glTexCoord2d(0, 0);
+    glfn->glVertex2f(p.x() - 1.0f, p.y() - 1.0f);
+    glfn->glTexCoord2d(1, 0);
+    glfn->glVertex2f(p.x() + 1.0f, p.y() - 1.0f);
+    glfn->glTexCoord2d(1, 1);
+    glfn->glVertex2f(p.x() + 1.0f, p.y() + 1.0f);
+    glfn->glTexCoord2d(0, 1);
+    glfn->glVertex2f(p.x() - 1.0f, p.y() + 1.0f);
+    glfn->glEnd();
 }
 
-#endif // VISWINDOW_H
+#endif // VISITEM_H

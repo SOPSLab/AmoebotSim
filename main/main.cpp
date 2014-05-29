@@ -1,12 +1,16 @@
-#include <QApplication>
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
 
-#include "ui/mainwindow.h"
+#include "ui/visitem.h"
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
+    QGuiApplication app(argc, argv);
 
-    return a.exec();
+    qmlRegisterType<VisItem>("VisItem", 1, 0, "VisItem");
+
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:///main.qml")));
+
+    return app.exec();
 }

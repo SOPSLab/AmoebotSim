@@ -1,4 +1,4 @@
-QT      += core gui script widgets
+QT      += core gui qml quick script
 CONFIG  += c++11
 
 TARGET    = AmoebotSim
@@ -11,23 +11,16 @@ win32:RC_FILE = res/pss.rc
 
 SOURCES += \
     main/main.cpp\
-    ui/consolelineedit.cpp \
-    ui/consolewidget.cpp \
-    ui/glwindow.cpp \
-    ui/mainwindow.cpp \
-    ui/viswindow.cpp
+    ui/glitem.cpp \
+    ui/visitem.cpp
 
 HEADERS += \
-    ui/consolelineedit.h \
-    ui/consolewidget.h \
-    ui/mainwindow.h \
-    ui/glwindow.h \
-    ui/viswindow.h
-
-FORMS   += \
-    ui/consolewidget.ui \
-    ui/mainwindow.ui
-
+    ui/glitem.h \
+    ui/visitem.h
 
 RESOURCES += \
-    res/textures.qrc
+    res/textures.qrc \
+    res/qml.qrc
+
+OTHER_FILES += \
+    res/main.qml
