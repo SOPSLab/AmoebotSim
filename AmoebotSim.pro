@@ -19,8 +19,9 @@ HEADERS += \
     ui/visitem.h
 
 RESOURCES += \
-    res/textures.qrc \
-    res/qml.qrc
+    res/qml.qrc \
+    res/textures.qrc
 
 OTHER_FILES += \
-    res/main.qml
+    res/qml/A_Button.qml \
+    res/qml/main.qml
