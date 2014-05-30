@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="dot.svg"
+   sodipodi:docname="particle.svg"
    inkscape:export-filename="C:\Users\Robert\Desktop\textures\grid.png"
    inkscape:export-xdpi="2600.96"
    inkscape:export-ydpi="2600.96">
@@ -22,10 +22,10 @@
      id="defs4" />
   <sodipodi:namedview
      id="base"
-     pagecolor="#ffffff"
+     pagecolor="#000000"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="0.0"
+     inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="7.9195959"
      inkscape:cx="22.280771"
@@ -49,7 +49,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -66,7 +66,7 @@
        sodipodi:cy="19.790304"
        sodipodi:rx="4.4825521"
        sodipodi:ry="4.4825521"
-       d="m -9.2176423,19.790304 a 4.4825521,4.4825521 0 1 1 -8.9651037,0 4.4825521,4.4825521 0 1 1 8.9651037,0 z"
+       d="m -9.2176423,19.790304 c 0,2.475645 -2.0069067,4.482552 -4.4825517,4.482552 -2.475645,0 -4.482552,-2.006907 -4.482552,-4.482552 0,-2.475645 2.006907,-4.482552 4.482552,-4.482552 2.475645,0 4.4825517,2.006907 4.4825517,4.482552 z"
        transform="matrix(0.79046647,0,0,0.79046647,46.262615,1001.2855)" />
   </g>
 </svg>

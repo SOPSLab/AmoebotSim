@@ -13,8 +13,8 @@
    height="2500"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.3.1 r9886"
-   sodipodi:docname="dotline.svg"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="particleLine.svg"
    inkscape:export-filename="G:\textures\grid.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
@@ -22,10 +22,10 @@
      id="defs4" />
   <sodipodi:namedview
      id="base"
-     pagecolor="#ffffff"
+     pagecolor="#000000"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="0.0"
+     inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.22627417"
      inkscape:cx="242.78572"
@@ -35,8 +35,8 @@
      showgrid="false"
      inkscape:object-nodes="true"
      units="px"
-     inkscape:window-width="1920"
-     inkscape:window-height="1018"
+     inkscape:window-width="1680"
+     inkscape:window-height="987"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -53,7 +53,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -70,7 +70,7 @@
        sodipodi:cy="816.89709"
        sodipodi:rx="167.93787"
        sodipodi:ry="167.93787"
-       d="m 592.20193,816.89709 a 167.93787,167.93787 0 1 1 -335.87573,0 167.93787,167.93787 0 1 1 335.87573,0 z"
+       d="m 592.20193,816.89709 c 0,92.74953 -75.18834,167.93787 -167.93786,167.93787 -92.74952,0 -167.93787,-75.18834 -167.93787,-167.93787 0,-92.74952 75.18835,-167.93786 167.93787,-167.93786 92.74952,0 167.93786,75.18834 167.93786,167.93786 z"
        transform="matrix(1.0549458,0,0,1.0549458,178.3619,-576.65716)" />
     <path
        style="fill:none;stroke:#000000;stroke-width:100;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
