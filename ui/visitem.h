@@ -7,7 +7,8 @@
 #include <QOpenGLTexture>
 #include <QPointF>
 
-#include "glitem.h"
+#include "sim/vec.h"
+#include "ui/glitem.h"
 
 class QMouseEvent;
 class QOpenGLTexture;
@@ -42,12 +43,10 @@ protected:
     void loadTextures();
     void setupCamera();
     void drawGrid();
-    void drawParticle(const int x, const int y);
-    void drawParticle(const int x, const int y, const int dir);
+    void drawParticles();
 
     static Quad calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight);
-    inline static QPointF gridToWorld(const int x, const int y);
-    inline static QPointF gridToWorld(const int x, const int y, const int dir);
+    inline static QPointF gridToWorld(Vec pos, const int dir = -1);
     inline void particleQuad(const QPointF p);
 
     void mousePressEvent(QMouseEvent* e);
@@ -80,35 +79,12 @@ protected:
     System* system;
 };
 
-QPointF VisItem::gridToWorld(const int x, const int y)
+QPointF VisItem::gridToWorld(Vec pos, const int dir)
 {
-    return QPointF(x + 0.5f * y, y * triangleHeight);
-}
-
-QPointF VisItem::gridToWorld(const int x, const int y, const int dir)
-{
-    Q_ASSERT(0 <= dir && dir <= 5);
-
-    if(dir == 0) {
-        return gridToWorld(x + 1, y + 0);
+    if(dir != -1) {
+        pos = pos.vecInDir(dir);
     }
-    if(dir == 1) {
-        return gridToWorld(x + 0, y + 1);
-    }
-    if(dir == 2) {
-        return gridToWorld(x - 1, y + 1);
-    }
-    if(dir == 3) {
-        return gridToWorld(x - 1, y + 0);
-    }
-    if(dir == 4) {
-        return gridToWorld(x + 0, y - 1);
-    }
-    if(dir == 5) {
-        return gridToWorld(x + 1, y - 1);
-    }
-
-    return gridToWorld(0, 0);
+    return QPointF(pos.x + 0.5f * pos.y, pos.y * triangleHeight);
 }
 
 void VisItem::particleQuad(const QPointF p)

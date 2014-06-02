@@ -56,17 +56,7 @@ void VisItem::paint()
     setupCamera();
 
     drawGrid();
-
-    if(system != nullptr) {
-        for(auto it = system->particles.begin(); it != system->particles.end(); ++it) {
-            Particle& p = *it;
-            if(p.tailDir == -1) {
-                drawParticle(p.headPos.x, p.headPos.y);
-            } else {
-                drawParticle(p.headPos.x, p.headPos.y, p.tailDir);
-            }
-        }
-    }
+    drawParticles();
 }
 
 void VisItem::loadTextures()
@@ -134,19 +124,23 @@ void VisItem::drawGrid()
     glfn->glEnd();
 }
 
-void VisItem::drawParticle(const int x, const int y)
+void VisItem::drawParticles()
 {
-    particleTex->bind();
-    particleQuad(gridToWorld(x, y));
-}
+    if(system != nullptr) {
+        for(auto it = system->particles.begin(); it != system->particles.end(); ++it) {
+            Particle& p = *it;
+            if(p.tailDir == -1) {
+                particleTex->bind();
+                particleQuad(gridToWorld(p.headPos));
+            } else {
+                particleLineTex[p.tailDir]->bind();
+                particleQuad(gridToWorld(p.headPos));
 
-void VisItem::drawParticle(const int x, const int y, const int dir)
-{
-    particleLineTex[dir]->bind();
-    particleQuad(gridToWorld(x, y));
-
-    particleTex->bind();
-    particleQuad(gridToWorld(x, y, dir));
+                particleTex->bind();
+                particleQuad(gridToWorld(p.headPos, p.tailDir));
+            }
+        }
+    }
 }
 
 VisItem::Quad VisItem::calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight)
