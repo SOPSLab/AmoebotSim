@@ -11,6 +11,8 @@ public:
     bool operator==(const Vec& other);
     bool operator!=(const Vec& other);
 
+    Vec vecInDir(int dir) const;
+
 public:
     int x, y;
 };

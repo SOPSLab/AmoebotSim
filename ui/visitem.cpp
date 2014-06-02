@@ -60,7 +60,11 @@ void VisItem::paint()
     if(system != nullptr) {
         for(auto it = system->particles.begin(); it != system->particles.end(); ++it) {
             Particle& p = *it;
-            drawParticle(p.pos.x, p.pos.y);
+            if(p.tailDir == -1) {
+                drawParticle(p.headPos.x, p.headPos.y);
+            } else {
+                drawParticle(p.headPos.x, p.headPos.y, p.tailDir);
+            }
         }
     }
 }

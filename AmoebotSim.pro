@@ -17,7 +17,9 @@ SOURCES += \
     sim/system.cpp \
     sim/particle.cpp \
     sim/vec.cpp \
-    main/application.cpp
+    main/application.cpp \
+    alg/algorithm.cpp \
+    alg/dummyalg.cpp
 
 HEADERS += \
     ui/glitem.h \
@@ -26,7 +28,10 @@ HEADERS += \
     sim/system.h \
     sim/particle.h \
     sim/vec.h \
-    main/application.h
+    main/application.h \
+    alg/algorithm.h \
+    sim/movement.h \
+    alg/dummyalg.h
 
 RESOURCES += \
     res/qml.qrc \

@@ -3,12 +3,22 @@
 
 #include "vec.h"
 
+class Algorithm;
+
 class Particle
 {
 public:
-    Particle();
+    Particle(const int _orientation, const Vec pos, const int _tailDir = -1);
+    Particle(const Particle& other);
+    ~Particle();
 
-    Vec pos;
+    Particle& operator=(const Particle& other);
+
+    int orientation; // global direction
+    Vec headPos;
+    int tailDir; // global direction
+
+    Algorithm* algorithm;
 };
 
 #endif // PARTICLE_H

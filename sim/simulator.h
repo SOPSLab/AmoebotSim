@@ -10,7 +10,7 @@ class Simulator : public QObject
 {
     Q_OBJECT
 public:
-    explicit Simulator(QObject *parent = 0);
+    explicit Simulator(QObject* parent = 0);
 
 signals:
     void updateSystem(System* _system);
