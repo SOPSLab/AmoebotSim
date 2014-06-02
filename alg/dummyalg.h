@@ -11,10 +11,7 @@ public:
     virtual ~DummyAlg();
 
     virtual Movement execute();
-    virtual Algorithm* clone();
-
-protected:
-    bool expanded;
+    virtual Algorithm* clone();   
 };
 
 #endif // DUMMYALG_H

@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include <QImage>
+#include <QMutexLocker>
 #include <QQuickWindow>
 
 #include "sim/particle.h"
@@ -19,6 +20,7 @@ VisItem::VisItem(QQuickItem* parent) :
 
 void VisItem::updateSystem(System* _system)
 {
+    QMutexLocker locker(&systemMutex);
     delete system;
     system = _system;
     window()->update();
@@ -126,6 +128,7 @@ void VisItem::drawGrid()
 
 void VisItem::drawParticles()
 {
+    QMutexLocker locker(&systemMutex);
     if(system != nullptr) {
         for(auto it = system->particles.begin(); it != system->particles.end(); ++it) {
             Particle& p = *it;

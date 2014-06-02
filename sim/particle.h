@@ -1,6 +1,7 @@
 #ifndef PARTICLE_H
 #define PARTICLE_H
 
+#include "sim/movement.h"
 #include "sim/vec.h"
 
 class Algorithm;
@@ -14,10 +15,15 @@ public:
 
     Particle& operator=(const Particle& other);
 
+    void setAlgorithm(Algorithm* _algorithm);
+    void prepareAlgorithm();
+    Movement executeAlgorithm();
+
     int orientation; // global direction
     Vec headPos;
     int tailDir; // global direction
 
+protected:
     Algorithm* algorithm;
 };
 

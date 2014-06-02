@@ -18,8 +18,8 @@ System::System()
     rng.seed(seed);
 }
 
-System::System(const System* other) :
-    particles(other->particles)
+System::System(const System& other)
+    : particles(other.particles)
 {
 }
 
@@ -33,7 +33,8 @@ void System::round()
     auto index = dist(rng);
 
     Particle& p = particles[index];
-    Movement m = p.algorithm->execute();
+    p.prepareAlgorithm();
+    Movement m = p.executeAlgorithm();
 
     if(m.type == MovementType::Idle) {
         return;

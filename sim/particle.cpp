@@ -40,3 +40,19 @@ Particle& Particle::operator=(const Particle& other)
 
     return *this;
 }
+
+void Particle::setAlgorithm(Algorithm* _algorithm)
+{
+    delete algorithm;
+    algorithm = _algorithm;
+}
+
+void Particle::prepareAlgorithm()
+{
+    algorithm->expanded = (tailDir != -1);
+}
+
+Movement Particle::executeAlgorithm()
+{
+    return algorithm->execute();
+}

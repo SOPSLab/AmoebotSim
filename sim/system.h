@@ -10,7 +10,7 @@ class System
 {
 public:
     System();
-    System(const System* other);
+    System(const System& other);
 
     void round();
 

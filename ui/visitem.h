@@ -3,6 +3,7 @@
 
 #include <array>
 
+#include <QMutex>
 #include <QOpenGLFunctions_2_0>
 #include <QOpenGLTexture>
 #include <QPointF>
@@ -46,8 +47,8 @@ protected:
     void drawParticles();
 
     static Quad calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight);
-    inline static QPointF gridToWorld(Vec pos, const int dir = -1);
-    inline void particleQuad(const QPointF p);
+    static QPointF gridToWorld(Vec pos, const int dir = -1);
+    void particleQuad(const QPointF p);
 
     void mousePressEvent(QMouseEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
@@ -77,9 +78,11 @@ protected:
     float zoom;
 
     System* system;
+
+    QMutex systemMutex;
 };
 
-QPointF VisItem::gridToWorld(Vec pos, const int dir)
+inline QPointF VisItem::gridToWorld(Vec pos, const int dir)
 {
     if(dir != -1) {
         pos = pos.vecInDir(dir);
@@ -87,7 +90,7 @@ QPointF VisItem::gridToWorld(Vec pos, const int dir)
     return QPointF(pos.x + 0.5f * pos.y, pos.y * triangleHeight);
 }
 
-void VisItem::particleQuad(const QPointF p)
+inline void VisItem::particleQuad(const QPointF p)
 {
     glfn->glBegin(GL_QUADS);
     glfn->glTexCoord2d(0, 0);
