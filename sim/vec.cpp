@@ -1,6 +1,6 @@
-#include "vec.h"
-
 #include <QtGlobal>
+
+#include "sim/vec.h"
 
 Vec::Vec()
 {

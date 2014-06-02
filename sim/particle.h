@@ -1,7 +1,7 @@
 #ifndef PARTICLE_H
 #define PARTICLE_H
 
-#include "vec.h"
+#include "sim/vec.h"
 
 class Algorithm;
 

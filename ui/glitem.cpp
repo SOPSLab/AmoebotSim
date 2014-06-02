@@ -4,7 +4,7 @@
 #include <QSurfaceFormat>
 #include <QWindow>
 
-#include "glitem.h"
+#include "ui/glitem.h"
 
 GLItem::GLItem(QQuickItem* parent) :
     QQuickItem(parent),

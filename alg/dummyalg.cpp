@@ -1,4 +1,4 @@
-#include "dummyalg.h"
+#include "alg/dummyalg.h"
 
 DummyAlg::DummyAlg()
     : expanded(false)
