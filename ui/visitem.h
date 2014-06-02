@@ -1,13 +1,13 @@
 #ifndef VISITEM_H
 #define VISITEM_H
 
-#include <array>
+#include <cmath>
 
 #include <QMutex>
-#include <QOpenGLFunctions_2_0>
 #include <QOpenGLTexture>
 #include <QPointF>
 
+#include "sim/particle.h"
 #include "sim/vec.h"
 #include "ui/glitem.h"
 
@@ -39,16 +39,16 @@ protected slots:
     virtual void sync();
     virtual void initialize();
     virtual void paint();
+    virtual void deinitialize();
 
 protected:
-    void loadTextures();
     void setupCamera();
     void drawGrid();
     void drawParticles();
+    void drawParticle(const Particle& p);
 
     static Quad calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight);
-    static QPointF gridToWorld(Vec pos, const int dir = -1);
-    void particleQuad(const QPointF p);
+    static QPointF gridToWorld(Vec pos);
 
     void mousePressEvent(QMouseEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
@@ -65,7 +65,6 @@ protected:
 
     QOpenGLTexture* gridTex;
     QOpenGLTexture* particleTex;
-    std::array<QOpenGLTexture*, 6> particleLineTex;
 
     // these variables are used by two threads
     // variables with suffix Gui are used by the gui thread
@@ -81,27 +80,5 @@ protected:
 
     QMutex systemMutex;
 };
-
-inline QPointF VisItem::gridToWorld(Vec pos, const int dir)
-{
-    if(dir != -1) {
-        pos = pos.vecInDir(dir);
-    }
-    return QPointF(pos.x + 0.5f * pos.y, pos.y * triangleHeight);
-}
-
-inline void VisItem::particleQuad(const QPointF p)
-{
-    glfn->glBegin(GL_QUADS);
-    glfn->glTexCoord2d(0, 0);
-    glfn->glVertex2f(p.x() - 1.0f, p.y() - 1.0f);
-    glfn->glTexCoord2d(1, 0);
-    glfn->glVertex2f(p.x() + 1.0f, p.y() - 1.0f);
-    glfn->glTexCoord2d(1, 1);
-    glfn->glVertex2f(p.x() + 1.0f, p.y() + 1.0f);
-    glfn->glTexCoord2d(0, 1);
-    glfn->glVertex2f(p.x() - 1.0f, p.y() + 1.0f);
-    glfn->glEnd();
-}
 
 #endif // VISITEM_H

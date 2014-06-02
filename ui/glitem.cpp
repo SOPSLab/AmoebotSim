@@ -17,9 +17,6 @@ GLItem::GLItem(QQuickItem* parent) :
 void GLItem::handleWindowChanged(QQuickWindow* window)
 {
     if(window != nullptr) {
-        connect(window, &QQuickWindow::beforeRendering, this, &GLItem::delegatePaint, Qt::DirectConnection);
-        connect(window, &QQuickWindow::beforeSynchronizing, this, &GLItem::sync, Qt::DirectConnection);
-
         window->setClearBeforeRendering(false);
 
         QSurfaceFormat format;
@@ -33,6 +30,10 @@ void GLItem::handleWindowChanged(QQuickWindow* window)
         format.setDepthBufferSize(24);
         format.setStencilBufferSize(8);
         window->setFormat(format);
+
+        connect(window, &QQuickWindow::beforeSynchronizing, this, &GLItem::sync, Qt::DirectConnection);
+        connect(window, &QQuickWindow::beforeRendering, this, &GLItem::delegatePaint, Qt::DirectConnection);
+        connect(window, &QQuickWindow::sceneGraphAboutToStop, this, &GLItem::delegeteDeinitialize, Qt::DirectConnection);
     }
 }
 
@@ -41,12 +42,20 @@ void GLItem::delegatePaint()
     if(!initialized) {
         // ownership goes to context
         glfn = window()->openglContext()->versionFunctions<QOpenGLFunctions_2_0>();
+        Q_ASSERT(glfn != nullptr);
         glfn->initializeOpenGLFunctions();
         initialize();
         initialized = true;
     }
 
     paint();
+}
+
+void GLItem::delegeteDeinitialize()
+{
+    initialized = false;
+    deinitialize();
+    glfn = nullptr;
 }
 
 int GLItem::width() const

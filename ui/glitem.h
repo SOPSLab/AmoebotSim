@@ -15,11 +15,13 @@ protected slots:
     virtual void sync() = 0;
     virtual void initialize() = 0;
     virtual void paint() = 0;
+    virtual void deinitialize() = 0;
 
 private slots:
     void handleWindowChanged(QQuickWindow* window);
 
     void delegatePaint();
+    void delegeteDeinitialize();
 
 protected:
     int width() const;

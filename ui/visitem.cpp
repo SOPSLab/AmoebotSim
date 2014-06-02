@@ -1,7 +1,9 @@
+#include <array>
 #include <cmath>
 
 #include <QImage>
 #include <QMutexLocker>
+#include <QOpenGLFunctions_2_0>
 #include <QQuickWindow>
 
 #include "sim/particle.h"
@@ -12,6 +14,8 @@ const float VisItem::triangleHeight = sqrtf(0.75f);
 
 VisItem::VisItem(QQuickItem* parent) :
     GLItem(parent),
+    gridTex(nullptr),
+    particleTex(nullptr),
     zoomGui(zoomInit),
     system(nullptr)
 {
@@ -34,7 +38,14 @@ void VisItem::sync()
 
 void VisItem::initialize()
 {
-    loadTextures();
+    gridTex = new QOpenGLTexture(QImage(":/textures/grid.png").mirrored());
+    gridTex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+    gridTex->setMagnificationFilter(QOpenGLTexture::Linear);
+    gridTex->setWrapMode(QOpenGLTexture::Repeat);
+
+    particleTex = new QOpenGLTexture(QImage(":textures/particle.png").mirrored());
+    particleTex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+    particleTex->setMagnificationFilter(QOpenGLTexture::Linear);
 }
 
 void VisItem::paint()
@@ -61,22 +72,13 @@ void VisItem::paint()
     drawParticles();
 }
 
-void VisItem::loadTextures()
+void VisItem::deinitialize()
 {
-    gridTex = new QOpenGLTexture(QImage(":/textures/grid.png").mirrored());
-    gridTex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
-    gridTex->setMagnificationFilter(QOpenGLTexture::Linear);
-    gridTex->setWrapMode(QOpenGLTexture::Repeat);
+    delete particleTex;
+    particleTex = nullptr;
 
-    particleTex = new QOpenGLTexture(QImage(":textures/particle.png").mirrored());
-    particleTex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
-    particleTex->setMagnificationFilter(QOpenGLTexture::Linear);
-
-    for(int i = 0; i < 6; i++) {
-        particleLineTex[i] = new QOpenGLTexture(QImage(QString(":/textures/particleLine%1.png").arg(i)).mirrored());
-        particleLineTex[i]->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
-        particleLineTex[i]->setMagnificationFilter(QOpenGLTexture::Linear);
-    }
+    delete gridTex;
+    gridTex = nullptr;
 }
 
 void VisItem::setupCamera()
@@ -128,22 +130,44 @@ void VisItem::drawGrid()
 
 void VisItem::drawParticles()
 {
+    particleTex->bind();
+    glfn->glBegin(GL_QUADS);
     QMutexLocker locker(&systemMutex);
     if(system != nullptr) {
         for(auto it = system->particles.begin(); it != system->particles.end(); ++it) {
-            Particle& p = *it;
-            if(p.tailDir == -1) {
-                particleTex->bind();
-                particleQuad(gridToWorld(p.headPos));
-            } else {
-                particleLineTex[p.tailDir]->bind();
-                particleQuad(gridToWorld(p.headPos));
-
-                particleTex->bind();
-                particleQuad(gridToWorld(p.headPos, p.tailDir));
-            }
+            drawParticle(*it);
         }
     }
+    glfn->glEnd();
+}
+
+void VisItem::drawParticle(const Particle& p)
+{
+    // these values are a consequence of how the particle texture was created
+    constexpr std::array<QPointF, 7> particleTexOffsets =
+    {{
+        QPointF(0.0f / 3.0f , 0.0f / 3.0f),
+        QPointF(1.0f / 3.0f , 0.0f / 3.0f),
+        QPointF(2.0f / 3.0f , 0.0f / 3.0f),
+        QPointF(0.0f / 3.0f , 1.0f / 3.0f),
+        QPointF(1.0f / 3.0f , 1.0f / 3.0f),
+        QPointF(2.0f / 3.0f , 1.0f / 3.0f),
+        QPointF(0.0f / 3.0f , 2.0f / 3.0f)
+    }};
+    constexpr float oneThird = 1.0f / 3.0f;
+    constexpr float halfQuadSideLength = 256.0f / 218.0f;
+
+    auto pos = gridToWorld(p.headPos);
+    const QPointF& texOffset = particleTexOffsets[p.tailDir + 1];
+
+    glfn->glTexCoord2f(texOffset.x(), texOffset.y());
+    glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
+    glfn->glTexCoord2f(texOffset.x() + oneThird, texOffset.y());
+    glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() - halfQuadSideLength);
+    glfn->glTexCoord2f(texOffset.x() + oneThird, texOffset.y() + oneThird);
+    glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
+    glfn->glTexCoord2f(texOffset.x(), texOffset.y() + oneThird);
+    glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
 }
 
 VisItem::Quad VisItem::calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight)
@@ -156,6 +180,11 @@ VisItem::Quad VisItem::calculateView(QPointF focusPos, float zoom, int viewportW
     view.bottom  = focusPos.y() - halfZoomRec * viewportHeight;
     view.top     = focusPos.y() + halfZoomRec * viewportHeight;
     return view;
+}
+
+QPointF VisItem::gridToWorld(Vec pos)
+{
+    return QPointF(pos.x + 0.5f * pos.y, pos.y * triangleHeight);
 }
 
 void VisItem::mousePressEvent(QMouseEvent* e)
