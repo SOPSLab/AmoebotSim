@@ -13,6 +13,8 @@ class QMouseEvent;
 class QOpenGLTexture;
 class QWheelEvent;
 
+class System;
+
 class VisItem : public GLItem
 {
     Q_OBJECT
@@ -27,6 +29,9 @@ protected:
 
 public:
     explicit VisItem(QQuickItem* parent = 0);
+
+public slots:
+    void updateSystem(System* _system);
 
 protected slots:
     virtual void sync();
@@ -71,6 +76,8 @@ protected:
     QPointF focusPos;
     float zoomGui;
     float zoom;
+
+    System* system;
 };
 
 QPointF VisItem::gridToWorld(const int x, const int y)

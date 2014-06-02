@@ -10,7 +10,13 @@ ApplicationWindow {
     minimumHeight: 600
     title: "AmoebotSim"
 
+    signal start()
+    signal stop()
+    signal round()
+    signal back()
+
     VisItem {
+        id: vis
         anchors.fill: parent
     }
 
@@ -81,13 +87,15 @@ ApplicationWindow {
         }
 
         A_Button {
-            id: startButton
+            id: startStopButton
             text: "start"
 
             onClicked: {
                 if(text == "start") {
+                    start()
                     text = "stop"
                 } else {
+                    stop()
                     text = "start"
                 }
             }
@@ -96,11 +104,17 @@ ApplicationWindow {
         A_Button {
             id: roundButton
             text: "round"
+            onClicked: {
+                round()
+            }
         }
 
         A_Button {
             id: backButton
             text: "back"
+            onClicked: {
+                back()
+            }
         }
     }
 }

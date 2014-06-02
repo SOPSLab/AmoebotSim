@@ -12,11 +12,21 @@ win32:RC_FILE = res/pss.rc
 SOURCES += \
     main/main.cpp\
     ui/glitem.cpp \
-    ui/visitem.cpp
+    ui/visitem.cpp \
+    sim/simulator.cpp \
+    sim/system.cpp \
+    sim/particle.cpp \
+    sim/vec.cpp \
+    main/application.cpp
 
 HEADERS += \
     ui/glitem.h \
-    ui/visitem.h
+    ui/visitem.h \
+    sim/simulator.h \
+    sim/system.h \
+    sim/particle.h \
+    sim/vec.h \
+    main/application.h
 
 RESOURCES += \
     res/qml.qrc \

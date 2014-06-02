@@ -3,15 +3,25 @@
 #include <QImage>
 #include <QQuickWindow>
 
-#include "visitem.h"
+#include "sim/particle.h"
+#include "sim/system.h"
+#include "ui/visitem.h"
 
 const float VisItem::triangleHeight = sqrtf(0.75f);
 
 VisItem::VisItem(QQuickItem* parent) :
     GLItem(parent),
-    zoomGui(zoomInit)
+    zoomGui(zoomInit),
+    system(nullptr)
 {
     setAcceptedMouseButtons(Qt::LeftButton);
+}
+
+void VisItem::updateSystem(System* _system)
+{
+    delete system;
+    system = _system;
+    window()->update();
 }
 
 void VisItem::sync()
@@ -47,9 +57,12 @@ void VisItem::paint()
 
     drawGrid();
 
-    drawParticle(0, 0, 1);
-    drawParticle(-1, 1);
-    drawParticle(1, 0, 5);
+    if(system != nullptr) {
+        for(auto it = system->particles.begin(); it != system->particles.end(); ++it) {
+            Particle& p = *it;
+            drawParticle(p.pos.x, p.pos.y);
+        }
+    }
 }
 
 void VisItem::loadTextures()
