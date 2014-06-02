@@ -5,7 +5,7 @@
 Simulator::Simulator(QObject* parent) :
     QObject(parent)
 {
-    Particle p(0, Vec(0, 0), 2);
+    Particle p(0, Vec(0, 0), -1);
     p.setAlgorithm(new DummyAlg());
     system.particles.push_back(p);
 
