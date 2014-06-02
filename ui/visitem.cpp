@@ -155,7 +155,7 @@ void VisItem::drawParticle(const Particle& p)
         QPointF(0.0f / 3.0f , 2.0f / 3.0f)
     }};
     constexpr float oneThird = 1.0f / 3.0f;
-    constexpr float halfQuadSideLength = 256.0f / 218.0f;
+    constexpr float halfQuadSideLength = 256.0f / 220.0f;
 
     auto pos = gridToWorld(p.headPos);
     const QPointF& texOffset = particleTexOffsets[p.tailDir + 1];

@@ -27,9 +27,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.28"
-     inkscape:cx="124.75561"
-     inkscape:cy="459.73493"
+     inkscape:zoom="0.90509668"
+     inkscape:cx="218.89484"
+     inkscape:cy="491.97716"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -73,19 +73,20 @@
      id="layer1"
      transform="translate(0,-160.3622)">
     <path
-       style="fill:none;stroke:#cccccc;stroke-width:25;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-       d="m 12.500075,606.3622 489.999855,0"
+       style="fill:none;stroke:#cccccc;stroke-width:20;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 10.000147,606.3622 494.999703,0"
        id="path2987"
        inkscape:connector-curvature="0" />
     <path
-       style="fill:none;stroke:#cccccc;stroke-width:25;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
-       d="m 0,160.3622 257.5,446 257.5,-446 z"
-       id="path3779"
-       inkscape:connector-curvature="0" />
+       style="fill:none;stroke:#cccccc;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       d="M 0,0 515,0 257.5,446 z"
+       id="path3784"
+       inkscape:connector-curvature="0"
+       transform="translate(0,160.3622)" />
     <path
-       style="fill:none;stroke:#cccccc;stroke-width:25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-       d="m 0,1052.3622 257.5,-446 257.5,446 z"
-       id="path3779-7"
+       style="fill:none;stroke:#cccccc;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="M 515,1052.3622 -3e-6,1052.3622 257.5,606.3622 z"
+       id="path3784-7"
        inkscape:connector-curvature="0" />
   </g>
 </svg>
