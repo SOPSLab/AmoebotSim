@@ -4,7 +4,6 @@
 #include <cmath>
 
 #include <QMutex>
-#include <QOpenGLTexture>
 #include <QPointF>
 
 #include "sim/particle.h"

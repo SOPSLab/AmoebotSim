@@ -4,6 +4,7 @@
 #include <QImage>
 #include <QMutexLocker>
 #include <QOpenGLFunctions_2_0>
+#include <QOpenGLTexture>
 #include <QQuickWindow>
 
 #include "sim/particle.h"

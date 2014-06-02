@@ -109,12 +109,12 @@ ApplicationWindow {
             }
         }
 
-//        A_Button {
-//            id: backButton
-//            text: "back"
-//            onClicked: {
-//                back()
-//            }
-//        }
+        A_Button {
+            id: backButton
+            text: "back"
+            onClicked: {
+                back()
+            }
+        }
     }
 }
