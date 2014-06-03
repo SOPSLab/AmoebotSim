@@ -95,3 +95,13 @@ int Algorithm::getTailContractLabel() const
 {
     return tailContractLabel;
 }
+
+bool Algorithm::headHasZeroEdge() const
+{
+    for(auto it = headLabels.cbegin(); it != headLabels.cend(); ++it) {
+        if(*it == 0) {
+            return true;
+        }
+    }
+    return false;
+}

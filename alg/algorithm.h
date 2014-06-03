@@ -22,6 +22,7 @@ public:
     const std::vector<int>& getTailLabels() const;
     int getHeadContractLabel() const;
     int getTailContractLabel() const;
+    bool headHasZeroEdge() const;
 
 private:
     bool expanded;
