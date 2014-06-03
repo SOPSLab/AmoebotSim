@@ -27,7 +27,7 @@ protected:
     std::mt19937 rng;
 
     std::deque<Particle> particles;
-    std::map<Vec, Particle*> particleMap;
+    std::map<Vec, Particle&> particleMap;
 };
 
 inline int System::posMod(const int a, const int n)

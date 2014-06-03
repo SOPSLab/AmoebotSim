@@ -36,9 +36,9 @@ bool System::insert(const Particle& p)
     }
 
     particles.push_back(p);
-    particleMap.insert(std::pair<Vec, Particle*>(p.headPos, &particles.back()));
+    particleMap.insert(std::pair<Vec, Particle&>(p.headPos, particles.back()));
     if(p.tailDir != -1) {
-        particleMap.insert(std::pair<Vec, Particle*>(p.tailPos(), &particles.back()));
+        particleMap.insert(std::pair<Vec, Particle&>(p.tailPos(), particles.back()));
     }
     return true;
 }
@@ -74,8 +74,15 @@ void System::round()
             p = backup;
         } else if(0 <= m.dir && m.dir <= 5) {
             int dir = posMod(p.orientation + m.dir, 6);
-            p.headPos = p.headPos.vecInDir(dir);
-            p.tailDir = posMod(dir + 3, 6);
+            Vec newHeadPos = p.headPos.vecInDir(dir);
+            if(particleMap.find(newHeadPos) == particleMap.end()) {
+                particleMap.insert(std::pair<Vec, Particle&>(newHeadPos, p));
+                p.headPos = newHeadPos;
+                p.tailDir = posMod(dir + 3, 6);
+            } else {
+                qDebug() << "collision";
+                p = backup;
+            }
         } else {
             qDebug() << "invalid expansion index";
             p = backup;
@@ -86,9 +93,11 @@ void System::round()
             p = backup;
         } else if(p.tailDir == p.orientation) {
             if(m.dir == 0) {        // head contraction
+                particleMap.erase(p.headPos);
                 p.headPos = p.tailPos();
                 p.tailDir = -1;
             } else if(m.dir == 5) { // tail contraction
+                particleMap.erase(p.tailPos());
                 p.tailDir = -1;
             } else {                // invalid contraction
                 qDebug() << "invalid contraction index";
@@ -96,9 +105,11 @@ void System::round()
             }
         } else if(p.tailDir == (p.orientation + 1) % 6) {
             if(m.dir == 1) {        // head contraction
+                particleMap.erase(p.headPos);
                 p.headPos = p.tailPos();
                 p.tailDir = -1;
             } else if(m.dir == 6) { // tail contraction
+                particleMap.erase(p.tailPos());
                 p.tailDir = -1;
             } else {                // invalid contraction
                 qDebug() << "invalid contraction index";
@@ -106,9 +117,11 @@ void System::round()
             }
         } else if(p.tailDir == (p.orientation + 2) % 6) {
             if(m.dir == 4) {        // head contraction
+                particleMap.erase(p.headPos);
                 p.headPos = p.tailPos();
                 p.tailDir = -1;
             } else if(m.dir == 9) { // tail contraction
+                particleMap.erase(p.tailPos());
                 p.tailDir = -1;
             } else {                // invalid contraction
                 qDebug() << "invalid contraction index";
@@ -116,9 +129,11 @@ void System::round()
             }
         } else if(p.tailDir == (p.orientation + 3) % 6) {
             if(m.dir == 5) {        // head contraction
+                particleMap.erase(p.headPos);
                 p.headPos = p.tailPos();
                 p.tailDir = -1;
             } else if(m.dir == 0) { // tail contraction
+                particleMap.erase(p.tailPos());
                 p.tailDir = -1;
             } else {                // invalid contraction
                 qDebug() << "invalid contraction index";
@@ -126,9 +141,11 @@ void System::round()
             }
         } else if(p.tailDir == (p.orientation + 4) % 6) {
             if(m.dir == 6) {        // head contraction
+                particleMap.erase(p.headPos);
                 p.headPos = p.tailPos();
                 p.tailDir = -1;
             } else if(m.dir == 1) { // tail contraction
+                particleMap.erase(p.tailPos());
                 p.tailDir = -1;
             } else {                // invalid contraction
                 qDebug() << "invalid contraction index";
@@ -136,9 +153,11 @@ void System::round()
             }
         } else if(p.tailDir == (p.orientation + 5) % 6) {
             if(m.dir == 9) {        // head contraction
+                particleMap.erase(p.headPos);
                 p.headPos = p.tailPos();
                 p.tailDir = -1;
             } else if(m.dir == 4) { // tail contraction
+                particleMap.erase(p.tailPos());
                 p.tailDir = -1;
             } else {                // invalid contraction
                 qDebug() << "invalid contraction index";
