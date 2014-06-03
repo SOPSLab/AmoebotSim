@@ -42,11 +42,12 @@ protected slots:
 
 protected:
     void setupCamera();
-    void drawGrid();
-    void drawParticles();
-    void drawParticle(const Particle& p);
+    void drawGrid(const Quad& view);
+    void drawParticles(const Quad& view);
+    void drawParticle(const Particle& p, const Quad& view);
 
     static Quad calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight);
+    static bool inView(const QPointF& headWorldPos, const Quad& view);
     static QPointF gridToWorld(Vec pos);
 
     void mousePressEvent(QMouseEvent* e);

@@ -69,8 +69,9 @@ void VisItem::paint()
 
     setupCamera();
 
-    drawGrid();
-    drawParticles();
+    Quad view = calculateView(focusPos, zoom, width(), height());
+    drawGrid(view);
+    drawParticles(view);
 }
 
 void VisItem::deinitialize()
@@ -92,7 +93,7 @@ void VisItem::setupCamera()
     glfn->glOrtho(view.left, view.right, view.bottom, view.top, 1, -1);
 }
 
-void VisItem::drawGrid()
+void VisItem::drawGrid(const Quad& view)
 {
     // Textures have to contain an integer number of pixels, but a triangle in our grid has irrational height.
     // Still, we want to tile / repeat the texture to get a background grid.
@@ -101,8 +102,6 @@ void VisItem::drawGrid()
     // The following value represents the undistorted height of the part of the grid contained in the texture
     // and has to be considered below in order to distord the texture.
     const float gridTexHeight = 2.0f * triangleHeight;
-
-    Quad view = calculateView(focusPos, zoom, width(), height());
 
     // Coordinate sytem voodoo:
     // Calculates the texture coordinates of the corners of the shown part of the grid.
@@ -129,20 +128,20 @@ void VisItem::drawGrid()
     glfn->glEnd();
 }
 
-void VisItem::drawParticles()
+void VisItem::drawParticles(const Quad& view)
 {
     particleTex->bind();
     glfn->glBegin(GL_QUADS);
     QMutexLocker locker(&systemMutex);
     if(system != nullptr) {
         for(auto it = system->particles.begin(); it != system->particles.end(); ++it) {
-            drawParticle(*it);
+            drawParticle(*it, view);
         }
     }
     glfn->glEnd();
 }
 
-void VisItem::drawParticle(const Particle& p)
+void VisItem::drawParticle(const Particle& p, const Quad& view)
 {
     // these values are a consequence of how the particle texture was created
     constexpr std::array<QPointF, 7> particleTexOffsets =
@@ -159,16 +158,17 @@ void VisItem::drawParticle(const Particle& p)
     constexpr float halfQuadSideLength = 256.0f / 220.0f;
 
     auto pos = gridToWorld(p.headPos);
-    const QPointF& texOffset = particleTexOffsets[p.tailDir + 1];
-
-    glfn->glTexCoord2f(texOffset.x(), texOffset.y());
-    glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
-    glfn->glTexCoord2f(texOffset.x() + oneThird, texOffset.y());
-    glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() - halfQuadSideLength);
-    glfn->glTexCoord2f(texOffset.x() + oneThird, texOffset.y() + oneThird);
-    glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
-    glfn->glTexCoord2f(texOffset.x(), texOffset.y() + oneThird);
-    glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
+    if(inView(pos, view)) {
+        const QPointF& texOffset = particleTexOffsets[p.tailDir + 1];
+        glfn->glTexCoord2f(texOffset.x(), texOffset.y());
+        glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
+        glfn->glTexCoord2f(texOffset.x() + oneThird, texOffset.y());
+        glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() - halfQuadSideLength);
+        glfn->glTexCoord2f(texOffset.x() + oneThird, texOffset.y() + oneThird);
+        glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
+        glfn->glTexCoord2f(texOffset.x(), texOffset.y() + oneThird);
+        glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
+    }
 }
 
 VisItem::Quad VisItem::calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight)
@@ -181,6 +181,15 @@ VisItem::Quad VisItem::calculateView(QPointF focusPos, float zoom, int viewportW
     view.bottom  = focusPos.y() - halfZoomRec * viewportHeight;
     view.top     = focusPos.y() + halfZoomRec * viewportHeight;
     return view;
+}
+
+bool VisItem::inView(const QPointF& headWorldPos, const Quad& view)
+{
+    constexpr float slack = 2.0f;
+    return  (headWorldPos.x() >= view.left   - slack) &&
+            (headWorldPos.x() <= view.right  + slack) &&
+            (headWorldPos.y() >= view.bottom - slack) &&
+            (headWorldPos.y() <= view.top    + slack);
 }
 
 QPointF VisItem::gridToWorld(Vec pos)
