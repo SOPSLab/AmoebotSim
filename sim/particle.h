@@ -16,7 +16,6 @@ public:
     Particle& operator=(const Particle& other);
 
     void setAlgorithm(Algorithm* _algorithm);
-    void prepareAlgorithm();
     Movement executeAlgorithm();
 
     int orientation; // global direction

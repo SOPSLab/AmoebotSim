@@ -33,7 +33,6 @@ void System::round()
     auto index = dist(rng);
 
     Particle& p = particles[index];
-    p.prepareAlgorithm();
     Movement m = p.executeAlgorithm();
 
     if(m.type == MovementType::Idle) {

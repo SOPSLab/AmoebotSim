@@ -5,6 +5,7 @@ DummyAlg::DummyAlg()
 }
 
 DummyAlg::DummyAlg(const DummyAlg& other)
+    : Algorithm(other)
 {
 }
 
@@ -14,7 +15,7 @@ DummyAlg::~DummyAlg()
 
 Movement DummyAlg::execute()
 {
-    if(expanded) {
+    if(isExpanded()) {
         return Movement(MovementType::Contract, 0);
     } else {
         return Movement(MovementType::Expand, 0);

@@ -9,12 +9,19 @@ class Algorithm
 {
 public:
     Algorithm();
+    Algorithm(const Algorithm& other);
     virtual ~Algorithm();
+
+    Movement delegateExecute();
 
     virtual Movement execute() = 0;
     virtual Algorithm* clone() = 0;
 
-public:
+    bool isExpanded() const;
+    std::vector<int> getHeadLabels() const;
+    std::vector<int> getTailLabels() const;
+
+private:
     bool expanded;
 
     std::vector<int> headLabels;

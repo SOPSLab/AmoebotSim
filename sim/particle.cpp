@@ -47,12 +47,7 @@ void Particle::setAlgorithm(Algorithm* _algorithm)
     algorithm = _algorithm;
 }
 
-void Particle::prepareAlgorithm()
-{
-    algorithm->expanded = (tailDir != -1);
-}
-
 Movement Particle::executeAlgorithm()
 {
-    return algorithm->execute();
+    return algorithm->delegateExecute();
 }
