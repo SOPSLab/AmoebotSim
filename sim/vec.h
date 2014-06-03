@@ -17,4 +17,6 @@ public:
     int x, y;
 };
 
+bool operator<(const Vec& v1, const Vec& v2);
+
 #endif // VEC_H

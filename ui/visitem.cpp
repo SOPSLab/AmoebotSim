@@ -134,8 +134,8 @@ void VisItem::drawParticles(const Quad& view)
     glfn->glBegin(GL_QUADS);
     QMutexLocker locker(&systemMutex);
     if(system != nullptr) {
-        for(auto it = system->particles.begin(); it != system->particles.end(); ++it) {
-            drawParticle(*it, view);
+        for(int i = 0; i < system->size(); ++i) {
+            drawParticle(system->at(i), view);
         }
     }
     glfn->glEnd();

@@ -7,7 +7,7 @@ Simulator::Simulator(QObject* parent) :
 {
     Particle p(0, Vec(0, 0), -1);
     p.setAlgorithm(new DummyAlg());
-    system.particles.push_back(p);
+    system.insert(p);
 
     roundTimer.setInterval(100);
     connect(&roundTimer, &QTimer::timeout, this, &Simulator::round);

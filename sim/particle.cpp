@@ -51,3 +51,8 @@ Movement Particle::executeAlgorithm()
 {
     return algorithm->delegateExecute();
 }
+
+Vec Particle::tailPos() const
+{
+    return headPos.vecInDir(tailDir);
+}

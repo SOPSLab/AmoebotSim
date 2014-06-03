@@ -2,9 +2,11 @@
 #define SYSTEM_H
 
 #include <deque>
+#include <map>
 #include <random>
 
-#include "particle.h"
+#include "sim/particle.h"
+#include "sim/vec.h"
 
 class System
 {
@@ -12,16 +14,20 @@ public:
     System();
     System(const System& other);
 
+    bool insert(const Particle& p);
+    const Particle& at(int index) const;
+    int size() const;
+
     void round();
 
 protected:
     static int posMod(const int a, const int n);
 
-public:
-    std::deque<Particle> particles;
-
 protected:
     std::mt19937 rng;
+
+    std::deque<Particle> particles;
+    std::map<Vec, Particle*> particleMap;
 };
 
 inline int System::posMod(const int a, const int n)

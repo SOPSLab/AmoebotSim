@@ -18,6 +18,8 @@ public:
     void setAlgorithm(Algorithm* _algorithm);
     Movement executeAlgorithm();
 
+    Vec tailPos() const;
+
 public:
     int orientation; // global direction
     Vec headPos;
