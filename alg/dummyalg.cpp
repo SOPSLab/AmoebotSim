@@ -1,13 +1,11 @@
 #include "alg/dummyalg.h"
 
 DummyAlg::DummyAlg()
-    : expandDir(0)
 {
 }
 
 DummyAlg::DummyAlg(const DummyAlg& other)
-    : Algorithm(other),
-      expandDir(other.expandDir)
+    : Algorithm(other)
 {
 }
 
@@ -18,10 +16,9 @@ DummyAlg::~DummyAlg()
 Movement DummyAlg::execute()
 {
     if(isExpanded()) {
-        return Movement(MovementType::Contract, getTailContractLabel());
+        return Movement(MovementType::HandoverContract, getTailContractLabel());
     } else {
-        expandDir = (expandDir + 1) % 6;
-        return Movement(MovementType::Expand, expandDir);
+        return Movement(MovementType::Expand, 0);
     }
 }
 

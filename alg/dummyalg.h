@@ -12,8 +12,6 @@ public:
 
     virtual Movement execute();
     virtual Algorithm* clone();
-
-    int expandDir;
 };
 
 #endif // DUMMYALG_H
