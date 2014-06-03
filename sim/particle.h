@@ -18,6 +18,7 @@ public:
     void setAlgorithm(Algorithm* _algorithm);
     Movement executeAlgorithm();
 
+public:
     int orientation; // global direction
     Vec headPos;
     int tailDir; // global direction
