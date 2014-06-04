@@ -1,4 +1,5 @@
 #include <chrono>
+#include <utility>
 
 #include <QDebug>
 
@@ -89,7 +90,7 @@ bool System::handleExpansion(Particle& p, int dir)
         return false; // invalid expansion index
     }
 
-    dir = posMod(p.orientation + dir, 6);
+    dir = posMod<6>(p.orientation + dir);
     Vec newHeadPos = p.headPos.vecInDir(dir);
 
     if(particleMap.find(newHeadPos) != particleMap.end()) {
@@ -98,7 +99,7 @@ bool System::handleExpansion(Particle& p, int dir)
 
     particleMap.insert(std::pair<Vec, Particle&>(newHeadPos, p));
     p.headPos = newHeadPos;
-    p.tailDir = posMod(dir + 3, 6);
+    p.tailDir = posMod<6>(dir + 3);
     return true;
 }
 
@@ -216,7 +217,7 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
                 p2 = backup;
                 continue; // invalid expansion index
             }
-            int expandDir = posMod(p2.orientation + m.dir, 6);
+            int expandDir = posMod<6>(p2.orientation + m.dir);
             Vec newHeadPos = p2.headPos.vecInDir(expandDir);
 
             // ensure that the node p2 wants to expand into is the node p wants to contract out of
@@ -252,7 +253,7 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
     particleMap.erase(handoverNode);
     if(handover) {
         handoverParticle->headPos = handoverNode;
-        handoverParticle->tailDir = posMod(handoverExpandDir + 3, 6);
+        handoverParticle->tailDir = posMod<6>(handoverExpandDir + 3);
         particleMap.insert(std::pair<Vec, Particle&>(handoverNode, *handoverParticle));
     }
 

@@ -23,7 +23,7 @@ public:
     bool handleContraction(Particle& p, int dir, bool isHandoverContraction);
 
 protected:
-    static int posMod(const int a, const int n);
+    template<int n> static int posMod(const int a);
 
 protected:
     std::mt19937 rng;
@@ -32,9 +32,9 @@ protected:
     std::map<Vec, Particle&> particleMap;
 };
 
-inline int System::posMod(const int a, const int n)
+template<int n> int System::posMod(const int a)
 {
-    return ((a % n) + n) % n;
+    return (a % n + n) % n;
 }
 
 #endif // SYSTEM_H
