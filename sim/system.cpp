@@ -133,7 +133,7 @@ void System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
 
     // determine whether the contraction direction is valid
     // and, if so, whether it is a head or a tail contraction
-    bool isHeadContract;
+    bool isHeadContract = false;
     if(p.tailDir == p.orientation) {
         if(dir == 0) {          // head contraction
             isHeadContract = true;

@@ -40,13 +40,15 @@ void VisItem::sync()
 void VisItem::initialize()
 {
     gridTex = new QOpenGLTexture(QImage(":/textures/grid.png").mirrored());
-    gridTex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
-    gridTex->setMagnificationFilter(QOpenGLTexture::Linear);
+    gridTex->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
     gridTex->setWrapMode(QOpenGLTexture::Repeat);
+    gridTex->bind();
+    gridTex->generateMipMaps();
 
     particleTex = new QOpenGLTexture(QImage(":textures/particle.png").mirrored());
-    particleTex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
-    particleTex->setMagnificationFilter(QOpenGLTexture::Linear);
+    particleTex->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
+    particleTex->bind();
+    particleTex->generateMipMaps();
 }
 
 void VisItem::paint()

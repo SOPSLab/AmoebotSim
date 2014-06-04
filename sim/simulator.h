@@ -1,27 +1,29 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
-#include <QObject>
 #include <QTimer>
 
 #include "system.h"
+
+class QTimer;
 
 class Simulator : public QObject
 {
     Q_OBJECT
 public:
-    explicit Simulator(QObject* parent = 0);
+    explicit Simulator();
 
 signals:
     void updateSystem(System* _system);
 
 public slots:
+    void init();
     void round();
     void start();
     void stop();
 
 protected:
-    QTimer roundTimer;
+    QTimer* roundTimer;
 
     System system;
 };

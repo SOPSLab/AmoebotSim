@@ -268,4 +268,5 @@ int Particle::labelOfNode(const Node node) const
         }
     }
     Q_ASSERT(false);
+    return -1; // avoid compiler warning
 }

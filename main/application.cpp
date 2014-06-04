@@ -23,6 +23,7 @@ Application::Application(int argc, char *argv[]) :
     connect(engine->rootObjects().at(0), SIGNAL(stop() ), sim, SLOT(stop() ));
     connect(engine->rootObjects().at(0), SIGNAL(round()), sim, SLOT(round()));
 
+    connect(simThread, SIGNAL(started()), sim, SLOT(init()));
     simThread->start();
 }
 

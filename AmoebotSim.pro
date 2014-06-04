@@ -7,7 +7,7 @@ TEMPLATE  = app
 macx:ICON = res/icon/icon.icns
 QMAKE_INFO_PLIST = res/Info.plist
 
-win32:RC_FILE = res/pss.rc
+win32:RC_FILE = res/AmoebotSim.rc
 
 SOURCES += \
     main/main.cpp\
