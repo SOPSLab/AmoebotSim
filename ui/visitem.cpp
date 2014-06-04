@@ -120,13 +120,13 @@ void VisItem::drawGrid(const Quad& view)
     gridTex->bind();
     glColor3f(0.8, 0.8, 0.8);
     glfn->glBegin(GL_QUADS);
-    glfn->glTexCoord2d(gridTexCoords.left, gridTexCoords.bottom);
+    glfn->glTexCoord2f(gridTexCoords.left, gridTexCoords.bottom);
     glfn->glVertex2f(view.left, view.bottom);
-    glfn->glTexCoord2d(gridTexCoords.right, gridTexCoords.bottom);
+    glfn->glTexCoord2f(gridTexCoords.right, gridTexCoords.bottom);
     glfn->glVertex2f(view.right, view.bottom);
-    glfn->glTexCoord2d(gridTexCoords.right, gridTexCoords.top);
+    glfn->glTexCoord2f(gridTexCoords.right, gridTexCoords.top);
     glfn->glVertex2f(view.right, view.top);
-    glfn->glTexCoord2d(gridTexCoords.left, gridTexCoords.top);
+    glfn->glTexCoord2f(gridTexCoords.left, gridTexCoords.top);
     glfn->glVertex2f(view.left, view.top);
     glfn->glEnd();
 }

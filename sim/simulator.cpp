@@ -19,6 +19,7 @@ void Simulator::init()
         roundTimer = new QTimer(this);
         roundTimer->setInterval(100);
         connect(roundTimer, &QTimer::timeout, this, &Simulator::round);
+        emit updateSystem(new System(system));
     }
 }
 
