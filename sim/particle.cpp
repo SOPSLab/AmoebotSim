@@ -61,7 +61,7 @@ void Particle::discard()
 
 const Flag* Particle::getFlagForNode(Node node)
 {
-    return algorithm->outFlags[labelOfNode(node)];
+    return algorithm->outFlags[labelOfNeighboringNode(node)];
 }
 
 Node Particle::tail() const
@@ -69,7 +69,7 @@ Node Particle::tail() const
     return head.nodeInDir(tailDir);
 }
 
-Node Particle::nodeIncidentToLabel(const int label) const
+Node Particle::occupiedNodeIncidentToLabel(const int label) const
 {
     if(tailDir == -1) {
         Q_ASSERT(0 <= label && label <= 5);
@@ -116,7 +116,7 @@ Node Particle::nodeIncidentToLabel(const int label) const
     }
 }
 
-Node Particle::nodeReachedViaLabel(const int label) const
+Node Particle::neighboringNodeReachedViaLabel(const int label) const
 {
     if(tailDir == -1) {
         Q_ASSERT(0 <= label && label <= 5);
@@ -259,11 +259,11 @@ Node Particle::nodeReachedViaLabel(const int label) const
     }
 }
 
-int Particle::labelOfNode(const Node node) const
+int Particle::labelOfNeighboringNode(const Node node) const
 {
     int labelLimit = tailDir == -1 ? 6 : 10;
     for(int label = 0; label < labelLimit; label++) {
-        if(nodeReachedViaLabel(label) == node) {
+        if(neighboringNodeReachedViaLabel(label) == node) {
             return label;
         }
     }

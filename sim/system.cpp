@@ -86,11 +86,11 @@ std::array<const Flag*, 10> System::assembleFlags(Particle& p)
             continue;
         }
 
-        auto neighborIt = particleMap.find(p.nodeReachedViaLabel(label));
+        auto neighborIt = particleMap.find(p.neighboringNodeReachedViaLabel(label));
         if(neighborIt == particleMap.end()) {
             flags[label] = nullptr;
         } else {
-            auto incidentNode = p.nodeIncidentToLabel(label);
+            auto incidentNode = p.occupiedNodeIncidentToLabel(label);
             flags[label] = neighborIt->second.getFlagForNode(incidentNode);
         }
     }
@@ -249,7 +249,7 @@ void System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
             Node newHead = p2.head.nodeInDir(expandDir);
 
             // ensure that the node p2 wants to expand into is the node p wants to contract out of
-            if( (isHeadContract && newHead != p.head) ||
+            if( ( isHeadContract && newHead != p.head) ||
                 (!isHeadContract && newHead != p.tail())) {
                 p2.discard();
                 continue;

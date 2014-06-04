@@ -23,9 +23,9 @@ public:
     const Flag* getFlagForNode(Node node);
 
     Node tail() const;
-    Node nodeIncidentToLabel(const int label) const;
-    Node nodeReachedViaLabel(const int label) const;
-    int labelOfNode(const Node node) const;
+    Node occupiedNodeIncidentToLabel(const int label) const;
+    Node neighboringNodeReachedViaLabel(const int label) const;
+    int labelOfNeighboringNode(const Node node) const;
 
     int headColor() const;
     int tailColor() const;
