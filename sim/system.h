@@ -19,6 +19,8 @@ public:
     int size() const;
 
     void round();
+    bool handleExpansion(Particle& p, int dir);
+    bool handleContraction(Particle& p, int dir, bool isHandoverContraction);
 
 protected:
     static int posMod(const int a, const int n);
