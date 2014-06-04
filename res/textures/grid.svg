@@ -22,14 +22,14 @@
      id="defs4" />
   <sodipodi:namedview
      id="base"
-     pagecolor="#cccccc"
+     pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.90509668"
-     inkscape:cx="218.89484"
-     inkscape:cy="491.97716"
+     inkscape:cx="347.05794"
+     inkscape:cy="422.37134"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -58,7 +58,7 @@
      id="layer2"
      inkscape:label="Helper Grid"
      sodipodi:insensitive="true"
-     style="display:none">
+     style="display:inline">
     <rect
        style="fill:#ff0000;fill-opacity:1;stroke:none"
        id="rect3775"
@@ -73,18 +73,18 @@
      id="layer1"
      transform="translate(0,-160.3622)">
     <path
-       style="fill:none;stroke:#cccccc;stroke-width:20;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       style="fill:none;stroke:#ffffff;stroke-width:20;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        d="m 10.000147,606.3622 494.999703,0"
        id="path2987"
        inkscape:connector-curvature="0" />
     <path
-       style="fill:none;stroke:#cccccc;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       style="fill:none;stroke:#ffffff;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
        d="M 0,0 515,0 257.5,446 z"
        id="path3784"
        inkscape:connector-curvature="0"
        transform="translate(0,160.3622)" />
     <path
-       style="fill:none;stroke:#cccccc;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       style="fill:none;stroke:#ffffff;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        d="M 515,1052.3622 -3e-6,1052.3622 257.5,606.3622 z"
        id="path3784-7"
        inkscape:connector-curvature="0" />

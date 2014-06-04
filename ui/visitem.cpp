@@ -118,6 +118,7 @@ void VisItem::drawGrid(const Quad& view)
 
     // Draw screen-filling quad with gridTex according to above texture coordinates.
     gridTex->bind();
+    glColor3f(0.8, 0.8, 0.8);
     glfn->glBegin(GL_QUADS);
     glfn->glTexCoord2d(gridTexCoords.left, gridTexCoords.bottom);
     glfn->glVertex2f(view.left, view.bottom);
@@ -148,19 +149,20 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
     // these values are a consequence of how the particle texture was created
     constexpr std::array<QPointF, 7> particleTexOffsets =
     {{
-        QPointF(0.0f / 3.0f , 0.0f / 3.0f),
-        QPointF(1.0f / 3.0f , 0.0f / 3.0f),
-        QPointF(2.0f / 3.0f , 0.0f / 3.0f),
-        QPointF(0.0f / 3.0f , 1.0f / 3.0f),
-        QPointF(1.0f / 3.0f , 1.0f / 3.0f),
-        QPointF(2.0f / 3.0f , 1.0f / 3.0f),
-        QPointF(0.0f / 3.0f , 2.0f / 3.0f)
+         QPointF(0.0f / 3.0f , 0.0f / 3.0f),
+         QPointF(1.0f / 3.0f , 0.0f / 3.0f),
+         QPointF(2.0f / 3.0f , 0.0f / 3.0f),
+         QPointF(0.0f / 3.0f , 1.0f / 3.0f),
+         QPointF(1.0f / 3.0f , 1.0f / 3.0f),
+         QPointF(2.0f / 3.0f , 1.0f / 3.0f),
+         QPointF(0.0f / 3.0f , 2.0f / 3.0f)
     }};
     constexpr float oneThird = 1.0f / 3.0f;
     constexpr float halfQuadSideLength = 256.0f / 220.0f;
 
     auto pos = nodeToWorldCoord(p.head);
     if(inView(pos, view)) {
+        glColor3f(0, 0, 0);
         const QPointF& texOffset = particleTexOffsets[p.tailDir + 1];
         glfn->glTexCoord2f(texOffset.x(), texOffset.y());
         glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
