@@ -161,16 +161,15 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
         }
     }
 
-    // look for a particle that wants to join in the action to do a handover
-    // if such a particle is found, do a handover
     bool handover = false;
     Particle* handoverParticle = nullptr;
     int handoverExpandDir = -1;
 
+    // decide whether a handover should be attempted
     auto dist = std::uniform_int_distribution<int>(0, 1);
-    bool attemptHandover = dist(rng);
-
-    if(isHandoverContraction || attemptHandover) {
+    bool attemptHandover = isHandoverContraction || dist(rng);
+    if(attemptHandover) {
+        // look for a particle that wants to join in the action to do a handover
         std::deque<int> neighborDirs = {0, 1, 2, 3, 4, 5};;
         while(neighborDirs.size() > 0) {
             // select a remaining direction from neighborDirs
@@ -205,17 +204,17 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
 
             // check whether p2 wants to expand and into which node
             if(p2.tailDir != -1) {
-                continue;
+                continue; // already expanded particle cannot expand
             }
             Particle backup = p2;
             Movement m = p2.executeAlgorithm();
             if(m.type != MovementType::Expand) {
                 p2 = backup;
-                continue;
+                continue; // we are only interested in expanding particles
             }
             if(m.dir < 0 || m.dir > 5) {
                 p2 = backup;
-                continue;
+                continue; // invalid expansion index
             }
             int expandDir = posMod(p2.orientation + m.dir, 6);
             Vec newHeadPos = p2.headPos.vecInDir(expandDir);
@@ -227,7 +226,8 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
                 continue;
             }
 
-            // successful handover! the particle will be changed accordingly below
+            // successful handover!
+            // the particle will be modified accordingly at the bottom of this method
             handover = true;
             handoverParticle = &p2;
             handoverExpandDir = expandDir;
