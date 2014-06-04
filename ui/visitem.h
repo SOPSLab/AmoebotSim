@@ -6,8 +6,8 @@
 #include <QMutex>
 #include <QPointF>
 
+#include "sim/node.h"
 #include "sim/particle.h"
-#include "sim/vec.h"
 #include "ui/glitem.h"
 
 class QMouseEvent;
@@ -48,7 +48,7 @@ protected:
 
     static Quad calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight);
     static bool inView(const QPointF& headWorldPos, const Quad& view);
-    static QPointF gridToWorld(Vec pos);
+    static QPointF nodeToWorldCoord(Node node);
 
     void mousePressEvent(QMouseEvent* e);
     void mouseMoveEvent(QMouseEvent* e);

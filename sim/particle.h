@@ -1,32 +1,47 @@
 #ifndef PARTICLE_H
 #define PARTICLE_H
 
-#include "sim/movement.h"
-#include "sim/vec.h"
+#include <array>
 
-class Algorithm;
+#include "alg/algorithm.h"
+#include "sim/movement.h"
+#include "sim/node.h"
 
 class Particle
 {
 public:
-    Particle(const int _orientation, const Vec pos, const int _tailDir = -1);
+    Particle(Algorithm* _algorithm, const int _orientation, const Node _head, const int _tailDir = -1);
     Particle(const Particle& other);
-    ~Particle();
+    virtual ~Particle();
 
     Particle& operator=(const Particle& other);
 
-    void setAlgorithm(Algorithm* _algorithm);
-    Movement executeAlgorithm();
+    Movement executeAlgorithm(std::array<const Flag*, 10>& inFlag);
+    void apply();
+    void discard();
 
-    Vec tailPos() const;
+    const Flag* getFlagForNode(Node node);
+
+    Node tail() const;
+    Node nodeIncidentToLabel(const int label) const;
+    Node nodeReachedViaLabel(const int label) const;
+    int labelOfNode(const Node node) const;
+
+    template<int n> static int posMod(const int a);
 
 public:
     int orientation; // global direction
-    Vec headPos;
+    Node head;
     int tailDir; // global direction
 
 protected:
     Algorithm* algorithm;
+    Algorithm* newAlgorithm;
 };
+
+template<int n> int Particle::posMod(const int a)
+{
+    return (a % n + n) % n;
+}
 
 #endif // PARTICLE_H

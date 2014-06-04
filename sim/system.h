@@ -1,12 +1,14 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
+#include <array>
 #include <deque>
 #include <map>
 #include <random>
 
+#include "alg/algorithm.h"
+#include "sim/node.h"
 #include "sim/particle.h"
-#include "sim/vec.h"
 
 class System
 {
@@ -19,22 +21,17 @@ public:
     int size() const;
 
     void round();
-    bool handleExpansion(Particle& p, int dir);
-    bool handleContraction(Particle& p, int dir, bool isHandoverContraction);
 
 protected:
-    template<int n> static int posMod(const int a);
+    std::array<const Flag*, 10> assembleFlags(Particle& p);
+    void handleExpansion(Particle& p, int dir);
+    void handleContraction(Particle& p, int dir, bool isHandoverContraction);
 
 protected:
     std::mt19937 rng;
 
     std::deque<Particle> particles;
-    std::map<Vec, Particle&> particleMap;
+    std::map<Node, Particle&> particleMap;
 };
-
-template<int n> int System::posMod(const int a)
-{
-    return (a % n + n) % n;
-}
 
 #endif // SYSTEM_H

@@ -1,14 +1,14 @@
 #include "simulator.h"
 
 #include "alg/dummyalg.h"
+#include "sim/node.h"
+#include "sim/particle.h"
 
 Simulator::Simulator(QObject* parent) :
     QObject(parent)
 {
     for(int x = 0; x < 6; x++) {
-        Particle p(0, Vec(x, 0), -1);
-        p.setAlgorithm(new DummyAlg());
-        system.insert(p);
+        system.insert(Particle(new DummyAlg(), 0, Node(x, 0), -1));
     }
 
     roundTimer.setInterval(100);

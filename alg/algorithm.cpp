@@ -1,5 +1,14 @@
 #include "alg/algorithm.h"
 
+Flag::Flag()
+{
+}
+
+Flag::Flag(const Flag& other)
+    : expanded(other.expanded)
+{
+}
+
 Algorithm::Algorithm()
     : expanded(false),
       headLabels({0, 1, 2, 3, 4, 5}),
@@ -22,9 +31,9 @@ Algorithm::~Algorithm()
 {
 }
 
-Movement Algorithm::delegateExecute()
+Movement Algorithm::delegateExecute(std::array<const Flag*, 10>& flags)
 {
-    Movement m = execute();
+    Movement m = execute(flags);
 
     if(m.type == MovementType::Expand) {
         expanded = true;
@@ -68,40 +77,10 @@ Movement Algorithm::delegateExecute()
         tailContractLabel = -1;
     }
 
-    return m;
-}
-
-bool Algorithm::isExpanded() const
-{
-    return expanded;
-}
-
-const std::vector<int>& Algorithm::getHeadLabels() const
-{
-    return headLabels;
-}
-
-const std::vector<int>& Algorithm::getTailLabels() const
-{
-    return tailLabels;
-}
-
-int Algorithm::getHeadContractLabel() const
-{
-    return headContractLabel;
-}
-
-int Algorithm::getTailContractLabel() const
-{
-    return tailContractLabel;
-}
-
-bool Algorithm::headHasZeroEdge() const
-{
-    for(auto it = headLabels.cbegin(); it != headLabels.cend(); ++it) {
-        if(*it == 0) {
-            return true;
-        }
+    for(auto it = outFlags.begin(); it != outFlags.end(); ++it) {
+        Flag* flag = *it;
+        flag->expanded = expanded;
     }
-    return false;
+
+    return m;
 }

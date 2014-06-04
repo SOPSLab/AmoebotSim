@@ -3,7 +3,6 @@
 
 #include <QDebug>
 
-#include "alg/algorithm.h"
 #include "sim/system.h"
 
 System::System()
@@ -28,18 +27,18 @@ System::System(const System& other)
 
 bool System::insert(const Particle& p)
 {
-    if(particleMap.find(p.headPos) != particleMap.end()) {
+    if(particleMap.find(p.head) != particleMap.end()) {
         return false;
     }
 
-    if(p.tailDir != -1 && particleMap.find(p.tailPos()) != particleMap.end()) {
+    if(p.tailDir != -1 && particleMap.find(p.tail()) != particleMap.end()) {
         return false;
     }
 
     particles.push_back(p);
-    particleMap.insert(std::pair<Vec, Particle&>(p.headPos, particles.back()));
+    particleMap.insert(std::pair<Node, Particle&>(p.head, particles.back()));
     if(p.tailDir != -1) {
-        particleMap.insert(std::pair<Vec, Particle&>(p.tailPos(), particles.back()));
+        particleMap.insert(std::pair<Node, Particle&>(p.tail(), particles.back()));
     }
     return true;
 }
@@ -64,49 +63,72 @@ void System::round()
     auto index = dist(rng);
 
     Particle& p = particles[index];
-    Particle backup = p;
-    Movement m = p.executeAlgorithm();
+    auto inFlags = assembleFlags(p);
+    Movement m = p.executeAlgorithm(inFlags);
 
-    if(m.type == MovementType::Expand) {
-        bool success = handleExpansion(p, m.dir);
-        if(!success) {
-            p = backup;
-        }
+    if(m.type == MovementType::Idle) {
+        p.apply();
+    } else if(m.type == MovementType::Expand) {
+        handleExpansion(p, m.dir);
     } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
-        bool success = handleContraction(p, m.dir, m.type == MovementType::HandoverContract);
-        if(!success) {
-            p = backup;
-        }
+        handleContraction(p, m.dir, m.type == MovementType::HandoverContract);
     }
 }
 
-bool System::handleExpansion(Particle& p, int dir)
+std::array<const Flag*, 10> System::assembleFlags(Particle& p)
+{
+    std::array<const Flag*, 10> flags;    
+
+    int labelLimit = p.tailDir == -1 ? 6 : 10;
+    for(int label = 0; label < 10; label++) {
+        if(label >= labelLimit) {
+            flags[label] = nullptr;
+            continue;
+        }
+
+        auto neighborIt = particleMap.find(p.nodeReachedViaLabel(label));
+        if(neighborIt == particleMap.end()) {
+            flags[label] = nullptr;
+        } else {
+            auto incidentNode = p.nodeIncidentToLabel(label);
+            flags[label] = neighborIt->second.getFlagForNode(incidentNode);
+        }
+    }
+
+    return flags;
+}
+
+void System::handleExpansion(Particle& p, int dir)
 {
     if(p.tailDir != -1) {
-        return false; // already expanded particle cannot expand
+        p.discard(); // already expanded particle cannot expand
+        return;
     }
 
     if(dir < 0 || dir > 5) {
-        return false; // invalid expansion index
+        p.discard(); // invalid expansion index
+        return;
     }
 
-    dir = posMod<6>(p.orientation + dir);
-    Vec newHeadPos = p.headPos.vecInDir(dir);
+    dir = Particle::posMod<6>(p.orientation + dir);
+    Node newHead = p.head.nodeInDir(dir);
 
-    if(particleMap.find(newHeadPos) != particleMap.end()) {
-        return false; // collision
+    if(particleMap.find(newHead) != particleMap.end()) {
+        p.discard(); // collision
+        return;
     }
 
-    particleMap.insert(std::pair<Vec, Particle&>(newHeadPos, p));
-    p.headPos = newHeadPos;
-    p.tailDir = posMod<6>(dir + 3);
-    return true;
+    particleMap.insert(std::pair<Node, Particle&>(newHead, p));
+    p.head = newHead;
+    p.tailDir = Particle::posMod<6>(dir + 3);
+    p.apply();
 }
 
-bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
+void System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
 {
     if(p.tailDir == -1) {
-        return false ; // already contracted particle cannot contract
+        p.discard(); // already contracted particle cannot contract
+        return;
     }
 
     // determine whether the contraction direction is valid
@@ -118,7 +140,8 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
         } else if(dir == 5) {   // tail contraction
             isHeadContract = false;
         } else {                // invalid contraction
-            return false;
+            p.discard();
+            return;
         }
     } else if(p.tailDir == (p.orientation + 1) % 6) {
         if(dir == 1) {          // head contraction
@@ -126,7 +149,8 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
         } else if(dir == 6) {   // tail contraction
             isHeadContract = false;
         } else {                // invalid contraction
-            return false;
+            p.discard();
+            return;
         }
     } else if(p.tailDir == (p.orientation + 2) % 6) {
         if(dir == 4) {          // head contraction
@@ -134,7 +158,8 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
         } else if(dir == 9) {   // tail contraction
             isHeadContract = false;
         } else {                // invalid contraction
-            return false;
+            p.discard();
+            return;
         }
     } else if(p.tailDir == (p.orientation + 3) % 6) {
         if(dir == 5) {          // head contraction
@@ -142,7 +167,8 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
         } else if(dir == 0) {   // tail contraction
             isHeadContract = false;
         } else {                // invalid contraction
-            return false;
+            p.discard();
+            return;
         }
     } else if(p.tailDir == (p.orientation + 4) % 6) {
         if(dir == 6) {          // head contraction
@@ -150,7 +176,8 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
         } else if(dir == 1) {   // tail contraction
             isHeadContract = false;
         } else {                // invalid contraction
-            return false;
+            p.discard();
+            return;
         }
     } else if(p.tailDir == (p.orientation + 5) % 6) {
         if(dir == 9) {          // head contraction
@@ -158,7 +185,8 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
         } else if(dir == 4) {   // tail contraction
             isHeadContract = false;
         } else {                // invalid contraction
-            return false;
+            p.discard();
+            return;
         }
     }
 
@@ -182,15 +210,15 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
 
             // determine the node the direction points to
             // and ensure that this node is not occupied by p
-            Vec neighbor;
+            Node neighbor;
             if(isHeadContract) {
-                neighbor = p.headPos.vecInDir(neighborDir);
-                if(neighbor == p.tailPos()) {
+                neighbor = p.head.nodeInDir(neighborDir);
+                if(neighbor == p.tail()) {
                     continue;
                 }
             } else {
-                neighbor = p.tailPos().vecInDir(neighborDir);
-                if(neighbor == p.headPos) {
+                neighbor = p.tail().nodeInDir(neighborDir);
+                if(neighbor == p.head) {
                     continue;
                 }
             }
@@ -206,24 +234,24 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
             // check whether p2 wants to expand and into which node
             if(p2.tailDir != -1) {
                 continue; // already expanded particle cannot expand
-            }
-            Particle backup = p2;
-            Movement m = p2.executeAlgorithm();
+            }    
+            auto inFlags = assembleFlags(p2);
+            Movement m = p2.executeAlgorithm(inFlags);
             if(m.type != MovementType::Expand) {
-                p2 = backup;
+                p2.discard();
                 continue; // we are only interested in expanding particles
             }
             if(m.dir < 0 || m.dir > 5) {
-                p2 = backup;
+                p2.discard();
                 continue; // invalid expansion index
             }
-            int expandDir = posMod<6>(p2.orientation + m.dir);
-            Vec newHeadPos = p2.headPos.vecInDir(expandDir);
+            int expandDir = Particle::posMod<6>(p2.orientation + m.dir);
+            Node newHead = p2.head.nodeInDir(expandDir);
 
             // ensure that the node p2 wants to expand into is the node p wants to contract out of
-            if( (isHeadContract && newHeadPos != p.headPos) ||
-                (!isHeadContract && newHeadPos != p.tailPos())) {
-                p2 = backup;
+            if( (isHeadContract && newHead != p.head) ||
+                (!isHeadContract && newHead != p.tail())) {
+                p2.discard();
                 continue;
             }
 
@@ -238,24 +266,25 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
 
     // a handover contraction can only executed as part of a handover
     if(isHandoverContraction && !handover) {
-        return false;
+        p.discard();
+        return;
     }
 
     // apply changes to particles and particleMap
-    Vec handoverNode;
+    Node handoverNode;
     if(isHeadContract) {
-        handoverNode = p.headPos;
-        p.headPos = p.tailPos();
+        handoverNode = p.head;
+        p.head = p.tail();
     } else {
-        handoverNode = p.tailPos();
+        handoverNode = p.tail();
     }
     p.tailDir = -1;
+    p.apply();
     particleMap.erase(handoverNode);
     if(handover) {
-        handoverParticle->headPos = handoverNode;
-        handoverParticle->tailDir = posMod<6>(handoverExpandDir + 3);
-        particleMap.insert(std::pair<Vec, Particle&>(handoverNode, *handoverParticle));
+        handoverParticle->head = handoverNode;
+        handoverParticle->tailDir = Particle::posMod<6>(handoverExpandDir + 3);
+        handoverParticle->apply();
+        particleMap.insert(std::pair<Node, Particle&>(handoverNode, *handoverParticle));
     }
-
-    return true;
 }

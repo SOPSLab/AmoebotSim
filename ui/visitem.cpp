@@ -157,7 +157,7 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
     constexpr float oneThird = 1.0f / 3.0f;
     constexpr float halfQuadSideLength = 256.0f / 220.0f;
 
-    auto pos = gridToWorld(p.headPos);
+    auto pos = nodeToWorldCoord(p.head);
     if(inView(pos, view)) {
         const QPointF& texOffset = particleTexOffsets[p.tailDir + 1];
         glfn->glTexCoord2f(texOffset.x(), texOffset.y());
@@ -192,9 +192,9 @@ bool VisItem::inView(const QPointF& headWorldPos, const Quad& view)
             (headWorldPos.y() <= view.top    + slack);
 }
 
-QPointF VisItem::gridToWorld(Vec pos)
+QPointF VisItem::nodeToWorldCoord(Node node)
 {
-    return QPointF(pos.x + 0.5f * pos.y, pos.y * triangleHeight);
+    return QPointF(node.x + 0.5f * node.y, node.y * triangleHeight);
 }
 
 void VisItem::mousePressEvent(QMouseEvent* e)
