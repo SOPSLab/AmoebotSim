@@ -14,7 +14,9 @@ Algorithm::Algorithm()
       headLabels({0, 1, 2, 3, 4, 5}),
       tailLabels({0, 1, 2, 3, 4, 5}),
       headContractLabel(-1),
-      tailContractLabel(-1)
+      tailContractLabel(-1),
+      headColor(-1),
+      tailColor(-1)
 {
 }
 
@@ -23,7 +25,9 @@ Algorithm::Algorithm(const Algorithm& other)
       headLabels(other.headLabels),
       tailLabels(other.tailLabels),
       headContractLabel(other.headContractLabel),
-      tailContractLabel(other.tailContractLabel)
+      tailContractLabel(other.tailContractLabel),
+      headColor(other.headColor),
+      tailColor(other.tailColor)
 {
 }
 

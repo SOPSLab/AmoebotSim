@@ -1,6 +1,7 @@
 #include <array>
 #include <cmath>
 
+#include <QColor>
 #include <QImage>
 #include <QMutexLocker>
 #include <QOpenGLFunctions_2_0>
@@ -118,7 +119,7 @@ void VisItem::drawGrid(const Quad& view)
 
     // Draw screen-filling quad with gridTex according to above texture coordinates.
     gridTex->bind();
-    glColor3f(0.8, 0.8, 0.8);
+    glColor4f(0.8f, 0.8f, 0.8f, 1.0f);
     glfn->glBegin(GL_QUADS);
     glfn->glTexCoord2f(gridTexCoords.left, gridTexCoords.bottom);
     glfn->glVertex2f(view.left, view.bottom);
@@ -147,7 +148,7 @@ void VisItem::drawParticles(const Quad& view)
 void VisItem::drawParticle(const Particle& p, const Quad& view)
 {
     // these values are a consequence of how the particle texture was created
-    constexpr std::array<QPointF, 7> particleTexOffsets =
+    constexpr std::array<QPointF, 8> particleTexOffsets =
     {{
          QPointF(0.0f / 3.0f , 0.0f / 3.0f),
          QPointF(1.0f / 3.0f , 0.0f / 3.0f),
@@ -155,14 +156,44 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
          QPointF(0.0f / 3.0f , 1.0f / 3.0f),
          QPointF(1.0f / 3.0f , 1.0f / 3.0f),
          QPointF(2.0f / 3.0f , 1.0f / 3.0f),
-         QPointF(0.0f / 3.0f , 2.0f / 3.0f)
+         QPointF(0.0f / 3.0f , 2.0f / 3.0f),
+         QPointF(1.0f / 3.0f , 2.0f / 3.0f)
     }};
     constexpr float oneThird = 1.0f / 3.0f;
     constexpr float halfQuadSideLength = 256.0f / 220.0f;
 
     auto pos = nodeToWorldCoord(p.head);
     if(inView(pos, view)) {
-        glColor3f(0, 0, 0);
+        if(p.headColor() != -1) {
+            QRgb color = p.headColor();
+            glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
+            const QPointF& texOffset = particleTexOffsets[7];
+            glfn->glTexCoord2f(texOffset.x(), texOffset.y());
+            glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
+            glfn->glTexCoord2f(texOffset.x() + oneThird, texOffset.y());
+            glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() - halfQuadSideLength);
+            glfn->glTexCoord2f(texOffset.x() + oneThird, texOffset.y() + oneThird);
+            glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
+            glfn->glTexCoord2f(texOffset.x(), texOffset.y() + oneThird);
+            glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
+        }
+
+        if(p.tailDir != -1 && p.tailColor() != -1) {
+            auto pos = nodeToWorldCoord(p.tail());
+            QRgb color = p.tailColor();
+            glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
+            const QPointF& texOffset = particleTexOffsets[7];
+            glfn->glTexCoord2f(texOffset.x(), texOffset.y());
+            glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
+            glfn->glTexCoord2f(texOffset.x() + oneThird, texOffset.y());
+            glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() - halfQuadSideLength);
+            glfn->glTexCoord2f(texOffset.x() + oneThird, texOffset.y() + oneThird);
+            glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
+            glfn->glTexCoord2f(texOffset.x(), texOffset.y() + oneThird);
+            glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
+        }
+
+        glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
         const QPointF& texOffset = particleTexOffsets[p.tailDir + 1];
         glfn->glTexCoord2f(texOffset.x(), texOffset.y());
         glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);

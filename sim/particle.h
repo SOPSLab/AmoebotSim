@@ -27,6 +27,9 @@ public:
     Node nodeReachedViaLabel(const int label) const;
     int labelOfNode(const Node node) const;
 
+    int headColor() const;
+    int tailColor() const;
+
     template<int n> static int posMod(const int a);
 
 public:

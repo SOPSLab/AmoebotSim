@@ -41,6 +41,9 @@ public:
     std::vector<int> tailLabels;
     int headContractLabel;
     int tailContractLabel;
+
+    int headColor;
+    int tailColor;
 };
 
 template<class T> void Algorithm::initFlags()

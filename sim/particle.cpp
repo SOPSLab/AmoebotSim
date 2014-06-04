@@ -270,3 +270,13 @@ int Particle::labelOfNode(const Node node) const
     Q_ASSERT(false);
     return -1; // avoid compiler warning
 }
+
+int Particle::headColor() const
+{
+    return algorithm->headColor;
+}
+
+int Particle::tailColor() const
+{
+    return algorithm->tailColor;
+}
