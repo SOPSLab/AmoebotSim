@@ -31,7 +31,6 @@ Movement DummyAlg::execute(std::array<const Flag*, 10>& flags)
 
     if(expanded) {
         if(inFlags[5] == nullptr) {
-
             return Movement(MovementType::Contract, tailContractLabel);
         } else {
             return Movement(MovementType::HandoverContract, tailContractLabel);

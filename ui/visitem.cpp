@@ -164,6 +164,7 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
 
     auto pos = nodeToWorldCoord(p.head);
     if(inView(pos, view)) {
+        // draw mark around head
         if(p.headColor() != -1) {
             QRgb color = p.headColor();
             glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
@@ -178,6 +179,7 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
             glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
         }
 
+        // draw mark around tail
         if(p.tailDir != -1 && p.tailColor() != -1) {
             auto pos = nodeToWorldCoord(p.tail());
             QRgb color = p.tailColor();
@@ -193,6 +195,7 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
             glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
         }
 
+        // draw particle
         glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
         const QPointF& texOffset = particleTexOffsets[p.tailDir + 1];
         glfn->glTexCoord2f(texOffset.x(), texOffset.y());
