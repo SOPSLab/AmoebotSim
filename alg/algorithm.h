@@ -12,6 +12,8 @@ public:
     Flag(const Flag& other);
 
     bool expanded;
+    int label;
+    bool headLabel;
 };
 
 class Algorithm
@@ -32,6 +34,8 @@ protected:
     template<class T> void copyFlags(const Algorithm& algorithm);
     void deleteFlags();
     template<class T> std::array<const T*, 10> castFlags(std::array<const Flag*, 10>& flags);
+
+    template<class T> static bool contains(std::vector<T> vector, T value);
 
 public:
     std::array<Flag*, 10> outFlags;
@@ -74,6 +78,16 @@ template<class T> std::array<const T*, 10> Algorithm::castFlags(std::array<const
         inFlags[i] = (T*)flags[i];
     }
     return inFlags;
+}
+
+template<class T> bool Algorithm::contains(std::vector<T> vector, T value)
+{
+    for(decltype(vector.size()) i = 0; i < vector.size(); i++) {
+        if(vector[i] == value) {
+            return true;
+        }
+    }
+    return false;
 }
 
 #endif // ALGORITHM_H

@@ -5,7 +5,9 @@ Flag::Flag()
 }
 
 Flag::Flag(const Flag& other)
-    : expanded(other.expanded)
+    : expanded(other.expanded),
+      label(other.label),
+      headLabel(other.headLabel)
 {
 }
 
@@ -37,11 +39,12 @@ Algorithm::~Algorithm()
 
 Movement Algorithm::delegateExecute(std::array<const Flag*, 10>& flags)
 {
+    // execute algorithm
     Movement m = execute(flags);
 
+    // update values on algorithm
     if(m.type == MovementType::Expand) {
         expanded = true;
-
         if(m.dir == 0) {
             headLabels = {8, 9, 0, 1, 2};
             tailLabels = {3, 4, 5, 6, 7};
@@ -81,9 +84,11 @@ Movement Algorithm::delegateExecute(std::array<const Flag*, 10>& flags)
         tailContractLabel = -1;
     }
 
-    for(auto it = outFlags.begin(); it != outFlags.end(); ++it) {
-        Flag* flag = *it;
-        flag->expanded = expanded;
+    // update outFlags
+    for(decltype(outFlags.size()) i = 0; i < outFlags.size(); i++) {
+        outFlags[i]->expanded = expanded;
+        outFlags[i]->label = i;
+        outFlags[i]->headLabel = contains(headLabels, (int) i);
     }
 
     return m;
