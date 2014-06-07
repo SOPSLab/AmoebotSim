@@ -233,7 +233,7 @@ Node Particle::neighboringNodeReachedViaLabel(const int label) const
             } else { // label == 9
                 return head.nodeInDir(posMod<6>(orientation + 5));
             }
-        } else { // tailDir == posMod<6>(orientation + 0)
+        } else { // tailDir == posMod<6>(orientation + 5)
             if(label == 0) {
                 return tail().nodeInDir(posMod<6>(orientation + 0));
             } else if(label == 1) {

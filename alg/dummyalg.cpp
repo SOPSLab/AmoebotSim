@@ -29,11 +29,11 @@ Movement DummyAlg::execute(std::array<const Flag*, 10>& flags)
 {
     auto inFlags = castFlags<DummyFlag>(flags);
 
-    if(expanded) {
+    if(isExpanded()) {
         if(inFlags[5] == nullptr) {
-            return Movement(MovementType::Contract, tailContractLabel);
+            return Movement(MovementType::Contract, tailContractionLabel());
         } else {
-            return Movement(MovementType::HandoverContract, tailContractLabel);
+            return Movement(MovementType::HandoverContract, tailContractionLabel());
         }
     } else {
         if(inFlags[0] == nullptr) {

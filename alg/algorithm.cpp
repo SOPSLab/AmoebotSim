@@ -1,95 +1,22 @@
 #include "alg/algorithm.h"
 
-Flag::Flag()
-{
-}
-
-Flag::Flag(const Flag& other)
-    : expanded(other.expanded),
-      label(other.label),
-      headLabel(other.headLabel)
-{
-}
-
-Algorithm::Algorithm()
-    : expanded(false),
-      headLabels({0, 1, 2, 3, 4, 5}),
-      tailLabels({0, 1, 2, 3, 4, 5}),
-      headContractLabel(-1),
-      tailContractLabel(-1),
-      headColor(-1),
-      tailColor(-1)
-{
-}
-
-Algorithm::Algorithm(const Algorithm& other)
-    : expanded(other.expanded),
-      headLabels(other.headLabels),
-      tailLabels(other.tailLabels),
-      headContractLabel(other.headContractLabel),
-      tailContractLabel(other.tailContractLabel),
-      headColor(other.headColor),
-      tailColor(other.tailColor)
-{
-}
-
-Algorithm::~Algorithm()
-{
-}
-
-Movement Algorithm::delegateExecute(std::array<const Flag*, 10>& flags)
-{
-    // execute algorithm
-    Movement m = execute(flags);
-
-    // update values on algorithm
-    if(m.type == MovementType::Expand) {
-        expanded = true;
-        if(m.dir == 0) {
-            headLabels = {8, 9, 0, 1, 2};
-            tailLabels = {3, 4, 5, 6, 7};
-            headContractLabel = 5;
-            tailContractLabel = 0;
-        } else if(m.dir == 1) {
-            headLabels = {9, 0, 1, 2, 3};
-            tailLabels = {4, 5, 6, 7, 8};
-            headContractLabel = 6;
-            tailContractLabel = 1;
-        } else if(m.dir == 2) {
-            headLabels = {2, 3, 4, 5, 6};
-            tailLabels = {7, 8, 9, 0, 1};
-            headContractLabel = 9;
-            tailContractLabel = 4;
-        } else if(m.dir == 3) {
-            headLabels = {3, 4, 5, 6, 7};
-            tailLabels = {8, 9, 0, 1, 2};
-            headContractLabel = 0;
-            tailContractLabel = 5;
-        } else if(m.dir == 4) {
-            headLabels = {4, 5, 6, 7, 8};
-            tailLabels = {9, 0, 1, 2, 3};
-            headContractLabel = 1;
-            tailContractLabel = 6;
-        } else if(m.dir == 5) {
-            headLabels = {7, 8, 9, 0, 1};
-            tailLabels = {2, 3, 4, 5, 6};
-            headContractLabel = 4;
-            tailContractLabel = 9;
-        }
-    } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
-        expanded = false;
-        headLabels = {0, 1, 2, 3, 4, 5};
-        tailLabels = {0, 1, 2, 3, 4, 5};
-        headContractLabel = -1;
-        tailContractLabel = -1;
-    }
-
-    // update outFlags
-    for(decltype(outFlags.size()) i = 0; i < outFlags.size(); i++) {
-        outFlags[i]->expanded = expanded;
-        outFlags[i]->label = i;
-        outFlags[i]->headLabel = contains(headLabels, (int) i);
-    }
-
-    return m;
-}
+const std::vector<int> Algorithm::sixLabels = {{0, 1, 2, 3, 4, 5}};
+const std::array<const std::vector<int>, 6> Algorithm::labels =
+{{
+    {3, 4, 5, 6, 7},
+    {4, 5, 6, 7, 8},
+    {7, 8, 9, 0, 1},
+    {8, 9, 0, 1, 2},
+    {9, 0, 1, 2, 3},
+    {2, 3, 4, 5, 6}
+}};
+const std::array<int, 6> Algorithm::contractLabels = {{0, 1, 4, 5, 6, 9}};
+const std::array<std::array<int, 10>, 6> Algorithm::labelDir
+{{
+    {{0, 1, 2, 1, 2, 3, 4, 5, 4, 5}},
+    {{0, 1, 2, 3, 2, 3, 4, 5, 0, 5}},
+    {{0, 1, 0, 1, 2, 3, 4, 3, 4, 5}},
+    {{0, 1, 2, 1, 2, 3, 4, 5, 4, 5}},
+    {{0, 1, 2, 3, 2, 3, 4, 5, 0, 5}},
+    {{0, 1, 0, 1, 2, 3, 4, 3, 4, 5}}
+}};
