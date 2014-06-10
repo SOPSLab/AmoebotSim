@@ -1,4 +1,6 @@
 #include "alg/dummyalg.h"
+#include "sim/particle.h"
+#include "sim/system.h"
 
 DummyFlag::DummyFlag()
 {
@@ -25,6 +27,20 @@ DummyAlg::~DummyAlg()
     deleteFlags();
 }
 
+System DummyAlg::instance()
+{
+    System system;
+    for(int x = 0; x < 6; x++) {
+        system.insert(Particle(new DummyAlg(), 0, Node(x, 0), -1));
+    }
+    return system;
+}
+
+Algorithm* DummyAlg::clone()
+{
+    return new DummyAlg(*this);
+}
+
 Movement DummyAlg::execute(std::array<const Flag*, 10>& flags)
 {
     auto inFlags = castFlags<DummyFlag>(flags);
@@ -48,9 +64,4 @@ Movement DummyAlg::execute(std::array<const Flag*, 10>& flags)
         }
         return Movement(MovementType::Expand, 0);
     }
-}
-
-Algorithm* DummyAlg::clone()
-{
-    return new DummyAlg(*this);
 }

@@ -22,6 +22,13 @@ Application::Application(int argc, char *argv[]) :
     connect(engine->rootObjects().at(0), SIGNAL(start()), sim, SLOT(start()));
     connect(engine->rootObjects().at(0), SIGNAL(stop() ), sim, SLOT(stop() ));
     connect(engine->rootObjects().at(0), SIGNAL(round()), sim, SLOT(round()));
+    connect(engine->rootObjects().at(0), SIGNAL(executeCommand(QString)), sim, SLOT(executeCommand(QString)));
+    connect(sim,
+            &Simulator::log,
+            [&](const QString msg, const bool isError){
+                QMetaObject::invokeMethod(engine->rootObjects().at(0), "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
+            }
+    );
 
     connect(simThread, SIGNAL(started()), sim, SLOT(init()));
     simThread->start();

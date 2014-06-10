@@ -3,6 +3,7 @@ import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.1
 
 TextField {
+    property bool showsError
     enabled: false
     textColor: "black"
     style: TextFieldStyle {
@@ -12,7 +13,7 @@ TextField {
             border.width: 1
             border.color: "#888"
             radius: 4
-            color: "#4d4"
+            color: showsError ? "#d44" : "#4d4"
             opacity: 0.75
         }
     }

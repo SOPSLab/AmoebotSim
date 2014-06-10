@@ -26,7 +26,6 @@ public:
     virtual ~Algorithm();
 
     Movement delegateExecute(std::array<const Flag*, 10>& flags);
-
     virtual Algorithm* clone() = 0;
 
 protected:
@@ -35,7 +34,7 @@ protected:
     template<class T> void initFlags();
     template<class T> void copyFlags(const Algorithm& algorithm);
     void deleteFlags();
-    template<class T> std::array<const T*, 10> castFlags(std::array<const Flag*, 10>& flags);
+    template<class T> static std::array<const T*, 10> castFlags(std::array<const Flag*, 10>& flags);
 
     template<class T> static bool contains(std::vector<T> vector, T value);
 

@@ -15,6 +15,7 @@ class System
 public:
     System();
     System(const System& other);
+    System& operator=(const System& other);
 
     bool insert(const Particle& p);
     const Particle& at(int index) const;

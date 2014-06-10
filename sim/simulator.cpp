@@ -1,16 +1,13 @@
-#include <QObject>
+#include <QScriptValue>
 
-#include "alg/dummyalg.h"
-#include "sim/node.h"
-#include "sim/particle.h"
+#include "script/scriptinterface.h"
 #include "sim/simulator.h"
 
 Simulator::Simulator()
     : roundTimer(nullptr)
 {
-    for(int x = 0; x < 6; x++) {
-        system.insert(Particle(new DummyAlg(), 0, Node(x, 0), -1));
-    }
+    engine.setProcessEventsInterval(33);
+    engine.setGlobalObject(engine.newQObject(new ScriptInterface(*this), QScriptEngine::ScriptOwnership));
 }
 
 void Simulator::init()
@@ -37,4 +34,12 @@ void Simulator::start()
 void Simulator::stop()
 {
     roundTimer->stop();
+}
+
+void Simulator::executeCommand(const QString cmd)
+{
+    QScriptValue result = engine.evaluate(cmd);
+    if(!result.isUndefined()) {
+        emit log(result.toString(), result.isError());
+    }
 }

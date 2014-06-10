@@ -15,6 +15,19 @@ ApplicationWindow {
     signal round()
     signal back()
 
+    signal executeCommand(string cmd)
+    function log(msg, isError)
+    {
+        commandField.visible = false
+        buttonRow.forceActiveFocus()
+
+        resultField.text = msg
+        resultField.showsError = isError;
+        resultField.opacity = 1
+        resultField.visible = true
+        resultFieldFade.running = true
+    }
+
     VisItem {
         id: vis
         anchors.fill: parent
@@ -27,7 +40,7 @@ ApplicationWindow {
         anchors.margins: 10
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        width: window.width - 290
+        width: window.width - 200
 
         SequentialAnimation {
             id: resultFieldFade
@@ -56,34 +69,34 @@ ApplicationWindow {
         A_TextField {
             id: commandField
             visible: false
-            width: window.width - 290
+            width: window.width - 200
 
             focus: true
-            Keys.onReturnPressed: {
-                visible = false
-
-                resultField.text = text
-                resultField.opacity = 1
-                resultField.visible = true
-                resultFieldFade.running = true
-
-                text = ""
-                buttonRow.forceActiveFocus()
-            }
-            Keys.onEscapePressed:{
-                visible = false
-                text = ""
-                buttonRow.forceActiveFocus()
+            Keys.onPressed: {
+                if(event.key == Qt.Key_Enter || event.key == Qt.Key_Return) {
+                    executeCommand(text)
+                    visible = false
+                    text = ""
+                    buttonRow.forceActiveFocus()
+                    event.accepted = true
+                } else if(event.key == Qt.Key_Escape) {
+                    visible = false
+                    text = ""
+                    buttonRow.forceActiveFocus()
+                    event.accepted = true
+                }
             }
         }
 
         focus: true
-        Keys.onReturnPressed: {
-            resultField.visible = false
-            resultFieldFade.running = false
-
-            commandField.visible = true
-            commandField.forceActiveFocus()
+        Keys.onPressed: {
+            if(event.key == Qt.Key_Enter || event.key == Qt.Key_Return) {
+                resultField.visible = false
+                resultFieldFade.running = false
+                commandField.visible = true
+                commandField.forceActiveFocus()
+                event.accepted = true
+            }
         }
 
         A_Button {
@@ -109,12 +122,12 @@ ApplicationWindow {
             }
         }
 
-        A_Button {
-            id: backButton
-            text: "back"
-            onClicked: {
-                back()
-            }
-        }
+//        A_Button {
+//            id: backButton
+//            text: "back"
+//            onClicked: {
+//                back()
+//            }
+//        }
     }
 }

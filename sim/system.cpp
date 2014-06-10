@@ -21,8 +21,20 @@ System::System()
 }
 
 System::System(const System& other)
-    : particles(other.particles)
+    : rng(other.rng)
 {
+    for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
+        insert(*it);
+    }
+}
+
+System& System::operator=(const System& other)
+{
+    rng = other.rng;
+    for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
+        insert(*it);
+    }
+    return (*this);
 }
 
 bool System::insert(const Particle& p)

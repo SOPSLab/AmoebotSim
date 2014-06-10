@@ -1,7 +1,10 @@
 #ifndef DUMMYALG_H
 #define DUMMYALG_H
 
+#include <QString>
+
 #include "alg/algorithm.h"
+#include "sim/system.h"
 
 class DummyFlag : public Flag
 {
@@ -17,6 +20,7 @@ public:
     DummyAlg(const DummyAlg& other);
     virtual ~DummyAlg();
 
+    static System instance();
     virtual Algorithm* clone();
 
 protected:
