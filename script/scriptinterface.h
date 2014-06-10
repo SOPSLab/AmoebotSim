@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-#include "alg/dummyalg.h"
+#include "alg/examplealgorithm.h"
 #include "sim/simulator.h"
 
 class ScriptInterface : public QObject
@@ -22,7 +22,7 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    _sim.system = DummyAlg::instance();
+    _sim.system = ExampleAlgorithm::instance();
 }
 
 inline void ScriptInterface::round()

@@ -11,7 +11,6 @@ win32:RC_FILE = res/AmoebotSim.rc
 
 SOURCES += \
     alg/algorithm.cpp \
-    alg/dummyalg.cpp \
     main/application.cpp \
     main/main.cpp\
     sim/node.cpp \
@@ -19,11 +18,11 @@ SOURCES += \
     sim/simulator.cpp \
     sim/system.cpp \
     ui/glitem.cpp \
-    ui/visitem.cpp
+    ui/visitem.cpp \
+    alg/examplealgorithm.cpp
 
 HEADERS += \
     alg/algorithm.h \
-    alg/dummyalg.h \
     main/application.h \
     script/scriptinterface.h \
     sim/movement.h \
@@ -32,7 +31,8 @@ HEADERS += \
     sim/simulator.h \
     sim/system.h \
     ui/glitem.h \
-    ui/visitem.h
+    ui/visitem.h \
+    alg/examplealgorithm.h
 
 RESOURCES += \
     res/qml.qrc \

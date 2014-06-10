@@ -1,54 +1,54 @@
-#include "alg/dummyalg.h"
+#include "alg/examplealgorithm.h"
 #include "sim/particle.h"
 #include "sim/system.h"
 
-DummyFlag::DummyFlag()
+ExampleFlag::ExampleFlag()
 {
 }
 
-DummyFlag::DummyFlag(const DummyFlag& other)
+ExampleFlag::ExampleFlag(const ExampleFlag& other)
     : Flag(other)
 {
 }
 
-DummyAlg::DummyAlg()
+ExampleAlgorithm::ExampleAlgorithm()
 {
-    initFlags<DummyFlag>();
+    initFlags<ExampleFlag>();
 }
 
-DummyAlg::DummyAlg(const DummyAlg& other)
+ExampleAlgorithm::ExampleAlgorithm(const ExampleAlgorithm& other)
     : Algorithm(other)
 {
-    copyFlags<DummyFlag>(other);
+    copyFlags<ExampleFlag>(other);
 }
 
-DummyAlg::~DummyAlg()
+ExampleAlgorithm::~ExampleAlgorithm()
 {
     deleteFlags();
 }
 
-System DummyAlg::instance()
+System ExampleAlgorithm::instance()
 {
     System system;
     for(int x = 0; x < 6; x++) {
-        system.insert(Particle(new DummyAlg(), 0, Node(x, 0), -1));
+        system.insert(Particle(new ExampleAlgorithm(), 0, Node(x, 0), -1));
     }
     return system;
 }
 
-Algorithm* DummyAlg::clone()
+Algorithm* ExampleAlgorithm::clone()
 {
-    return new DummyAlg(*this);
+    return new ExampleAlgorithm(*this);
 }
 
-bool DummyAlg::isDeterministic() const
+bool ExampleAlgorithm::isDeterministic() const
 {
     return true;
 }
 
-Movement DummyAlg::execute(std::array<const Flag*, 10>& flags)
+Movement ExampleAlgorithm::execute(std::array<const Flag*, 10>& flags)
 {
-    auto inFlags = castFlags<DummyFlag>(flags);
+    auto inFlags = castFlags<ExampleFlag>(flags);
 
     if(isExpanded()) {
         if(inFlags[5] == nullptr) {
