@@ -11,6 +11,9 @@ class QTimer;
 class Simulator : public QObject
 {
     Q_OBJECT
+
+    friend class ScriptInterface;
+
 public:
     explicit Simulator();
 
@@ -29,12 +32,11 @@ public slots:
 
     void executeCommand(const QString cmd);
 
-public:
-    System system;
-
 protected:
     QScriptEngine engine;
     QTimer* roundTimer;
+
+    System system;
 };
 
 #endif // SIMULATOR_H
