@@ -48,9 +48,11 @@ bool System::insert(const Particle& p)
     }
 
     particles.push_back(p);
-    particleMap.insert(std::pair<Node, Particle&>(p.head, particles.back()));
+    particles.back().active = true;
+    activeParticles.push_back(&particles.back());
+    particleMap.insert(std::pair<Node, Particle*>(p.head, &particles.back()));
     if(p.tailDir != -1) {
-        particleMap.insert(std::pair<Node, Particle&>(p.tail(), particles.back()));
+        particleMap.insert(std::pair<Node, Particle*>(p.tail(), &particles.back()));
     }
     return true;
 }
@@ -65,33 +67,41 @@ int System::size() const
     return particles.size();
 }
 
-void System::round()
+bool System::round()
 {
-    if(particles.size() == 0) {
-        return;
-    }
-    while(true) {
-        auto dist = std::uniform_int_distribution<int>(0, particles.size() - 1);
+    Q_ASSERT(activeParticles.size() <= particles.size());
+    while(activeParticles.size() > 0) {
+        auto dist = std::uniform_int_distribution<int>(0, activeParticles.size() - 1);
         auto index = dist(rng);
+        std::swap(activeParticles[0], activeParticles[index]);
 
-        Particle& p = particles[index];
-        auto inFlags = assembleFlags(p);
-        Movement m = p.executeAlgorithm(inFlags);
+        Particle* p = activeParticles.front();
+        auto inFlags = assembleFlags(*p);
+        Movement m = p->executeAlgorithm(inFlags);
 
         if(m.type == MovementType::Idle) {
-            p.apply();
-            return;
+            p->apply();
+            activateParticlesAround(*p);
         } else if(m.type == MovementType::Expand) {
-            bool success = handleExpansion(p, m.dir);
-            if(success) {
-                return;
+            bool actionSuccessful = handleExpansion(*p, m.dir);
+            if(actionSuccessful) {
+                break;
             }
         } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
-            bool success = handleContraction(p, m.dir, m.type == MovementType::HandoverContract);
-            if(success) {
-                return;
+            bool actionSuccessful = handleContraction(*p, m.dir, m.type == MovementType::HandoverContract);
+            if(actionSuccessful) {
+                break;
             }
         }
+
+        // particle inactive
+        p->active = false;
+        activeParticles.pop_front();
+    }
+    if(activeParticles.size() == 0) {
+        return true;
+    } else {
+        return false;
     }
 }
 
@@ -111,7 +121,7 @@ std::array<const Flag*, 10> System::assembleFlags(Particle& p)
             flags[label] = nullptr;
         } else {
             auto incidentNode = p.occupiedNodeIncidentToLabel(label);
-            flags[label] = neighborIt->second.getFlagForNode(incidentNode);
+            flags[label] = neighborIt->second->getFlagForNode(incidentNode);
         }
     }
 
@@ -138,10 +148,11 @@ bool System::handleExpansion(Particle& p, int dir)
         return false;
     }
 
-    particleMap.insert(std::pair<Node, Particle&>(newHead, p));
+    particleMap.insert(std::pair<Node, Particle*>(newHead, &p));
     p.head = newHead;
     p.tailDir = Particle::posMod<6>(dir + 3);
     p.apply();
+    activateParticlesAround(p);
     return true;
 }
 
@@ -250,7 +261,7 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
             if(mapIt == particleMap.end()) {
                 continue;
             }
-            Particle& p2 = mapIt->second;
+            Particle& p2 = *mapIt->second;
 
             // check whether p2 wants to expand and into which node
             if(p2.tailDir != -1) {
@@ -301,12 +312,28 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
     }
     p.tailDir = -1;
     p.apply();
+    activateParticlesAround(p);
     particleMap.erase(handoverNode);
     if(handover) {
         handoverParticle->head = handoverNode;
         handoverParticle->tailDir = Particle::posMod<6>(handoverExpandDir + 3);
         handoverParticle->apply();
-        particleMap.insert(std::pair<Node, Particle&>(handoverNode, *handoverParticle));
+        activateParticlesAround(*handoverParticle);
+        particleMap.insert(std::pair<Node, Particle*>(handoverNode, handoverParticle));
     }
     return true;
+}
+
+void System::activateParticlesAround(Particle& p)
+{
+    int labelLimit = p.tailDir == -1 ? 6 : 10;
+    for(int label = 0; label < labelLimit; label++) {
+        auto neighborIt = particleMap.find(p.neighboringNodeReachedViaLabel(label));
+        if(neighborIt != particleMap.end()) {
+            if(!neighborIt->second->active) {
+                neighborIt->second->active = true;
+                activeParticles.push_back(neighborIt->second);
+            }
+        }
+    }
 }

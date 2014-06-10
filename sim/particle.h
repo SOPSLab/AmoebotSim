@@ -37,6 +37,8 @@ public:
     Node head;
     int tailDir; // global direction
 
+    bool active;
+
 protected:
     Algorithm* algorithm;
     Algorithm* newAlgorithm;

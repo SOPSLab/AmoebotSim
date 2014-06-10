@@ -6,6 +6,7 @@ Particle::Particle(Algorithm* _algorithm, const int _orientation, const Node _he
     : orientation(_orientation),
       head(_head),
       tailDir(_tailDir),
+      active(true),
       algorithm(_algorithm),
       newAlgorithm(nullptr)
 {
@@ -16,6 +17,7 @@ Particle::Particle(const Particle& other)
     : orientation(other.orientation),
       head(other.head),
       tailDir(other.tailDir),
+      active(other.active),
       algorithm(other.algorithm->clone()),
       newAlgorithm(nullptr)
 {
@@ -33,6 +35,7 @@ Particle& Particle::operator=(const Particle& other)
     orientation = other.orientation;
     head = other.head;
     tailDir = other.tailDir;
+    active = other.active;
     algorithm = other.algorithm->clone();
     return *this;
 }
