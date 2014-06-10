@@ -22,6 +22,7 @@ public:
 
     static System instance();
     virtual Algorithm* clone();
+    virtual bool isDeterministic() const;
 
 protected:
     virtual Movement execute(std::array<const Flag*, 10>& flags);

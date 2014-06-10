@@ -13,23 +13,35 @@
 class System
 {
 public:
+    enum class SystemState {
+        Valid,
+        Collision,
+        Disconnected,
+        Terminated,
+        Deadlock
+    };
+
+public:
     System();
     System(const System& other);
     System& operator=(const System& other);
 
-    bool insert(const Particle &p);
+    SystemState insert(const Particle &p);
     const Particle& at(int index) const;
     int size() const;
 
-    // returns true if an action was executed
-    // returns false if the algorithm already terminated
-    bool round();
+    SystemState round();
+    SystemState deterministicRound();
+    SystemState nondeterministicRound();
+
+    SystemState getSystemState() const;
 
 protected:
     std::array<const Flag*, 10> assembleFlags(Particle& p);
     bool handleExpansion(Particle& p, int dir);
     bool handleContraction(Particle& p, int dir, bool isHandoverContraction);
     void activateParticlesAround(Particle& p);
+    bool hasBlockedParticle() const;
 
 protected:
     std::mt19937 rng;
@@ -37,6 +49,8 @@ protected:
     std::deque<Particle> particles;
     std::deque<Particle*> activeParticles;
     std::map<Node, Particle*> particleMap;
+
+    SystemState systemState;
 };
 
 #endif // SYSTEM_H

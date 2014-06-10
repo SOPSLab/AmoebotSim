@@ -3,6 +3,7 @@
 
 enum class MovementType
 {
+    Empty,
     Idle,
     Expand,
     Contract,
@@ -12,7 +13,7 @@ enum class MovementType
 class Movement
 {
 public:
-    Movement(MovementType _type, int _dir);
+    Movement(MovementType _type, int _dir = 0);
 
 public:
     MovementType type;

@@ -41,6 +41,11 @@ Algorithm* DummyAlg::clone()
     return new DummyAlg(*this);
 }
 
+bool DummyAlg::isDeterministic() const
+{
+    return true;
+}
+
 Movement DummyAlg::execute(std::array<const Flag*, 10>& flags)
 {
     auto inFlags = castFlags<DummyFlag>(flags);

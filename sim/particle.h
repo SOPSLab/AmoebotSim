@@ -10,6 +10,13 @@
 class Particle
 {
 public:
+    enum class ParticleState {
+        Active,
+        Inactive,
+        Blocked
+    };
+
+public:
     Particle(Algorithm* _algorithm, const int _orientation, const Node _head, const int _tailDir = -1);
     Particle(const Particle& other);
     virtual ~Particle();
@@ -29,6 +36,7 @@ public:
 
     int headColor() const;
     int tailColor() const;
+    bool algorithmIsDeterministic() const;
 
     template<int n> static int posMod(const int a);
 
@@ -37,7 +45,7 @@ public:
     Node head;
     int tailDir; // global direction
 
-    bool active;
+    ParticleState particleState;
 
 protected:
     Algorithm* algorithm;

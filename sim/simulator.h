@@ -22,6 +22,9 @@ public:
 signals:
     void updateSystem(System* _system);
 
+    void started();
+    void stopped();
+
     void log(const QString msg, const bool isError);
 
 public slots:

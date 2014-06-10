@@ -28,6 +28,16 @@ ApplicationWindow {
         resultFieldFade.running = true
     }
 
+    function setLabelStart()
+    {
+        startStopButton.text = "start"
+    }
+
+    function setLabelStop()
+    {
+        startStopButton.text = "stop"
+    }
+
     VisItem {
         id: vis
         anchors.fill: parent
@@ -73,13 +83,13 @@ ApplicationWindow {
 
             focus: true
             Keys.onPressed: {
-                if(event.key == Qt.Key_Enter || event.key == Qt.Key_Return) {
+                if(event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
                     executeCommand(text)
                     visible = false
                     text = ""
                     buttonRow.forceActiveFocus()
                     event.accepted = true
-                } else if(event.key == Qt.Key_Escape) {
+                } else if(event.key === Qt.Key_Escape) {
                     visible = false
                     text = ""
                     buttonRow.forceActiveFocus()
@@ -90,7 +100,7 @@ ApplicationWindow {
 
         focus: true
         Keys.onPressed: {
-            if(event.key == Qt.Key_Enter || event.key == Qt.Key_Return) {
+            if(event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
                 resultField.visible = false
                 resultFieldFade.running = false
                 commandField.visible = true
@@ -103,7 +113,7 @@ ApplicationWindow {
             id: startStopButton
             text: "start"
 
-            onClicked: {
+            onClicked: {             
                 if(text == "start") {
                     start()
                     text = "stop"

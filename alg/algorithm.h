@@ -27,6 +27,7 @@ public:
 
     Movement delegateExecute(std::array<const Flag*, 10>& flags);
     virtual Algorithm* clone() = 0;
+    virtual bool isDeterministic() const = 0;
 
 protected:
     virtual Movement execute(std::array<const Flag*, 10>& flags) = 0;

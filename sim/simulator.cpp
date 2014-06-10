@@ -23,17 +23,38 @@ void Simulator::init()
 void Simulator::round()
 {
     system.round();
+    auto systemState = system.getSystemState();
+    if(systemState == System::SystemState::Collision) {
+        log("Collision detected. Simulation aborted.", true);
+        roundTimer->stop();
+        emit stopped();
+    } else if(systemState == System::SystemState::Deadlock) {
+        log("Deadlock detected. Simulation aborted.", true);
+        roundTimer->stop();
+        emit stopped();
+    } else if(systemState == System::SystemState::Disconnected) {
+        log("System disconnected. Simulation aborted.", true);
+        roundTimer->stop();
+        emit stopped();
+    } else if(systemState == System::SystemState::Terminated) {
+        log("System terminated. Simulation finished.", false);
+        roundTimer->stop();
+        emit stopped();
+    }
+
     emit updateSystem(new System(system));
 }
 
 void Simulator::start()
 {
     roundTimer->start();
+    emit started();
 }
 
 void Simulator::stop()
 {
     roundTimer->stop();
+    emit stopped();
 }
 
 void Simulator::executeCommand(const QString cmd)

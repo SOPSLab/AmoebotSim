@@ -29,6 +29,18 @@ Application::Application(int argc, char *argv[]) :
                 QMetaObject::invokeMethod(engine->rootObjects().at(0), "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
             }
     );
+    connect(sim,
+            &Simulator::started,
+            [&](){
+                QMetaObject::invokeMethod(engine->rootObjects().at(0), "setLabelStop");
+            }
+    );
+    connect(sim,
+            &Simulator::stopped,
+            [&](){
+                QMetaObject::invokeMethod(engine->rootObjects().at(0), "setLabelStart");
+            }
+    );
 
     connect(simThread, SIGNAL(started()), sim, SLOT(init()));
     simThread->start();
