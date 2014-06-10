@@ -15,6 +15,8 @@ public:
 public slots:
     void round();
 
+    void exampleAlgorithmInstance(int size);
+
 private:
     Simulator& sim;
 };
@@ -22,12 +24,17 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    _sim.system = ExampleAlgorithm::instance();
+    sim.setSystem(ExampleAlgorithm::instance(10));
 }
 
 inline void ScriptInterface::round()
 {
     sim.round();
+}
+
+inline void ScriptInterface::exampleAlgorithmInstance(int size)
+{
+    sim.setSystem(ExampleAlgorithm::instance(size));
 }
 
 #endif // SCRIPTINTERFACE_H

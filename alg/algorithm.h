@@ -1,10 +1,12 @@
 #ifndef ALGORITHM_H
 #define ALGORITHM_H
 
-#include <QtGlobal>
-
 #include <array>
+#include <chrono>
+#include <random>
 #include <vector>
+
+#include <QtGlobal>
 
 #include "sim/movement.h"
 
@@ -39,6 +41,9 @@ protected:
 
     template<class T> static bool contains(std::vector<T> vector, T value);
 
+    static int randDir();
+    int randLabel() const;
+
     int labelToDir(int label) const;
 
     int tailDir() const;
@@ -49,6 +54,8 @@ protected:
     int headContractionLabel() const;
     int tailContractionLabel() const;
 
+    const std::array<int, 3>& backLabels() const;
+
 private:
     static int labelToDir(int label, int tailDir);
     void updateLabels(const Movement m);
@@ -58,6 +65,9 @@ public:
     std::array<Flag*, 10> outFlags;
     int headColor;
     int tailColor;
+
+protected:
+    static std::mt19937 rng;
 
 private:
     int _tailDir;
@@ -71,6 +81,8 @@ private:
     static const std::array<int, 6> contractLabels;
     // direction of an edge depending on tailDir and label
     static const std::array<std::array<int, 10>, 6> labelDir;
+
+    static const std::array<const std::array<int, 3>, 6>_backLabels;
 };
 
 inline Flag::Flag()
@@ -88,6 +100,21 @@ inline Algorithm::Algorithm()
       tailColor(-1),
       _tailDir(-1)
 {
+    static bool rngInitialized = false;
+    if(!rngInitialized) {
+        uint32_t seed;
+        std::random_device device;
+        if(device.entropy() == 0) {
+            auto duration = std::chrono::high_resolution_clock::now() - std::chrono::high_resolution_clock::time_point::min();
+            seed = duration.count();
+        } else {
+            std::uniform_int_distribution<uint32_t> dist(std::numeric_limits<uint32_t>::min(),
+                                                         std::numeric_limits<uint32_t>::max());
+            seed = dist(device);
+        }
+        rng.seed(seed);
+        rngInitialized = true;
+    }
 }
 
 inline Algorithm::Algorithm(const Algorithm& other)
@@ -150,6 +177,23 @@ template<class T> bool Algorithm::contains(std::vector<T> vector, T value)
     return false;
 }
 
+inline int Algorithm::randDir()
+{
+    static std::uniform_int_distribution<int> dist(0, 5);
+    return dist(rng);
+}
+
+inline int Algorithm::randLabel() const
+{
+    static std::uniform_int_distribution<int> dist6(0, 5);
+    static std::uniform_int_distribution<int> dist10(0, 9);
+    if(_tailDir == -1) {
+        return dist6(rng);
+    } else {
+        return dist10(rng);
+    }
+}
+
 inline int Algorithm::labelToDir(int label) const
 {
     return labelToDir(label, _tailDir);
@@ -198,6 +242,12 @@ inline int Algorithm::tailContractionLabel() const
 {
     Q_ASSERT(0 <= _tailDir && _tailDir <= 5);
     return contractLabels[(_tailDir + 3) % 6];
+}
+
+inline const std::array<int, 3>& Algorithm::backLabels() const
+{
+    Q_ASSERT(0 <= _tailDir && _tailDir <= 5);
+    return _backLabels[_tailDir];
 }
 
 inline int Algorithm::labelToDir(int label, int tailDir)

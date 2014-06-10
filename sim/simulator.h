@@ -12,12 +12,11 @@ class Simulator : public QObject
 {
     Q_OBJECT
 
-    friend class ScriptInterface;
-
 public:
     explicit Simulator();
+    virtual ~Simulator();
 
-    void registerAlgorithm(QString name, void (*fn)());
+    void setSystem(System* _system);
 
 signals:
     void updateSystem(System* _system);
@@ -39,7 +38,7 @@ protected:
     QScriptEngine engine;
     QTimer* roundTimer;
 
-    System system;
+    System* system;
 };
 
 #endif // SIMULATOR_H

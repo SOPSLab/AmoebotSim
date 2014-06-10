@@ -4,10 +4,27 @@
 #include "sim/simulator.h"
 
 Simulator::Simulator()
-    : roundTimer(nullptr)
+    : roundTimer(nullptr),
+      system(nullptr)
 {
     engine.setProcessEventsInterval(33);
     engine.setGlobalObject(engine.newQObject(new ScriptInterface(*this), QScriptEngine::ScriptOwnership));
+}
+
+Simulator::~Simulator()
+{
+    delete system;
+}
+
+void Simulator::setSystem(System* _system)
+{
+    if(roundTimer != nullptr) {
+        roundTimer->stop();
+        emit stopped();
+    }
+    delete system;
+    system = _system;
+    emit updateSystem(new System(*system));
 }
 
 void Simulator::init()
@@ -16,14 +33,14 @@ void Simulator::init()
         roundTimer = new QTimer(this);
         roundTimer->setInterval(100);
         connect(roundTimer, &QTimer::timeout, this, &Simulator::round);
-        emit updateSystem(new System(system));
+        emit updateSystem(new System(*system));
     }
 }
 
 void Simulator::round()
 {
-    system.round();
-    auto systemState = system.getSystemState();
+    system->round();
+    auto systemState = system->getSystemState();
     if(systemState == System::SystemState::Collision) {
         log("Collision detected. Simulation aborted.", true);
         roundTimer->stop();
@@ -42,7 +59,7 @@ void Simulator::round()
         emit stopped();
     }
 
-    emit updateSystem(new System(system));
+    emit updateSystem(new System(*system));
 }
 
 void Simulator::start()
