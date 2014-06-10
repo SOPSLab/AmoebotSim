@@ -24,8 +24,8 @@ public:
 
 protected:
     std::array<const Flag*, 10> assembleFlags(Particle& p);
-    void handleExpansion(Particle& p, int dir);
-    void handleContraction(Particle& p, int dir, bool isHandoverContraction);
+    bool handleExpansion(Particle& p, int dir);
+    bool handleContraction(Particle& p, int dir, bool isHandoverContraction);
 
 protected:
     std::mt19937 rng;
