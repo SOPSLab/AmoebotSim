@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <chrono>
+#include <set>
 #include <utility>
 
 #include <QDebug>
@@ -43,24 +44,10 @@ System& System::operator=(const System& other)
 
 System::SystemState System::insert(const Particle& p)
 {
-    if(systemState == SystemState::Collision || systemState == SystemState::Disconnected) {
-        return systemState;
-    }
-
-    if(particleMap.find(p.head) != particleMap.end()) {
-        systemState = SystemState::Collision;
-        return systemState;
-    }
-
-    if(p.tailDir != -1 && particleMap.find(p.tail()) != particleMap.end()) {
-        systemState = SystemState::Collision;
-        return systemState;
-    }
+    Q_ASSERT(particleMap.find(p.head) == particleMap.end());
+    Q_ASSERT(p.tailDir == -1 || particleMap.find(p.tail()) == particleMap.end());
 
     particles.push_back(p);
-    particles.back().particleState = Particle::ParticleState::Active;
-    activateParticlesAround(particles.back());
-    activeParticles.push_back(&particles.back());
     particleMap.insert(std::pair<Node, Particle*>(p.head, &particles.back()));
     if(p.tailDir != -1) {
         particleMap.insert(std::pair<Node, Particle*>(p.tail(), &particles.back()));
@@ -80,7 +67,7 @@ int System::size() const
 
 System::SystemState System::round()
 {
-    if(systemState == SystemState::Collision || systemState == SystemState::Disconnected) {
+    if(systemState != SystemState::Valid) {
         return systemState;
     }
 
@@ -89,22 +76,16 @@ System::SystemState System::round()
         return systemState;
     }
 
-    if(particles[0].algorithmIsDeterministic()) {
-        return deterministicRound();
-    } else {
-        return nondeterministicRound();
+    std::deque<Particle*> shuffledParticles;
+    for(auto it = particles.begin(); it != particles.end(); ++it) {
+        shuffledParticles.push_back(&(*it));
     }
-}
+    std::shuffle(shuffledParticles.begin(), shuffledParticles.end(), rng);
 
-System::SystemState System::deterministicRound()
-{
-    Q_ASSERT(activeParticles.size() <= particles.size());
-    while(activeParticles.size() > 0) {
-        auto dist = std::uniform_int_distribution<int>(0, activeParticles.size() - 1);
-        auto index = dist(rng);
-        std::swap(activeParticles[0], activeParticles[index]);
+    bool hasBlockedParticles = false;
 
-        Particle* p = activeParticles.front();
+    while(shuffledParticles.size() > 0) {
+        Particle* p = shuffledParticles.front();
         auto inFlags = assembleFlags(*p);
         Movement m = p->executeAlgorithm(inFlags);
 
@@ -112,76 +93,33 @@ System::SystemState System::deterministicRound()
             // particle becomes inactive voluntarily
             // it will be activated once its neighborhood changes
             p->discard();
-            p->particleState = Particle::ParticleState::Inactive;
-            activeParticles.pop_front();
+            shuffledParticles.pop_front();
             continue;
         } else if(m.type == MovementType::Idle) {
             p->apply();
-            activateParticlesAround(*p);
-            break;
+            return systemState;
         } else if(m.type == MovementType::Expand) {
-            bool actionSuccessful = handleExpansion(*p, m.dir);
-            if(actionSuccessful) {
-                break;
+            if(handleExpansion(*p, m.dir)) {
+                return systemState;
             }
         } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
-            bool actionSuccessful = handleContraction(*p, m.dir, m.type == MovementType::HandoverContract);
-            if(actionSuccessful) {
-                break;
+            if(handleContraction(*p, m.dir, m.type == MovementType::HandoverContract)) {
+                return systemState;
             }
         }
 
-        // particle becomes blocked because it was not able to perform its action
-        // it will be activated once its neighborhood changes
-        p->particleState = Particle::ParticleState::Blocked;
-        activeParticles.pop_front();
+        // particle is blocked, it can not exceute its action
+        hasBlockedParticles = true;
+        shuffledParticles.pop_front();
     }
-    if(activeParticles.size() == 0) {
-        if(hasBlockedParticle()) {
+
+    if(hasBlockedParticles) {
+        if(particles[0].algorithmIsDeterministic()) {
             systemState = SystemState::Deadlock;
         } else {
-            systemState = SystemState::Terminated;
+            systemState = SystemState::Valid;
         }
-    }
-    return systemState;
-}
-
-System::SystemState System::nondeterministicRound()
-{
-    // depending on the algorithm used for the particles,
-    // this method might not terminate!
-    Q_ASSERT(activeParticles.size() <= particles.size());
-    while(activeParticles.size() > 0) {
-        auto dist = std::uniform_int_distribution<int>(0, activeParticles.size() - 1);
-        auto index = dist(rng);
-
-        Particle* p = activeParticles[index];
-        auto inFlags = assembleFlags(*p);
-        Movement m = p->executeAlgorithm(inFlags);
-
-        if(m.type == MovementType::Empty) {
-            // particle becomes inactive voluntarily
-            // it will be activated once its neighborhood changes
-            p->discard();
-            p->particleState = Particle::ParticleState::Inactive;
-            activeParticles.pop_front();
-        } else if(m.type == MovementType::Idle) {
-            p->apply();
-            activateParticlesAround(*p);
-            break;
-        } else if(m.type == MovementType::Expand) {
-            bool actionSuccessful = handleExpansion(*p, m.dir);
-            if(actionSuccessful) {
-                break;
-            }
-        } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
-            bool actionSuccessful = handleContraction(*p, m.dir, m.type == MovementType::HandoverContract);
-            if(actionSuccessful) {
-                break;
-            }
-        }
-    }
-    if(activeParticles.size() == 0) {
+    } else {
         systemState = SystemState::Terminated;
     }
     return systemState;
@@ -239,7 +177,6 @@ bool System::handleExpansion(Particle& p, int dir)
     p.head = newHead;
     p.tailDir = Particle::posMod<6>(dir + 3);
     p.apply();
-    activateParticlesAround(p);
     return true;
 }
 
@@ -390,7 +327,6 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
     }
 
     // apply changes to particles and particleMap
-    activateParticlesAround(p);
     Node handoverNode;
     if(isHeadContract) {
         handoverNode = p.head;
@@ -406,32 +342,40 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
         handoverParticle->tailDir = Particle::posMod<6>(handoverExpandDir + 3);
         handoverParticle->apply();
         particleMap.insert(std::pair<Node, Particle*>(handoverNode, handoverParticle));
-        activateParticlesAround(*handoverParticle);
+    } else {
+        if(!isConnected()) {
+            systemState = SystemState::Disconnected;
+        }
     }
-    activateParticlesAround(p);
     return true;
 }
 
-void System::activateParticlesAround(Particle& p)
+bool System::isConnected() const
 {
-    int labelLimit = p.tailDir == -1 ? 6 : 10;
-    for(int label = 0; label < labelLimit; label++) {
-        auto neighborIt = particleMap.find(p.neighboringNodeReachedViaLabel(label));
-        if(neighborIt != particleMap.end()) {
-            if(neighborIt->second->particleState != Particle::ParticleState::Active) {
-                neighborIt->second->particleState = Particle::ParticleState::Active;
-                activeParticles.push_back(neighborIt->second);
+    if(particleMap.empty()) {
+        return true;
+    }
+
+    std::set<Node> occupiedNodes;
+    for(auto it = particleMap.cbegin(); it != particleMap.cend(); ++it) {
+        occupiedNodes.insert(it->first);
+    }
+
+    std::deque<Node> queue;
+    queue.push_back(*occupiedNodes.begin());
+
+    while(!queue.empty()) {
+        Node n = queue.front();
+        queue.pop_front();
+        for(int dir = 0; dir < 6; ++dir) {
+            Node neighbor = n.nodeInDir(dir);
+            auto nondeIt = occupiedNodes.find(neighbor);
+            if(nondeIt != occupiedNodes.end()) {
+                queue.push_back(neighbor);
+                occupiedNodes.erase(nondeIt);
             }
         }
     }
-}
 
-bool System::hasBlockedParticle() const
-{
-    for(auto it = particles.cbegin(); it != particles.cend(); ++it) {
-        if(it->particleState == Particle::ParticleState::Blocked) {
-            return true;
-        }
-    }
-    return false;
+    return occupiedNodes.empty();
 }

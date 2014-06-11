@@ -47,7 +47,7 @@ System* ExampleAlgorithm::instance(const int size)
     for(int x = 0; x < size; x++) {
         Phase phase = x == size - 1 ? Phase::Leader : Phase::Idle;
         int orientation = randDir();
-        Node position = Node(x, 0);
+        Node position = Node(x - size / 2, 0);
         int tailDir = -1;
         system->insert(Particle(new ExampleAlgorithm(phase), orientation, position, tailDir));
     }

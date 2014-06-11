@@ -41,11 +41,7 @@ void Simulator::round()
 {
     system->round();
     auto systemState = system->getSystemState();
-    if(systemState == System::SystemState::Collision) {
-        log("Collision detected. Simulation aborted.", true);
-        roundTimer->stop();
-        emit stopped();
-    } else if(systemState == System::SystemState::Deadlock) {
+    if(systemState == System::SystemState::Deadlock) {
         log("Deadlock detected. Simulation aborted.", true);
         roundTimer->stop();
         emit stopped();

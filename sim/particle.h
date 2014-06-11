@@ -10,13 +10,6 @@
 class Particle
 {
 public:
-    enum class ParticleState {
-        Active,
-        Inactive,
-        Blocked
-    };
-
-public:
     Particle(Algorithm* _algorithm, const int _orientation, const Node _head, const int _tailDir = -1);
     Particle(const Particle& other);
     virtual ~Particle();
@@ -44,8 +37,6 @@ public:
     int orientation; // global direction
     Node head;
     int tailDir; // global direction
-
-    ParticleState particleState;
 
 protected:
     Algorithm* algorithm;
