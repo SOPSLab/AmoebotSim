@@ -7,15 +7,15 @@ ExampleFlag::ExampleFlag()
 }
 
 ExampleFlag::ExampleFlag(const ExampleFlag& other)
-    : Flag(other), // Do not forget to call the constructor of the Flag class!
-      phase(other.phase)
+    : Flag(other),      // Do not forget to call the constructor of the Flag class!
+      phase(other.phase)// And be sure to implement correct copy constructors.
 {
 }
 
 ExampleAlgorithm::ExampleAlgorithm(const Phase _phase)
     : phase(_phase),
       followDir(-1),
-      distanceToTravel(3)
+      distanceToTravel(3) // The line of particles should travel 3 nodes wide.
 {
     // The following method conveniently sets up the outFlags.
     initFlags<ExampleFlag>();
@@ -25,8 +25,8 @@ ExampleAlgorithm::ExampleAlgorithm(const Phase _phase)
 
 
 ExampleAlgorithm::ExampleAlgorithm(const ExampleAlgorithm& other)
-    : Algorithm(other), // Do not forget to call the constructor of the Algorithm class!
-      phase(other.phase),
+    : Algorithm(other),     // Do not forget to call the constructor of the Algorithm class!
+      phase(other.phase),   // And again, make sure to provide a correct copy constructor.
       followDir(other.followDir),
       distanceToTravel(other.distanceToTravel)
 {
@@ -43,6 +43,7 @@ ExampleAlgorithm::~ExampleAlgorithm()
 
 System* ExampleAlgorithm::instance(const int size)
 {
+    // Create a line of particles where the right-most one is a leader.
     System* system = new System();
     for(int x = 0; x < size; x++) {
         Phase phase = x == size - 1 ? Phase::Leader : Phase::Idle;
@@ -62,6 +63,7 @@ Algorithm* ExampleAlgorithm::clone()
 
 bool ExampleAlgorithm::isDeterministic() const
 {
+    // Our algorithm works completely deterministically. Specifying this here allows the simulator to detect deadlocks.
     return true;
 }
 
@@ -76,23 +78,28 @@ Movement ExampleAlgorithm::execute(std::array<const Flag*, 10>& flags)
     outFlags = castFlags<ExampleFlag>(Algorithm::outFlags);
 
     if(phase == Phase::Finished) {
+        // Finished particles do nothing.
         return Movement(MovementType::Empty);
     }
 
     if(isExpanded()) {
+        // Expanded particles contract no matter of their phase.
         if(inFlags[headContractionLabel()] == nullptr) {
+            // inFlags[headContractionLabel()] denotes the flag of the node behind the tail.
+            // Note that an inFlag has the value "nullptr" if there is no particle occuying the respective node.
             return Movement(MovementType::Contract, tailContractionLabel());
         } else {
             return Movement(MovementType::HandoverContract, tailContractionLabel());
         }
     } else {
-
         if(hasNeighborInPhase(Phase::Finished)) {
+            // If a particle has a finished neighbor, it will become finished itself.
             setPhase(Phase::Finished);
             return Movement(MovementType::Idle);
         }
 
         if(phase == Phase::Leader) {
+            // The leader travels to the right for "distanceToTravel" many steps and then finishes.
             if(distanceToTravel > 0) {
                 distanceToTravel--;
                 auto moveDir = determineMoveDir();
@@ -102,8 +109,10 @@ Movement ExampleAlgorithm::execute(std::array<const Flag*, 10>& flags)
                 return Movement(MovementType::Idle);
             }
         } else if(phase == Phase::Follower){
+            // A follower knows in which direction to expand and simply does so.
             return Movement(MovementType::Expand, followDir);
         } else {//phase == Phase::Idle
+            // If an idle particle sees any active particle (leader or follower), it becomes active itself.
             followDir = determineFollowDir();
             if(followDir != -1) {
                 setPhase(Phase::Follower);
@@ -119,6 +128,7 @@ void ExampleAlgorithm::setPhase(Phase _phase)
 {
     phase = _phase;
     if(phase == Phase::Finished) {
+        // The head and the tail of a particle can be marked by a separate color.
         headColor = 0x00ff00;
         tailColor = 0x00ff00;
     } else if(phase == Phase::Leader) {
@@ -128,6 +138,7 @@ void ExampleAlgorithm::setPhase(Phase _phase)
         headColor = 0x0000ff;
         tailColor = 0x0000ff;
     } else {//phase == Phase::Idle
+        // Setting the color to -1 will remove the mark.
         headColor = -1;
         tailColor = -1;
     }
@@ -141,7 +152,7 @@ void ExampleAlgorithm::setPhase(Phase _phase)
 bool ExampleAlgorithm::hasNeighborInPhase(Phase _phase)
 {
     for(int label = 0; label < 10; label++) {
-        if(inFlags[label] != nullptr) {
+        if(inFlags[label] != nullptr) { // Again, note that an inFlag can be nullptr!
             const ExampleFlag& flag = *inFlags[label];
             if(flag.phase == _phase) {
                 return true;
