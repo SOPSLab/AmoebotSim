@@ -37,6 +37,7 @@ public slots:
 protected:
     QScriptEngine engine;
     QTimer* roundTimer;
+    QTimer* updateTimer;
 
     System* system;
 };
