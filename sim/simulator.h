@@ -2,7 +2,6 @@
 #define SIMULATOR_H
 
 #include <QScriptEngine>
-#include <QTimer>
 
 #include "system.h"
 

@@ -1,4 +1,5 @@
 #include <QScriptValue>
+#include <QTimer>
 
 #include "script/scriptinterface.h"
 #include "sim/simulator.h"
@@ -7,7 +8,6 @@ Simulator::Simulator()
     : roundTimer(nullptr),
       system(nullptr)
 {
-    engine.setProcessEventsInterval(33);
     engine.setGlobalObject(engine.newQObject(new ScriptInterface(*this), QScriptEngine::ScriptOwnership));
 }
 
