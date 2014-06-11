@@ -54,7 +54,7 @@ void Simulator::round()
         roundTimer->stop();
         emit stopped();
     } else if(systemState == System::SystemState::Terminated) {
-        log("System terminated. Simulation finished.", false);
+        log("Algorithm terminated. Simulation finished.", false);
         roundTimer->stop();
         emit stopped();
     }

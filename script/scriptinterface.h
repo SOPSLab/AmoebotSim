@@ -24,7 +24,7 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    sim.setSystem(ExampleAlgorithm::instance(10));
+    sim.setSystem(ExampleAlgorithm::instance(5));
 }
 
 inline void ScriptInterface::round()

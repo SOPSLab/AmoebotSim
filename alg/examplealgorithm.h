@@ -33,7 +33,8 @@
  * the state of a particle can only be applied if the associated movement succeeds (the action is enabled). If all
  * particles in a system return empty as their movement, the simulator will detect that the algorithm terminated.
  *
- * The comments in the code below give more details on the implementation of algorithms.
+ * The comments in the code below give more details on the implementation of algorithms. The example is a simplified
+ * version of the Spanning Forest Algorithms.
  * */
 
 #ifndef EXAMPLEALGORITHM_H
@@ -43,18 +44,29 @@
 
 class System;
 
+// The three phases from the spanning forest algorithm.
+enum class Phase {
+    Finished,
+    Leader,
+    Follower,
+    Idle
+};
+
 class ExampleFlag : public Flag
 {
 public:
     ExampleFlag();
     ExampleFlag(const ExampleFlag& other);
+
+    // A particle should tell its neighbors, in what phase it is.
+    Phase phase;
 };
 
 class ExampleAlgorithm : public Algorithm
 {
 public:
     // Particles can be initialized differently, for example to provide a seed particle.
-    ExampleAlgorithm(const bool _isSeed = false);
+    ExampleAlgorithm(const Phase _phase);
     ExampleAlgorithm(const ExampleAlgorithm& other);
     virtual ~ExampleAlgorithm();
 
@@ -92,11 +104,18 @@ protected:
      * */
     virtual Movement execute(std::array<const Flag*, 10>& flags);
 
+    void setPhase(Phase _phase);
+    bool hasNeighborInPhase(Phase _phase);
+    int determineMoveDir();
+    int determineFollowDir();
+
 protected:
-    // Store whether a particle is a seed in the state.
-    bool isSeed;
-    // Include an expand direction into the state of a particle.
-    int expandDir;
+    std::array<const ExampleFlag*, 10> inFlags;
+    std::array<ExampleFlag*, 10> outFlags;
+
+    Phase phase;
+    int followDir;
+    int distanceToTravel;
 };
 
 #endif // EXAMPLEALGORITHM_H

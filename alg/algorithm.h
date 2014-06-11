@@ -37,7 +37,8 @@ protected:
     template<class T> void initFlags();
     template<class T> void copyFlags(const Algorithm& algorithm);
     void deleteFlags();
-    template<class T> static std::array<const T*, 10> castFlags(std::array<const Flag*, 10>& flags);
+    template<class T> static std::array<const T*, 10> castFlags(std::array<const Flag*, 10>& _flags);
+    template<class T> static std::array<T*, 10> castFlags(std::array<Flag*, 10>& _flags);
 
     template<class T> static bool contains(std::vector<T> vector, T value);
 
@@ -158,13 +159,22 @@ inline void Algorithm::deleteFlags()
     }
 }
 
-template<class T> std::array<const T*, 10> Algorithm::castFlags(std::array<const Flag*, 10>& flags)
+template<class T> std::array<const T*, 10> Algorithm::castFlags(std::array<const Flag*, 10>& _flags)
 {
-    std::array<const T*, 10> inFlags;
-    for(decltype(flags.size()) i = 0; i < flags.size(); i++) {
-        inFlags[i] = (T*)flags[i];
+    std::array<const T*, 10> flags;
+    for(decltype(_flags.size()) i = 0; i < _flags.size(); i++) {
+        flags[i] = (T*)_flags[i];
     }
-    return inFlags;
+    return flags;
+}
+
+template<class T> std::array<T*, 10> Algorithm::castFlags(std::array<Flag*, 10>& _flags)
+{
+    std::array<T*, 10> flags;
+    for(decltype(_flags.size()) i = 0; i < _flags.size(); i++) {
+        flags[i] = (T*)_flags[i];
+    }
+    return flags;
 }
 
 template<class T> bool Algorithm::contains(std::vector<T> vector, T value)

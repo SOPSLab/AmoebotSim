@@ -390,6 +390,7 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
     }
 
     // apply changes to particles and particleMap
+    activateParticlesAround(p);
     Node handoverNode;
     if(isHeadContract) {
         handoverNode = p.head;
@@ -399,15 +400,15 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
     }
     p.tailDir = -1;
     p.apply();
-    activateParticlesAround(p);
     particleMap.erase(handoverNode);
     if(handover) {
         handoverParticle->head = handoverNode;
         handoverParticle->tailDir = Particle::posMod<6>(handoverExpandDir + 3);
         handoverParticle->apply();
-        activateParticlesAround(*handoverParticle);
         particleMap.insert(std::pair<Node, Particle*>(handoverNode, handoverParticle));
+        activateParticlesAround(*handoverParticle);
     }
+    activateParticlesAround(p);
     return true;
 }
 

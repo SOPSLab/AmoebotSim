@@ -7,32 +7,28 @@ ExampleFlag::ExampleFlag()
 }
 
 ExampleFlag::ExampleFlag(const ExampleFlag& other)
-    : Flag(other) // Do not forget to call the constructor of the Flag class!
+    : Flag(other), // Do not forget to call the constructor of the Flag class!
+      phase(other.phase)
 {
 }
 
-ExampleAlgorithm::ExampleAlgorithm(const bool _isSeed)
-    : isSeed(_isSeed),
-      expandDir(0) // Initially, the expand direction should be 0.
+ExampleAlgorithm::ExampleAlgorithm(const Phase _phase)
+    : phase(_phase),
+      followDir(-1),
+      distanceToTravel(3)
 {
     // The following method conveniently sets up the outFlags.
     initFlags<ExampleFlag>();
-
-    // You can assign a color to each the head and the tail of a particle.
-    if(isSeed) {
-        headColor = 0xff0000;
-        tailColor = 0x00ff00;
-    } else {
-        headColor = 0x0000ff;
-        tailColor = -1; // -1 specifies that there should be no circle around the
-    }
+    outFlags = castFlags<ExampleFlag>(Algorithm::outFlags);
+    setPhase(_phase);
 }
 
 
 ExampleAlgorithm::ExampleAlgorithm(const ExampleAlgorithm& other)
     : Algorithm(other), // Do not forget to call the constructor of the Algorithm class!
-      isSeed(other.isSeed),
-      expandDir(other.expandDir)
+      phase(other.phase),
+      followDir(other.followDir),
+      distanceToTravel(other.distanceToTravel)
 {
     // The following method conveniently copies the outFlags, provided the copy constructor for the flags is correctly
     // implemented.
@@ -49,11 +45,11 @@ System* ExampleAlgorithm::instance(const int size)
 {
     System* system = new System();
     for(int x = 0; x < size; x++) {
-        bool isSeed = (x == 0);
+        Phase phase = x == size - 1 ? Phase::Leader : Phase::Idle;
         int orientation = randDir();
         Node position = Node(x, 0);
         int tailDir = -1;
-        system->insert(Particle(new ExampleAlgorithm(isSeed), orientation, position, tailDir));
+        system->insert(Particle(new ExampleAlgorithm(phase), orientation, position, tailDir));
     }
     return system; // Note that the ownership goes to the caller!
 }
@@ -74,29 +70,107 @@ Movement ExampleAlgorithm::execute(std::array<const Flag*, 10>& flags)
     /*
      * As you can see, the flags received as a parameter have type Flag*. However, we would like to have flags of type
      * ExampleFlag*. The following method provides convenient casting. Note that it does not check whether the casts are
-     * valid!
+     * valid! The array of flags is stored in a member variable so that it can be accessed easily in other methods.
      * */
-    auto inFlags = castFlags<ExampleFlag>(flags);
+    inFlags = castFlags<ExampleFlag>(flags);
+    outFlags = castFlags<ExampleFlag>(Algorithm::outFlags);
 
+    if(phase == Phase::Finished) {
+        return Movement(MovementType::Empty);
+    }
 
     if(isExpanded()) {
-//        if(inFlags[5] == nullptr) {
+        if(inFlags[headContractionLabel()] == nullptr) {
             return Movement(MovementType::Contract, tailContractionLabel());
-//        } else {
+        } else {
             return Movement(MovementType::HandoverContract, tailContractionLabel());
-//        }
+        }
     } else {
-//        if(inFlags[0] == nullptr) {
-//            headColor = 0xff0000;
-//            tailColor = 0xff0000;
-//        } else if(inFlags[3] == nullptr) {
-//            headColor = 0x00ff00;
-//            tailColor = 0x00ff00;
-//        } else {
-//            headColor = 0x0000ff;
-//            tailColor = 0x0000ff;
-//        }
-        expandDir = (expandDir + 1) % 6;
-        return Movement(MovementType::Expand, expandDir);
+
+        if(hasNeighborInPhase(Phase::Finished)) {
+            setPhase(Phase::Finished);
+            return Movement(MovementType::Idle);
+        }
+
+        if(phase == Phase::Leader) {
+            if(distanceToTravel > 0) {
+                distanceToTravel--;
+                auto moveDir = determineMoveDir();
+                return Movement(MovementType::Expand, moveDir);
+            } else {
+                setPhase(Phase::Finished);
+                return Movement(MovementType::Idle);
+            }
+        } else if(phase == Phase::Follower){
+            return Movement(MovementType::Expand, followDir);
+        } else {//phase == Phase::Idle
+            followDir = determineFollowDir();
+            if(followDir != -1) {
+                setPhase(Phase::Follower);
+                return Movement(MovementType::Idle);
+            } else {
+                return Movement(MovementType::Empty);
+            }
+        }
     }
+}
+
+void ExampleAlgorithm::setPhase(Phase _phase)
+{
+    phase = _phase;
+    if(phase == Phase::Finished) {
+        headColor = 0x00ff00;
+        tailColor = 0x00ff00;
+    } else if(phase == Phase::Leader) {
+        headColor = 0xff0000;
+        tailColor = 0xff0000;
+    } else if(phase == Phase::Follower) {
+        headColor = 0x0000ff;
+        tailColor = 0x0000ff;
+    } else {//phase == Phase::Idle
+        headColor = -1;
+        tailColor = -1;
+    }
+
+    for(auto it = outFlags.begin(); it != outFlags.end(); ++it) {
+        ExampleFlag& flag = *(*it);
+        flag.phase = phase;
+    }
+}
+
+bool ExampleAlgorithm::hasNeighborInPhase(Phase _phase)
+{
+    for(int label = 0; label < 10; label++) {
+        if(inFlags[label] != nullptr) {
+            const ExampleFlag& flag = *inFlags[label];
+            if(flag.phase == _phase) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+int ExampleAlgorithm::determineMoveDir()
+{
+    Q_ASSERT(isContracted());
+    for(int label = 0; label < 6; label++) {
+        if(inFlags[label] != nullptr) {
+            return (labelToDir(label) + 3) % 6;
+        }
+    }
+    Q_ASSERT(false);
+}
+
+int ExampleAlgorithm::determineFollowDir()
+{
+    for(int label = 0; label < 10; label++) {
+        if(inFlags[label] != nullptr) {
+            const ExampleFlag& flag = *inFlags[label];
+            if(flag.phase == Phase::Leader || flag.phase == Phase::Follower) {
+                return labelToDir(label);
+            }
+        }
+    }
+    return -1;
 }
