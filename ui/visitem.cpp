@@ -6,11 +6,32 @@
 #include <QMutexLocker>
 #include <QOpenGLFunctions_2_0>
 #include <QOpenGLTexture>
+#include <QTimer>
 #include <QQuickWindow>
 
 #include "sim/particle.h"
 #include "sim/system.h"
 #include "ui/visitem.h"
+
+const std::array<QPointF, 16> VisItem::particleTexOffsets =
+{{
+     QPointF(0.0f / 4.0f , 0.0f / 4.0f),
+     QPointF(1.0f / 4.0f , 0.0f / 4.0f),
+     QPointF(2.0f / 4.0f , 0.0f / 4.0f),
+     QPointF(3.0f / 4.0f , 0.0f / 4.0f),
+     QPointF(0.0f / 4.0f , 1.0f / 4.0f),
+     QPointF(1.0f / 4.0f , 1.0f / 4.0f),
+     QPointF(2.0f / 4.0f , 1.0f / 4.0f),
+     QPointF(3.0f / 4.0f , 1.0f / 4.0f),
+     QPointF(0.0f / 4.0f , 2.0f / 4.0f),
+     QPointF(1.0f / 4.0f , 2.0f / 4.0f),
+     QPointF(2.0f / 4.0f , 2.0f / 4.0f),
+     QPointF(3.0f / 4.0f , 2.0f / 4.0f),
+     QPointF(0.0f / 4.0f , 3.0f / 4.0f),
+     QPointF(1.0f / 4.0f , 3.0f / 4.0f),
+     QPointF(2.0f / 4.0f , 3.0f / 4.0f),
+     QPointF(3.0f / 4.0f , 3.0f / 4.0f)
+}};
 
 const float VisItem::triangleHeight = sqrtf(0.75f);
 
@@ -19,9 +40,14 @@ VisItem::VisItem(QQuickItem* parent) :
     gridTex(nullptr),
     particleTex(nullptr),
     zoomGui(zoomInit),
-    system(nullptr)
+    system(nullptr),
+    blinkValue(-1.0f)
 {
     setAcceptedMouseButtons(Qt::LeftButton);
+
+    blinkTimer = new QTimer(this);
+    connect(blinkTimer, &QTimer::timeout, [&](){blinkValue += 0.2; if(blinkValue >= 1.0) blinkValue = -1.0;});
+    blinkTimer->start(33);
 }
 
 void VisItem::updateSystem(System* _system)
@@ -74,7 +100,12 @@ void VisItem::paint()
 
     Quad view = calculateView(focusPos, zoom, width(), height());
     drawGrid(view);
-    drawParticles(view);
+    if(system != nullptr) {
+        drawParticles(view);
+        if(system->getSystemState() == System::SystemState::Disconnected) {
+            drawDisconnectionNode();
+        }
+    }
 }
 
 void VisItem::deinitialize()
@@ -147,29 +178,6 @@ void VisItem::drawParticles(const Quad& view)
 
 void VisItem::drawParticle(const Particle& p, const Quad& view)
 {
-    // these values are a consequence of how the particle texture was created
-    constexpr std::array<QPointF, 16> particleTexOffsets =
-    {{
-         QPointF(0.0f / 4.0f , 0.0f / 4.0f),
-         QPointF(1.0f / 4.0f , 0.0f / 4.0f),
-         QPointF(2.0f / 4.0f , 0.0f / 4.0f),
-         QPointF(3.0f / 4.0f , 0.0f / 4.0f),
-         QPointF(0.0f / 4.0f , 1.0f / 4.0f),
-         QPointF(1.0f / 4.0f , 1.0f / 4.0f),
-         QPointF(2.0f / 4.0f , 1.0f / 4.0f),
-         QPointF(3.0f / 4.0f , 1.0f / 4.0f),
-         QPointF(0.0f / 4.0f , 2.0f / 4.0f),
-         QPointF(1.0f / 4.0f , 2.0f / 4.0f),
-         QPointF(2.0f / 4.0f , 2.0f / 4.0f),
-         QPointF(3.0f / 4.0f , 2.0f / 4.0f),
-         QPointF(0.0f / 4.0f , 3.0f / 4.0f),
-         QPointF(1.0f / 4.0f , 3.0f / 4.0f),
-         QPointF(2.0f / 4.0f , 3.0f / 4.0f),
-         QPointF(3.0f / 4.0f , 3.0f / 4.0f)
-    }};
-    constexpr float oneFourth = 1.0f / 4.0f;
-    constexpr float halfQuadSideLength = 256.0f / 220.0f;
-
     auto pos = nodeToWorldCoord(p.head);
     if(inView(pos, view)) {
         // draw mark around head
@@ -215,6 +223,23 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
         glfn->glTexCoord2f(texOffset.x(), texOffset.y() + oneFourth);
         glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
     }
+}
+
+void VisItem::drawDisconnectionNode()
+{
+    auto pos = nodeToWorldCoord(system->getDisconnectionNode());
+    glColor4i(255 << 23, 0, 0, (0.6f * fabsf(blinkValue) + 0.4f) * (180 << 23));
+    const QPointF& texOffset = particleTexOffsets[14];
+    glfn->glBegin(GL_QUADS);
+    glfn->glTexCoord2f(texOffset.x(), texOffset.y());
+    glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
+    glfn->glTexCoord2f(texOffset.x() + oneFourth, texOffset.y());
+    glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() - halfQuadSideLength);
+    glfn->glTexCoord2f(texOffset.x() + oneFourth, texOffset.y() + oneFourth);
+    glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
+    glfn->glTexCoord2f(texOffset.x(), texOffset.y() + oneFourth);
+    glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
+    glfn->glEnd();
 }
 
 VisItem::Quad VisItem::calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight)
