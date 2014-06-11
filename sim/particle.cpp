@@ -271,14 +271,34 @@ int Particle::labelOfNeighboringNode(const Node node) const
     return -1; // avoid compiler warning
 }
 
-int Particle::headColor() const
+int Particle::headMarkColor() const
 {
-    return algorithm->headColor;
+    return algorithm->headMarkColor;
 }
 
-int Particle::tailColor() const
+int Particle::headMarkDir() const
 {
-    return algorithm->tailColor;
+    Q_ASSERT(-1 <= algorithm->headMarkDir && algorithm->headMarkDir <= 5);
+    if(algorithm->headMarkDir == -1) {
+        return -1;
+    } else {
+        return (orientation + algorithm->headMarkDir) % 6;
+    }
+}
+
+int Particle::tailMarkColor() const
+{
+    return algorithm->tailMarkColor;
+}
+
+int Particle::tailMarkDir() const
+{
+    Q_ASSERT(-1 <= algorithm->tailMarkDir && algorithm->tailMarkDir <= 5);
+    if(algorithm->tailMarkDir == -1) {
+        return -1;
+    } else {
+        return (orientation + algorithm->tailMarkDir) % 6;
+    }
 }
 
 bool Particle::algorithmIsDeterministic() const

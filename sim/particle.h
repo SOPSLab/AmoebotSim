@@ -27,8 +27,10 @@ public:
     Node neighboringNodeReachedViaLabel(const int label) const;
     int labelOfNeighboringNode(const Node node) const;
 
-    int headColor() const;
-    int tailColor() const;
+    int headMarkColor() const;
+    int headMarkDir() const;
+    int tailMarkColor() const;
+    int tailMarkDir() const;
     bool algorithmIsDeterministic() const;
 
     template<int n> static int posMod(const int a);

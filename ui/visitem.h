@@ -56,7 +56,7 @@ protected:
 
 protected:
     static constexpr float zoomMin = 10.0f;
-    static constexpr float zoomMax = 200.0f;
+    static constexpr float zoomMax = 500.0f;
     static constexpr float zoomInit = 50.0f;
     static constexpr float zoomAttenuation = 10.0f;
 

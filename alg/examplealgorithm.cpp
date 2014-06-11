@@ -103,6 +103,11 @@ Movement ExampleAlgorithm::execute(std::array<const Flag*, 10>& flags)
             if(distanceToTravel > 0) {
                 distanceToTravel--;
                 auto moveDir = determineMoveDir();
+                // The mark associated to a head or tail (see below in setPhase) can be extended to show a direction.
+                // If the direction is -1, the mark is drawn without an indicator for direction.
+                // Otherwise, the direction must be from [0, 5] (not adhering to this will cause a crash!)
+                // and the indicator will point in that direction.
+                headMarkDir = moveDir;
                 return Movement(MovementType::Expand, moveDir);
             } else {
                 setPhase(Phase::Finished);
@@ -114,6 +119,7 @@ Movement ExampleAlgorithm::execute(std::array<const Flag*, 10>& flags)
         } else {//phase == Phase::Idle
             // If an idle particle sees any active particle (leader or follower), it becomes active itself.
             followDir = determineFollowDir();
+            headMarkDir = followDir;
             if(followDir != -1) {
                 setPhase(Phase::Follower);
                 return Movement(MovementType::Idle);
@@ -129,18 +135,18 @@ void ExampleAlgorithm::setPhase(Phase _phase)
     phase = _phase;
     if(phase == Phase::Finished) {
         // The head and the tail of a particle can be marked by a separate color.
-        headColor = 0x00ff00;
-        tailColor = 0x00ff00;
+        headMarkColor = 0x00ff00;
+        tailMarkColor = 0x00ff00;
     } else if(phase == Phase::Leader) {
-        headColor = 0xff0000;
-        tailColor = 0xff0000;
+        headMarkColor = 0xff0000;
+        tailMarkColor = 0xff0000;
     } else if(phase == Phase::Follower) {
-        headColor = 0x0000ff;
-        tailColor = 0x0000ff;
+        headMarkColor = 0x0000ff;
+        tailMarkColor = 0x0000ff;
     } else {//phase == Phase::Idle
         // Setting the color to -1 will remove the mark.
-        headColor = -1;
-        tailColor = -1;
+        headMarkColor = -1;
+        tailMarkColor = -1;
     }
 
     for(auto it = outFlags.begin(); it != outFlags.end(); ++it) {
@@ -171,6 +177,7 @@ int ExampleAlgorithm::determineMoveDir()
         }
     }
     Q_ASSERT(false);
+    return -1;
 }
 
 int ExampleAlgorithm::determineFollowDir()

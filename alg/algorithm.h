@@ -64,8 +64,10 @@ private:
 
 public:
     std::array<Flag*, 10> outFlags;
-    int headColor;
-    int tailColor;
+    int headMarkColor;
+    int headMarkDir;
+    int tailMarkColor;
+    int tailMarkDir;
 
 protected:
     static std::mt19937 rng;
@@ -97,8 +99,10 @@ inline Flag::Flag(const Flag& other)
 }
 
 inline Algorithm::Algorithm()
-    : headColor(-1),
-      tailColor(-1),
+    : headMarkColor(-1),
+      headMarkDir(-1),
+      tailMarkColor(-1),
+      tailMarkDir(-1),
       _tailDir(-1)
 {
     static bool rngInitialized = false;
@@ -119,8 +123,10 @@ inline Algorithm::Algorithm()
 }
 
 inline Algorithm::Algorithm(const Algorithm& other)
-    : headColor(other.headColor),
-      tailColor(other.tailColor),
+    : headMarkColor(other.headMarkColor),
+      headMarkDir(other.headMarkDir),
+      tailMarkColor(other.tailMarkColor),
+      tailMarkDir(other.tailMarkDir),
       _tailDir(other._tailDir)
 {
 }
