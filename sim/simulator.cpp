@@ -1,4 +1,5 @@
 #include <QScriptValue>
+#include <QTimer>
 
 #include "script/scriptinterface.h"
 #include "sim/simulator.h"
@@ -7,7 +8,6 @@ Simulator::Simulator()
     : roundTimer(nullptr),
       system(nullptr)
 {
-    engine.setProcessEventsInterval(33);
     engine.setGlobalObject(engine.newQObject(new ScriptInterface(*this), QScriptEngine::ScriptOwnership));
 }
 
@@ -24,7 +24,6 @@ void Simulator::setSystem(System* _system)
     }
     delete system;
     system = _system;
-    emit updateSystem(new System(*system));
 }
 
 void Simulator::init()
@@ -33,7 +32,11 @@ void Simulator::init()
         roundTimer = new QTimer(this);
         roundTimer->setInterval(100);
         connect(roundTimer, &QTimer::timeout, this, &Simulator::round);
-        emit updateSystem(new System(*system));
+
+        updateTimer = new QTimer(this);
+        updateTimer->setInterval(33);
+        connect(updateTimer, &QTimer::timeout, [&](){emit updateSystem(new System(*system));});
+        updateTimer->start();
     }
 }
 
@@ -54,8 +57,6 @@ void Simulator::round()
         roundTimer->stop();
         emit stopped();
     }
-
-    emit updateSystem(new System(*system));
 }
 
 void Simulator::start()

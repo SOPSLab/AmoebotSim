@@ -12,6 +12,7 @@
 
 class QMouseEvent;
 class QOpenGLTexture;
+class QTimer;
 class QWheelEvent;
 
 class System;
@@ -45,6 +46,7 @@ protected:
     void drawGrid(const Quad& view);
     void drawParticles(const Quad& view);
     void drawParticle(const Particle& p, const Quad& view);
+    void drawDisconnectionNode();
 
     static Quad calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight);
     static bool inView(const QPointF& headWorldPos, const Quad& view);
@@ -59,6 +61,11 @@ protected:
     static constexpr float zoomMax = 150.0f;
     static constexpr float zoomInit = 50.0f;
     static constexpr float zoomAttenuation = 10.0f;
+
+    // these values are a consequence of how the particle texture was created
+    static const std::array<QPointF, 16> particleTexOffsets;
+    static constexpr float oneFourth = 1.0f / 4.0f;
+    static constexpr float halfQuadSideLength = 256.0f / 220.0f;
 
     // height of a triangle in our equilateral triangular grid if the side length is 1
     static const float triangleHeight;
@@ -79,6 +86,9 @@ protected:
     System* system;
 
     QMutex systemMutex;
+
+    QTimer* blinkTimer;
+    float blinkValue;
 };
 
 #endif // VISITEM_H

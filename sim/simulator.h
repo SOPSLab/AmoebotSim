@@ -2,7 +2,6 @@
 #define SIMULATOR_H
 
 #include <QScriptEngine>
-#include <QTimer>
 
 #include "system.h"
 
@@ -37,6 +36,7 @@ public slots:
 protected:
     QScriptEngine engine;
     QTimer* roundTimer;
+    QTimer* updateTimer;
 
     System* system;
 };

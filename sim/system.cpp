@@ -25,7 +25,8 @@ System::System()
 
 System::System(const System& other)
     : rng(other.rng),
-      systemState(other.systemState)
+      systemState(other.systemState),
+      disconnectionNode(other.disconnectionNode)
 {
     for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
         insert(*it);
@@ -36,6 +37,7 @@ System& System::operator=(const System& other)
 {
     rng = other.rng;
     systemState = other.systemState;
+    disconnectionNode = other.disconnectionNode;
     for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
         insert(*it);
     }
@@ -128,6 +130,11 @@ System::SystemState System::round()
 System::SystemState System::getSystemState() const
 {
     return systemState;
+}
+
+Node System::getDisconnectionNode() const
+{
+    return disconnectionNode;
 }
 
 std::array<const Flag*, 10> System::assembleFlags(Particle& p)
@@ -343,8 +350,10 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
         handoverParticle->apply();
         particleMap.insert(std::pair<Node, Particle*>(handoverNode, handoverParticle));
     } else {
+        // an isolated contraction is the only action that can disconnect the system
         if(!isConnected()) {
             systemState = SystemState::Disconnected;
+            disconnectionNode = handoverNode;
         }
     }
     return true;

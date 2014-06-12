@@ -32,6 +32,7 @@ public:
     SystemState round();
 
     SystemState getSystemState() const;
+    Node getDisconnectionNode() const;
 
 protected:
     std::array<const Flag*, 10> assembleFlags(Particle& p);
@@ -46,6 +47,7 @@ protected:
     std::map<Node, Particle*> particleMap;
 
     SystemState systemState;
+    Node disconnectionNode;
 };
 
 #endif // SYSTEM_H
