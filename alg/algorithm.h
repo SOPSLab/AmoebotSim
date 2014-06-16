@@ -42,6 +42,7 @@ protected:
 
     template<class T> static bool contains(std::vector<T> vector, T value);
 
+    static int randInt(int from, int toNotIncluding);
     static int randDir();
     int randLabel() const;
 
@@ -193,20 +194,23 @@ template<class T> bool Algorithm::contains(std::vector<T> vector, T value)
     return false;
 }
 
+inline int Algorithm::randInt(int from, int toNotIncluding)
+{
+    std::uniform_int_distribution<int> dist(from, toNotIncluding);
+    return dist(rng);
+}
+
 inline int Algorithm::randDir()
 {
-    static std::uniform_int_distribution<int> dist(0, 5);
-    return dist(rng);
+    return randInt(0, 6);
 }
 
 inline int Algorithm::randLabel() const
 {
-    static std::uniform_int_distribution<int> dist6(0, 5);
-    static std::uniform_int_distribution<int> dist10(0, 9);
     if(_tailDir == -1) {
-        return dist6(rng);
+        return randInt(0, 6);
     } else {
-        return dist10(rng);
+        return randInt(0, 10);
     }
 }
 
