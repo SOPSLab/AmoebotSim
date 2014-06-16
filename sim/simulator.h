@@ -33,6 +33,8 @@ public slots:
 
     void executeCommand(const QString cmd);
 
+    void setRoundDuration(int ms);
+
 protected:
     QScriptEngine engine;
     QTimer* roundTimer;

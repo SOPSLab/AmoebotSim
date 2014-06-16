@@ -15,6 +15,8 @@ public:
 public slots:
     void round();
 
+    void setRoundDuration(int ms);
+
     void exampleAlgorithmInstance(int size);
 
 private:
@@ -30,6 +32,11 @@ inline ScriptInterface::ScriptInterface(Simulator& _sim)
 inline void ScriptInterface::round()
 {
     sim.round();
+}
+
+inline void ScriptInterface::setRoundDuration(int ms)
+{
+    sim.setRoundDuration(ms);
 }
 
 inline void ScriptInterface::exampleAlgorithmInstance(int size)

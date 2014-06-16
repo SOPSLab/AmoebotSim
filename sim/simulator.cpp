@@ -78,3 +78,8 @@ void Simulator::executeCommand(const QString cmd)
         emit log(result.toString(), result.isError());
     }
 }
+
+void Simulator::setRoundDuration(int ms)
+{
+    roundTimer->setInterval(ms);
+}
