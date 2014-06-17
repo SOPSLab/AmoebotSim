@@ -198,7 +198,7 @@ template<class T> bool Algorithm::contains(std::vector<T> vector, T value)
 
 inline int Algorithm::randInt(const int from, const int toNotIncluding)
 {
-    std::uniform_int_distribution<int> dist(from, toNotIncluding);
+    std::uniform_int_distribution<int> dist(from, toNotIncluding - 1);
     return dist(rng);
 }
 
