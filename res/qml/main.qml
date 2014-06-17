@@ -42,32 +42,6 @@ ApplicationWindow {
         anchors.fill: parent
     }
 
-    A_ResultTextField {
-        id: resultField
-        visible: false
-        opacity: 0
-        anchors.margins: 10
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        width: window.width - 200
-
-        SequentialAnimation {
-            id: resultFieldFade
-            running: false
-
-            PauseAnimation {
-                duration: 5000
-            }
-
-            NumberAnimation {
-                target: resultField
-                property: "opacity"
-                to: 0
-                duration: 1000
-            }
-        }
-    }
-
     Row {
         id: buttonRow
         spacing: 10
@@ -78,7 +52,7 @@ ApplicationWindow {
         A_TextField {
             id: commandField
             visible: false
-            width: window.width - 200
+            width: startStopButton.visible ? window.width - 200 : window.width - 20
 
             focus: true
             Keys.onPressed: {
@@ -97,6 +71,29 @@ ApplicationWindow {
             }
         }
 
+        A_ResultTextField {
+            id: resultField
+            visible: false
+            opacity: 0
+            width: startStopButton.visible ? window.width - 200 : window.width - 20
+
+            SequentialAnimation {
+                id: resultFieldFade
+                running: false
+
+                PauseAnimation {
+                    duration: 5000
+                }
+
+                NumberAnimation {
+                    target: resultField
+                    property: "opacity"
+                    to: 0
+                    duration: 1000
+                }
+            }
+        }
+
         focus: true
         Keys.onPressed: {
             if(event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
@@ -105,6 +102,10 @@ ApplicationWindow {
                 commandField.visible = true
                 commandField.forceActiveFocus()
                 event.accepted = true
+            } else if(event.key === Qt.Key_B && (event.modifiers & Qt.ControlModifier)) {
+                startStopButton.visible = !startStopButton.visible
+                roundButton.visible = !roundButton.visible
+                event.accepted = true
             }
         }
 
@@ -112,7 +113,7 @@ ApplicationWindow {
             id: startStopButton
             text: "start"
 
-            onClicked: {             
+            onClicked: {
                 if(text == "start") {
                     start()
                     text = "stop"

@@ -6,6 +6,9 @@
 #include "alg/examplealgorithm.h"
 #include "sim/simulator.h"
 
+/*
+ * The methods of the following class are automatically available during runtime as command in the command-line.
+ * */
 class ScriptInterface : public QObject
 {
     Q_OBJECT
