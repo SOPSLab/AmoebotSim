@@ -106,6 +106,16 @@ ApplicationWindow {
                 startStopButton.visible = !startStopButton.visible
                 roundButton.visible = !roundButton.visible
                 event.accepted = true
+            } else if(event.key === Qt.Key_E && (event.modifiers & Qt.ControlModifier)) {
+                if(startStopButton.text == "start") {
+                    start()
+                } else {
+                    stop()
+                }
+                event.accepted = true
+            } else if(event.key === Qt.Key_D && (event.modifiers & Qt.ControlModifier)) {
+                round()
+                event.accepted = true
             }
         }
 
@@ -116,10 +126,8 @@ ApplicationWindow {
             onClicked: {
                 if(text == "start") {
                     start()
-                    text = "stop"
                 } else {
                     stop()
-                    text = "start"
                 }
             }
         }
