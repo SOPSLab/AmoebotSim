@@ -28,7 +28,7 @@ The following instructions should get you started working with AmoebotSim; pleas
 - Use the buttons in the bottom-right corner to control the simulation.
 - A command-line can be opened by pressing the return-key. The available commands are the methods of the _ScriptInterface_ class in _script/scriptinterface.h_.
 - The following keyboard shortcuts are available (the shortcuts are given for Windows; on OS X replace _Ctrl_ with _Cmd_):
-    - __Ctrl + B__: Hide / Show buttons in the bottom right corner (nice for presentations).
+    - __Ctrl + B__: Hide / Show buttons in the bottom-right corner (nice for presentations).
 
 [1] http://qt-project.org/downloads
 
