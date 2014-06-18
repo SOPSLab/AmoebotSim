@@ -10,15 +10,7 @@
 
 #include "sim/movement.h"
 
-class Flag {
-public:
-    Flag();
-    Flag(const Flag& other);
-
-public:
-    int dir;
-    int tailDir;
-};
+class Flag;
 
 class Algorithm
 {
@@ -91,15 +83,15 @@ private:
     static const std::array<const std::array<int, 3>, 6>_backLabels;
 };
 
-inline Flag::Flag()
-{
-}
+class Flag {
+public:
+    Flag();
+    Flag(const Flag& other);
 
-inline Flag::Flag(const Flag& other)
-    : dir(other.dir),
-      tailDir(other.tailDir)
-{
-}
+public:
+    int dir;
+    int tailDir;
+};
 
 inline Algorithm::Algorithm()
     : headMarkColor(-1),
@@ -311,6 +303,16 @@ inline void Algorithm::updateOutFlags()
         outFlags[i]->dir = labelToDir(i);
         outFlags[i]->tailDir = _tailDir;
     }
+}
+
+inline Flag::Flag()
+{
+}
+
+inline Flag::Flag(const Flag& other)
+    : dir(other.dir),
+      tailDir(other.tailDir)
+{
 }
 
 #endif // ALGORITHM_H

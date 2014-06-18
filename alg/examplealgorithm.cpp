@@ -2,16 +2,6 @@
 #include "sim/particle.h"
 #include "sim/system.h"
 
-ExampleFlag::ExampleFlag()
-{
-}
-
-ExampleFlag::ExampleFlag(const ExampleFlag& other)
-    : Flag(other),      // Do not forget to call the constructor of the Flag class!
-      phase(other.phase)// And be sure to implement correct copy constructors.
-{
-}
-
 ExampleAlgorithm::ExampleAlgorithm(const Phase _phase)
     : phase(_phase),
       followDir(-1),
@@ -191,4 +181,14 @@ int ExampleAlgorithm::determineFollowDir()
         }
     }
     return -1;
+}
+
+ExampleFlag::ExampleFlag()
+{
+}
+
+ExampleFlag::ExampleFlag(const ExampleFlag& other)
+    : Flag(other),      // Do not forget to call the constructor of the Flag class!
+      phase(other.phase)// And be sure to implement correct copy constructors.
+{
 }

@@ -42,32 +42,20 @@
 
 #include "alg/algorithm.h"
 
+class ExampleFlag;
 class System;
-
-// The three phases from the spanning forest algorithm together with a new "Finished" phase.
-enum class Phase {
-    Finished,
-    Leader,
-    Follower,
-    Idle
-};
-
-/*
- * The specific flag class for this algorithm defines the data that can be shared between particles. It has to extend
- * the Flag class.
- * */
-class ExampleFlag : public Flag
-{
-public:
-    ExampleFlag();
-    ExampleFlag(const ExampleFlag& other);
-
-    // A particle should tell its neighbors, in what phase it is.
-    Phase phase;
-};
 
 class ExampleAlgorithm : public Algorithm
 {
+public:
+    // The three phases from the spanning forest algorithm together with a new "Finished" phase.
+    enum class Phase {
+        Finished,
+        Leader,
+        Follower,
+        Idle
+    };
+
 public:
     // Particles can be initialized differently. This can also be used to generate instances with a seed particle.
     ExampleAlgorithm(const Phase _phase);
@@ -132,6 +120,20 @@ protected:
     Phase phase;
     int followDir;
     int distanceToTravel;
+};
+
+/*
+ * The specific flag class for this algorithm defines the data that can be shared between particles. It has to extend
+ * the Flag class.
+ * */
+class ExampleFlag : public Flag
+{
+public:
+    ExampleFlag();
+    ExampleFlag(const ExampleFlag& other);
+
+    // A particle should tell its neighbors, in what phase it is.
+    ExampleAlgorithm::Phase phase;
 };
 
 #endif // EXAMPLEALGORITHM_H
