@@ -40,21 +40,37 @@ protected:
     static float randFloat(const float from, const float toNotIncluding);
     static bool randBool(const double trueProb = 0.5);
 
-    int labelToDir(int label) const;
+    int labelToDir(const int label) const;
+    int labelToDirAfterExpansion(const int label, const int expansionDir) const;
 
     int tailDir() const;
     bool isExpanded() const;
     bool isContracted() const;
+
     const std::vector<int>& headLabels() const;
     const std::vector<int>& tailLabels() const;
+    bool isHeadLabel(const int label) const;
+    bool isTailLabel(const int label) const;
+    int dirToHeadLabel(const int dir) const;
+    int dirToTailLabel(const int dir) const;
     int headContractionLabel() const;
     int tailContractionLabel() const;
+
+    const std::vector<int>& headLabelsAfterExpansion(const int expansionDir) const;
+    const std::vector<int>& tailLabelsAfterExpansion(const int expansionDir) const;
+    bool isHeadLabelAfterExpansion(const int label, const int expansionDir) const;
+    bool isTailLabelAfterExpansion(const int label, const int expansionDir) const;
+    int dirToHeadLabelAfterExpansion(const int dir, const int expansionDir) const;
+    int dirToTailLabelAfterExpansion(const int dir, const int expansionDir) const;
+    int headContractionLabelAfterExpansion(const int expansionDir) const;
+    int tailContractionLabelAfterExpansion(const int expansionDir) const;
+
 
     const std::array<int, 3>& backLabels() const;
 
 private:
     static int labelToDir(int label, int tailDir);
-    void updateLabels(const Movement m);
+    void updateTailDir(const Movement m);
     void updateOutFlags();
 
 public:
@@ -87,6 +103,9 @@ class Flag {
 public:
     Flag();
     Flag(const Flag& other);
+
+    bool isExpanded() const;
+    bool isContracted() const;
 
 public:
     int dir;
@@ -133,7 +152,7 @@ inline Algorithm::~Algorithm()
 inline Movement Algorithm::delegateExecute(std::array<const Flag*, 10>& flags)
 {
     Movement m = execute(flags);
-    updateLabels(m);
+    updateTailDir(m);
     updateOutFlags();
     return m;
 }
@@ -219,9 +238,15 @@ inline bool Algorithm::randBool(const double trueProb)
     return (randFloat(0, 1) < trueProb);
 }
 
-inline int Algorithm::labelToDir(int label) const
+inline int Algorithm::labelToDir(const int label) const
 {
     return labelToDir(label, _tailDir);
+}
+
+inline int Algorithm::labelToDirAfterExpansion(const int label, const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    return labelToDir(label, (expansionDir + 3) % 6);
 }
 
 inline int Algorithm::tailDir() const
@@ -257,6 +282,58 @@ inline const std::vector<int>& Algorithm::tailLabels() const
     }
 }
 
+inline bool Algorithm::isHeadLabel(const int label) const
+{
+    for(auto it = headLabels().cbegin(); it != headLabels().cend(); ++it) {
+        if(label == *it) {
+            return true;
+        }
+    }
+    return false;
+}
+
+inline bool Algorithm::isTailLabel(const int label) const
+{
+    for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
+        if(label == *it) {
+            return true;
+        }
+    }
+    return false;
+}
+
+inline int Algorithm::dirToHeadLabel(const int dir) const
+{
+    Q_ASSERT(0 <= dir && dir <= 5);
+    if(isContracted()) {
+        return dir;
+    } else {
+        for(auto it = headLabels().cbegin(); it != headLabels().cend(); ++it) {
+            if(dir == labelToDir(*it)) {
+                return *it;
+            }
+        }
+        Q_ASSERT(false);
+        return 0;
+    }
+}
+
+inline int Algorithm::dirToTailLabel(const int dir) const
+{
+    Q_ASSERT(0 <= dir && dir <= 5);
+    if(isContracted()) {
+        return dir;
+    } else {
+        for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
+            if(dir == labelToDir(*it)) {
+                return *it;
+            }
+        }
+        Q_ASSERT(false);
+        return 0;
+    }
+}
+
 inline int Algorithm::headContractionLabel() const
 {
     Q_ASSERT(0 <= _tailDir && _tailDir <= 5);
@@ -267,6 +344,88 @@ inline int Algorithm::tailContractionLabel() const
 {
     Q_ASSERT(0 <= _tailDir && _tailDir <= 5);
     return contractLabels[(_tailDir + 3) % 6];
+}
+
+inline const std::vector<int>& Algorithm::headLabelsAfterExpansion(const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    int tempTailDir = (expansionDir + 3) % 6;
+    return labels[tempTailDir];
+}
+
+inline const std::vector<int>& Algorithm::tailLabelsAfterExpansion(const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    int tempTailDir = (expansionDir + 3) % 6;
+    return labels[(tempTailDir + 3) % 6];
+}
+
+inline bool Algorithm::isHeadLabelAfterExpansion(const int label, const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    for(auto it = headLabelsAfterExpansion(expansionDir).cbegin(); it != headLabelsAfterExpansion(expansionDir).cend(); ++it) {
+        if(label == *it) {
+            return true;
+        }
+    }
+    return false;
+}
+
+inline bool Algorithm::isTailLabelAfterExpansion(const int label, const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    for(auto it = tailLabelsAfterExpansion(expansionDir).cbegin(); it != tailLabelsAfterExpansion(expansionDir).cend(); ++it) {
+        if(label == *it) {
+            return true;
+        }
+    }
+    return false;
+}
+
+inline int Algorithm::dirToHeadLabelAfterExpansion(const int dir, const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= dir && dir <= 5);
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    for(auto it = headLabelsAfterExpansion(expansionDir).cbegin(); it != headLabelsAfterExpansion(expansionDir).cend(); ++it) {
+        if(dir == labelToDirAfterExpansion(*it, expansionDir)) {
+            return *it;
+        }
+    }
+    Q_ASSERT(false);
+    return 0;
+}
+
+inline int Algorithm::dirToTailLabelAfterExpansion(const int dir, const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= dir && dir <= 5);
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    for(auto it = tailLabelsAfterExpansion(expansionDir).cbegin(); it != tailLabelsAfterExpansion(expansionDir).cend(); ++it) {
+        if(dir == labelToDirAfterExpansion(*it, expansionDir)) {
+            return *it;
+        }
+    }
+    Q_ASSERT(false);
+    return 0;
+}
+
+inline int Algorithm::headContractionLabelAfterExpansion(const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    return contractLabels[(expansionDir + 3) % 6];
+}
+
+inline int Algorithm::tailContractionLabelAfterExpansion(const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    return contractLabels[expansionDir];
 }
 
 inline const std::array<int, 3>& Algorithm::backLabels() const
@@ -287,7 +446,7 @@ inline int Algorithm::labelToDir(int label, int tailDir)
     }
 }
 
-inline void Algorithm::updateLabels(const Movement m)
+inline void Algorithm::updateTailDir(const Movement m)
 {
     if(m.type == MovementType::Expand) {
         _tailDir = (m.dir + 3) % 6;
@@ -313,6 +472,16 @@ inline Flag::Flag(const Flag& other)
     : dir(other.dir),
       tailDir(other.tailDir)
 {
+}
+
+inline bool Flag::isExpanded() const
+{
+    return (tailDir != -1);
+}
+
+inline bool Flag::isContracted() const
+{
+    return !isExpanded();
 }
 
 #endif // ALGORITHM_H

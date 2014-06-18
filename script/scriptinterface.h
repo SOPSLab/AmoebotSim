@@ -4,6 +4,7 @@
 #include <QObject>
 
 #include "alg/examplealgorithm.h"
+#include "alg/infobjcoating.h"
 #include "sim/simulator.h"
 
 /*
@@ -29,7 +30,7 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    sim.setSystem(ExampleAlgorithm::instance(5));
+    sim.setSystem(InfObjCoating::instance(50));
 }
 
 inline void ScriptInterface::round()
@@ -44,7 +45,7 @@ inline void ScriptInterface::setRoundDuration(int ms)
 
 inline void ScriptInterface::exampleAlgorithmInstance(int size)
 {
-    sim.setSystem(ExampleAlgorithm::instance(size));
+    sim.setSystem(InfObjCoating::instance(size));
 }
 
 #endif // SCRIPTINTERFACE_H

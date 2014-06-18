@@ -9,20 +9,10 @@ QMAKE_INFO_PLIST = res/Info.plist
 
 win32:RC_FILE = res/AmoebotSim.rc
 
-SOURCES += \
-    alg/algorithm.cpp \
-    main/application.cpp \
-    main/main.cpp\
-    sim/node.cpp \
-    sim/particle.cpp \
-    sim/simulator.cpp \
-    sim/system.cpp \
-    ui/glitem.cpp \
-    ui/visitem.cpp \
-    alg/examplealgorithm.cpp
-
 HEADERS += \
     alg/algorithm.h \
+    alg/examplealgorithm.h \
+    alg/infobjcoating.h \
     main/application.h \
     script/scriptinterface.h \
     sim/movement.h \
@@ -31,8 +21,20 @@ HEADERS += \
     sim/simulator.h \
     sim/system.h \
     ui/glitem.h \
-    ui/visitem.h \
-    alg/examplealgorithm.h
+    ui/visitem.h
+
+SOURCES += \
+    alg/algorithm.cpp \
+    alg/examplealgorithm.cpp \
+    alg/infobjcoating.cpp \
+    main/application.cpp \
+    main/main.cpp\
+    sim/node.cpp \
+    sim/particle.cpp \
+    sim/simulator.cpp \
+    sim/system.cpp \
+    ui/glitem.cpp \
+    ui/visitem.cpp
 
 RESOURCES += \
     res/qml.qrc \
