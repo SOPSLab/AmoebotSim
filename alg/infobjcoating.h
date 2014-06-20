@@ -30,14 +30,19 @@ protected:
     virtual Movement execute(std::array<const Flag*, 10>& flags);
 
     void setPhase(const Phase _phase);
-    int neighborInPhase(const Phase _phase) const;
+
+    bool neighborIsInPhase(const int label, const Phase _phase) const;
+    int firstNeighborInPhase(const Phase _phase) const;
     bool hasNeighborInPhase(const Phase _phase) const;
 
     void setContractDir(const int contractDir);
     int updatedFollowDir() const;
 
+    void unsetFollowIndicator() const;
     void setFollowIndicatorLabel(const int label);
-    bool receivesFollowIndicator() const;
+    bool tailReceivesFollowIndicator() const;
+
+    int getMoveDir() const;
 
 protected:
     std::array<const InfObjCoatingFlag*, 10> inFlags;

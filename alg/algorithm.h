@@ -65,7 +65,6 @@ protected:
     int headContractionLabelAfterExpansion(const int expansionDir) const;
     int tailContractionLabelAfterExpansion(const int expansionDir) const;
 
-
     const std::array<int, 3>& backLabels() const;
 
 private:
@@ -110,6 +109,7 @@ public:
 public:
     int dir;
     int tailDir;
+    bool fromHead;
 };
 
 inline Algorithm::Algorithm()
@@ -458,9 +458,10 @@ inline void Algorithm::updateTailDir(const Movement m)
 inline void Algorithm::updateOutFlags()
 {
     int labelLimit = _tailDir == -1 ? 6 : 10;
-    for(int i = 0; i < labelLimit; i++) {
-        outFlags[i]->dir = labelToDir(i);
-        outFlags[i]->tailDir = _tailDir;
+    for(int label = 0; label < labelLimit; label++) {
+        outFlags[label]->dir = labelToDir(label);
+        outFlags[label]->tailDir = _tailDir;
+        outFlags[label]->fromHead = isHeadLabel(label);
     }
 }
 
@@ -470,7 +471,8 @@ inline Flag::Flag()
 
 inline Flag::Flag(const Flag& other)
     : dir(other.dir),
-      tailDir(other.tailDir)
+      tailDir(other.tailDir),
+      fromHead(other.fromHead)
 {
 }
 

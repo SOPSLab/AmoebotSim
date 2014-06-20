@@ -153,7 +153,7 @@ std::array<const Flag*, 10> System::assembleFlags(Particle& p)
             flags[label] = nullptr;
         } else {
             auto incidentNode = p.occupiedNodeIncidentToLabel(label);
-            flags[label] = neighborIt->second->getFlagForNode(incidentNode);
+            flags[label] = neighborIt->second->getFlagForNodeInDir(incidentNode, (p.labelToDir(label) + 3) % 6);
         }
     }
 

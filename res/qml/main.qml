@@ -107,7 +107,7 @@ ApplicationWindow {
                 roundButton.visible = !roundButton.visible
                 event.accepted = true
             } else if(event.key === Qt.Key_E && (event.modifiers & Qt.ControlModifier)) {
-                if(startStopButton.text == "start") {
+                if(startStopButton.text === "start") {
                     start()
                 } else {
                     stop()

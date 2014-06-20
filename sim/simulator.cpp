@@ -57,6 +57,11 @@ void Simulator::round()
         roundTimer->stop();
         emit stopped();
     }
+
+#ifdef QT_DEBUG
+    // increases the chance that when the debugger stops the visualization shows the actual configuration of the system
+    updateSystem(new System(*system));
+#endif
 }
 
 void Simulator::start()

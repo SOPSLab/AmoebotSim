@@ -2,6 +2,26 @@
 
 #include "sim/particle.h"
 
+const std::vector<int> Particle::sixLabels = {{0, 1, 2, 3, 4, 5}};
+const std::array<const std::vector<int>, 6> Particle::labels =
+{{
+    {3, 4, 5, 6, 7},
+    {4, 5, 6, 7, 8},
+    {7, 8, 9, 0, 1},
+    {8, 9, 0, 1, 2},
+    {9, 0, 1, 2, 3},
+    {2, 3, 4, 5, 6}
+}};
+const std::array<std::array<int, 10>, 6> Particle::labelDir
+{{
+    {{0, 1, 2, 1, 2, 3, 4, 5, 4, 5}},
+    {{0, 1, 2, 3, 2, 3, 4, 5, 0, 5}},
+    {{0, 1, 0, 1, 2, 3, 4, 3, 4, 5}},
+    {{0, 1, 2, 1, 2, 3, 4, 5, 4, 5}},
+    {{0, 1, 2, 3, 2, 3, 4, 5, 0, 5}},
+    {{0, 1, 0, 1, 2, 3, 4, 3, 4, 5}}
+}};
+
 Particle::Particle(Algorithm* _algorithm, const int _orientation, const Node _head, const int _tailDir)
     : orientation(_orientation),
       head(_head),
@@ -59,9 +79,9 @@ void Particle::discard()
     newAlgorithm = nullptr;
 }
 
-const Flag* Particle::getFlagForNode(Node node)
+const Flag* Particle::getFlagForNodeInDir(const Node node, const int dir)
 {
-    return algorithm->outFlags[labelOfNeighboringNode(node)];
+    return algorithm->outFlags[labelOfNeighboringNodeInDir(node, dir)];
 }
 
 Node Particle::tail() const
@@ -69,201 +89,95 @@ Node Particle::tail() const
     return head.nodeInDir(tailDir);
 }
 
+const std::vector<int>& Particle::headLabels() const
+{
+    Q_ASSERT(-1 <= tailDir && tailDir < 6);
+    if(tailDir == -1) {
+        return sixLabels;
+    } else {
+        int relativeTailDir = (tailDir - orientation + 6) % 6;
+        return labels[relativeTailDir];
+    }
+}
+
+const std::vector<int>& Particle::tailLabels() const
+{
+    Q_ASSERT(-1 <= tailDir && tailDir < 6);
+    if(tailDir == -1) {
+        return sixLabels;
+    } else {
+        int relativeTailDir = (tailDir - orientation + 6) % 6;
+        return labels[(relativeTailDir + 3) % 6];
+    }
+}
+
+bool Particle::isHeadLabel(const int label) const
+{
+    for(auto it = headLabels().cbegin(); it != headLabels().cend(); ++it) {
+        if(label == *it) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Particle::isTailLabel(const int label) const
+{
+    for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
+        if(label == *it) {
+            return true;
+        }
+    }
+    return false;
+}
+
 Node Particle::occupiedNodeIncidentToLabel(const int label) const
 {
+    Q_ASSERT(-1 <= tailDir && tailDir < 6);
     if(tailDir == -1) {
-        Q_ASSERT(0 <= label && label <= 5);
+        Q_ASSERT(0 <= label && label < 6);
         return head;
     } else {
-        Q_ASSERT(0 <= label && label <= 9);
-        if(tailDir == posMod<6>(orientation + 0)) {
-            if(label <= 2 || label >= 8) {
-                return tail();
-            } else {
-                return head;
-            }
-        } else if(tailDir == posMod<6>(orientation + 1)) {
-            if(label <= 3 || label >= 9) {
-                return tail();
-            } else {
-                return head;
-            }
-        } else if(tailDir == posMod<6>(orientation + 2)) {
-            if(label <= 2 || label >= 7) {
-                return head;
-            } else {
-                return tail();
-            }
-        } else if(tailDir == posMod<6>(orientation + 3)) {
-            if(label <= 2 || label >= 8) {
-                return head;
-            } else {
-                return tail();
-            }
-        } else if(tailDir == posMod<6>(orientation + 4)) {
-            if(label <= 3 || label >= 9) {
-                return head;
-            } else {
-                return tail();
-            }
-        } else { // tailDir == posMod<6>(orientation + 0)
-            if(label <= 2 || label >= 7) {
-                return tail();
-            } else {
-                return head;
-            }
+        Q_ASSERT(0 <= label && label < 10);
+        if(isHeadLabel(label)) {
+            return head;
+        } else {
+            return tail();
         }
     }
 }
 
 Node Particle::neighboringNodeReachedViaLabel(const int label) const
 {
+    Q_ASSERT(-1 <= tailDir && tailDir < 6);
     if(tailDir == -1) {
-        Q_ASSERT(0 <= label && label <= 5);
+        Q_ASSERT(0 <= label && label < 6);
         return head.nodeInDir(posMod<6>(orientation + label));
     } else {
-        Q_ASSERT(0 <= label && label <= 9);
-        if(tailDir == posMod<6>(orientation + 0)) {
-            if(label == 0) {
-                return tail().nodeInDir(posMod<6>(orientation + 0));
-            } else if(label == 1) {
-                return tail().nodeInDir(posMod<6>(orientation + 1));
-            } else if(label == 2) {
-                return tail().nodeInDir(posMod<6>(orientation + 2));
-            } else if(label == 3) {
-                return head.nodeInDir(posMod<6>(orientation + 1));
-            } else if(label == 4) {
-                return head.nodeInDir(posMod<6>(orientation + 2));
-            } else if(label == 5) {
-                return head.nodeInDir(posMod<6>(orientation + 3));
-            } else if(label == 6) {
-                return head.nodeInDir(posMod<6>(orientation + 4));
-            } else if(label == 7) {
-                return head.nodeInDir(posMod<6>(orientation + 5));
-            } else if(label == 8) {
-                return tail().nodeInDir(posMod<6>(orientation + 4));
-            } else { // label == 9
-                return tail().nodeInDir(posMod<6>(orientation + 5));
-            }
-        } else if(tailDir == posMod<6>(orientation + 1)) {
-            if(label == 0) {
-                return tail().nodeInDir(posMod<6>(orientation + 0));
-            } else if(label == 1) {
-                return tail().nodeInDir(posMod<6>(orientation + 1));
-            } else if(label == 2) {
-                return tail().nodeInDir(posMod<6>(orientation + 2));
-            } else if(label == 3) {
-                return tail().nodeInDir(posMod<6>(orientation + 3));
-            } else if(label == 4) {
-                return head.nodeInDir(posMod<6>(orientation + 2));
-            } else if(label == 5) {
-                return head.nodeInDir(posMod<6>(orientation + 3));
-            } else if(label == 6) {
-                return head.nodeInDir(posMod<6>(orientation + 4));
-            } else if(label == 7) {
-                return head.nodeInDir(posMod<6>(orientation + 5));
-            } else if(label == 8) {
-                return head.nodeInDir(posMod<6>(orientation + 0));
-            } else { // label == 9
-                return tail().nodeInDir(posMod<6>(orientation + 5));
-            }
-        } else if(tailDir == posMod<6>(orientation + 2)) {
-            if(label == 0) {
-                return head.nodeInDir(posMod<6>(orientation + 0));
-            } else if(label == 1) {
-                return head.nodeInDir(posMod<6>(orientation + 1));
-            } else if(label == 2) {
-                return tail().nodeInDir(posMod<6>(orientation + 0));
-            } else if(label == 3) {
-                return tail().nodeInDir(posMod<6>(orientation + 1));
-            } else if(label == 4) {
-                return tail().nodeInDir(posMod<6>(orientation + 2));
-            } else if(label == 5) {
-                return tail().nodeInDir(posMod<6>(orientation + 3));
-            } else if(label == 6) {
-                return tail().nodeInDir(posMod<6>(orientation + 4));
-            } else if(label == 7) {
-                return head.nodeInDir(posMod<6>(orientation + 3));
-            } else if(label == 8) {
-                return head.nodeInDir(posMod<6>(orientation + 4));
-            } else { // label == 9
-                return head.nodeInDir(posMod<6>(orientation + 5));
-            }
-        } else if(tailDir == posMod<6>(orientation + 3)) {
-            if(label == 0) {
-                return head.nodeInDir(posMod<6>(orientation + 0));
-            } else if(label == 1) {
-                return head.nodeInDir(posMod<6>(orientation + 1));
-            } else if(label == 2) {
-                return head.nodeInDir(posMod<6>(orientation + 2));
-            } else if(label == 3) {
-                return tail().nodeInDir(posMod<6>(orientation + 1));
-            } else if(label == 4) {
-                return tail().nodeInDir(posMod<6>(orientation + 2));
-            } else if(label == 5) {
-                return tail().nodeInDir(posMod<6>(orientation + 3));
-            } else if(label == 6) {
-                return tail().nodeInDir(posMod<6>(orientation + 4));
-            } else if(label == 7) {
-                return tail().nodeInDir(posMod<6>(orientation + 5));
-            } else if(label == 8) {
-                return head.nodeInDir(posMod<6>(orientation + 4));
-            } else { // label == 9
-                return head.nodeInDir(posMod<6>(orientation + 5));
-            }
-        } else if(tailDir == posMod<6>(orientation + 4)) {
-            if(label == 0) {
-                return head.nodeInDir(posMod<6>(orientation + 0));
-            } else if(label == 1) {
-                return head.nodeInDir(posMod<6>(orientation + 1));
-            } else if(label == 2) {
-                return head.nodeInDir(posMod<6>(orientation + 2));
-            } else if(label == 3) {
-                return head.nodeInDir(posMod<6>(orientation + 3));
-            } else if(label == 4) {
-                return tail().nodeInDir(posMod<6>(orientation + 2));
-            } else if(label == 5) {
-                return tail().nodeInDir(posMod<6>(orientation + 3));
-            } else if(label == 6) {
-                return tail().nodeInDir(posMod<6>(orientation + 4));
-            } else if(label == 7) {
-                return tail().nodeInDir(posMod<6>(orientation + 5));
-            } else if(label == 8) {
-                return tail().nodeInDir(posMod<6>(orientation + 0));
-            } else { // label == 9
-                return head.nodeInDir(posMod<6>(orientation + 5));
-            }
-        } else { // tailDir == posMod<6>(orientation + 5)
-            if(label == 0) {
-                return tail().nodeInDir(posMod<6>(orientation + 0));
-            } else if(label == 1) {
-                return tail().nodeInDir(posMod<6>(orientation + 1));
-            } else if(label == 2) {
-                return head.nodeInDir(posMod<6>(orientation + 0));
-            } else if(label == 3) {
-                return head.nodeInDir(posMod<6>(orientation + 1));
-            } else if(label == 4) {
-                return head.nodeInDir(posMod<6>(orientation + 2));
-            } else if(label == 5) {
-                return head.nodeInDir(posMod<6>(orientation + 3));
-            } else if(label == 6) {
-                return head.nodeInDir(posMod<6>(orientation + 4));
-            } else if(label == 7) {
-                return tail().nodeInDir(posMod<6>(orientation + 3));
-            } else if(label == 8) {
-                return tail().nodeInDir(posMod<6>(orientation + 4));
-            } else { // label == 9
-                return tail().nodeInDir(posMod<6>(orientation + 5));
-            }
-        }
+        Q_ASSERT(0 <= label && label < 10);
+        Node incidentNode = occupiedNodeIncidentToLabel(label);
+        return incidentNode.nodeInDir(labelToDir(label));
     }
 }
 
-int Particle::labelOfNeighboringNode(const Node node) const
+int Particle::labelToDir(const int label) const
+{
+    Q_ASSERT(-1 <= tailDir && tailDir < 6);
+    if(tailDir == -1) {
+        Q_ASSERT(0 <= label && label < 6);
+        return (label + orientation) % 6;
+    } else {
+        Q_ASSERT(0 <= label && label < 10);
+        int relativeTailDir = (tailDir - orientation + 6) % 6;
+        return (labelDir[relativeTailDir][label] + orientation) % 6;
+    }
+}
+
+int Particle::labelOfNeighboringNodeInDir(const Node node, const int dir) const
 {
     int labelLimit = tailDir == -1 ? 6 : 10;
     for(int label = 0; label < labelLimit; label++) {
-        if(neighboringNodeReachedViaLabel(label) == node) {
+        if(labelToDir(label) == dir && neighboringNodeReachedViaLabel(label) == node) {
             return label;
         }
     }

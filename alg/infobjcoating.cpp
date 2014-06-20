@@ -74,7 +74,7 @@ System* InfObjCoating::instance(const int numParticles, const float holeProb)
         }
 
         std::set<Node> nextCandidates;
-        for(auto it = candidates.begin(); it != candidates.end(); ++it) {
+        for(auto it = candidates.begin(); it != candidates.end() && numNonStaticParticles < numParticles; ++it) {
             if(randBool(1.0f - holeProb)) {
                 system->insert(Particle(new InfObjCoating(Phase::Inactive), randDir(), *it));
                 numNonStaticParticles++;
@@ -114,20 +114,19 @@ Movement InfObjCoating::execute(std::array<const Flag*, 10>& flags)
             setFollowIndicatorLabel(followDir);
         }
 
-        if(hasNeighborInPhase(Phase::Inactive) || receivesFollowIndicator()) {
+        if(hasNeighborInPhase(Phase::Inactive) || tailReceivesFollowIndicator()) {
             return Movement(MovementType::HandoverContract, tailContractionLabel());
         } else {
             return Movement(MovementType::Contract, tailContractionLabel());
         }
     } else {
         if(phase == Phase::Inactive) {
-            auto label = neighborInPhase(Phase::Static);
-            if(label != -1) {
+            if(hasNeighborInPhase(Phase::Static)) {
                 setPhase(Phase::Lead);
                 return Movement(MovementType::Idle);
             }
 
-            label = std::max(neighborInPhase(Phase::Follow), neighborInPhase(Phase::Lead));
+            auto label = std::max(firstNeighborInPhase(Phase::Follow), firstNeighborInPhase(Phase::Lead));
             if(label != -1) {
                 setPhase(Phase::Follow);
                 followDir = labelToDir(label);
@@ -137,26 +136,28 @@ Movement InfObjCoating::execute(std::array<const Flag*, 10>& flags)
             }
         } else if(phase == Phase::Follow) {
             Q_ASSERT(inFlags[followDir] != nullptr);
-            auto label = neighborInPhase(Phase::Static);
-            if(label != -1) {
+            if(hasNeighborInPhase(Phase::Static)) {
                 setPhase(Phase::Lead);
+                unsetFollowIndicator();
                 return Movement(MovementType::Idle);
             }
 
-            if(inFlags[followDir]->isExpanded()) {
-                int oldFollowDir = followDir;
-                setContractDir(oldFollowDir);
+            if(inFlags[followDir]->isExpanded() && !inFlags[followDir]->fromHead) {
+                int expansionDir = followDir;
+                setContractDir(expansionDir);
                 followDir = updatedFollowDir();
-                setFollowIndicatorLabel(dirToHeadLabelAfterExpansion(followDir, oldFollowDir));
                 headMarkDir = followDir;
-                return Movement(MovementType::Expand, oldFollowDir);
+                auto temp = dirToHeadLabelAfterExpansion(followDir, expansionDir);
+                Q_ASSERT(labelToDirAfterExpansion(temp, expansionDir) == followDir);
+                setFollowIndicatorLabel(temp);
+                return Movement(MovementType::Expand, expansionDir);
             }
         } else if(phase == Phase::Lead) {
-//            setContractDir(dirToHeadLabelAfterExpansion(1, 1));
-//            return Movement(MovementType::Expand, 1);
-            return Movement(MovementType::Empty);
+            int moveDir = getMoveDir();
+            setContractDir(moveDir);
+            headMarkDir = moveDir;
+            return Movement(MovementType::Expand, moveDir);
         }
-
         return Movement(MovementType::Empty);
     }
 }
@@ -184,13 +185,17 @@ void InfObjCoating::setPhase(const Phase _phase)
     }
 }
 
-int InfObjCoating::neighborInPhase(const Phase _phase) const
+bool InfObjCoating::neighborIsInPhase(const int label, const Phase _phase) const
+{
+    Q_ASSERT(0 <= label && label <= 9);
+    return (inFlags[label] != nullptr && inFlags[label]->phase == _phase);
+}
+
+int InfObjCoating::firstNeighborInPhase(const Phase _phase) const
 {
     for(int label = 0; label < 10; label++) {
-        if(inFlags[label] != nullptr) {
-            if(inFlags[label]->phase == _phase) {
-                return label;
-            }
+        if(neighborIsInPhase(label, _phase)) {
+            return label;
         }
     }
     return -1;
@@ -198,7 +203,7 @@ int InfObjCoating::neighborInPhase(const Phase _phase) const
 
 bool InfObjCoating::hasNeighborInPhase(const Phase _phase) const
 {
-    return (neighborInPhase(_phase) != -1);
+    return (firstNeighborInPhase(_phase) != -1);
 }
 
 void InfObjCoating::setContractDir(const int contractDir)
@@ -211,10 +216,17 @@ void InfObjCoating::setContractDir(const int contractDir)
 int InfObjCoating::updatedFollowDir() const
 {
     int contractDir = inFlags[followDir]->contractDir;
-    int offset = (inFlags[followDir]->dir - followDir + 9) % 6;
+    int offset = (followDir - inFlags[followDir]->dir + 9) % 6;
     int tempFollowDir = (contractDir + offset) % 6;
     Q_ASSERT(0 <= tempFollowDir && tempFollowDir <= 5);
     return tempFollowDir;
+}
+
+void InfObjCoating::unsetFollowIndicator() const
+{
+    for(int i = 0; i < 10; i++) {
+        outFlags[i]->followIndicator = false;
+    }
 }
 
 void InfObjCoating::setFollowIndicatorLabel(const int label)
@@ -224,9 +236,10 @@ void InfObjCoating::setFollowIndicatorLabel(const int label)
     }
 }
 
-bool InfObjCoating::receivesFollowIndicator() const
+bool InfObjCoating::tailReceivesFollowIndicator() const
 {
-    for(int label = 0; label < 10; label++) {
+    for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
+        auto label = *it;
         if(inFlags[label] != nullptr) {
             if(inFlags[label]->followIndicator) {
                 return true;
@@ -234,6 +247,21 @@ bool InfObjCoating::receivesFollowIndicator() const
         }
     }
     return false;
+}
+
+int InfObjCoating::getMoveDir() const
+{
+    Q_ASSERT(isContracted());
+    int label = firstNeighborInPhase(Phase::Static);
+    Q_ASSERT(label != -1);
+    for(int offset = 1; offset < 6; offset++) {
+        int dir = (label - offset + 6) % 6;
+        if(!neighborIsInPhase(dir, Phase::Static)) {
+            return dir;
+        }
+    }
+    Q_ASSERT(false);
+    return 0;
 }
 
 InfObjCoatingFlag::InfObjCoatingFlag()

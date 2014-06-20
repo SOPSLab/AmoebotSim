@@ -2,6 +2,7 @@
 #define PARTICLE_H
 
 #include <array>
+#include <vector>
 
 #include "alg/algorithm.h"
 #include "sim/movement.h"
@@ -20,12 +21,19 @@ public:
     void apply();
     void discard();
 
-    const Flag* getFlagForNode(Node node);
+    const Flag* getFlagForNodeInDir(const Node node, const int dir);
 
     Node tail() const;
+
+    const std::vector<int>& headLabels() const;
+    const std::vector<int>& tailLabels() const;
+    bool isHeadLabel(const int label) const;
+    bool isTailLabel(const int label) const;
+
     Node occupiedNodeIncidentToLabel(const int label) const;
     Node neighboringNodeReachedViaLabel(const int label) const;
-    int labelOfNeighboringNode(const Node node) const;
+    int labelToDir(const int label) const;
+    int labelOfNeighboringNodeInDir(const Node node, const int dir) const;
 
     int headMarkColor() const;
     int headMarkDir() const;
@@ -43,6 +51,11 @@ public:
 protected:
     Algorithm* algorithm;
     Algorithm* newAlgorithm;
+
+private:
+    static const std::vector<int> sixLabels;
+    static const std::array<const std::vector<int>, 6> labels;
+    static const std::array<std::array<int, 10>, 6> labelDir;
 };
 
 template<int n> int Particle::posMod(const int a)
