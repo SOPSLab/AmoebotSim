@@ -3,6 +3,7 @@
 #include "sim/node.h"
 
 Node::Node()
+    : x(0), y(0)
 {
 }
 

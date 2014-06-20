@@ -10,6 +10,7 @@ class InfObjCoating : public Algorithm
 {
 public:
     enum class Phase {
+        Static,
         Inactive,
         Follow,
         Lead
@@ -20,7 +21,7 @@ public:
     InfObjCoating(const InfObjCoating& other);
     virtual ~InfObjCoating();
 
-    static System* instance(const int size);
+    static System* instance(const int numParticles, const float holeProb);
 
     virtual Algorithm* clone();
     virtual bool isDeterministic() const;

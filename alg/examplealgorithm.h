@@ -73,7 +73,7 @@ public:
      * does not check it and will most probably fail in very unpleasent and undebuggable ways if the requirement is not
      * satisfied.
      * */
-    static System* instance(const int size);
+    static System* instance(const int numParticles);
 
     /*
      * This method has to be implemented and has to correctly copy all member variables of an algorithm. The easiest way

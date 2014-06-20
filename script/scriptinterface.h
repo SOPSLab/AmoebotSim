@@ -21,7 +21,8 @@ public slots:
 
     void setRoundDuration(int ms);
 
-    void exampleAlgorithmInstance(int size);
+    void exampleAlgorithm(const int numParticles);
+    void infObjCoating(const int numParticles, const float holeProb = 0.2);
 
 private:
     Simulator& sim;
@@ -30,7 +31,7 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    sim.setSystem(InfObjCoating::instance(50));
+    sim.setSystem(InfObjCoating::instance(100, 0.2));
 }
 
 inline void ScriptInterface::round()
@@ -43,9 +44,29 @@ inline void ScriptInterface::setRoundDuration(int ms)
     sim.setRoundDuration(ms);
 }
 
-inline void ScriptInterface::exampleAlgorithmInstance(int size)
+inline void ScriptInterface::exampleAlgorithm(const int numParticles)
 {
-    sim.setSystem(InfObjCoating::instance(size));
+    if(numParticles < 0) {
+        sim.log("numParticles >= 0 required", true);
+        return;
+    }
+
+    sim.setSystem(ExampleAlgorithm::instance(numParticles));
+}
+
+inline void ScriptInterface::infObjCoating(const int numParticles, const float holeProb)
+{
+    if(numParticles < 0) {
+        sim.log("numParticles >= 0 required", true);
+        return;
+    }
+
+    if(holeProb < 0.0f || holeProb > 1.0f) {
+        sim.log("holeProb in [0.0, 1.0] required", true);
+        return;
+    }
+
+    sim.setSystem(InfObjCoating::instance(numParticles, holeProb));
 }
 
 #endif // SCRIPTINTERFACE_H

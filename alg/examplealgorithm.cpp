@@ -31,14 +31,14 @@ ExampleAlgorithm::~ExampleAlgorithm()
     deleteFlags();
 }
 
-System* ExampleAlgorithm::instance(const int size)
+System* ExampleAlgorithm::instance(const int numParticles)
 {
     // Create a line of particles where the right-most one is a leader.
     System* system = new System();
-    for(int x = 0; x < size; x++) {
-        Phase phase = x == size - 1 ? Phase::Leader : Phase::Idle;
+    for(int x = 0; x < numParticles; x++) {
+        Phase phase = x == numParticles - 1 ? Phase::Leader : Phase::Idle;
         int orientation = randDir();
-        Node position = Node(x - size / 2, 0);
+        Node position = Node(x - numParticles / 2, 0);
         int tailDir = -1;
         system->insert(Particle(new ExampleAlgorithm(phase), orientation, position, tailDir));
     }

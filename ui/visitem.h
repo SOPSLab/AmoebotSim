@@ -57,9 +57,9 @@ protected:
     void wheelEvent(QWheelEvent* e);
 
 protected:
-    static constexpr float zoomMin = 10.0f;
-    static constexpr float zoomMax = 150.0f;
-    static constexpr float zoomInit = 50.0f;
+    static constexpr float zoomMin = 4.0f;
+    static constexpr float zoomMax = 128.0f;
+    static constexpr float zoomInit = 16.0f;
     static constexpr float zoomAttenuation = 10.0f;
 
     // these values are a consequence of how the particle texture was created

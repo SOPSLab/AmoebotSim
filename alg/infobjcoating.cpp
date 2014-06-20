@@ -1,6 +1,10 @@
 #include <algorithm>
+#include <cmath>
+#include <deque>
+#include <set>
 
 #include "alg/infobjcoating.h"
+#include "sim/particle.h"
 #include "sim/system.h"
 
 InfObjCoating::InfObjCoating(const Phase _phase)
@@ -23,16 +27,70 @@ InfObjCoating::~InfObjCoating()
     deleteFlags();
 }
 
-System* InfObjCoating::instance(const int size)
-{
+System* InfObjCoating::instance(const int numParticles, const float holeProb)
+{   
     System* system = new System();
-    for(int x = 0; x < size; x++) {
-        Phase phase = x == size - 1 ? Phase::Lead : Phase::Inactive;
-        int orientation = size - 1 ? 0 : randDir();
-        Node position = Node(x - size / 2, 0);
-        int tailDir = -1;
-        system->insert(Particle(new InfObjCoating(phase), orientation, position, tailDir));
+
+    std::deque<Node> orderedSurface;
+    std::set<Node> occupied;
+
+    Node pos;
+    int lastOffset = 0;
+    while(system->size() < 2 * numParticles) {
+        system->insert(Particle(new InfObjCoating(Phase::Static), randDir(), pos));
+        occupied.insert(pos);
+        orderedSurface.push_back(pos);
+        int offset;
+        if(lastOffset == 4) {
+            offset = randInt(3, 5);
+        } else {
+            offset = randInt(2, 5);
+        }
+        lastOffset = offset;
+        pos = pos.nodeInDir(offset);
     }
+
+    std::set<Node> candidates;
+    int count = 0;
+    for(auto it = orderedSurface.begin(); it != orderedSurface.end(); ++it) {
+        if(count >= sqrt(numParticles)) {
+            break;
+        }
+        count++;
+
+        for(int dir = 1; dir <= 2; dir++) {
+            const Node node = it->nodeInDir(dir);
+            if(occupied.find(node) == occupied.end()) {
+                candidates.insert(node);
+                occupied.insert(node);
+            }
+        }
+    }
+
+    int numNonStaticParticles = 0;
+    while(numNonStaticParticles < numParticles) {
+        if(candidates.empty()) {
+            return system;
+        }
+
+        std::set<Node> nextCandidates;
+        for(auto it = candidates.begin(); it != candidates.end(); ++it) {
+            if(randBool(1.0f - holeProb)) {
+                system->insert(Particle(new InfObjCoating(Phase::Inactive), randDir(), *it));
+                numNonStaticParticles++;
+
+                for(int dir = 1; dir <= 2; dir++) {
+                    const Node node = it->nodeInDir(dir);
+                    if(occupied.find(node) == occupied.end()) {
+                        nextCandidates.insert(node);
+                        occupied.insert(node);
+                    }
+                }
+            }
+        }
+        nextCandidates.swap(candidates);
+    }
+
     return system;
 }
 
@@ -63,7 +121,13 @@ Movement InfObjCoating::execute(std::array<const Flag*, 10>& flags)
         }
     } else {
         if(phase == Phase::Inactive) {
-            auto label = std::max(neighborInPhase(Phase::Follow), neighborInPhase(Phase::Lead));
+            auto label = neighborInPhase(Phase::Static);
+            if(label != -1) {
+                setPhase(Phase::Lead);
+                return Movement(MovementType::Idle);
+            }
+
+            label = std::max(neighborInPhase(Phase::Follow), neighborInPhase(Phase::Lead));
             if(label != -1) {
                 setPhase(Phase::Follow);
                 followDir = labelToDir(label);
@@ -73,6 +137,12 @@ Movement InfObjCoating::execute(std::array<const Flag*, 10>& flags)
             }
         } else if(phase == Phase::Follow) {
             Q_ASSERT(inFlags[followDir] != nullptr);
+            auto label = neighborInPhase(Phase::Static);
+            if(label != -1) {
+                setPhase(Phase::Lead);
+                return Movement(MovementType::Idle);
+            }
+
             if(inFlags[followDir]->isExpanded()) {
                 int oldFollowDir = followDir;
                 setContractDir(oldFollowDir);
@@ -82,8 +152,9 @@ Movement InfObjCoating::execute(std::array<const Flag*, 10>& flags)
                 return Movement(MovementType::Expand, oldFollowDir);
             }
         } else if(phase == Phase::Lead) {
-            setContractDir(dirToHeadLabelAfterExpansion(1, 1));
-            return Movement(MovementType::Expand, 1);
+//            setContractDir(dirToHeadLabelAfterExpansion(1, 1));
+//            return Movement(MovementType::Expand, 1);
+            return Movement(MovementType::Empty);
         }
 
         return Movement(MovementType::Empty);
@@ -100,9 +171,12 @@ void InfObjCoating::setPhase(const Phase _phase)
     } else if(phase == Phase::Follow) {
         headMarkColor = 0x0000ff;
         tailMarkColor = 0x0000ff;
-    } else { // phase == Phase::Inactive
+    } else if(phase == Phase::Inactive) {
         headMarkColor = -1;
         tailMarkColor = -1;
+    } else { // phase == Phase::Static
+        headMarkColor = 0x000000;
+        tailMarkColor = 0x000000;
     }
 
     for(int label = 0; label < 10; label++) {
