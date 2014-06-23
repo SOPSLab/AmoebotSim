@@ -21,7 +21,8 @@ HEADERS += \
     sim/simulator.h \
     sim/system.h \
     ui/glitem.h \
-    ui/visitem.h
+    ui/visitem.h \
+    alg/hexagon.h
 
 SOURCES += \
     alg/algorithm.cpp \
@@ -34,7 +35,8 @@ SOURCES += \
     sim/simulator.cpp \
     sim/system.cpp \
     ui/glitem.cpp \
-    ui/visitem.cpp
+    ui/visitem.cpp \
+    alg/hexagon.cpp
 
 RESOURCES += \
     res/qml.qrc \
