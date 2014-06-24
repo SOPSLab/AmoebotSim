@@ -3,6 +3,8 @@
 
 #include <QGuiApplication>
 
+#include "ui/commandhistorymanager.h"
+
 class QQmlApplicationEngine;
 class QThread;
 
@@ -20,6 +22,8 @@ protected:
 
     Simulator* sim;
     QThread* simThread;
+
+    CommandHistoryManager commandHistoryManager;
 };
 
 #endif // APPLICATION_H

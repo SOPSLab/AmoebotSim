@@ -15,6 +15,10 @@ ApplicationWindow {
     signal back()
 
     signal executeCommand(string cmd)
+    signal commandFieldUp()
+    signal commandFieldDown()
+    signal commandFieldReset()
+
     function log(msg, isError)
     {
         commandField.visible = false
@@ -37,6 +41,11 @@ ApplicationWindow {
         startStopButton.text = "stop"
     }
 
+    function setCommand(cmd)
+    {
+        commandField.text = cmd
+    }
+
     VisItem {
         id: vis
         anchors.fill: parent
@@ -57,7 +66,9 @@ ApplicationWindow {
             focus: true
             Keys.onPressed: {
                 if(event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
-                    executeCommand(text)
+                    if(text != "") {
+                        executeCommand(text)
+                    }
                     visible = false
                     text = ""
                     buttonRow.forceActiveFocus()
@@ -66,6 +77,13 @@ ApplicationWindow {
                     visible = false
                     text = ""
                     buttonRow.forceActiveFocus()
+                    commandFieldReset()
+                    event.accepted = true
+                } else if(event.key === Qt.Key_Up) {
+                    commandFieldUp()
+                    event.accepted = true
+                } else if(event.key === Qt.Key_Down) {
+                    commandFieldDown()
                     event.accepted = true
                 }
             }

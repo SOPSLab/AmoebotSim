@@ -16,7 +16,7 @@ Application::Application(int argc, char *argv[]) :
 
     sim->moveToThread(simThread);
 
-    // setup connections between gui and simulation
+    // setup connections between GUI and Simulator
     VisItem* vis = engine->rootObjects().at(0)->findChild<VisItem*>();
     connect(sim, &Simulator::updateSystem, vis, &VisItem::updateSystem);
     connect(engine->rootObjects().at(0), SIGNAL(start()), sim, SLOT(start()));
@@ -39,6 +39,18 @@ Application::Application(int argc, char *argv[]) :
             &Simulator::stopped,
             [&](){
                 QMetaObject::invokeMethod(engine->rootObjects().at(0), "setLabelStart");
+            }
+    );
+
+    // setup connections between GUI and CommmandHistoryManager
+    connect(engine->rootObjects().at(0), SIGNAL(executeCommand(QString)), &commandHistoryManager, SLOT(commandExecuted(QString)));
+    connect(engine->rootObjects().at(0), SIGNAL(commandFieldUp()), &commandHistoryManager, SLOT(up()));
+    connect(engine->rootObjects().at(0), SIGNAL(commandFieldDown()), &commandHistoryManager, SLOT(down()));
+    connect(engine->rootObjects().at(0), SIGNAL(commandFieldReset()), &commandHistoryManager, SLOT(reset()));
+    connect(&commandHistoryManager,
+            &CommandHistoryManager::setCommand,
+            [&](const QString& command){
+                QMetaObject::invokeMethod(engine->rootObjects().at(0), "setCommand", Q_ARG(QVariant, command));
             }
     );
 
