@@ -1,17 +1,17 @@
 #include <set>
 #include <random>
 #include <QTime>
-#include "hexagon.h"
+#include "triangle.h"
 #include "sim/particle.h"
 #include "sim/system.h"
 
-HexFlag::HexFlag()
+TriFlag::TriFlag()
     : point(false),
       followIndicator(false)
 {
 }
 
-HexFlag::HexFlag(const HexFlag& other)
+TriFlag::TriFlag(const TriFlag& other)
     : Flag(other),  
       state(other.state),
       point(other.point),
@@ -19,12 +19,12 @@ HexFlag::HexFlag(const HexFlag& other)
 {
 }
 
-Hexagon::Hexagon(const State _state)
+Triangle::Triangle(const State _state)
     : state(_state),
       followDir(-1)
 {
-    initFlags<HexFlag>();
-    outFlags = castFlags<HexFlag>(Algorithm::outFlags);
+    initFlags<TriFlag>();
+    outFlags = castFlags<TriFlag>(Algorithm::outFlags);
     if (_state == State::Seed){
         outFlags[0]->point = true;
         headMarkDir = 0;
@@ -33,26 +33,26 @@ Hexagon::Hexagon(const State _state)
 }
 
 
-Hexagon::Hexagon(const Hexagon& other)
+Triangle::Triangle(const Triangle& other)
     : Algorithm(other),
       state(other.state),
       followDir(other.followDir)
 {
-    copyFlags<HexFlag>(other);
+    copyFlags<TriFlag>(other);
 }
 
-Hexagon::~Hexagon()
+Triangle::~Triangle()
 {
     deleteFlags();
 }
 
-System* Hexagon::instance(const int size, const double holeProb)
+System* Triangle::instance(const int size, const double holeProb)
 {
     System* system = new System();
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(new Hexagon(State::Seed), randDir(), Node(0,0), -1));
+    system->insert(Particle(new Triangle(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -82,25 +82,25 @@ System* Hexagon::instance(const int size, const double holeProb)
             }
         }
         // Insert new idle particle
-        system->insert(Particle(new Hexagon(State::Idle), randDir(), head, -1));
+        system->insert(Particle(new Triangle(State::Idle), randDir(), head, -1));
     }
     return system;
 }
 
-Algorithm* Hexagon::clone()
+Algorithm* Triangle::clone()
 {
-    return new Hexagon(*this);
+    return new Triangle(*this);
 }
 
-bool Hexagon::isDeterministic() const
+bool Triangle::isDeterministic() const
 {
     return true;
 }
 
-Movement Hexagon::execute(std::array<const Flag*, 10>& flags)
+Movement Triangle::execute(std::array<const Flag*, 10>& flags)
 {
-	inFlags = castFlags<HexFlag>(flags);
-    outFlags = castFlags<HexFlag>(Algorithm::outFlags);
+	inFlags = castFlags<TriFlag>(flags);
+    outFlags = castFlags<TriFlag>(Algorithm::outFlags);
 
     if(isExpanded()){
         if(state == State::Follower) {
@@ -158,21 +158,38 @@ Movement Hexagon::execute(std::array<const Flag*, 10>& flags)
         }
 
         else if (state == State::Leader && !hasNeighborInState(State::Idle)){
+            
             headMarkDir = -1;
             int direction = isPointedAt();
             headMarkDir = direction;
             if(direction != -1){
                 setState(State::Finished);
-                if(inFlags[direction] != nullptr && inFlags[direction]->state == State::Seed){
-                    outFlags[(direction+1)%6]->point = true;
-                }
-                else if (inFlags[(direction+2)%6] != nullptr && inFlags[(direction+2)%6]->state == State::Finished){
+                if(neighborInState((direction+4)%6, State::Finished) || neighborInState((direction+2)%6, State::Finished)){
                     outFlags[(direction+3)%6]->point = true;
                 }
-                else {
-                    outFlags[(direction+2)%6]->point = true;
+                else{
+                    if (neighborInState(direction,State::Seed)){
+                        outFlags[(direction+5)%6]->point = true;
+                    }
+                    else if (hasNeighborInState(State::Seed) || neighborInState((direction+5)%6, State::Finished)){
+                        outFlags[(direction+2)%6]->point = true;
+                        outFlags[(direction+2)%6]->side = false;
+                    }
+                    else if (neighborInState((direction+1)%6, State::Finished)){
+                        outFlags[(direction+4)%6]->point = true;
+                        outFlags[(direction+4)%6]->side = true;
+                    }
+                    else if (!neighborInState((direction+1)%6, State::Finished) && !neighborInState((direction+5)%6, State::Finished)){
+                        if (inFlags[direction]->side){
+                            outFlags[(direction+5)%6]->point = true;
+                        }
+                        else if (!inFlags[direction]->side){
+                            outFlags[(direction+1)%6]->point = true;
+                        }
+                    }
                 }
             }
+            
             else {
                 auto moveDir = getMoveDir();
                 setContractDir(moveDir);
@@ -189,8 +206,8 @@ Movement Hexagon::execute(std::array<const Flag*, 10>& flags)
     
 }
 
-int Hexagon::isPointedAt(){
-    for(int label = 0; label < 12; label++) {
+int Triangle::isPointedAt(){
+    for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr) {
             if(inFlags[label]->point){
                 return label;
@@ -200,7 +217,7 @@ int Hexagon::isPointedAt(){
     return -1;
 }
 
-void Hexagon::setState(State _state)
+void Triangle::setState(State _state)
 {
     state = _state;
     if (state == State::Seed){
@@ -219,22 +236,22 @@ void Hexagon::setState(State _state)
         headMarkColor = -1; tailMarkColor = -1; // No color
     }
     for(auto it = outFlags.begin(); it != outFlags.end(); ++it) {
-        HexFlag& flag = *(*it);
+        TriFlag& flag = *(*it);
         flag.state = state;
     }
 }
 
-bool Hexagon::neighborInState(int direction, State _state){
+bool Triangle::neighborInState(int direction, State _state){
     Q_ASSERT(0 <= direction && direction <= 9);
     return (inFlags[direction] != nullptr && inFlags[direction]->state == _state);
 }
 
-bool Hexagon::hasNeighborInState(State _state)
+bool Triangle::hasNeighborInState(State _state)
 {
     return (firstNeighborInState(_state) != -1);
 }
 
-int Hexagon::firstNeighborInState(State _state)
+int Triangle::firstNeighborInState(State _state)
 {
     for(int label = 0; label < 10; label++) {
         if(neighborInState(label, _state)) {
@@ -244,7 +261,7 @@ int Hexagon::firstNeighborInState(State _state)
     return -1;
 }
 
-int Hexagon::getMoveDir()
+int Triangle::getMoveDir()
 {
     Q_ASSERT(isContracted());
     int objectDir = firstNeighborInState(State::Finished);
@@ -258,13 +275,13 @@ int Hexagon::getMoveDir()
     return labelToDir(objectDir);
 }
 
-void Hexagon::setContractDir(const int contractDir)
+void Triangle::setContractDir(const int contractDir)
 {
     for(int label = 0; label < 10; label++) {
         outFlags[label]->contractDir = contractDir;
     }
 }
-int Hexagon::updatedFollowDir() const
+int Triangle::updatedFollowDir() const
 {
     int contractDir = inFlags[followDir]->contractDir;
     int offset = (followDir - inFlags[followDir]->dir + 9) % 6;
@@ -273,21 +290,21 @@ int Hexagon::updatedFollowDir() const
     return tempFollowDir;
 }
 
-int Hexagon::unsetFollowIndicator() const
+int Triangle::unsetFollowIndicator() const
 {
     for(int i = 0; i < 10; i++) {
         outFlags[i]->followIndicator = false;
     }
 }
 
-void Hexagon::setFollowIndicatorLabel(const int label)
+void Triangle::setFollowIndicatorLabel(const int label)
 {
     for(int i = 0; i < 10; i++) {
         outFlags[i]->followIndicator = (i == label);
     }
 }
 
-bool Hexagon::tailReceivesFollowIndicator() const
+bool Triangle::tailReceivesFollowIndicator() const
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;
@@ -300,7 +317,7 @@ bool Hexagon::tailReceivesFollowIndicator() const
     return false;
 }
 
-bool Hexagon::followIndicatorMatchState(State _state) const
+bool Triangle::followIndicatorMatchState(State _state) const
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;

@@ -6,6 +6,7 @@
 #include "alg/examplealgorithm.h"
 #include "alg/infobjcoating.h"
 #include "alg/hexagon.h"
+#include "alg/triangle.h"
 #include "sim/simulator.h"
 
 /*
@@ -24,7 +25,8 @@ public slots:
 
     void exampleAlgorithm(const int numParticles);
     void infObjCoating(const int numParticles, const float holeProb = 0.2);
-    void hexagon(const int numParticles, const float holeProb = 0.0);
+    void hexagon(const int numParticles = 100, const float holeProb = 0.0);
+    void triangle(const int numParticles = 100, const float holeProb = 0.0);
 
 private:
     Simulator& sim;
@@ -83,6 +85,20 @@ inline void ScriptInterface::hexagon(const int numParticles, const float holePro
     }
 
     sim.setSystem(Hexagon::instance(numParticles, holeProb));
+}
+inline void ScriptInterface::triangle(const int numParticles, const float holeProb)
+{
+    if(numParticles < 0) {
+        sim.log("numParticles >= 0 required", true);
+        return;
+    }
+
+    if(holeProb < 0.0f || holeProb > 1.0f) {
+        sim.log("holeProb in [0.0, 1.0] required", true);
+        return;
+    }
+
+    sim.setSystem(Triangle::instance(numParticles, holeProb));
 }
 
 #endif // SCRIPTINTERFACE_H

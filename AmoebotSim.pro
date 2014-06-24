@@ -23,7 +23,8 @@ HEADERS += \
     sim/system.h \
     ui/glitem.h \
     ui/commandhistorymanager.h \
-    ui/visitem.h
+    ui/visitem.h \
+    alg/triangle.h
 
 SOURCES += \
     alg/algorithm.cpp \
@@ -38,7 +39,8 @@ SOURCES += \
     sim/system.cpp \
     ui/commandhistorymanager.cpp \
     ui/glitem.cpp \
-    ui/visitem.cpp
+    ui/visitem.cpp \
+    alg/triangle.cpp
 
 
 RESOURCES += \

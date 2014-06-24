@@ -1,11 +1,11 @@
-#ifndef HEXAGON_H
-#define HEXAGON_H
+#ifndef TRIANGLE_H
+#define TRIANGLE_H
 
 #include "alg/algorithm.h"
-class HexFlag;
+class TriFlag;
 class System;
 
-class Hexagon : public Algorithm
+class Triangle : public Algorithm
 {
 public:
     enum class State {
@@ -15,9 +15,9 @@ public:
         Idle,
         Seed
     };
-    Hexagon(const State _state);
-    Hexagon(const Hexagon& other);
-    virtual ~Hexagon();
+    Triangle(const State _state);
+    Triangle(const Triangle& other);
+    virtual ~Triangle();
     static System* instance(const int size, const double holeProb);
     virtual Algorithm* clone();
     virtual bool isDeterministic() const;
@@ -25,7 +25,7 @@ public:
 protected:
     virtual Movement execute(std::array<const Flag*, 10>& flags);
     
-    int isPointedAt(); // 
+    int isPointedAt();
 
     void setState(State _state);
     bool neighborInState(int direction, State _state);
@@ -42,22 +42,22 @@ protected:
     bool followIndicatorMatchState(State _state) const;
     
 protected:
-    std::array<const HexFlag*, 10> inFlags;
-    std::array<HexFlag*, 10> outFlags;
+    std::array<const TriFlag*, 10> inFlags;
+    std::array<TriFlag*, 10> outFlags;
     State state;
     int followDir;
 };
 
-class HexFlag : public Flag
+class TriFlag : public Flag
 {
 public:
-    HexFlag();
-    HexFlag(const HexFlag& other);
-    Hexagon::State state;
-    bool point; //
+    TriFlag();
+    TriFlag(const TriFlag& other);
+    Triangle::State state;
+    bool point;
+    bool side;
     bool followIndicator;
     int contractDir;
 };
 
-#endif // HEXAGON_H
-
+#endif // TRIANGLE_H
