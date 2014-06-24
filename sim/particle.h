@@ -29,6 +29,8 @@ public:
     const std::vector<int>& tailLabels() const;
     bool isHeadLabel(const int label) const;
     bool isTailLabel(const int label) const;
+    int headContractionLabel() const;
+    int tailContractionLabel() const;
 
     Node occupiedNodeIncidentToLabel(const int label) const;
     Node neighboringNodeReachedViaLabel(const int label) const;
@@ -55,6 +57,7 @@ protected:
 private:
     static const std::vector<int> sixLabels;
     static const std::array<const std::vector<int>, 6> labels;
+    static const std::array<int, 6> contractLabels;
     static const std::array<std::array<int, 10>, 6> labelDir;
 };
 

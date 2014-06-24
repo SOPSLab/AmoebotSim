@@ -12,6 +12,7 @@ const std::array<const std::vector<int>, 6> Particle::labels =
     {9, 0, 1, 2, 3},
     {2, 3, 4, 5, 6}
 }};
+const std::array<int, 6> Particle::contractLabels = {{0, 1, 4, 5, 6, 9}};
 const std::array<std::array<int, 10>, 6> Particle::labelDir
 {{
     {{0, 1, 2, 1, 2, 3, 4, 5, 4, 5}},
@@ -129,6 +130,20 @@ bool Particle::isTailLabel(const int label) const
         }
     }
     return false;
+}
+
+int Particle::headContractionLabel() const
+{
+    Q_ASSERT(0 <= tailDir && tailDir <= 5);
+    int relativeTailDir = (tailDir - orientation + 6) % 6;
+    return contractLabels[relativeTailDir];
+}
+
+int Particle::tailContractionLabel() const
+{
+    Q_ASSERT(0 <= tailDir && tailDir <= 5);
+    int relativeTailDir = (tailDir - orientation + 6) % 6;
+    return contractLabels[(relativeTailDir + 3) % 6];
 }
 
 Node Particle::occupiedNodeIncidentToLabel(const int label) const

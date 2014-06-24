@@ -36,8 +36,8 @@ public:
 
 protected:
     std::array<const Flag*, 10> assembleFlags(Particle& p);
-    bool handleExpansion(Particle& p, int dir);
-    bool handleContraction(Particle& p, int dir, bool isHandoverContraction);
+    bool handleExpansion(Particle& p, int label);
+    bool handleContraction(Particle& p, int label, bool isHandoverContraction);
     bool isConnected() const;
 
 protected:

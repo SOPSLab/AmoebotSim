@@ -13,16 +13,16 @@ enum class MovementType
 class Movement
 {
 public:
-    Movement(MovementType _type, int _dir = 0);
+    Movement(MovementType _type, int _label = 0);
 
 public:
     MovementType type;
-    int dir;
+    int label;
 };
 
-inline Movement::Movement(MovementType _type, int _dir) :
+inline Movement::Movement(MovementType _type, int _label) :
     type(_type),
-    dir(_dir)
+    label(_label)
 {
 }
 

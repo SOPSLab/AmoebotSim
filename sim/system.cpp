@@ -101,11 +101,11 @@ System::SystemState System::round()
             p->apply();
             return systemState;
         } else if(m.type == MovementType::Expand) {
-            if(handleExpansion(*p, m.dir)) {
+            if(handleExpansion(*p, m.label)) {
                 return systemState;
             }
         } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
-            if(handleContraction(*p, m.dir, m.type == MovementType::HandoverContract)) {
+            if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
                 return systemState;
             }
         }
@@ -160,20 +160,20 @@ std::array<const Flag*, 10> System::assembleFlags(Particle& p)
     return flags;
 }
 
-bool System::handleExpansion(Particle& p, int dir)
+bool System::handleExpansion(Particle& p, int label)
 {
     if(p.tailDir != -1) {
         p.discard(); // already expanded particle cannot expand
         return false;
     }
 
-    if(dir < 0 || dir > 5) {
+    if(label < 0 || label > 5) {
         p.discard(); // invalid expansion index
         return false;
     }
 
-    dir = Particle::posMod<6>(p.orientation + dir);
-    Node newHead = p.head.nodeInDir(dir);
+    label = Particle::posMod<6>(p.orientation + label);
+    Node newHead = p.head.nodeInDir(label);
 
     if(particleMap.find(newHead) != particleMap.end()) {
         p.discard(); // collision
@@ -182,12 +182,12 @@ bool System::handleExpansion(Particle& p, int dir)
 
     particleMap.insert(std::pair<Node, Particle*>(newHead, &p));
     p.head = newHead;
-    p.tailDir = Particle::posMod<6>(dir + 3);
+    p.tailDir = Particle::posMod<6>(label + 3);
     p.apply();
     return true;
 }
 
-bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
+bool System::handleContraction(Particle& p, int label, bool isHandoverContraction)
 {
     if(p.tailDir == -1) {
         p.discard(); // already contracted particle cannot contract
@@ -197,60 +197,13 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
     // determine whether the contraction direction is valid
     // and, if so, whether it is a head or a tail contraction
     bool isHeadContract = false;
-    if(p.tailDir == p.orientation) {
-        if(dir == 0) {          // head contraction
-            isHeadContract = true;
-        } else if(dir == 5) {   // tail contraction
-            isHeadContract = false;
-        } else {                // invalid contraction
-            p.discard();
-            return false;
-        }
-    } else if(p.tailDir == (p.orientation + 1) % 6) {
-        if(dir == 1) {          // head contraction
-            isHeadContract = true;
-        } else if(dir == 6) {   // tail contraction
-            isHeadContract = false;
-        } else {                // invalid contraction
-            p.discard();
-            return false;
-        }
-    } else if(p.tailDir == (p.orientation + 2) % 6) {
-        if(dir == 4) {          // head contraction
-            isHeadContract = true;
-        } else if(dir == 9) {   // tail contraction
-            isHeadContract = false;
-        } else {                // invalid contraction
-            p.discard();
-            return false;
-        }
-    } else if(p.tailDir == (p.orientation + 3) % 6) {
-        if(dir == 5) {          // head contraction
-            isHeadContract = true;
-        } else if(dir == 0) {   // tail contraction
-            isHeadContract = false;
-        } else {                // invalid contraction
-            p.discard();
-            return false;
-        }
-    } else if(p.tailDir == (p.orientation + 4) % 6) {
-        if(dir == 6) {          // head contraction
-            isHeadContract = true;
-        } else if(dir == 1) {   // tail contraction
-            isHeadContract = false;
-        } else {                // invalid contraction
-            p.discard();
-            return false;
-        }
-    } else if(p.tailDir == (p.orientation + 5) % 6) {
-        if(dir == 9) {          // head contraction
-            isHeadContract = true;
-        } else if(dir == 4) {   // tail contraction
-            isHeadContract = false;
-        } else {                // invalid contraction
-            p.discard();
-            return false;
-        }
+    if(label == p.headContractionLabel()) {
+        isHeadContract = true;
+    } else if(label == p.tailContractionLabel()) {
+        isHeadContract = false;
+    } else {
+        p.discard();
+        return false;
     }
 
     bool handover = false;
@@ -304,11 +257,11 @@ bool System::handleContraction(Particle& p, int dir, bool isHandoverContraction)
                 p2.discard();
                 continue; // we are only interested in expanding particles
             }
-            if(m.dir < 0 || m.dir > 5) {
+            if(m.label < 0 || m.label > 5) {
                 p2.discard();
                 continue; // invalid expansion index
             }
-            int expandDir = Particle::posMod<6>(p2.orientation + m.dir);
+            int expandDir = Particle::posMod<6>(p2.orientation + m.label);
             Node newHead = p2.head.nodeInDir(expandDir);
 
             // ensure that the node p2 wants to expand into is the node p wants to contract out of

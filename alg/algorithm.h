@@ -449,7 +449,7 @@ inline int Algorithm::labelToDir(int label, int tailDir)
 inline void Algorithm::updateTailDir(const Movement m)
 {
     if(m.type == MovementType::Expand) {
-        _tailDir = (m.dir + 3) % 6;
+        _tailDir = (m.label + 3) % 6;
     } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
         _tailDir = -1;
     }
