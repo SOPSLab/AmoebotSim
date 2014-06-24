@@ -20,7 +20,7 @@ The following instructions should get you started working with AmoebotSim; pleas
 
 - Also, it is advisable to disable QML debugging as leaving this enabled might pose a security risk. It can be disabled with a checkbox under _Projects_, _Build Steps_, _qmake_.
 
-- If you are new to developing algorithms, the best way to start is looking at the example algorithm in the "alg" directory. This simple algorithm is extensively commented (in contrast to the remaining code). In principle, developing new algorithms only requires creating a new subclass of the Algorithm class and making it available in the application by introducing it in the script interface in the "script" directory. Changes on the remaining code should not be required.
+- If you are new to developing algorithms in AmoebotSim, the best way to start is looking at the example algorithm in the "alg" directory. Changes on the remaining code should not be required.
 
 ###User Interface###
 
