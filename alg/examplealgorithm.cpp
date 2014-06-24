@@ -2,33 +2,27 @@
 #include "sim/particle.h"
 #include "sim/system.h"
 
+namespace ExampleAlgorithm
+{
 ExampleAlgorithm::ExampleAlgorithm(const Phase _phase)
     : phase(_phase),
       followDir(-1),
       distanceToTravel(3) // The line of particles should travel 3 nodes wide.
 {
-    // The following method conveniently sets up the outFlags.
-    initFlags<ExampleFlag>();
-    outFlags = castFlags<ExampleFlag>(Algorithm::outFlags);
     setPhase(_phase);
 }
 
 
 ExampleAlgorithm::ExampleAlgorithm(const ExampleAlgorithm& other)
-    : Algorithm(other),     // Do not forget to call the constructor of the Algorithm class!
-      phase(other.phase),   // And again, make sure to provide a correct copy constructor.
+    : AlgorithmWithFlags(other),    // Do not forget to call the constructor of the AlgorithmWithFlags class template!
+      phase(other.phase),           // And again, make sure to provide a correct copy constructor.
       followDir(other.followDir),
       distanceToTravel(other.distanceToTravel)
 {
-    // The following method conveniently copies the outFlags, provided the copy constructor for the flags is correctly
-    // implemented.
-    copyFlags<ExampleFlag>(other);
 }
 
 ExampleAlgorithm::~ExampleAlgorithm()
 {
-    // The following method conveniently deletes the outFlags.
-    deleteFlags();
 }
 
 System* ExampleAlgorithm::instance(const int numParticles)
@@ -45,28 +39,8 @@ System* ExampleAlgorithm::instance(const int numParticles)
     return system; // Note that the ownership goes to the caller!
 }
 
-Algorithm* ExampleAlgorithm::clone()
+Movement ExampleAlgorithm::execute()
 {
-    // Use (correctly implemented) copy constructor to do the cloning.
-    return new ExampleAlgorithm(*this);
-}
-
-bool ExampleAlgorithm::isDeterministic() const
-{
-    // Our algorithm works completely deterministically. Specifying this here allows the simulator to detect deadlocks.
-    return true;
-}
-
-Movement ExampleAlgorithm::execute(std::array<const Flag*, 10>& flags)
-{
-    /*
-     * As you can see, the flags received as a parameter have type Flag*. However, we would like to have flags of type
-     * ExampleFlag*. The following method provides convenient casting. Note that it does not check whether the casts are
-     * valid! The array of flags is stored in a member variable so that it can be accessed easily in other methods.
-     * */
-    inFlags = castFlags<ExampleFlag>(flags);
-    outFlags = castFlags<ExampleFlag>(Algorithm::outFlags);
-
     if(phase == Phase::Finished) {
         // Finished particles do nothing.
         return Movement(MovementType::Empty);
@@ -120,6 +94,18 @@ Movement ExampleAlgorithm::execute(std::array<const Flag*, 10>& flags)
     }
 }
 
+Algorithm* ExampleAlgorithm::clone()
+{
+    // Use (correctly implemented) copy constructor to do the cloning.
+    return new ExampleAlgorithm(*this);
+}
+
+bool ExampleAlgorithm::isDeterministic() const
+{
+    // Our algorithm works completely deterministically. Specifying this here allows the simulator to detect deadlocks.
+    return true;
+}
+
 void ExampleAlgorithm::setPhase(Phase _phase)
 {
     phase = _phase;
@@ -139,9 +125,8 @@ void ExampleAlgorithm::setPhase(Phase _phase)
         tailMarkColor = -1;
     }
 
-    for(auto it = outFlags.begin(); it != outFlags.end(); ++it) {
-        ExampleFlag& flag = *(*it);
-        flag.phase = phase;
+    for(int i = 0; i < 10; i++) {
+        outFlags[i].phase = phase;
     }
 }
 
@@ -191,4 +176,6 @@ ExampleFlag::ExampleFlag(const ExampleFlag& other)
     : Flag(other),      // Do not forget to call the constructor of the Flag class!
       phase(other.phase)// And be sure to implement correct copy constructors.
 {
+}
+
 }

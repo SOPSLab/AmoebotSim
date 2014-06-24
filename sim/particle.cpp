@@ -62,7 +62,7 @@ Movement Particle::executeAlgorithm(std::array<const Flag*, 10>& inFlag)
 {
     Q_ASSERT(newAlgorithm == nullptr);
     newAlgorithm = algorithm->clone();
-    return newAlgorithm->delegateExecute(inFlag);
+    return newAlgorithm->execute(inFlag);
 }
 
 void Particle::apply()
@@ -82,7 +82,7 @@ void Particle::discard()
 
 const Flag* Particle::getFlagForNodeInDir(const Node node, const int dir)
 {
-    return algorithm->outFlags[labelOfNeighboringNodeInDir(node, dir)];
+    return algorithm->flagAt(labelOfNeighboringNodeInDir(node, dir));
 }
 
 Node Particle::tail() const

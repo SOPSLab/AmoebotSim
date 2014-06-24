@@ -5,6 +5,8 @@
 #include "sim/particle.h"
 #include "sim/system.h"
 
+namespace Triangle
+{
 TriFlag::TriFlag()
     : point(false),
       followIndicator(false)
@@ -12,7 +14,7 @@ TriFlag::TriFlag()
 }
 
 TriFlag::TriFlag(const TriFlag& other)
-    : Flag(other),  
+    : Flag(other),
       state(other.state),
       point(other.point),
       followIndicator(other.followIndicator)
@@ -23,10 +25,8 @@ Triangle::Triangle(const State _state)
     : state(_state),
       followDir(-1)
 {
-    initFlags<TriFlag>();
-    outFlags = castFlags<TriFlag>(Algorithm::outFlags);
     if (_state == State::Seed){
-        outFlags[0]->point = true;
+        outFlags[0].point = true;
         headMarkDir = 0;
     }
     setState(_state);
@@ -34,16 +34,14 @@ Triangle::Triangle(const State _state)
 
 
 Triangle::Triangle(const Triangle& other)
-    : Algorithm(other),
+    : AlgorithmWithFlags(other),
       state(other.state),
       followDir(other.followDir)
 {
-    copyFlags<TriFlag>(other);
 }
 
 Triangle::~Triangle()
 {
-    deleteFlags();
 }
 
 System* Triangle::instance(const int size, const double holeProb)
@@ -59,7 +57,7 @@ System* Triangle::instance(const int size, const double holeProb)
         candidates.insert(Node(0,0).nodeInDir(dir));
     }
 
-    while(occupied.size() < size && !candidates.empty()){
+    while(int(occupied.size()) < size && !candidates.empty()){
         auto index = randInt(0, candidates.size());
         auto it = candidates.begin();
         while (index != 0){
@@ -87,21 +85,8 @@ System* Triangle::instance(const int size, const double holeProb)
     return system;
 }
 
-Algorithm* Triangle::clone()
+Movement Triangle::execute()
 {
-    return new Triangle(*this);
-}
-
-bool Triangle::isDeterministic() const
-{
-    return true;
-}
-
-Movement Triangle::execute(std::array<const Flag*, 10>& flags)
-{
-	inFlags = castFlags<TriFlag>(flags);
-    outFlags = castFlags<TriFlag>(Algorithm::outFlags);
-
     if(isExpanded()){
         if(state == State::Follower) {
             setFollowIndicatorLabel(followDir);
@@ -109,7 +94,7 @@ Movement Triangle::execute(std::array<const Flag*, 10>& flags)
 
         if(hasNeighborInState(State::Idle) || (tailReceivesFollowIndicator() && (followIndicatorMatchState(State::Follower) || (followIndicatorMatchState(State::Leader) && state != State::Follower)))) {
             return Movement(MovementType::HandoverContract, tailContractionLabel());
-        } 
+        }
         else {
             return Movement(MovementType::Contract, tailContractionLabel());
         }
@@ -131,7 +116,7 @@ Movement Triangle::execute(std::array<const Flag*, 10>& flags)
         }
 
         else if (state == State::Follower && !hasNeighborInState(State::Idle)) {
-            
+
             if (hasNeighborInState(State::Finished)){
                 setState(State::Leader);
             }
@@ -158,38 +143,38 @@ Movement Triangle::execute(std::array<const Flag*, 10>& flags)
         }
 
         else if (state == State::Leader && !hasNeighborInState(State::Idle)){
-            
+
             headMarkDir = -1;
             int direction = isPointedAt();
             headMarkDir = direction;
             if(direction != -1){
                 setState(State::Finished);
                 if(neighborInState((direction+4)%6, State::Finished) || neighborInState((direction+2)%6, State::Finished)){
-                    outFlags[(direction+3)%6]->point = true;
+                    outFlags[(direction+3)%6].point = true;
                 }
                 else{
                     if (neighborInState(direction,State::Seed)){
-                        outFlags[(direction+5)%6]->point = true;
+                        outFlags[(direction+5)%6].point = true;
                     }
                     else if (hasNeighborInState(State::Seed) || neighborInState((direction+5)%6, State::Finished)){
-                        outFlags[(direction+2)%6]->point = true;
-                        outFlags[(direction+2)%6]->side = false;
+                        outFlags[(direction+2)%6].point = true;
+                        outFlags[(direction+2)%6].side = false;
                     }
                     else if (neighborInState((direction+1)%6, State::Finished)){
-                        outFlags[(direction+4)%6]->point = true;
-                        outFlags[(direction+4)%6]->side = true;
+                        outFlags[(direction+4)%6].point = true;
+                        outFlags[(direction+4)%6].side = true;
                     }
                     else if (!neighborInState((direction+1)%6, State::Finished) && !neighborInState((direction+5)%6, State::Finished)){
                         if (inFlags[direction]->side){
-                            outFlags[(direction+5)%6]->point = true;
+                            outFlags[(direction+5)%6].point = true;
                         }
                         else if (!inFlags[direction]->side){
-                            outFlags[(direction+1)%6]->point = true;
+                            outFlags[(direction+1)%6].point = true;
                         }
                     }
                 }
             }
-            
+
             else {
                 auto moveDir = getMoveDir();
                 setContractDir(moveDir);
@@ -203,7 +188,17 @@ Movement Triangle::execute(std::array<const Flag*, 10>& flags)
         }
         return Movement(MovementType::Idle);
     }
-    
+
+}
+
+Algorithm* Triangle::clone()
+{
+    return new Triangle(*this);
+}
+
+bool Triangle::isDeterministic() const
+{
+    return true;
 }
 
 int Triangle::isPointedAt(){
@@ -221,23 +216,22 @@ void Triangle::setState(State _state)
 {
     state = _state;
     if (state == State::Seed){
-    	headMarkColor = 0x00ff00; tailMarkColor = 0x00ff00; // Green
+        headMarkColor = 0x00ff00; tailMarkColor = 0x00ff00; // Green
     }
     else if(state == State::Finished) {
         headMarkColor = 0x000000; tailMarkColor = 0x000000; // Black
     }
     else if(state == State::Leader) {
         headMarkColor = 0xff0000; tailMarkColor = 0xff0000; // Red
-    } 
+    }
     else if(state == State::Follower) {
         headMarkColor = 0x0000ff; tailMarkColor = 0x0000ff; // Blue
-    } 
+    }
     else { // phase == Phase::Idle
         headMarkColor = -1; tailMarkColor = -1; // No color
     }
-    for(auto it = outFlags.begin(); it != outFlags.end(); ++it) {
-        TriFlag& flag = *(*it);
-        flag.state = state;
+    for(int i = 0; i < 10; i++) {
+        outFlags[i].state = state;
     }
 }
 
@@ -278,7 +272,7 @@ int Triangle::getMoveDir()
 void Triangle::setContractDir(const int contractDir)
 {
     for(int label = 0; label < 10; label++) {
-        outFlags[label]->contractDir = contractDir;
+        outFlags[label].contractDir = contractDir;
     }
 }
 int Triangle::updatedFollowDir() const
@@ -290,17 +284,17 @@ int Triangle::updatedFollowDir() const
     return tempFollowDir;
 }
 
-int Triangle::unsetFollowIndicator() const
+void Triangle::unsetFollowIndicator()
 {
     for(int i = 0; i < 10; i++) {
-        outFlags[i]->followIndicator = false;
+        outFlags[i].followIndicator = false;
     }
 }
 
 void Triangle::setFollowIndicatorLabel(const int label)
 {
     for(int i = 0; i < 10; i++) {
-        outFlags[i]->followIndicator = (i == label);
+        outFlags[i].followIndicator = (i == label);
     }
 }
 
@@ -328,4 +322,5 @@ bool Triangle::followIndicatorMatchState(State _state) const
         }
     }
     return false;
+}
 }

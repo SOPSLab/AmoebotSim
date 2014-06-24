@@ -35,7 +35,7 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    sim.setSystem(InfObjCoating::instance(100, 0.2));
+    sim.setSystem(InfObjCoating::InfObjCoating::instance(100, 0.2));
 }
 
 inline void ScriptInterface::round()
@@ -55,7 +55,7 @@ inline void ScriptInterface::exampleAlgorithm(const int numParticles)
         return;
     }
 
-    sim.setSystem(ExampleAlgorithm::instance(numParticles));
+    sim.setSystem(ExampleAlgorithm::ExampleAlgorithm::instance(numParticles));
 }
 
 inline void ScriptInterface::infObjCoating(const int numParticles, const float holeProb)
@@ -70,8 +70,9 @@ inline void ScriptInterface::infObjCoating(const int numParticles, const float h
         return;
     }
 
-    sim.setSystem(InfObjCoating::instance(numParticles, holeProb));
+    sim.setSystem(InfObjCoating::InfObjCoating::instance(numParticles, holeProb));
 }
+
 inline void ScriptInterface::hexagon(const int numParticles, const float holeProb)
 {
     if(numParticles < 0) {
@@ -84,8 +85,9 @@ inline void ScriptInterface::hexagon(const int numParticles, const float holePro
         return;
     }
 
-    sim.setSystem(Hexagon::instance(numParticles, holeProb));
+    sim.setSystem(Hexagon::Hexagon::instance(numParticles, holeProb));
 }
+
 inline void ScriptInterface::triangle(const int numParticles, const float holeProb)
 {
     if(numParticles < 0) {
@@ -98,7 +100,7 @@ inline void ScriptInterface::triangle(const int numParticles, const float holePr
         return;
     }
 
-    sim.setSystem(Triangle::instance(numParticles, holeProb));
+    sim.setSystem(Triangle::Triangle::instance(numParticles, holeProb));
 }
 
 #endif // SCRIPTINTERFACE_H

@@ -5,6 +5,8 @@
 #include "sim/particle.h"
 #include "sim/system.h"
 
+namespace Hexagon
+{
 HexFlag::HexFlag()
     : point(false),
       followIndicator(false)
@@ -12,7 +14,7 @@ HexFlag::HexFlag()
 }
 
 HexFlag::HexFlag(const HexFlag& other)
-    : Flag(other),  
+    : Flag(other),
       state(other.state),
       point(other.point),
       followIndicator(other.followIndicator)
@@ -23,27 +25,22 @@ Hexagon::Hexagon(const State _state)
     : state(_state),
       followDir(-1)
 {
-    initFlags<HexFlag>();
-    outFlags = castFlags<HexFlag>(Algorithm::outFlags);
     if (_state == State::Seed){
-        outFlags[0]->point = true;
+        outFlags[0].point = true;
         headMarkDir = 0;
     }
     setState(_state);
 }
 
-
 Hexagon::Hexagon(const Hexagon& other)
-    : Algorithm(other),
+    : AlgorithmWithFlags(other),
       state(other.state),
       followDir(other.followDir)
 {
-    copyFlags<HexFlag>(other);
 }
 
 Hexagon::~Hexagon()
 {
-    deleteFlags();
 }
 
 System* Hexagon::instance(const int size, const double holeProb)
@@ -59,7 +56,7 @@ System* Hexagon::instance(const int size, const double holeProb)
         candidates.insert(Node(0,0).nodeInDir(dir));
     }
 
-    while(occupied.size() < size && !candidates.empty()){
+    while(int(occupied.size()) < size && !candidates.empty()){
         auto index = randInt(0, candidates.size());
         auto it = candidates.begin();
         while (index != 0){
@@ -87,21 +84,8 @@ System* Hexagon::instance(const int size, const double holeProb)
     return system;
 }
 
-Algorithm* Hexagon::clone()
+Movement Hexagon::execute()
 {
-    return new Hexagon(*this);
-}
-
-bool Hexagon::isDeterministic() const
-{
-    return true;
-}
-
-Movement Hexagon::execute(std::array<const Flag*, 10>& flags)
-{
-	inFlags = castFlags<HexFlag>(flags);
-    outFlags = castFlags<HexFlag>(Algorithm::outFlags);
-
     if(isExpanded()){
         if(state == State::Follower) {
             setFollowIndicatorLabel(followDir);
@@ -109,7 +93,7 @@ Movement Hexagon::execute(std::array<const Flag*, 10>& flags)
 
         if(hasNeighborInState(State::Idle) || (tailReceivesFollowIndicator() && (followIndicatorMatchState(State::Follower) || (followIndicatorMatchState(State::Leader) && state != State::Follower)))) {
             return Movement(MovementType::HandoverContract, tailContractionLabel());
-        } 
+        }
         else {
             return Movement(MovementType::Contract, tailContractionLabel());
         }
@@ -131,7 +115,7 @@ Movement Hexagon::execute(std::array<const Flag*, 10>& flags)
         }
 
         else if (state == State::Follower && !hasNeighborInState(State::Idle)) {
-            
+
             if (hasNeighborInState(State::Finished)){
                 setState(State::Leader);
             }
@@ -164,13 +148,13 @@ Movement Hexagon::execute(std::array<const Flag*, 10>& flags)
             if(direction != -1){
                 setState(State::Finished);
                 if(inFlags[direction] != nullptr && inFlags[direction]->state == State::Seed){
-                    outFlags[(direction+1)%6]->point = true;
+                    outFlags[(direction+1)%6].point = true;
                 }
                 else if (inFlags[(direction+2)%6] != nullptr && inFlags[(direction+2)%6]->state == State::Finished){
-                    outFlags[(direction+3)%6]->point = true;
+                    outFlags[(direction+3)%6].point = true;
                 }
                 else {
-                    outFlags[(direction+2)%6]->point = true;
+                    outFlags[(direction+2)%6].point = true;
                 }
             }
             else {
@@ -186,11 +170,20 @@ Movement Hexagon::execute(std::array<const Flag*, 10>& flags)
         }
         return Movement(MovementType::Idle);
     }
-    
+}
+
+Algorithm* Hexagon::clone()
+{
+    return new Hexagon(*this);
+}
+
+bool Hexagon::isDeterministic() const
+{
+    return true;
 }
 
 int Hexagon::isPointedAt(){
-    for(int label = 0; label < 12; label++) {
+    for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr) {
             if(inFlags[label]->point){
                 return label;
@@ -204,23 +197,23 @@ void Hexagon::setState(State _state)
 {
     state = _state;
     if (state == State::Seed){
-    	headMarkColor = 0x00ff00; tailMarkColor = 0x00ff00; // Green
+        headMarkColor = 0x00ff00; tailMarkColor = 0x00ff00; // Green
     }
     else if(state == State::Finished) {
         headMarkColor = 0x000000; tailMarkColor = 0x000000; // Black
     }
     else if(state == State::Leader) {
         headMarkColor = 0xff0000; tailMarkColor = 0xff0000; // Red
-    } 
+    }
     else if(state == State::Follower) {
         headMarkColor = 0x0000ff; tailMarkColor = 0x0000ff; // Blue
-    } 
+    }
     else { // phase == Phase::Idle
         headMarkColor = -1; tailMarkColor = -1; // No color
     }
-    for(auto it = outFlags.begin(); it != outFlags.end(); ++it) {
-        HexFlag& flag = *(*it);
-        flag.state = state;
+
+    for(int i = 0; i < 10; i++) {
+        outFlags[i].state = state;
     }
 }
 
@@ -261,7 +254,7 @@ int Hexagon::getMoveDir()
 void Hexagon::setContractDir(const int contractDir)
 {
     for(int label = 0; label < 10; label++) {
-        outFlags[label]->contractDir = contractDir;
+        outFlags[label].contractDir = contractDir;
     }
 }
 int Hexagon::updatedFollowDir() const
@@ -273,17 +266,17 @@ int Hexagon::updatedFollowDir() const
     return tempFollowDir;
 }
 
-int Hexagon::unsetFollowIndicator() const
+void Hexagon::unsetFollowIndicator()
 {
     for(int i = 0; i < 10; i++) {
-        outFlags[i]->followIndicator = false;
+        outFlags[i].followIndicator = false;
     }
 }
 
 void Hexagon::setFollowIndicatorLabel(const int label)
 {
     for(int i = 0; i < 10; i++) {
-        outFlags[i]->followIndicator = (i == label);
+        outFlags[i].followIndicator = (i == label);
     }
 }
 
@@ -311,4 +304,6 @@ bool Hexagon::followIndicatorMatchState(State _state) const
         }
     }
     return false;
+}
+
 }

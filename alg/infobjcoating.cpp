@@ -7,28 +7,39 @@
 #include "sim/particle.h"
 #include "sim/system.h"
 
+namespace InfObjCoating
+{
+InfObjCoatingFlag::InfObjCoatingFlag()
+    : followIndicator(false)
+{
+}
+
+InfObjCoatingFlag::InfObjCoatingFlag(const InfObjCoatingFlag& other)
+    : Flag(other),
+      phase(other.phase),
+      contractDir(other.contractDir),
+      followIndicator(other.followIndicator)
+{
+}
+
 InfObjCoating::InfObjCoating(const Phase _phase)
 {
-    initFlags<InfObjCoatingFlag>();
-    outFlags = castFlags<InfObjCoatingFlag>(Algorithm::outFlags);
     setPhase(_phase);
 }
 
 InfObjCoating::InfObjCoating(const InfObjCoating& other)
-    : Algorithm(other),
+    : AlgorithmWithFlags(other),
       phase(other.phase),
       followDir(other.followDir)
 {
-    copyFlags<InfObjCoatingFlag>(other);
 }
 
 InfObjCoating::~InfObjCoating()
 {
-    deleteFlags();
 }
 
 System* InfObjCoating::instance(const int numParticles, const float holeProb)
-{   
+{
     System* system = new System();
 
     std::deque<Node> orderedSurface;
@@ -94,21 +105,8 @@ System* InfObjCoating::instance(const int numParticles, const float holeProb)
     return system;
 }
 
-Algorithm* InfObjCoating::clone()
+Movement InfObjCoating::execute()
 {
-    return new InfObjCoating(*this);
-}
-
-bool InfObjCoating::isDeterministic() const
-{
-    return true;
-}
-
-Movement InfObjCoating::execute(std::array<const Flag*, 10>& flags)
-{
-    inFlags = castFlags<InfObjCoatingFlag>(flags);
-    outFlags = castFlags<InfObjCoatingFlag>(Algorithm::outFlags);
-
     if(isExpanded()) {
         if(phase == Phase::Follow) {
             setFollowIndicatorLabel(followDir);
@@ -162,6 +160,16 @@ Movement InfObjCoating::execute(std::array<const Flag*, 10>& flags)
     }
 }
 
+Algorithm* InfObjCoating::clone()
+{
+    return new InfObjCoating(*this);
+}
+
+bool InfObjCoating::isDeterministic() const
+{
+    return true;
+}
+
 void InfObjCoating::setPhase(const Phase _phase)
 {
     phase = _phase;
@@ -181,7 +189,7 @@ void InfObjCoating::setPhase(const Phase _phase)
     }
 
     for(int label = 0; label < 10; label++) {
-        outFlags[label]->phase = phase;
+        outFlags[label].phase = phase;
     }
 }
 
@@ -209,7 +217,7 @@ bool InfObjCoating::hasNeighborInPhase(const Phase _phase) const
 void InfObjCoating::setContractDir(const int contractDir)
 {
     for(int label = 0; label < 10; label++) {
-        outFlags[label]->contractDir = contractDir;
+        outFlags[label].contractDir = contractDir;
     }
 }
 
@@ -222,17 +230,17 @@ int InfObjCoating::updatedFollowDir() const
     return tempFollowDir;
 }
 
-void InfObjCoating::unsetFollowIndicator() const
+void InfObjCoating::unsetFollowIndicator()
 {
     for(int i = 0; i < 10; i++) {
-        outFlags[i]->followIndicator = false;
+        outFlags[i].followIndicator = false;
     }
 }
 
 void InfObjCoating::setFollowIndicatorLabel(const int label)
 {
     for(int i = 0; i < 10; i++) {
-        outFlags[i]->followIndicator = (i == label);
+        outFlags[i].followIndicator = (i == label);
     }
 }
 
@@ -263,16 +271,4 @@ int InfObjCoating::getMoveDir() const
     Q_ASSERT(false);
     return 0;
 }
-
-InfObjCoatingFlag::InfObjCoatingFlag()
-    : followIndicator(false)
-{
-}
-
-InfObjCoatingFlag::InfObjCoatingFlag(const InfObjCoatingFlag& other)
-    : Flag(other),
-      phase(other.phase),
-      contractDir(other.contractDir),
-      followIndicator(other.followIndicator)
-{
 }

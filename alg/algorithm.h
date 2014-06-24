@@ -19,20 +19,14 @@ public:
     Algorithm(const Algorithm& other);
     virtual ~Algorithm();
 
-    Movement delegateExecute(std::array<const Flag*, 10>& flags);
+    virtual Movement execute(std::array<const Flag*, 10>& flags) = 0;
     virtual Algorithm* clone() = 0;
     virtual bool isDeterministic() const = 0;
 
+    virtual const Flag* flagAt(const int i) const = 0;
+
 protected:
-    virtual Movement execute(std::array<const Flag*, 10>& flags) = 0;
-
-    template<class T> void initFlags();
-    template<class T> void copyFlags(const Algorithm& algorithm);
-    void deleteFlags();
-    template<class T> static std::array<const T*, 10> castFlags(std::array<const Flag*, 10>& _flags);
-    template<class T> static std::array<T*, 10> castFlags(std::array<Flag*, 10>& _flags);
-
-    template<class T> static bool contains(std::vector<T> vector, T value);
+    void updateTailDir(const Movement m);
 
     static int randInt(const int from, const int toNotIncluding);
     static int randDir();
@@ -69,11 +63,8 @@ protected:
 
 private:
     static int labelToDir(int label, int tailDir);
-    void updateTailDir(const Movement m);
-    void updateOutFlags();
 
 public:
-    std::array<Flag*, 10> outFlags;
     int headMarkColor;
     int headMarkDir;
     int tailMarkColor;
@@ -96,20 +87,6 @@ private:
     static const std::array<std::array<int, 10>, 6> labelDir;
 
     static const std::array<const std::array<int, 3>, 6>_backLabels;
-};
-
-class Flag {
-public:
-    Flag();
-    Flag(const Flag& other);
-
-    bool isExpanded() const;
-    bool isContracted() const;
-
-public:
-    int dir;
-    int tailDir;
-    bool fromHead;
 };
 
 inline Algorithm::Algorithm()
@@ -147,64 +124,6 @@ inline Algorithm::Algorithm(const Algorithm& other)
 
 inline Algorithm::~Algorithm()
 {
-}
-
-inline Movement Algorithm::delegateExecute(std::array<const Flag*, 10>& flags)
-{
-    Movement m = execute(flags);
-    updateTailDir(m);
-    updateOutFlags();
-    return m;
-}
-
-template<class T> void Algorithm::initFlags()
-{
-    for(auto it = outFlags.begin(); it != outFlags.end(); ++it) {
-        *it = new T();
-    }
-    updateOutFlags();
-}
-
-template<class T> void Algorithm::copyFlags(const Algorithm& algorithm)
-{
-    for(decltype(algorithm.outFlags.size()) i = 0; i < algorithm.outFlags.size(); i++) {
-        outFlags[i] = new T(*(T*)algorithm.outFlags[i]);
-    }
-}
-
-inline void Algorithm::deleteFlags()
-{
-    for(auto it = outFlags.begin(); it != outFlags.end(); ++it) {
-        delete *it;
-    }
-}
-
-template<class T> std::array<const T*, 10> Algorithm::castFlags(std::array<const Flag*, 10>& _flags)
-{
-    std::array<const T*, 10> flags;
-    for(decltype(_flags.size()) i = 0; i < _flags.size(); i++) {
-        flags[i] = (T*)_flags[i];
-    }
-    return flags;
-}
-
-template<class T> std::array<T*, 10> Algorithm::castFlags(std::array<Flag*, 10>& _flags)
-{
-    std::array<T*, 10> flags;
-    for(decltype(_flags.size()) i = 0; i < _flags.size(); i++) {
-        flags[i] = (T*)_flags[i];
-    }
-    return flags;
-}
-
-template<class T> bool Algorithm::contains(std::vector<T> vector, T value)
-{
-    for(decltype(vector.size()) i = 0; i < vector.size(); i++) {
-        if(vector[i] == value) {
-            return true;
-        }
-    }
-    return false;
 }
 
 inline int Algorithm::randInt(const int from, const int toNotIncluding)
@@ -453,37 +372,6 @@ inline void Algorithm::updateTailDir(const Movement m)
     } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
         _tailDir = -1;
     }
-}
-
-inline void Algorithm::updateOutFlags()
-{
-    int labelLimit = _tailDir == -1 ? 6 : 10;
-    for(int label = 0; label < labelLimit; label++) {
-        outFlags[label]->dir = labelToDir(label);
-        outFlags[label]->tailDir = _tailDir;
-        outFlags[label]->fromHead = isHeadLabel(label);
-    }
-}
-
-inline Flag::Flag()
-{
-}
-
-inline Flag::Flag(const Flag& other)
-    : dir(other.dir),
-      tailDir(other.tailDir),
-      fromHead(other.fromHead)
-{
-}
-
-inline bool Flag::isExpanded() const
-{
-    return (tailDir != -1);
-}
-
-inline bool Flag::isContracted() const
-{
-    return !isExpanded();
 }
 
 #endif // ALGORITHM_H

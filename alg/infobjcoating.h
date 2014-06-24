@@ -1,55 +1,17 @@
 #ifndef INFOBJCOATING_H
 #define INFOBJCOATING_H
 
-#include "alg/algorithm.h"
+#include "alg/algorithmwithflags.h"
 
-class InfObjCoatingFlag;
 class System;
 
-class InfObjCoating : public Algorithm
+namespace InfObjCoating
 {
-public:
-    enum class Phase {
-        Static,
-        Inactive,
-        Follow,
-        Lead
-    };
-
-public:
-    InfObjCoating(const Phase _phase);
-    InfObjCoating(const InfObjCoating& other);
-    virtual ~InfObjCoating();
-
-    static System* instance(const int numParticles, const float holeProb);
-
-    virtual Algorithm* clone();
-    virtual bool isDeterministic() const;
-
-protected:
-    virtual Movement execute(std::array<const Flag*, 10>& flags);
-
-    void setPhase(const Phase _phase);
-
-    bool neighborIsInPhase(const int label, const Phase _phase) const;
-    int firstNeighborInPhase(const Phase _phase) const;
-    bool hasNeighborInPhase(const Phase _phase) const;
-
-    void setContractDir(const int contractDir);
-    int updatedFollowDir() const;
-
-    void unsetFollowIndicator() const;
-    void setFollowIndicatorLabel(const int label);
-    bool tailReceivesFollowIndicator() const;
-
-    int getMoveDir() const;
-
-protected:
-    std::array<const InfObjCoatingFlag*, 10> inFlags;
-    std::array<InfObjCoatingFlag*, 10> outFlags;
-
-    Phase phase;
-    int followDir;
+enum class Phase {
+    Static,
+    Inactive,
+    Follow,
+    Lead
 };
 
 class InfObjCoatingFlag : public Flag
@@ -59,9 +21,44 @@ public:
     InfObjCoatingFlag(const InfObjCoatingFlag& other);
 
 public:
-    InfObjCoating::Phase phase;
+    Phase phase;
     int contractDir;
     bool followIndicator;
 };
+
+class InfObjCoating : public AlgorithmWithFlags<InfObjCoatingFlag>
+{
+public:
+    InfObjCoating(const Phase _phase);
+    InfObjCoating(const InfObjCoating& other);
+    virtual ~InfObjCoating();
+
+    static System* instance(const int numParticles, const float holeProb);
+
+    virtual Movement execute();
+    virtual Algorithm* clone();
+    virtual bool isDeterministic() const;
+
+protected:
+    void setPhase(const Phase _phase);
+
+    bool neighborIsInPhase(const int label, const Phase _phase) const;
+    int firstNeighborInPhase(const Phase _phase) const;
+    bool hasNeighborInPhase(const Phase _phase) const;
+
+    void setContractDir(const int contractDir);
+    int updatedFollowDir() const;
+
+    void unsetFollowIndicator();
+    void setFollowIndicatorLabel(const int label);
+    bool tailReceivesFollowIndicator() const;
+
+    int getMoveDir() const;
+
+protected:
+    Phase phase;
+    int followDir;
+};
+}
 
 #endif // INFOBJCOATING_H

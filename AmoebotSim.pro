@@ -11,9 +11,11 @@ win32:RC_FILE = res/AmoebotSim.rc
 
 HEADERS += \
     alg/algorithm.h \
+    alg/algorithmwithflags.h \
     alg/examplealgorithm.h \
     alg/hexagon.h \
     alg/infobjcoating.h \
+    alg/triangle.h \
     main/application.h \
     script/scriptinterface.h \
     sim/movement.h \
@@ -23,14 +25,14 @@ HEADERS += \
     sim/system.h \
     ui/glitem.h \
     ui/commandhistorymanager.h \
-    ui/visitem.h \
-    alg/triangle.h
+    ui/visitem.h
 
 SOURCES += \
     alg/algorithm.cpp \
     alg/examplealgorithm.cpp \
     alg/hexagon.cpp \
     alg/infobjcoating.cpp \
+    alg/triangle.cpp \
     main/application.cpp \
     main/main.cpp\
     sim/node.cpp \
@@ -39,8 +41,7 @@ SOURCES += \
     sim/system.cpp \
     ui/commandhistorymanager.cpp \
     ui/glitem.cpp \
-    ui/visitem.cpp \
-    alg/triangle.cpp
+    ui/visitem.cpp
 
 
 RESOURCES += \

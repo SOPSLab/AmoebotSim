@@ -6,32 +6,38 @@
  * a particle. Note that our formal model requires that the state space is constant in size. You have to make sure for
  * yourself that the algorithm you implement satisfies this requirement.
  *
- * An algorithm has to extend the abstract class Algorithm. This class automatically keeps track of some information
- * about the particle and provides methods to its subclasses for convenience.  For example, it provides the following:
+ * An algorithm typically extends the abstract class template AlgorithmWithFlags<class FlagClass> where FlagClass
+ * specifies the class name of the flag class used by algorithm. This class template (together with its superclass
+ * Algorithm) automatically keeps track of some information about the particle and provides methods to its subclasses
+ * for convenience. It also manages the flags. For example, it provides the following:
  *      - direction of the tail relative to the orientation of a particle (tailDir), -1 if particle is contracted
  *      - whether a particle is expanded or not (isExpanded, isContracted)
  *      - what labels are the head / tail labels (headLabels, tailLabels)
  *      - what labels correspond to a head / tail contraction (headContractionLabel, tailContractionLabel)
  *      - what direction an edge with a specific label points in (labelToDir)
  *
- * A flag encapsulates the information shared by a particle with another particle. A flag has to extend the abstract
- * class Flag. Again, flags automatically contain some information about the "sending" particle, for example:
+ * A flag encapsulates the information shared by a particle with another particle. Your custom flag class has to extend
+ * the class Flag (the simulator checks this). Flags automatically contain some information about the "sending"
+ * particle, for example:
  *      - direction of the edge leaving the "sending" particle the flag was set for (dir)
  *      - direction of the tail relative to the orientation of the "sending" particle (tailDir)
- * Each algorithm has an array of "outFlags", that is the information set for the neighboring particle to read.
+ * An algorithm extending the class template AlgorithmWithFlags has access to an array "outFlags", that specifies the
+ * information set for the neighboring particle to read. Analogously, such an algorithm also has access to an array
+ * "inFlag" that contains pointers to the flags read from the neighbors. Note that this array contains pointers, and
+ * that a pointer in the array has the value "nullptr" in absence of a sending node.
  *
- * The behavior of a particle is encoded in the "execute" method. As its only parameter this method gets the information
- * set by the neighboring particles (flags). In this method, the member variables (i.e., the state of a particle) can be
- * changed arbitrarily. The return value of the method describes the movement the particle should execute. In contrast
- * to the formal model, at this point an algorithm can only specify a one or no movement to be executed. The
- * MovementType enum encodes the movements allowed in the Amoebot model as well as a value "Empty" to denote that the
- * transition function for the particle should map to the empty set. Note that there is a difference between idle and
- * empty: Idle means that a particle does not want to move but wants to change its state. Empty means that, from its
- * current point of view, the particle is done. Accordingly, changes on the member variables of an algorithm will be
- * reset if the Empty movement is returned. Similarly, changes will be reset if a movement is impossible (collisions,
- * expansions of expanded particles, ...). So corresponding to the formal model, changes to the state of a particle can
- * only be applied if the associated movement succeeds (the action is enabled). If all particles in a system return
- * "Empty" as their movement, the simulator will detect that the algorithm terminated.
+ * The behavior of a particle is encoded in the "execute" method. In this method, the member variables (i.e., the state
+ * of a particle) can be changed arbitrarily. The return value of the method describes the movement the particle should
+ * execute. In contrast to the formal model, at this point an algorithm can only specify a one or no movement to be
+ * executed. The MovementType enum encodes the movements allowed in the Amoebot model as well as a value "Empty" to
+ * denote that the transition function for the particle should map to the empty set. Note that there is a difference
+ * between idle and empty: Idle means that a particle does not want to move but wants to change its state. Empty means
+ * that, from its current point of view, the particle does not want to do anything at all. Accordingly, changes to the
+ * member variables of an algorithm will be reset if the Empty movement is returned. Similarly, changes will be reset if
+ * a movement is impossible (collisions, expansions of expanded particles, ...). So corresponding to the formal model,
+ * changes to the state of a particle can only be applied if the associated movement succeeds (the action is enabled).
+ * If all particles in a system return "Empty" as their movement, the simulator will detect that the algorithm
+ * terminated.
  *
  * The comments in the code below give more details on the implementation of algorithms. The example is a simplified
  * version of the Spanning Forest Algorithms where a line of particles moves a certain number of nodes to the right.
@@ -40,22 +46,40 @@
 #ifndef EXAMPLEALGORITHM_H
 #define EXAMPLEALGORITHM_H
 
-#include "alg/algorithm.h"
+#include "alg/algorithmwithflags.h"
 
-class ExampleFlag;
 class System;
 
-class ExampleAlgorithm : public Algorithm
+// We put everything in a namespace so we do not pollute the global namespace.
+namespace ExampleAlgorithm
+{
+// The three phases from the spanning forest algorithm together with a new "Finished" phase.
+enum class Phase {
+    Finished,
+    Leader,
+    Follower,
+    Idle
+};
+
+/*
+ * The custom flag class for this algorithm defines the data that can be shared between particles. It has to extend
+ * the Flag class.
+ * */
+class ExampleFlag : public Flag
 {
 public:
-    // The three phases from the spanning forest algorithm together with a new "Finished" phase.
-    enum class Phase {
-        Finished,
-        Leader,
-        Follower,
-        Idle
-    };
+    ExampleFlag();
+    ExampleFlag(const ExampleFlag& other);
 
+    // A particle should tell its neighbors, in what phase it is.
+    Phase phase;
+};
+
+/*
+ * An algorithm must extend the class AlgorithmWithFlags<class FlagClass> where FlagClass is our custom class of flags.
+ * */
+class ExampleAlgorithm : public AlgorithmWithFlags<ExampleFlag>
+{
 public:
     // Particles can be initialized differently. This can also be used to generate instances with a seed particle.
     ExampleAlgorithm(const Phase _phase);
@@ -75,9 +99,12 @@ public:
      * */
     static System* instance(const int numParticles);
 
+    // This method essentially determines the behavior of a particle. See description above.
+    virtual Movement execute();
+
     /*
      * This method has to be implemented and has to correctly copy all member variables of an algorithm. The easiest way
-     * to achieve this is to implement a correct copy constructor and use this to implement cloning, as is done in this
+     * to achieve this is to implement a correct copy constructor and use it to implement cloning, as is done in this
      * example algorithm.
      * */
     virtual Algorithm* clone();
@@ -91,9 +118,6 @@ public:
     virtual bool isDeterministic() const;
 
 protected:
-    // This method essentially determines the behavior of a particle. See description above.
-    virtual Movement execute(std::array<const Flag*, 10>& flags);
-
     /* What the following methods do should be quite self-explanatory. However, their implementation contains some
      * relevant comments.
      * */
@@ -104,36 +128,13 @@ protected:
 
 protected:
     /*
-     * These arrays represent the ingoing and outgoing flags of a particles. It is not a must to have these as members,
-     * though. The outFlags array actually shadows a definition of an array in the Algorithm class of the same name, and
-     * the inFlags are always provided to the execute method. However, it is convenenient to have these in order to
-     * reduce the number of parameters in the protected functions above. The values are updated (mostly) in the execute
-     * method.
-     * */
-    std::array<const ExampleFlag*, 10> inFlags;
-    std::array<ExampleFlag*, 10> outFlags;
-
-    /*
-     * phase and followDir are defined as usually in the spanning forest approach. distanceToTravel specifies the number
-     * of nodes the line of cells moves.
+     * phase and followDir are defined as usual in the spanning forest approach.
+     * distanceToTravel specifies the number of nodes the line of cells moves.
      * */
     Phase phase;
     int followDir;
     int distanceToTravel;
 };
-
-/*
- * The specific flag class for this algorithm defines the data that can be shared between particles. It has to extend
- * the Flag class.
- * */
-class ExampleFlag : public Flag
-{
-public:
-    ExampleFlag();
-    ExampleFlag(const ExampleFlag& other);
-
-    // A particle should tell its neighbors, in what phase it is.
-    ExampleAlgorithm::Phase phase;
-};
+}
 
 #endif // EXAMPLEALGORITHM_H
