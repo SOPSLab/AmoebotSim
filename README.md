@@ -31,6 +31,7 @@ The following instructions should get you started working with AmoebotSim; pleas
     - __Ctrl + B__: Hide / Show buttons in the bottom-right corner (nice for presentations).
     - __Ctrl + E__: Start / Stop the simulation.
     - __Ctrl + D__: Execute a single round of the simulation.
+    - __Ctrl + F__: Focus on center of mass.
 
 [1] http://qt-project.org/downloads
 
