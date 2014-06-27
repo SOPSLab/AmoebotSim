@@ -34,6 +34,7 @@ public:
 
 public slots:
     void updateSystem(System* _system);
+    void focusOnCenterOfMass();
 
 protected slots:
     virtual void sync();

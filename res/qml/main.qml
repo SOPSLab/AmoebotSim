@@ -12,7 +12,7 @@ ApplicationWindow {
     signal start()
     signal stop()
     signal round()
-    signal back()
+    signal focusOnCenterOfMass()
 
     signal executeCommand(string cmd)
     signal commandFieldUp()
@@ -133,6 +133,9 @@ ApplicationWindow {
                 event.accepted = true
             } else if(event.key === Qt.Key_D && (event.modifiers & Qt.ControlModifier)) {
                 round()
+                event.accepted = true
+            } else if(event.key === Qt.Key_F && (event.modifiers & Qt.ControlModifier)) {
+                vis.focusOnCenterOfMass()
                 event.accepted = true
             }
         }

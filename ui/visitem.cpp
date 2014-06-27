@@ -58,6 +58,31 @@ void VisItem::updateSystem(System* _system)
     window()->update();
 }
 
+void VisItem::focusOnCenterOfMass()
+{
+    if(system == nullptr) {
+        return;
+    }
+
+    QPointF sum(0, 0);
+    int numNodes = 0;
+
+    for(int i = 0; i < system->size(); i++) {
+        const Particle& p = system->at(i);
+        sum = sum + nodeToWorldCoord(p.head);
+        numNodes++;
+        if(p.tailDir != -1) {
+            sum = sum + nodeToWorldCoord(p.tail());
+            numNodes++;
+        }
+    }
+
+    sum = sum / numNodes;
+
+    focusPosGui = sum;
+    window()->update();
+}
+
 void VisItem::sync()
 {
     focusPos = focusPosGui;
@@ -100,11 +125,14 @@ void VisItem::paint()
 
     Quad view = calculateView(focusPos, zoom, width(), height());
     drawGrid(view);
-    if(system != nullptr) {
-        drawParticles(view);
-        if(system->getSystemState() == System::SystemState::Disconnected) {
-            drawDisconnectionNode();
-        }
+
+    if(system == nullptr) {
+        return;
+    }
+
+    drawParticles(view);
+    if(system->getSystemState() == System::SystemState::Disconnected) {
+        drawDisconnectionNode();
     }
 }
 
