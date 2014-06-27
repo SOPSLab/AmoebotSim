@@ -60,7 +60,7 @@ void VisItem::updateSystem(System* _system)
 
 void VisItem::focusOnCenterOfMass()
 {
-    if(system == nullptr) {
+    if(system == nullptr || system->size() == 0) {
         return;
     }
 
@@ -77,9 +77,7 @@ void VisItem::focusOnCenterOfMass()
         }
     }
 
-    sum = sum / numNodes;
-
-    focusPosGui = sum;
+    focusPosGui = sum / numNodes;
     window()->update();
 }
 
