@@ -22,6 +22,7 @@ Application::Application(int argc, char *argv[]) :
     connect(engine->rootObjects().at(0), SIGNAL(start()), sim, SLOT(start()));
     connect(engine->rootObjects().at(0), SIGNAL(stop() ), sim, SLOT(stop() ));
     connect(engine->rootObjects().at(0), SIGNAL(round()), sim, SLOT(round()));
+    connect(vis, &VisItem::roundForParticleAt, sim, &Simulator::roundForParticleAt);
     connect(engine->rootObjects().at(0), SIGNAL(executeCommand(QString)), sim, SLOT(executeCommand(QString)));
     connect(sim,
             &Simulator::log,

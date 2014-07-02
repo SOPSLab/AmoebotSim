@@ -45,9 +45,12 @@ VisItem::VisItem(QQuickItem* parent) :
 {
     setAcceptedMouseButtons(Qt::LeftButton);
 
+    renderTimer = new QTimer(this);
+    renderTimer->start(15);
+
     blinkTimer = new QTimer(this);
-    connect(blinkTimer, &QTimer::timeout, [&](){blinkValue += 0.2; if(blinkValue >= 1.0) blinkValue = -1.0;});
-    blinkTimer->start(33);
+    connect(blinkTimer, &QTimer::timeout, [&](){blinkValue += 0.1; if(blinkValue >= 1.0) blinkValue = -1.0;});
+    blinkTimer->start(15);
 }
 
 void VisItem::updateSystem(System* _system)
@@ -55,7 +58,6 @@ void VisItem::updateSystem(System* _system)
     QMutexLocker locker(&systemMutex);
     delete system;
     system = _system;
-    window()->update();
 }
 
 void VisItem::focusOnCenterOfMass()
@@ -78,7 +80,6 @@ void VisItem::focusOnCenterOfMass()
     }
 
     focusPosGui = sum / numNodes;
-    window()->update();
 }
 
 void VisItem::sync()
@@ -99,6 +100,9 @@ void VisItem::initialize()
     particleTex->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
     particleTex->bind();
     particleTex->generateMipMaps();
+
+    Q_ASSERT(window() != nullptr);
+    connect(renderTimer, &QTimer::timeout, window(), &QQuickWindow::update);
 }
 
 void VisItem::paint()
@@ -136,6 +140,8 @@ void VisItem::paint()
 
 void VisItem::deinitialize()
 {
+    renderTimer->disconnect();
+
     delete particleTex;
     particleTex = nullptr;
 
@@ -294,26 +300,44 @@ QPointF VisItem::nodeToWorldCoord(Node node)
     return QPointF(node.x + 0.5f * node.y, node.y * triangleHeight);
 }
 
+Node VisItem::worldCoordToNode(QPointF worldCord)
+{
+    const int y = std::round(worldCord.y() / triangleHeight);
+    const int x = std::round(worldCord.x() - 0.5 * y);
+    return Node(x, y);
+}
+
+QPointF VisItem::windowCoordToWorldCoord(const QPointF windowCoord)
+{
+    auto view = calculateView(focusPosGui, zoomGui, width(), height());
+    const float x = view.left + (view.right - view.left) * windowCoord.x() / width();
+    const float y = view.top + (view.bottom - view.top ) * windowCoord.y() / height();
+    return QPointF(x, y);
+}
+
 void VisItem::mousePressEvent(QMouseEvent* e)
 {
     if(e->buttons() & Qt::LeftButton) {
-        lastMousePosGui = e->localPos();
+        if(e->modifiers() & Qt::ControlModifier) {
+            tranlatingGui = false;
+            Node node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
+            emit roundForParticleAt(node.x, node.y);
+        } else {
+            tranlatingGui = true;
+            lastMousePosGui = e->localPos();
+        }
         e->accept();
     }
 }
 
 void VisItem::mouseMoveEvent(QMouseEvent* e)
 {
-    if(e->buttons() & Qt::LeftButton) {
+    if(e->buttons() & Qt::LeftButton && tranlatingGui) {
         QPointF offset = lastMousePosGui - e->localPos();
         QPointF scaledOffset = offset / zoomGui;
         focusPosGui += QPointF(scaledOffset.x(), -scaledOffset.y());
         lastMousePosGui = e->localPos();
         e->accept();
-
-        if(window()) {
-            window()->update();
-        }
     }
 }
 
@@ -340,8 +364,4 @@ void VisItem::wheelEvent(QWheelEvent* e)
 
     // move the focus point so that the point under the cursor remains unchanged
     focusPosGui = focusPosGui + oldPos - newPos;
-
-    if(window()) {
-        window()->update();
-    }
 }

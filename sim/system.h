@@ -30,6 +30,7 @@ public:
     int size() const;
 
     SystemState round();
+    SystemState roundForParticle(const Node node);
 
     SystemState getSystemState() const;
     Node getDisconnectionNode() const;

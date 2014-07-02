@@ -127,6 +127,40 @@ System::SystemState System::round()
     return systemState;
 }
 
+System::SystemState System::roundForParticle(const Node node)
+{
+    if(systemState != SystemState::Valid) {
+        return systemState;
+    }
+
+    if(particles.size() == 0) {
+        systemState = SystemState::Terminated;
+        return systemState;
+    }
+
+    auto it = particleMap.find(node);
+    if(it == particleMap.end()) {
+        return systemState;
+    }
+
+    Particle* p = it->second;
+    auto inFlags = assembleFlags(*p);
+    Movement m = p->executeAlgorithm(inFlags);
+
+    if(m.type == MovementType::Empty) {
+        // particle becomes inactive voluntarily
+        // it will be activated once its neighborhood changes
+        p->discard();
+    } else if(m.type == MovementType::Idle) {
+        p->apply();
+    } else if(m.type == MovementType::Expand) {
+        handleExpansion(*p, m.label);
+    } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
+        handleContraction(*p, m.label, m.type == MovementType::HandoverContract);
+    }
+    return systemState;
+}
+
 System::SystemState System::getSystemState() const
 {
     return systemState;

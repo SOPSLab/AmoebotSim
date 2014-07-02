@@ -76,6 +76,27 @@ void Simulator::stop()
     emit stopped();
 }
 
+void Simulator::roundForParticleAt(const int x, const int y)
+{
+    if(!roundTimer->isActive()) {
+        const Node node(x, y);
+        system->roundForParticle(node);
+        auto systemState = system->getSystemState();
+        if(systemState == System::SystemState::Deadlock) {
+            log("Deadlock detected.", true);
+        } else if(systemState == System::SystemState::Disconnected) {
+            log("System disconnected.", true);
+        } else if(systemState == System::SystemState::Terminated) {
+            log("Algorithm terminated.", false);
+        }
+
+    #ifdef QT_DEBUG
+        // increases the chance that when the debugger stops the visualization shows the actual configuration of the system
+        updateSystem(new System(*system));
+    #endif
+    }
+}
+
 void Simulator::executeCommand(const QString cmd)
 {
     QScriptValue result = engine.evaluate(cmd);

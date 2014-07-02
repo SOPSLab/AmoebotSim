@@ -31,6 +31,8 @@ public slots:
     void start();
     void stop();
 
+    void roundForParticleAt(const int x, const int y);
+
     void executeCommand(const QString cmd);
 
     void setRoundDuration(int ms);

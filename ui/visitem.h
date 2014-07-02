@@ -32,6 +32,9 @@ protected:
 public:
     explicit VisItem(QQuickItem* parent = 0);
 
+signals:
+    void roundForParticleAt(const int x, const int y);
+
 public slots:
     void updateSystem(System* _system);
     void focusOnCenterOfMass();
@@ -52,6 +55,8 @@ protected:
     static Quad calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight);
     static bool inView(const QPointF& headWorldPos, const Quad& view);
     static QPointF nodeToWorldCoord(Node node);
+    static Node worldCoordToNode(QPointF worldCord);
+    QPointF windowCoordToWorldCoord(const QPointF windowCoord);
 
     void mousePressEvent(QMouseEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
@@ -71,9 +76,12 @@ protected:
     // height of a triangle in our equilateral triangular grid if the side length is 1
     static const float triangleHeight;
 
+    QTimer* renderTimer;
+
     QOpenGLTexture* gridTex;
     QOpenGLTexture* particleTex;
 
+    bool tranlatingGui;
     // these variables are used by two threads
     // variables with suffix Gui are used by the gui thread
     // and the remaining variables are used by the render thread
