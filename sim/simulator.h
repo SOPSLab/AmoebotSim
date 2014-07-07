@@ -34,11 +34,18 @@ public slots:
     void roundForParticleAt(const int x, const int y);
 
     void executeCommand(const QString cmd);
-    void executeScript(const QString script);
+    void runScript(const QString script);
+    void abortScript();
+
+    bool getSystemValid();
+    bool getSystemDisconnected();
+    bool getSystemTerminated();
+    bool getSystemDeadlocked();
+
+    int getNumParticles() const;
+    int getNumMovements() const;
 
     void setRoundDuration(int ms);
-    int getNumMovements() const;
-    int numParticles() const;
 
 protected:
     QScriptEngine engine;

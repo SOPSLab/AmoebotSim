@@ -17,7 +17,7 @@ public:
         Valid,
         Disconnected,
         Terminated,
-        Deadlock
+        Deadlocked
     };
 
 public:

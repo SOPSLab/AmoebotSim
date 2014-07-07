@@ -23,13 +23,20 @@ public:
     explicit ScriptInterface(Simulator& _sim);
     
 public slots:
-    void run(const QString scriptFilePath);
-
     void round();
 
-    void setRoundDuration(int ms);
+    void runScript(const QString scriptFilePath);
+    void writeToFile(const QString filePath, const QString text);
+
+    bool isValid();
+    bool isDisconnected();
+    bool isTerminated();
+    bool isDeadlocked();
+
+    int getNumParticles();
     int getNumMovements();
-    int numParticles();
+
+    void setRoundDuration(int ms);
 
     void exampleAlgorithm(const int numParticles);
     void infObjCoating(const int numParticles, const float holeProb = 0.2);
@@ -40,24 +47,6 @@ public slots:
 private:
     Simulator& sim;
 };
-
-inline void ScriptInterface::run(const QString scriptFilePath)
-{
-    QFile scriptFile(scriptFilePath);
-
-    if(!scriptFile.open(QFile::ReadOnly)) {
-        sim.log("script not found", true);
-        return;
-    }
-
-    QTextStream stream(&scriptFile);
-    QString script = stream.readAll();
-
-    scriptFile.close();
-
-    sim.executeScript(script);
-    sim.log("script finished", false);
-}
 
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
@@ -70,9 +59,62 @@ inline void ScriptInterface::round()
     sim.round();
 }
 
-inline void ScriptInterface::setRoundDuration(int ms)
+inline void ScriptInterface::runScript(const QString scriptFilePath)
 {
-    sim.setRoundDuration(ms);
+    QFile scriptFile(scriptFilePath);
+
+    if(!scriptFile.open(QFile::ReadOnly)) {
+        sim.log("could not open script file", true);
+        return;
+    }
+
+    QTextStream stream(&scriptFile);
+    QString script = stream.readAll();
+
+    scriptFile.close();
+
+    sim.runScript(script);
+    sim.log("script finished", false);
+}
+
+inline void ScriptInterface::writeToFile(const QString filePath, const QString text)
+{
+    QFile file(filePath);
+
+    if(!file.open(QFile::WriteOnly | QFile::Append)) {
+        sim.log("could not write to file", true);
+        return;
+    }
+
+    QTextStream stream(&file);
+    stream << text;
+
+    file.close();
+}
+
+inline bool ScriptInterface::isValid()
+{
+    return sim.getSystemValid();
+}
+
+inline bool ScriptInterface::isDisconnected()
+{
+    return sim.getSystemDisconnected();
+}
+
+inline bool ScriptInterface::isTerminated()
+{
+    return sim.getSystemTerminated();
+}
+
+inline bool ScriptInterface::isDeadlocked()
+{
+    return sim.getSystemDeadlocked();
+}
+
+inline int ScriptInterface::getNumParticles()
+{
+    return sim.getNumParticles();
 }
 
 inline int ScriptInterface::getNumMovements()
@@ -80,9 +122,9 @@ inline int ScriptInterface::getNumMovements()
     return sim.getNumMovements();
 }
 
-inline int ScriptInterface::numParticles()
+inline void ScriptInterface::setRoundDuration(int ms)
 {
-    return sim.numParticles();
+    sim.setRoundDuration(ms);
 }
 
 inline void ScriptInterface::exampleAlgorithm(const int numParticles)

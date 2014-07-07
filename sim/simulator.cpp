@@ -44,7 +44,7 @@ void Simulator::round()
 {
     system->round();
     auto systemState = system->getSystemState();
-    if(systemState == System::SystemState::Deadlock) {
+    if(systemState == System::SystemState::Deadlocked) {
         log("Deadlock detected. Simulation aborted.", true);
         roundTimer->stop();
         emit stopped();
@@ -82,7 +82,7 @@ void Simulator::roundForParticleAt(const int x, const int y)
         const Node node(x, y);
         system->roundForParticle(node);
         auto systemState = system->getSystemState();
-        if(systemState == System::SystemState::Deadlock) {
+        if(systemState == System::SystemState::Deadlocked) {
             log("Deadlock detected.", true);
         } else if(systemState == System::SystemState::Disconnected) {
             log("System disconnected.", true);
@@ -105,14 +105,39 @@ void Simulator::executeCommand(const QString cmd)
     }
 }
 
-void Simulator::executeScript(const QString script)
+void Simulator::runScript(const QString script)
 {
     engine.evaluate(script);
 }
 
-void Simulator::setRoundDuration(int ms)
+void Simulator::abortScript()
 {
-    roundTimer->setInterval(ms);
+    engine.abortEvaluation();
+}
+
+bool Simulator::getSystemValid()
+{
+    return system->getSystemState() == System::SystemState::Valid;
+}
+
+bool Simulator::getSystemDisconnected()
+{
+    return system->getSystemState() == System::SystemState::Disconnected;
+}
+
+bool Simulator::getSystemTerminated()
+{
+    return system->getSystemState() == System::SystemState::Terminated;
+}
+
+bool Simulator::getSystemDeadlocked()
+{
+    return system->getSystemState() == System::SystemState::Deadlocked;
+}
+
+int Simulator::getNumParticles() const
+{
+    return system->size();
 }
 
 int Simulator::getNumMovements() const
@@ -120,7 +145,7 @@ int Simulator::getNumMovements() const
     return system->getNumMovements();
 }
 
-int Simulator::numParticles() const
+void Simulator::setRoundDuration(int ms)
 {
-    return system->size();
+    roundTimer->setInterval(ms);
 }

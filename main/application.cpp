@@ -61,6 +61,7 @@ Application::Application(int argc, char *argv[]) :
 
 Application::~Application()
 {
+    sim->abortScript();
     simThread->quit();
     simThread->wait();
     delete sim;

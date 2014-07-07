@@ -120,7 +120,7 @@ System::SystemState System::round()
 
     if(hasBlockedParticles) {
         if(particles[0].algorithmIsDeterministic()) {
-            systemState = SystemState::Deadlock;
+            systemState = SystemState::Deadlocked;
         } else {
             systemState = SystemState::Valid;
         }
