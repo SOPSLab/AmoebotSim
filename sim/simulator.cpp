@@ -114,3 +114,8 @@ int Simulator::getNumMovements() const
 {
     return system->getNumMovements();
 }
+
+int Simulator::numParticles() const
+{
+    return system->size();
+}
