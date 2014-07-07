@@ -8,7 +8,8 @@
 #include "sim/system.h"
 
 System::System()
-    : systemState(SystemState::Valid)
+    : systemState(SystemState::Valid),
+      numMovements(0)
 {
     uint32_t seed;
     std::random_device device;
@@ -26,7 +27,8 @@ System::System()
 System::System(const System& other)
     : rng(other.rng),
       systemState(other.systemState),
-      disconnectionNode(other.disconnectionNode)
+      disconnectionNode(other.disconnectionNode),
+      numMovements(other.numMovements)
 {
     for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
         insert(*it);
@@ -38,6 +40,7 @@ System& System::operator=(const System& other)
     rng = other.rng;
     systemState = other.systemState;
     disconnectionNode = other.disconnectionNode;
+    numMovements = other.numMovements;
     for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
         insert(*it);
     }
@@ -171,6 +174,11 @@ Node System::getDisconnectionNode() const
     return disconnectionNode;
 }
 
+int System::getNumMovements() const
+{
+    return numMovements;
+}
+
 std::array<const Flag*, 10> System::assembleFlags(Particle& p)
 {
     std::array<const Flag*, 10> flags;    
@@ -218,6 +226,7 @@ bool System::handleExpansion(Particle& p, int label)
     p.head = newHead;
     p.tailDir = Particle::posMod<6>(label + 3);
     p.apply();
+    numMovements++;
     return true;
 }
 
@@ -330,11 +339,13 @@ bool System::handleContraction(Particle& p, int label, bool isHandoverContractio
     }
     p.tailDir = -1;
     p.apply();
+    numMovements++;
     particleMap.erase(handoverNode);
     if(handover) {
         handoverParticle->head = handoverNode;
         handoverParticle->tailDir = Particle::posMod<6>(handoverExpandDir + 3);
         handoverParticle->apply();
+        numMovements++;
         particleMap.insert(std::pair<Node, Particle*>(handoverNode, handoverParticle));
     } else {
         // an isolated contraction is the only action that can disconnect the system

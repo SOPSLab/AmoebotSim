@@ -23,6 +23,7 @@ public slots:
     void round();
 
     void setRoundDuration(int ms);
+    int getNumMovements();
 
     void exampleAlgorithm(const int numParticles);
     void infObjCoating(const int numParticles, const float holeProb = 0.2);
@@ -48,6 +49,11 @@ inline void ScriptInterface::round()
 inline void ScriptInterface::setRoundDuration(int ms)
 {
     sim.setRoundDuration(ms);
+}
+
+inline int ScriptInterface::getNumMovements()
+{
+    return sim.getNumMovements();
 }
 
 inline void ScriptInterface::exampleAlgorithm(const int numParticles)

@@ -34,6 +34,7 @@ public:
 
     SystemState getSystemState() const;
     Node getDisconnectionNode() const;
+    int getNumMovements() const;
 
 protected:
     std::array<const Flag*, 10> assembleFlags(Particle& p);
@@ -49,6 +50,8 @@ protected:
 
     SystemState systemState;
     Node disconnectionNode;
+
+    int numMovements;
 };
 
 #endif // SYSTEM_H

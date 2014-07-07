@@ -36,6 +36,7 @@ public slots:
     void executeCommand(const QString cmd);
 
     void setRoundDuration(int ms);
+    int getNumMovements() const;
 
 protected:
     QScriptEngine engine;

@@ -109,3 +109,8 @@ void Simulator::setRoundDuration(int ms)
 {
     roundTimer->setInterval(ms);
 }
+
+int Simulator::getNumMovements() const
+{
+    return system->getNumMovements();
+}
