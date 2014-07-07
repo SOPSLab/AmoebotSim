@@ -38,6 +38,7 @@ public slots:
 
     void setRoundDuration(int ms);
     int getNumMovements() const;
+    int numParticles() const;
 
 protected:
     QScriptEngine engine;
