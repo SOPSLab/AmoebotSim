@@ -1,7 +1,10 @@
 #ifndef SCRIPTINTERFACE_H
 #define SCRIPTINTERFACE_H
 
+#include <QFile>
 #include <QObject>
+#include <QString>
+#include <QTextStream>
 
 #include "alg/examplealgorithm.h"
 #include "alg/infobjcoating.h"
@@ -20,6 +23,8 @@ public:
     explicit ScriptInterface(Simulator& _sim);
     
 public slots:
+    void run(const QString scriptFilePath);
+
     void round();
 
     void setRoundDuration(int ms);
@@ -34,6 +39,24 @@ public slots:
 private:
     Simulator& sim;
 };
+
+inline void ScriptInterface::run(const QString scriptFilePath)
+{
+    QFile scriptFile(scriptFilePath);
+
+    if(!scriptFile.open(QFile::ReadOnly)) {
+        sim.log("script not found", true);
+        return;
+    }
+
+    QTextStream stream(&scriptFile);
+    QString script = stream.readAll();
+
+    scriptFile.close();
+
+    sim.executeScript(script);
+    sim.log("script finished", false);
+}
 
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)

@@ -105,6 +105,11 @@ void Simulator::executeCommand(const QString cmd)
     }
 }
 
+void Simulator::executeScript(const QString script)
+{
+    engine.evaluate(script);
+}
+
 void Simulator::setRoundDuration(int ms)
 {
     roundTimer->setInterval(ms);
