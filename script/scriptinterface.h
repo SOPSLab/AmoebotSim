@@ -40,9 +40,9 @@ public slots:
 
     void exampleAlgorithm(const int numParticles);
     void infObjCoating(const int numParticles, const float holeProb = 0.2);
-    void hexagon(const int numParticles = 100, const float holeProb = 0.0);
-    void triangle(const int numParticles = 100, const float holeProb = 0.0);
-    void ring(const int numParticles = 100, const float holeProb = 0.0);
+    void hexagon(const unsigned int numParticles = 100, const float holeProb = 0.0);
+    void triangle(const unsigned int numParticles = 100, const float holeProb = 0.0);
+    void ring(const unsigned int numParticles = 100, const float holeProb = 0.0);
 
 private:
     Simulator& sim;
@@ -152,13 +152,8 @@ inline void ScriptInterface::infObjCoating(const int numParticles, const float h
     sim.setSystem(InfObjCoating::InfObjCoating::instance(numParticles, holeProb));
 }
 
-inline void ScriptInterface::hexagon(const int numParticles, const float holeProb)
+inline void ScriptInterface::hexagon(const unsigned int numParticles, const float holeProb)
 {
-    if(numParticles < 0) {
-        sim.log("numParticles >= 0 required", true);
-        return;
-    }
-
     if(holeProb < 0.0f || holeProb > 1.0f) {
         sim.log("holeProb in [0.0, 1.0] required", true);
         return;
@@ -167,13 +162,8 @@ inline void ScriptInterface::hexagon(const int numParticles, const float holePro
     sim.setSystem(Hexagon::Hexagon::instance(numParticles, holeProb));
 }
 
-inline void ScriptInterface::triangle(const int numParticles, const float holeProb)
+inline void ScriptInterface::triangle(const unsigned int numParticles, const float holeProb)
 {
-    if(numParticles < 0) {
-        sim.log("numParticles >= 0 required", true);
-        return;
-    }
-
     if(holeProb < 0.0f || holeProb > 1.0f) {
         sim.log("holeProb in [0.0, 1.0] required", true);
         return;
@@ -181,13 +171,8 @@ inline void ScriptInterface::triangle(const int numParticles, const float holePr
 
     sim.setSystem(Triangle::Triangle::instance(numParticles, holeProb));
 }
-inline void ScriptInterface::ring(const int numParticles, const float holeProb)
+inline void ScriptInterface::ring(const unsigned int numParticles, const float holeProb)
 {
-    if(numParticles < 0) {
-        sim.log("numParticles >= 0 required", true);
-        return;
-    }
-
     if(holeProb < 0.0f || holeProb > 1.0f) {
         sim.log("holeProb in [0.0, 1.0] required", true);
         return;

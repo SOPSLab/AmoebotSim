@@ -34,7 +34,7 @@ public:
     Triangle(const Triangle& other);
     virtual ~Triangle();
 
-    static System* instance(const int size, const double holeProb);
+    static System* instance(const unsigned int size, const double holeProb);
 
     virtual Movement execute();
     virtual Algorithm* clone();

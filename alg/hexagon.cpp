@@ -43,7 +43,7 @@ Hexagon::~Hexagon()
 {
 }
 
-System* Hexagon::instance(const int size, const double holeProb)
+System* Hexagon::instance(const unsigned int size, const double holeProb)
 {
     System* system = new System();
     std::set<Node> occupied, candidates;
@@ -56,7 +56,7 @@ System* Hexagon::instance(const int size, const double holeProb)
         candidates.insert(Node(0,0).nodeInDir(dir));
     }
 
-    while(int(occupied.size()) < size && !candidates.empty()){
+    while(occupied.size() < size && !candidates.empty()){
         auto index = randInt(0, candidates.size());
         auto it = candidates.begin();
         while (index != 0){
@@ -147,10 +147,10 @@ Movement Hexagon::execute()
             headMarkDir = direction;
             if(direction != -1){
                 setState(State::Finished);
-                if(inFlags[direction] != nullptr && inFlags[direction]->state == State::Seed){
+                if(neighborInState(direction, State::Seed)){
                     outFlags[(direction+1)%6].point = true;
                 }
-                else if (inFlags[(direction+2)%6] != nullptr && inFlags[(direction+2)%6]->state == State::Finished){
+                else if (neighborInState((direction+2)%6, State::Finished)){
                     outFlags[(direction+3)%6].point = true;
                 }
                 else {

@@ -9,8 +9,9 @@ namespace Ring
 {
 RingFlag::RingFlag()
     : point(false),
-      followIndicator(false),
-      stopper(false)
+      stopper(false),
+      followIndicator(false)
+      
 {
 }
 
@@ -26,7 +27,7 @@ RingFlag::RingFlag(const RingFlag& other)
 Ring::Ring(const State _state)
     : state(_state),
       followDir(-1),
-      head(false)
+      wait(0)
 {
     if (_state == State::Seed){
         outFlags[0].point = true;
@@ -40,7 +41,8 @@ Ring::Ring(const State _state)
 Ring::Ring(const Ring& other)
     : AlgorithmWithFlags(other),
       state(other.state),
-      followDir(other.followDir)
+      followDir(other.followDir),
+      wait(other.wait)
 {
 }
 
@@ -48,7 +50,7 @@ Ring::~Ring()
 {
 }
 
-System* Ring::instance(const int size, const double holeProb)
+System* Ring::instance(const unsigned int size, const double holeProb)
 {
     System* system = new System();
     std::set<Node> occupied, candidates;
@@ -101,15 +103,14 @@ bool Ring::isDeterministic() const
 
 Movement Ring::execute()
 {
-    if(isExpanded()/* && state != State::Finished*/){
+    if(isExpanded()){
         if(state == State::Follower) {
             setFollowIndicatorLabel(followDir);
         }
         // Sorry, long exception statement needed its own 3 lines
         if  (hasNeighborInState(State::Idle) || 
             state == State::Leader2 || state == State::Follower2 ||
-            (tailReceivesFollowIndicator() && (followIndicatorMatchState(State::Follower) || (followIndicatorMatchState(State::Leader) && state != State::Follower))) ||
-            (state == State::Set2 && isPointedAt() != -1)) {
+            (tailReceivesFollowIndicator() && (followIndicatorMatchState(State::Follower) || (followIndicatorMatchState(State::Leader) && state != State::Follower)))) {
             return Movement(MovementType::HandoverContract, tailContractionLabel());
         } 
         else {
@@ -133,7 +134,6 @@ Movement Ring::execute()
         }
 
         else if (state == State::Follower && !hasNeighborInState(State::Idle)) {
-            
             if (hasNeighborInState(State::Set)){
                 setState(State::Leader);
             }
@@ -164,21 +164,18 @@ Movement Ring::execute()
             int direction = isPointedAt();
             if(direction != -1){
                 setState(State::Set);
-                if(inFlags[direction] != nullptr && inFlags[direction]->state == State::Seed){
-                    setPoint((direction+1)%6);
-                    headMarkDir = (direction+1)%6;
-                    followDir = (direction+1)%6;
+                if(neighborInState(direction, State::Seed)){
+                    direction = (direction+1)%6;
                 }
-                else if (inFlags[(direction+2)%6] != nullptr && (inFlags[(direction+2)%6]->state == State::Set || inFlags[(direction+2)%6]->state == State::Follower2)){
-                    setPoint((direction+3)%6);
-                    headMarkDir = (direction+3)%6;
-                    followDir = (direction+3)%6;
+                else if (neighborInState((direction+2)%6, State::Set) || neighborInState((direction+2)%6, State::Follower2)){
+                    direction = (direction+3)%6;
                 }
                 else {
-                    setPoint((direction+2)%6);
-                    headMarkDir = (direction+2)%6;
-                    followDir = (direction+2)%6;
+                    direction = (direction+2)%6;
                 }
+                setPoint(direction);
+                headMarkDir = direction;
+                followDir = direction;
             }
             else {
                 auto moveDir = getMoveDir();
@@ -192,13 +189,10 @@ Movement Ring::execute()
             if (hasNeighborInState(State::Leader2) && hasNeighborInState(State::Seed)){
                 setStopper();
             }
-            if (inFlags[followDir] == nullptr && state == State::Follower2){
-                setState(State::Leader2);
-            }
-            else if (inFlags[followDir] == nullptr && state == State::Seed){
+            if (inFlags[followDir] == nullptr && state == State::Seed){
                 return Movement(MovementType::Idle);
             }
-            else if (inFlags[followDir]->state == State::Finished){
+            else if (neighborInState(followDir, State::Finished)){
                 setState(State::Finished);
             }
             else {
@@ -217,20 +211,8 @@ Movement Ring::execute()
         }
 
         else if (state == State::Leader2){
-            auto label = isPointedAt();
-            if (hasNeighborInState(State::Leader) || hasNeighborInState(State::Leader2) || hasNeighborInState(State::Set)){
-                if (hasNeighborInState(State::Set)){
-                    setPoint(firstNeighborInState(State::Set));
-                    headMarkDir = firstNeighborInState(State::Set);
-                }
-                else if (firstNeighborInState(State::Leader2) == headMarkDir && label != -1 && inFlags[label]->state == State::Follower2){
-                    setState(State::Follower2);
-                }
-                return Movement(MovementType::Idle);
-            }
-            else if (nearStopper()){
+            if (nearStopper()){
                 setState(State::Finished);
-                head = true;
             }
             else {
                 auto moveDir = getMoveDir();
@@ -241,23 +223,22 @@ Movement Ring::execute()
             }
         }
 
-        else if (state == State::Set){
+        else if (state == State::Set && !hasNeighborInState(State::Leader) && !hasNeighborInState(State::Follower)){
             auto label = isPointedAt();
-            if (label != -1 && (inFlags[label]->state == State::Follower2 || inFlags[label]->state == State::Seed || inFlags[label]->state == State::Leader2) && !hasNeighborInState(State::Follower) && !hasNeighborInState(State::Leader)){
-                if (inFlags[headMarkDir] != nullptr && inFlags[label]->state != State::Leader2){
-                    setState(State::Follower2);
+            if  (neighborInState(label,State::Follower2) || neighborInState(label,State::Seed)){   
+                if (wait < 5) {
+                    wait++;
                 }
                 else {
-                    setState(State::Leader2);
-                }
-                setPoint(headMarkDir);
-                if (inFlags[headMarkDir] == nullptr && inFlags[(headMarkDir+5)%6]->state != State::Follower2){
-                    while (inFlags[headMarkDir] == nullptr){
-                        headMarkDir = (headMarkDir+5)%6;
+                    if (inFlags[headMarkDir] != nullptr){
+                        setState(State::Follower2);
                     }
+                    else {
+                        setState(State::Leader2);
+                    }
+                    setPoint(headMarkDir);
                 }
             }
-            return Movement(MovementType::Idle);
         }
 
         else if (state == State::Finished){
@@ -327,9 +308,6 @@ void Ring::setState(State _state)
     else if(state == State::Follower2) {
         headMarkColor = 0x0000aa; tailMarkColor = 0x0000aa; // Dark Blue
     }
-    else if(state == State::Set2) {
-        headMarkColor = 0xaaaa00; tailMarkColor = 0xaaaa00; // Dark Yellow
-    }
     else { // phase == Phase::Idle
         headMarkColor = -1; tailMarkColor = -1; // No color
     }
@@ -357,14 +335,6 @@ int Ring::firstNeighborInState(State _state)
     }
     return -1;
 }
-bool Ring::allNeighborsInState(State _state){
-    for (int label = 0; label < 5; label++){
-        if (!neighborInState(label, _state)){
-            return false;
-        }
-    }
-    return true;
-}
 
 int Ring::getMoveDir()
 {
@@ -381,15 +351,6 @@ int Ring::getMoveDir()
         objectDir = (objectDir+5)%6;
         if (neighborInState(objectDir, State::Set) || neighborInState(objectDir, State::Follower2)){
             objectDir = (objectDir+5)%6;
-        }
-    }
-    else if (state == State::Set2){
-        objectDir = firstNeighborInState(State::Set2);
-        if (neighborInState(objectDir, State::Set2)){
-            objectDir = (objectDir+1)%6;
-        }
-        if (neighborInState(objectDir, State::Set2)){
-            objectDir = (objectDir+1)%6;
         }
     }
     else {

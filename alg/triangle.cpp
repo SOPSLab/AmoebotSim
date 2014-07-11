@@ -44,7 +44,7 @@ Triangle::~Triangle()
 {
 }
 
-System* Triangle::instance(const int size, const double holeProb)
+System* Triangle::instance(const unsigned int size, const double holeProb)
 {
     System* system = new System();
     std::set<Node> occupied, candidates;
@@ -57,7 +57,7 @@ System* Triangle::instance(const int size, const double holeProb)
         candidates.insert(Node(0,0).nodeInDir(dir));
     }
 
-    while(int(occupied.size()) < size && !candidates.empty()){
+    while(occupied.size() < size && !candidates.empty()){
         auto index = randInt(0, candidates.size());
         auto it = candidates.begin();
         while (index != 0){

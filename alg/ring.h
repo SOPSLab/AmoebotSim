@@ -9,7 +9,6 @@ namespace Ring
 {
 enum class State {
     Finished,
-    Set2,
     Leader2,
     Follower2,
     Set,
@@ -28,7 +27,6 @@ public:
     Ring::State state;
     bool point; //
     bool stopper;
-    bool move;
     bool followIndicator;
     int contractDir;
 };
@@ -41,7 +39,7 @@ public:
     Ring(const Ring& other);
     virtual ~Ring();
 
-    static System* instance(const int size, const double holeProb);
+    static System* instance(const unsigned int size, const double holeProb);
 
     virtual Movement execute();
     virtual Algorithm* clone();
@@ -60,7 +58,6 @@ protected:
     bool neighborInState(int direction, State _state);
     bool hasNeighborInState(State _state);
     int firstNeighborInState(State _state);
-    bool allNeighborsInState(State _state);
 
     int getMoveDir(); 
     void setContractDir(const int contractDir);
@@ -74,7 +71,7 @@ protected:
 protected:
     State state;
     int followDir;
-    bool head;
+    int wait;
 };
 }
 
