@@ -120,10 +120,13 @@ Movement InfObjCoating::execute()
     } else {
         if(phase == Phase::Inactive) {
             if(hasNeighborInPhase(Phase::Static)) {
+                setPhase(Phase::Set);
+                return Movement(MovementType::Idle);
+            }
+            else if (hasNeighborInPhase(Phase::Set)){
                 setPhase(Phase::Lead);
                 return Movement(MovementType::Idle);
             }
-
             auto label = std::max(firstNeighborInPhase(Phase::Follow), firstNeighborInPhase(Phase::Lead));
             if(label != -1) {
                 setPhase(Phase::Follow);
@@ -134,7 +137,7 @@ Movement InfObjCoating::execute()
             }
         } else if(phase == Phase::Follow) {
             Q_ASSERT(inFlags[followDir] != nullptr);
-            if(hasNeighborInPhase(Phase::Static)) {
+            if(hasNeighborInPhase(Phase::Set)) {
                 setPhase(Phase::Lead);
                 unsetFollowIndicator();
                 return Movement(MovementType::Idle);
@@ -151,10 +154,18 @@ Movement InfObjCoating::execute()
                 return Movement(MovementType::Expand, expansionDir);
             }
         } else if(phase == Phase::Lead) {
-            int moveDir = getMoveDir();
-            setContractDir(moveDir);
-            headMarkDir = moveDir;
-            return Movement(MovementType::Expand, moveDir);
+            if (hasNeighborInPhase(Phase::Static)) {
+                setPhase(Phase::Set);
+                return Movement(MovementType::Idle);
+            }
+            else{
+                int moveDir = getMoveDir();
+                setContractDir(moveDir);
+                headMarkDir = moveDir;
+                return Movement(MovementType::Expand, moveDir);
+            }
+        } else if(phase == Phase::Set) {
+            return Movement(MovementType::Empty);
         }
         return Movement(MovementType::Empty);
     }
@@ -180,6 +191,9 @@ void InfObjCoating::setPhase(const Phase _phase)
     } else if(phase == Phase::Follow) {
         headMarkColor = 0x0000ff;
         tailMarkColor = 0x0000ff;
+    } else if(phase == Phase::Set){
+        headMarkColor = 0xaaaaaa;
+        tailMarkColor = 0xaaaaaa;
     } else if(phase == Phase::Inactive) {
         headMarkColor = -1;
         tailMarkColor = -1;
@@ -260,15 +274,11 @@ bool InfObjCoating::tailReceivesFollowIndicator() const
 int InfObjCoating::getMoveDir() const
 {
     Q_ASSERT(isContracted());
-    int label = firstNeighborInPhase(Phase::Static);
-    Q_ASSERT(label != -1);
-    for(int offset = 1; offset < 6; offset++) {
-        int dir = (label - offset + 6) % 6;
-        if(!neighborIsInPhase(dir, Phase::Static)) {
-            return dir;
-        }
+    int label = firstNeighborInPhase(Phase::Set);
+    label = (label+5)%6;
+    while (neighborIsInPhase(label, Phase::Set)){
+        label = (label+5)%6;
     }
-    Q_ASSERT(false);
-    return 0;
+    return labelToDir(label);
 }
 }

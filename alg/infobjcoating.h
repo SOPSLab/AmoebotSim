@@ -10,6 +10,7 @@ namespace InfObjCoating
 enum class Phase {
     Static,
     Inactive,
+    Set,
     Follow,
     Lead
 };
