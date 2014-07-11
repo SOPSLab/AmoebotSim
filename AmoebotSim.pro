@@ -26,7 +26,8 @@ HEADERS += \
     ui/glitem.h \
     ui/commandhistorymanager.h \
     ui/visitem.h \
-    alg/ring.h
+    alg/ring.h \
+    alg/line.h
 
 SOURCES += \
     alg/algorithm.cpp \
@@ -43,7 +44,8 @@ SOURCES += \
     ui/commandhistorymanager.cpp \
     ui/glitem.cpp \
     ui/visitem.cpp \
-    alg/ring.cpp
+    alg/ring.cpp \
+    alg/line.cpp
 
 
 RESOURCES += \

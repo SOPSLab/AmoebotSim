@@ -8,6 +8,7 @@
 
 #include "alg/examplealgorithm.h"
 #include "alg/infobjcoating.h"
+#include "alg/line.h"
 #include "alg/hexagon.h"
 #include "alg/triangle.h"
 #include "alg/ring.h"
@@ -40,6 +41,7 @@ public slots:
 
     void exampleAlgorithm(const int numParticles);
     void infObjCoating(const int numParticles, const float holeProb = 0.2);
+    void line(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void hexagon(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void triangle(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void ring(const unsigned int numParticles = 100, const float holeProb = 0.0);
@@ -150,6 +152,16 @@ inline void ScriptInterface::infObjCoating(const int numParticles, const float h
     }
 
     sim.setSystem(InfObjCoating::InfObjCoating::instance(numParticles, holeProb));
+}
+
+inline void ScriptInterface::line(const unsigned int numParticles, const float holeProb)
+{
+    if(holeProb < 0.0f || holeProb > 1.0f) {
+        sim.log("holeProb in [0.0, 1.0] required", true);
+        return;
+    }
+
+    sim.setSystem(Line::Line::instance(numParticles, holeProb));
 }
 
 inline void ScriptInterface::hexagon(const unsigned int numParticles, const float holeProb)
