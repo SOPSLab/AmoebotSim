@@ -156,6 +156,7 @@ Movement InfObjCoating::execute()
         } else if(phase == Phase::Lead) {
             if (hasNeighborInPhase(Phase::Static)) {
                 setPhase(Phase::Set);
+                headMarkDir = -1;
                 return Movement(MovementType::Idle);
             }
             else{
@@ -164,9 +165,7 @@ Movement InfObjCoating::execute()
                 headMarkDir = moveDir;
                 return Movement(MovementType::Expand, moveDir);
             }
-        } else if(phase == Phase::Set) {
-            return Movement(MovementType::Empty);
-        }
+        } 
         return Movement(MovementType::Empty);
     }
 }
@@ -192,8 +191,8 @@ void InfObjCoating::setPhase(const Phase _phase)
         headMarkColor = 0x0000ff;
         tailMarkColor = 0x0000ff;
     } else if(phase == Phase::Set){
-        headMarkColor = 0xaaaaaa;
-        tailMarkColor = 0xaaaaaa;
+        headMarkColor = 0x777777;
+        tailMarkColor = 0x777777;
     } else if(phase == Phase::Inactive) {
         headMarkColor = -1;
         tailMarkColor = -1;
