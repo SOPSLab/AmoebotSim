@@ -11,7 +11,6 @@ RingFlag::RingFlag()
     : point(false),
       stopper(false),
       followIndicator(false)
-      
 {
 }
 
@@ -19,8 +18,9 @@ RingFlag::RingFlag(const RingFlag& other)
     : Flag(other),  
       state(other.state),
       point(other.point),
+      stopper(other.stopper),
       followIndicator(other.followIndicator),
-      stopper(other.stopper)
+      contractDir(other.contractDir)
 {
 }
 
@@ -383,7 +383,7 @@ int Ring::updatedFollowDir() const
     return tempFollowDir;
 }
 
-int Ring::unsetFollowIndicator()
+void Ring::unsetFollowIndicator()
 {
     for(int i = 0; i < 10; i++) {
         outFlags[i].followIndicator = false;

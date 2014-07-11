@@ -63,7 +63,7 @@ protected:
     void setContractDir(const int contractDir);
     int updatedFollowDir() const;
 
-    int unsetFollowIndicator();
+    void unsetFollowIndicator();
     void setFollowIndicatorLabel(const int label);
     bool tailReceivesFollowIndicator() const;
     bool followIndicatorMatchState(State _state) const;
