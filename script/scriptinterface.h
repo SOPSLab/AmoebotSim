@@ -12,6 +12,7 @@
 #include "alg/hexagon.h"
 #include "alg/triangle.h"
 #include "alg/ring.h"
+#include "alg/rhomboid.h"
 #include "sim/simulator.h"
 
 /*
@@ -45,6 +46,7 @@ public slots:
     void hexagon(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void triangle(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void ring(const unsigned int numParticles = 100, const float holeProb = 0.0);
+    void rhomboid(const unsigned int numParticles = 100, const float holeProb = 0.0, const int sideLength = 10);
 
 private:
     Simulator& sim;
@@ -192,5 +194,13 @@ inline void ScriptInterface::ring(const unsigned int numParticles, const float h
 
     sim.setSystem(Ring::Ring::instance(numParticles, holeProb));
 }
+inline void ScriptInterface::rhomboid(const unsigned int numParticles, const float holeProb, const int sideLength)
+{
+    if(holeProb < 0.0f || holeProb > 1.0f) {
+        sim.log("holeProb in [0.0, 1.0] required", true);
+        return;
+    }
 
+    sim.setSystem(Rhomboid::Rhomboid::instance(numParticles, holeProb, sideLength));
+}
 #endif // SCRIPTINTERFACE_H

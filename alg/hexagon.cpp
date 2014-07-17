@@ -90,7 +90,6 @@ Movement Hexagon::execute()
         if(state == State::Follower) {
             setFollowIndicatorLabel(followDir);
         }
-
         if(hasNeighborInState(State::Idle) || (tailReceivesFollowIndicator() && (followIndicatorMatchState(State::Follower) || (followIndicatorMatchState(State::Leader) && state != State::Follower)))) {
             return Movement(MovementType::HandoverContract, tailContractionLabel());
         }
@@ -145,7 +144,7 @@ Movement Hexagon::execute()
             headMarkDir = -1;
             int direction = isPointedAt();
             headMarkDir = direction;
-            if(direction != -1){
+            if(direction != -1){ // Change to finished state and use surroundings to find the next point direction
                 setState(State::Finished);
                 if(neighborInState(direction, State::Seed)){
                     outFlags[(direction+1)%6].point = true;

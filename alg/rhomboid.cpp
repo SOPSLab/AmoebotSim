@@ -1,58 +1,60 @@
 #include <set>
 #include <random>
 #include <QTime>
-#include "triangle.h"
+#include "Rhomboid.h"
 #include "sim/particle.h"
 #include "sim/system.h"
 
-namespace Triangle
+namespace Rhomboid
 {
-TriFlag::TriFlag()
+RhomFlag::RhomFlag()
     : point(false),
-      side(false),
+      count(1),
       followIndicator(false)
 {
 }
 
-TriFlag::TriFlag(const TriFlag& other)
+RhomFlag::RhomFlag(const RhomFlag& other)
     : Flag(other),
       state(other.state),
       point(other.point),
-      side(other.side),
+      count(other.count),
       followIndicator(other.followIndicator)
 {
 }
 
-Triangle::Triangle(const State _state)
+Rhomboid::Rhomboid(const State _state, const int _sideLength)
     : state(_state),
-      followDir(-1)
+      followDir(-1),
+      sideLength(_sideLength)
 {
     if (_state == State::Seed){
+    	setCount(1);
         outFlags[0].point = true;
         headMarkDir = 0;
     }
     setState(_state);
 }
 
-
-Triangle::Triangle(const Triangle& other)
+Rhomboid::Rhomboid(const Rhomboid& other)
     : AlgorithmWithFlags(other),
       state(other.state),
-      followDir(other.followDir)
+      followDir(other.followDir),
+      sideLength(other.sideLength)
 {
 }
 
-Triangle::~Triangle()
+Rhomboid::~Rhomboid()
 {
 }
 
-System* Triangle::instance(const unsigned int size, const double holeProb)
+System* Rhomboid::instance(const unsigned int size, const double holeProb, const int sideLength)
 {
     System* system = new System();
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(new Triangle(State::Seed), randDir(), Node(0,0), -1));
+    system->insert(Particle(new Rhomboid(State::Seed, sideLength), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -82,12 +84,12 @@ System* Triangle::instance(const unsigned int size, const double holeProb)
             }
         }
         // Insert new idle particle
-        system->insert(Particle(new Triangle(State::Idle), randDir(), head, -1));
+        system->insert(Particle(new Rhomboid(State::Idle, sideLength), randDir(), head, -1));
     }
     return system;
 }
 
-Movement Triangle::execute()
+Movement Rhomboid::execute()
 {
     if(isExpanded()){
         if(state == State::Follower) {
@@ -145,35 +147,32 @@ Movement Triangle::execute()
         }
 
         else if (state == State::Leader && !hasNeighborInState(State::Idle)){
-
             headMarkDir = -1;
             int direction = isPointedAt();
             headMarkDir = direction;
             if(direction != -1){
+                int count = inFlags[direction]->count;
+                count++;
                 setState(State::Finished);
-                if(neighborInState((direction+4)%6, State::Finished) || neighborInState((direction+2)%6, State::Finished)){
-                    outFlags[(direction+3)%6].point = true;
+                if (count < sideLength){
+                	outFlags[(direction+3)%6].point = true;
+                	setCount(count);
                 }
-                else{
-                    if (!neighborInState((direction+1)%6, State::Finished) && !neighborInState((direction+5)%6, State::Finished) && !neighborInState((direction+5)%6, State::Seed)){
-                        if (inFlags[direction]->side || neighborInState(direction,State::Seed)){
-                            outFlags[(direction+5)%6].point = true;
-                        }
-                        else {
-                            outFlags[(direction+1)%6].point = true;
-                        }
-                    }
-                    else if (hasNeighborInState(State::Seed) || neighborInState((direction+5)%6, State::Finished)){
-                        outFlags[(direction+2)%6].point = true;
-                        //outFlags[(direction+2)%6].side = false;
-                    }
-                    else if (neighborInState((direction+1)%6, State::Finished)){
-                        outFlags[(direction+4)%6].point = true;
-                        outFlags[(direction+4)%6].side = true;
-                    }
+                else if (count == sideLength && !neighborInState((direction+5)%6, State::Finished)){
+                	outFlags[(direction+4)%6].point = true;
+                	setCount(count);
+                }
+                else if (count == sideLength && neighborInState((direction+5)%6, State::Finished)){
+                	outFlags[(direction+1)%6].point = true;
+                	setCount(count);
+                }
+                else if (count > sideLength && !neighborInState((direction+1)%6, State::Finished)){
+                	outFlags[(direction+5)%6].point = true;
+                }
+                else {
+                	outFlags[(direction+2)%6].point = true;
                 }
             }
-
             else {
                 auto moveDir = getMoveDir();
                 setContractDir(moveDir);
@@ -187,21 +186,20 @@ Movement Triangle::execute()
         }
         return Movement(MovementType::Idle);
     }
-
 }
 
-Algorithm* Triangle::clone()
+Algorithm* Rhomboid::clone()
 {
-    return new Triangle(*this);
+    return new Rhomboid(*this);
 }
 
-bool Triangle::isDeterministic() const
+bool Rhomboid::isDeterministic() const
 {
     return true;
 }
 
-int Triangle::isPointedAt(){
-    for(int label = 0; label < 10; label++) {
+int Rhomboid::isPointedAt(){
+	for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr) {
             if(inFlags[label]->point){
                 return label;
@@ -211,7 +209,13 @@ int Triangle::isPointedAt(){
     return -1;
 }
 
-void Triangle::setState(State _state)
+void Rhomboid::setCount(const int _count){
+	for(int label = 0; label < 10; label++){
+		outFlags[label].count = _count;
+	}
+}
+
+void Rhomboid::setState(State _state)
 {
     state = _state;
     if (state == State::Seed){
@@ -229,22 +233,23 @@ void Triangle::setState(State _state)
     else { // phase == Phase::Idle
         headMarkColor = -1; tailMarkColor = -1; // No color
     }
+
     for(int i = 0; i < 10; i++) {
         outFlags[i].state = state;
     }
 }
 
-bool Triangle::neighborInState(int direction, State _state){
+bool Rhomboid::neighborInState(int direction, State _state){
     Q_ASSERT(0 <= direction && direction <= 9);
     return (inFlags[direction] != nullptr && inFlags[direction]->state == _state);
 }
 
-bool Triangle::hasNeighborInState(State _state)
+bool Rhomboid::hasNeighborInState(State _state)
 {
     return (firstNeighborInState(_state) != -1);
 }
 
-int Triangle::firstNeighborInState(State _state)
+int Rhomboid::firstNeighborInState(State _state)
 {
     for(int label = 0; label < 10; label++) {
         if(neighborInState(label, _state)) {
@@ -254,7 +259,7 @@ int Triangle::firstNeighborInState(State _state)
     return -1;
 }
 
-int Triangle::getMoveDir()
+int Rhomboid::getMoveDir()
 {
     Q_ASSERT(isContracted());
     int objectDir = firstNeighborInState(State::Finished);
@@ -268,13 +273,13 @@ int Triangle::getMoveDir()
     return labelToDir(objectDir);
 }
 
-void Triangle::setContractDir(const int contractDir)
+void Rhomboid::setContractDir(const int contractDir)
 {
     for(int label = 0; label < 10; label++) {
         outFlags[label].contractDir = contractDir;
     }
 }
-int Triangle::updatedFollowDir() const
+int Rhomboid::updatedFollowDir() const
 {
     int contractDir = inFlags[followDir]->contractDir;
     int offset = (followDir - inFlags[followDir]->dir + 9) % 6;
@@ -283,21 +288,21 @@ int Triangle::updatedFollowDir() const
     return tempFollowDir;
 }
 
-void Triangle::unsetFollowIndicator()
+void Rhomboid::unsetFollowIndicator()
 {
     for(int i = 0; i < 10; i++) {
         outFlags[i].followIndicator = false;
     }
 }
 
-void Triangle::setFollowIndicatorLabel(const int label)
+void Rhomboid::setFollowIndicatorLabel(const int label)
 {
     for(int i = 0; i < 10; i++) {
         outFlags[i].followIndicator = (i == label);
     }
 }
 
-bool Triangle::tailReceivesFollowIndicator() const
+bool Rhomboid::tailReceivesFollowIndicator() const
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;
@@ -310,7 +315,7 @@ bool Triangle::tailReceivesFollowIndicator() const
     return false;
 }
 
-bool Triangle::followIndicatorMatchState(State _state) const
+bool Rhomboid::followIndicatorMatchState(State _state) const
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;
@@ -322,4 +327,5 @@ bool Triangle::followIndicatorMatchState(State _state) const
     }
     return false;
 }
+
 }

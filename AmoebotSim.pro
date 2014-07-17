@@ -27,7 +27,8 @@ HEADERS += \
     ui/commandhistorymanager.h \
     ui/visitem.h \
     alg/ring.h \
-    alg/line.h
+    alg/line.h \
+    alg/rhomboid.h
 
 SOURCES += \
     alg/algorithm.cpp \
@@ -45,7 +46,8 @@ SOURCES += \
     ui/glitem.cpp \
     ui/visitem.cpp \
     alg/ring.cpp \
-    alg/line.cpp
+    alg/line.cpp \
+    alg/rhomboid.cpp
 
 
 RESOURCES += \
