@@ -153,7 +153,7 @@ Movement Rhomboid::execute()
             if(direction != -1){
                 int count = inFlags[direction]->count;
                 count++;
-                setState(State::Finished);
+                setState(State::Finished); // Changes to finished state, then sets count and point accordingly
                 if (count < sideLength){
                 	outFlags[(direction+3)%6].point = true;
                 	setCount(count);

@@ -1,3 +1,5 @@
+// Brian Parker
+// Note that all of my shape formation algorithms make use of "State" instead of "phase". The two are equivalent in theory, but not in programming.
 #ifndef RING_H
 #define RING_H
 
@@ -26,7 +28,7 @@ public:
     RingFlag(const RingFlag& other);
     Ring::State state;
     bool point; //
-    bool stopper;
+    bool stopper; // This algorithm also makes use of a stopper, which is a "mid-point" for the expanded ring
     bool followIndicator;
     int contractDir;
 };
@@ -51,6 +53,7 @@ protected:
     int isPointedAt(); // 
     void setPoint(int _label);
 
+    // Functions to access the stopper
     bool nearStopper();
     void setStopper(bool value = true);
 

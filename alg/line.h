@@ -1,3 +1,5 @@
+// Brian Parker
+// Note that all of my shape formation algorithms make use of "State" instead of "phase". The two are equivalent in theory, but not in programming.
 #ifndef LINE_H
 #define LINE_H
 
@@ -21,7 +23,7 @@ public:
     LineFlag();
     LineFlag(const LineFlag& other);
     State state;
-    bool point;
+    bool point; //
     bool followIndicator;
     int contractDir;
 };

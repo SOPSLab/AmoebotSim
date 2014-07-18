@@ -142,13 +142,14 @@ Movement Line::execute()
             }
         }
 
+        // Leader: Only changes to finished if pointed at, and sets point to continue in straight line
         else if (state == State::Leader && !hasNeighborInState(State::Idle)){
             headMarkDir = -1;
             int direction = isPointedAt();
             headMarkDir = direction;
             if(direction != -1){
                 setState(State::Finished);
-                outFlags[(direction+3)%6].point = true;
+                outFlags[(direction+3)%6].point = true; // Set point
             }
             else {
                 auto moveDir = getMoveDir();

@@ -151,6 +151,7 @@ Movement Triangle::execute()
             headMarkDir = direction;
             if(direction != -1){
                 setState(State::Finished);
+                // The following checks surroundings to ensure that the formation continues in a snaking pattern
                 if(neighborInState((direction+4)%6, State::Finished) || neighborInState((direction+2)%6, State::Finished)){
                     outFlags[(direction+3)%6].point = true;
                 }
@@ -165,7 +166,6 @@ Movement Triangle::execute()
                     }
                     else if (hasNeighborInState(State::Seed) || neighborInState((direction+5)%6, State::Finished)){
                         outFlags[(direction+2)%6].point = true;
-                        //outFlags[(direction+2)%6].side = false;
                     }
                     else if (neighborInState((direction+1)%6, State::Finished)){
                         outFlags[(direction+4)%6].point = true;

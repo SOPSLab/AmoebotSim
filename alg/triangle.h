@@ -1,3 +1,5 @@
+// Brian Parker
+// Note that all of my shape formation algorithms make use of "State" instead of "phase". The two are equivalent in theory, but not in programming.
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 
@@ -21,8 +23,8 @@ public:
     TriFlag();
     TriFlag(const TriFlag& other);
     Triangle::State state;
-    bool point;
-    bool side;
+    bool point; // 
+    bool side; // This algorithm makes use of a "side" flag that specifically indicates the right side of the forming triangle
     bool followIndicator;
     int contractDir;
 };

@@ -163,7 +163,7 @@ Movement Ring::execute()
             headMarkDir = -1;
             int direction = isPointedAt();
             if(direction != -1){
-                setState(State::Set);
+                setState(State::Set); // Normal hexagon formation
                 if(neighborInState(direction, State::Seed)){
                     direction = (direction+1)%6;
                 }
@@ -187,7 +187,7 @@ Movement Ring::execute()
 
         else if ((state == State::Follower2 || state == State::Seed) && !hasNeighborInState(State::Idle)){
             if (hasNeighborInState(State::Leader2) && hasNeighborInState(State::Seed)){
-                setStopper();
+                setStopper(); // Set Stopper indicator
             }
             if (inFlags[followDir] == nullptr && state == State::Seed){
                 return Movement(MovementType::Idle);
@@ -211,7 +211,7 @@ Movement Ring::execute()
         }
 
         else if (state == State::Leader2){
-            if (nearStopper()){
+            if (nearStopper()){ // Checks for stopper particle (in mid section)
                 setState(State::Finished);
             }
             else {
@@ -227,7 +227,7 @@ Movement Ring::execute()
             auto label = isPointedAt();
             if  (neighborInState(label,State::Follower2) || neighborInState(label,State::Seed)){   
                 if (wait < 5) {
-                    wait++;
+                    wait++; // inclusion of a constant wait period is a rudimentary way to solve the issue of having some particles still being in hex formation
                 }
                 else {
                     if (inFlags[headMarkDir] != nullptr){

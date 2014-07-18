@@ -1,3 +1,5 @@
+// Brian Parker
+// Note that all of my shape formation algorithms make use of "State" instead of "phase". The two are equivalent in theory, but not in programming.
 #ifndef RHOMBOID_H
 #define RHOMBOID_H
 
@@ -22,7 +24,7 @@ public:
     RhomFlag(const RhomFlag& other);
     State state;
     bool point;
-    int count;
+    int count; // Counts up to sideLength
     bool followIndicator;
     int contractDir;
 };
@@ -30,7 +32,7 @@ public:
 class Rhomboid : public AlgorithmWithFlags<RhomFlag>
 {
 public:
-    Rhomboid(const State _state, const int _sideLength);
+    Rhomboid(const State _state, const int _sideLength); // Slightly modified particle creation instance to allow passing of sideLength
     Rhomboid(const Rhomboid& other);
     virtual ~Rhomboid();
 
@@ -62,7 +64,7 @@ protected:
 protected:
     State state;
     int followDir;
-    int sideLength;
+    int sideLength; // User specified length of shape's side
 };
 }
 

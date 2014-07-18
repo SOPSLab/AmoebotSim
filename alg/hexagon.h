@@ -1,3 +1,5 @@
+// Brian Parker
+// Note that all of my shape formation algorithms make use of "State" instead of "phase". The two are equivalent in theory, but not in programming.
 #ifndef HEXAGON_H
 #define HEXAGON_H
 
@@ -15,13 +17,14 @@ enum class State {
     Seed
 };
 
+// The pointer is initialized here in the HexFlag class.note the use of namespaces and classnames throughout.
 class HexFlag : public Flag
 {
 public:
     HexFlag();
     HexFlag(const HexFlag& other);
     State state;
-    bool point;
+    bool point; // 
     bool followIndicator;
     int contractDir;
 };
@@ -40,7 +43,7 @@ public:
     virtual bool isDeterministic() const;
 
 protected:
-    int isPointedAt(); //
+    int isPointedAt(); // Function to easily use the pointer mechanic
 
     void setState(State _state);
     bool neighborInState(int direction, State _state);
