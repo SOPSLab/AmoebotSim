@@ -3,7 +3,6 @@ import QtQuick.Controls 1.2
 import VisItem 1.0
 
 ApplicationWindow {
-    id: window
     visible: true
     minimumWidth: 800
     minimumHeight: 600
@@ -55,13 +54,13 @@ ApplicationWindow {
         id: buttonRow
         spacing: 10
         anchors.margins: 10
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
+        anchors.bottom: vis.bottom
+        anchors.right: vis.right
 
         A_TextField {
             id: commandField
             visible: false
-            width: startStopButton.visible ? window.width - 200 : window.width - 20
+            width: startStopButton.visible ? vis.width - 200 : vis.width - 20
 
             focus: true
             Keys.onPressed: {
@@ -93,7 +92,7 @@ ApplicationWindow {
             id: resultField
             visible: false
             opacity: 0
-            width: startStopButton.visible ? window.width - 200 : window.width - 20
+            width: startStopButton.visible ? vis.width - 200 : vis.width - 20
 
             SequentialAnimation {
                 id: resultFieldFade
