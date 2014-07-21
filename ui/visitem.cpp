@@ -350,7 +350,7 @@ void VisItem::wheelEvent(QWheelEvent* e)
     QPointF oldPos = QPointF(view.left, view.bottom) + mousePos / zoomGui;
 
     // update zoom
-    zoomGui += e->angleDelta().y() / zoomAttenuation;
+    zoomGui *= std::exp(e->angleDelta().y() / zoomAttenuation);
     if(zoomGui < zoomMin) {
         zoomGui = zoomMin;
     } else if(zoomGui > zoomMax) {

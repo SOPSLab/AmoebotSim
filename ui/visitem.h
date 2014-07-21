@@ -66,7 +66,7 @@ protected:
     static constexpr float zoomMin = 4.0f;
     static constexpr float zoomMax = 128.0f;
     static constexpr float zoomInit = 16.0f;
-    static constexpr float zoomAttenuation = 10.0f;
+    static constexpr float zoomAttenuation = 500.0f;
 
     // these values are a consequence of how the particle texture was created
     static const std::array<QPointF, 16> particleTexOffsets;
