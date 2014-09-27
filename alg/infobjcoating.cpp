@@ -191,8 +191,8 @@ void InfObjCoating::setPhase(const Phase _phase)
         headMarkColor = 0x0000ff;
         tailMarkColor = 0x0000ff;
     } else if(phase == Phase::Set){
-        headMarkColor = 0x777777;
-        tailMarkColor = 0x777777;
+        headMarkColor = 0x00ff00;
+        tailMarkColor = 0x00ff00;
     } else if(phase == Phase::Inactive) {
         headMarkColor = -1;
         tailMarkColor = -1;
