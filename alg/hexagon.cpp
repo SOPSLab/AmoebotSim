@@ -90,16 +90,15 @@ Movement Hexagon::execute()
         if(state == State::Follower) {
             setFollowIndicatorLabel(followDir);
         }
+
         if(hasNeighborInState(State::Idle) || (tailReceivesFollowIndicator() && (followIndicatorMatchState(State::Follower) || (followIndicatorMatchState(State::Leader) && state != State::Follower)))) {
             return Movement(MovementType::HandoverContract, tailContractionLabel());
-        }
-        else {
+        } else {
             return Movement(MovementType::Contract, tailContractionLabel());
         }
-    }
-    else {
-        if (state == State::Idle){
-            if (hasNeighborInState(State::Finished) || hasNeighborInState(State::Seed)){
+    } else {
+        if(state == State::Idle){
+            if(hasNeighborInState(State::Finished) || hasNeighborInState(State::Seed)) {
                 setState(State::Leader);
                 return Movement(MovementType::Idle);
             }
@@ -110,23 +109,14 @@ Movement Hexagon::execute()
                 setFollowIndicatorLabel(followDir);
                 headMarkDir = followDir;
                 return Movement(MovementType::Idle);
+            } else {
+                return Movement(MovementType::Empty);
             }
-        }
-
-        else if (state == State::Follower && !hasNeighborInState(State::Idle)) {
-
-            if (hasNeighborInState(State::Finished)){
+        } else if(state == State::Follower && !hasNeighborInState(State::Idle)) {
+            if(hasNeighborInState(State::Finished)){
                 setState(State::Leader);
-            }
-            else {
-                if(inFlags[followDir] == nullptr){
-                    if (hasNeighborInState(State::Leader)){
-                        followDir = firstNeighborInState(State::Leader);
-                    }
-                    else {
-                        followDir = firstNeighborInState(State::Follower);
-                    }
-                }
+                return Movement(MovementType::Idle);
+            } else {
                 if(inFlags[followDir]->isExpanded() && !inFlags[followDir]->fromHead) {
                     int expansionDir = followDir;
                     setContractDir(expansionDir);
@@ -136,38 +126,33 @@ Movement Hexagon::execute()
                     Q_ASSERT(labelToDirAfterExpansion(temp, expansionDir) == followDir);
                     setFollowIndicatorLabel(temp);
                     return Movement(MovementType::Expand, expansionDir);
+                } else {
+                    return Movement(MovementType::Empty);
                 }
             }
-        }
-
-        else if (state == State::Leader && !hasNeighborInState(State::Idle)){
+        } else if(state == State::Leader && !hasNeighborInState(State::Idle)){
             headMarkDir = -1;
             int direction = isPointedAt();
             headMarkDir = direction;
-            if(direction != -1){ // Change to finished state and use surroundings to find the next point direction
+            if(direction != -1) { // Change to finished state and use surroundings to find the next point direction
                 setState(State::Finished);
                 if(neighborInState(direction, State::Seed)){
                     outFlags[(direction+1)%6].point = true;
-                }
-                else if (neighborInState((direction+2)%6, State::Finished)){
+                } else if (neighborInState((direction+2)%6, State::Finished)){
                     outFlags[(direction+3)%6].point = true;
-                }
-                else {
+                } else {
                     outFlags[(direction+2)%6].point = true;
                 }
-            }
-            else {
+                return Movement(MovementType::Idle);
+            } else {
                 auto moveDir = getMoveDir();
                 setContractDir(moveDir);
                 headMarkDir = moveDir;
                 return Movement(MovementType::Expand, moveDir);
             }
-        }
-
-        else if (state == State::Finished || state == State::Seed){
+        } else {
             return Movement(MovementType::Empty);
         }
-        return Movement(MovementType::Idle);
     }
 }
 
