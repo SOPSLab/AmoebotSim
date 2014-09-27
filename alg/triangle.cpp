@@ -93,15 +93,12 @@ Movement Triangle::execute()
         if(state == State::Follower) {
             setFollowIndicatorLabel(followDir);
         }
-
         if(hasNeighborInState(State::Idle) || (tailReceivesFollowIndicator() && (followIndicatorMatchState(State::Follower) || (followIndicatorMatchState(State::Leader) && state != State::Follower)))) {
             return Movement(MovementType::HandoverContract, tailContractionLabel());
-        }
-        else {
+        } else {
             return Movement(MovementType::Contract, tailContractionLabel());
         }
-    }
-    else {
+    } else {
         if (state == State::Idle){
             if (hasNeighborInState(State::Finished) || hasNeighborInState(State::Seed)){
                 setState(State::Leader);
@@ -114,23 +111,14 @@ Movement Triangle::execute()
                 setFollowIndicatorLabel(followDir);
                 headMarkDir = followDir;
                 return Movement(MovementType::Idle);
+            } else {
+                return Movement(MovementType::Empty);
             }
-        }
-
-        else if (state == State::Follower && !hasNeighborInState(State::Idle)) {
-
-            if (hasNeighborInState(State::Finished)){
+        } else if(state == State::Follower && !hasNeighborInState(State::Idle)) {
+            if(hasNeighborInState(State::Finished)){
                 setState(State::Leader);
-            }
-            else {
-                if(inFlags[followDir] == nullptr){
-                    if (hasNeighborInState(State::Leader)){
-                        followDir = firstNeighborInState(State::Leader);
-                    }
-                    else {
-                        followDir = firstNeighborInState(State::Follower);
-                    }
-                }
+                return Movement(MovementType::Idle);
+            } else {
                 if(inFlags[followDir]->isExpanded() && !inFlags[followDir]->fromHead) {
                     int expansionDir = followDir;
                     setContractDir(expansionDir);
@@ -140,12 +128,11 @@ Movement Triangle::execute()
                     Q_ASSERT(labelToDirAfterExpansion(temp, expansionDir) == followDir);
                     setFollowIndicatorLabel(temp);
                     return Movement(MovementType::Expand, expansionDir);
+                } else {
+                    return Movement(MovementType::Empty);
                 }
             }
-        }
-
-        else if (state == State::Leader && !hasNeighborInState(State::Idle)){
-
+        } else if(state == State::Leader && !hasNeighborInState(State::Idle)){
             headMarkDir = -1;
             int direction = isPointedAt();
             headMarkDir = direction;
@@ -154,40 +141,31 @@ Movement Triangle::execute()
                 // The following checks surroundings to ensure that the formation continues in a snaking pattern
                 if(neighborInState((direction+4)%6, State::Finished) || neighborInState((direction+2)%6, State::Finished)){
                     outFlags[(direction+3)%6].point = true;
-                }
-                else{
+                } else{
                     if (!neighborInState((direction+1)%6, State::Finished) && !neighborInState((direction+5)%6, State::Finished) && !neighborInState((direction+5)%6, State::Seed)){
                         if (inFlags[direction]->side || neighborInState(direction,State::Seed)){
                             outFlags[(direction+5)%6].point = true;
-                        }
-                        else {
+                        } else {
                             outFlags[(direction+1)%6].point = true;
                         }
-                    }
-                    else if (hasNeighborInState(State::Seed) || neighborInState((direction+5)%6, State::Finished)){
+                    } else if (hasNeighborInState(State::Seed) || neighborInState((direction+5)%6, State::Finished)){
                         outFlags[(direction+2)%6].point = true;
-                    }
-                    else if (neighborInState((direction+1)%6, State::Finished)){
+                    } else if (neighborInState((direction+1)%6, State::Finished)){
                         outFlags[(direction+4)%6].point = true;
                         outFlags[(direction+4)%6].side = true;
                     }
                 }
-            }
-
-            else {
+                return Movement(MovementType::Idle);
+            } else {
                 auto moveDir = getMoveDir();
                 setContractDir(moveDir);
                 headMarkDir = moveDir;
                 return Movement(MovementType::Expand, moveDir);
             }
-        }
-
-        else if (state == State::Finished || state == State::Seed){
+        } else {
             return Movement(MovementType::Empty);
         }
-        return Movement(MovementType::Idle);
     }
-
 }
 
 Algorithm* Triangle::clone()
