@@ -59,6 +59,9 @@ protected:
     int headContractionLabelAfterExpansion(const int expansionDir) const;
     int tailContractionLabelAfterExpansion(const int expansionDir) const;
 
+    const std::array<int, 3>& frontLabels() const;
+    const std::array<int, 2>& sideLabelsFromHead() const;
+    const std::array<int, 2>& sideLabelsFromTail() const;
     const std::array<int, 3>& backLabels() const;
 
 private:
@@ -86,6 +89,9 @@ private:
     // direction of an edge depending on tailDir and label
     static const std::array<std::array<int, 10>, 6> labelDir;
 
+    static const std::array<const std::array<int, 3>, 6>_frontLabels;
+    static const std::array<const std::array<int, 2>, 6>_sideLabelsFromHead;
+    static const std::array<const std::array<int, 2>, 6>_sideLabelsFromTail;
     static const std::array<const std::array<int, 3>, 6>_backLabels;
 };
 
@@ -345,6 +351,24 @@ inline int Algorithm::tailContractionLabelAfterExpansion(const int expansionDir)
     Q_ASSERT(isContracted());
     Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
     return contractLabels[expansionDir];
+}
+
+inline const std::array<int, 3>& Algorithm::frontLabels() const
+{
+    Q_ASSERT(0 <= _tailDir && _tailDir <= 5);
+    return _frontLabels[_tailDir];
+}
+
+inline const std::array<int, 2>& Algorithm::sideLabelsFromHead() const
+{
+    Q_ASSERT(0 <= _tailDir && _tailDir <= 5);
+    return _sideLabelsFromHead[_tailDir];
+}
+
+inline const std::array<int, 2>& Algorithm::sideLabelsFromTail() const
+{
+    Q_ASSERT(0 <= _tailDir && _tailDir <= 5);
+    return _sideLabelsFromTail[_tailDir];
 }
 
 inline const std::array<int, 3>& Algorithm::backLabels() const

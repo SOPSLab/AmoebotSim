@@ -13,7 +13,7 @@ const std::array<const std::vector<int>, 6> Particle::labels =
     {2, 3, 4, 5, 6}
 }};
 const std::array<int, 6> Particle::contractLabels = {{0, 1, 4, 5, 6, 9}};
-const std::array<std::array<int, 10>, 6> Particle::labelDir
+const std::array<std::array<int, 10>, 6> Particle::labelDir =
 {{
     {{0, 1, 2, 1, 2, 3, 4, 5, 4, 5}},
     {{0, 1, 2, 3, 2, 3, 4, 5, 0, 5}},
