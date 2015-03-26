@@ -40,8 +40,8 @@ BoundedObjCoating::BoundedObjCoating(const BoundedObjCoating& other)
     : AlgorithmWithFlags(other),
       phase(other.phase),
       followDir(other.followDir),
-      downDir(other.downDir),
       Lnumber(other.Lnumber),
+      downDir(other.downDir),
       leftDir(other.leftDir),
       rightDir(other.rightDir),
       NumFinishedNeighbors(other.NumFinishedNeighbors)
@@ -559,6 +559,8 @@ int BoundedObjCoating::getLnumber() const
             return (inFlags[downDir]->Lnumber +1)%2;
 
     }
+
+    return 0; // RG: previously, the function could reach this point without returning anything which caused a compiler warning
 }
 
 void BoundedObjCoating::getLeftDir()

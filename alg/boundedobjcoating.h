@@ -1,5 +1,5 @@
 #ifndef BOUNDEDOBJCOATING_H
-#define BOUNDEDBJCOATING_H
+#define BOUNDEDOBJCOATING_H
 
 #include "alg/algorithmwithflags.h"
 
