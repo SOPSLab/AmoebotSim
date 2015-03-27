@@ -19,6 +19,7 @@ Application::Application(int argc, char *argv[]) :
     // setup connections between GUI and Simulator
     VisItem* vis = engine->rootObjects().at(0)->findChild<VisItem*>();
     connect(sim, &Simulator::updateSystem, vis, &VisItem::updateSystem);
+    connect(sim, &Simulator::saveScreenshotSignal, vis, &VisItem::saveScreenshot);
     connect(engine->rootObjects().at(0), SIGNAL(start()), sim, SLOT(start()));
     connect(engine->rootObjects().at(0), SIGNAL(stop() ), sim, SLOT(stop() ));
     connect(engine->rootObjects().at(0), SIGNAL(round()), sim, SLOT(round()));

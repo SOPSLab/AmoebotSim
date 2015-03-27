@@ -30,6 +30,7 @@ public slots:
 
     void runScript(const QString scriptFilePath);
     void writeToFile(const QString filePath, const QString text);
+    void saveScreenshot(const QString filePath = "");
 
     bool isValid();
     bool isDisconnected();
@@ -96,6 +97,11 @@ inline void ScriptInterface::writeToFile(const QString filePath, const QString t
     stream << text;
 
     file.close();
+}
+
+inline void ScriptInterface::saveScreenshot(const QString filePath)
+{
+    sim.saveScreenshotSlot(filePath);
 }
 
 inline bool ScriptInterface::isValid()

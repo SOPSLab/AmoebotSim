@@ -38,6 +38,7 @@ signals:
 public slots:
     void updateSystem(System* _system);
     void focusOnCenterOfMass();
+    void saveScreenshot(QString filePath = "");
 
 protected slots:
     virtual void sync();

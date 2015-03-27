@@ -60,7 +60,7 @@ void Simulator::round()
 
 #ifdef QT_DEBUG
     // increases the chance that when the debugger stops the visualization shows the actual configuration of the system
-    updateSystem(new System(*system));
+    emit updateSystem(new System(*system));
 #endif
 }
 
@@ -92,7 +92,7 @@ void Simulator::roundForParticleAt(const int x, const int y)
 
     #ifdef QT_DEBUG
         // increases the chance that when the debugger stops the visualization shows the actual configuration of the system
-        updateSystem(new System(*system));
+        emit updateSystem(new System(*system));
     #endif
     }
 }
@@ -148,4 +148,11 @@ int Simulator::getNumMovements() const
 void Simulator::setRoundDuration(int ms)
 {
     roundTimer->setInterval(ms);
+}
+
+void Simulator::saveScreenshotSlot(const QString filePath)
+{
+    // first make sure the visualization has the most recent system
+    emit updateSystem(new System(*system));
+    emit saveScreenshotSignal(filePath);
 }
