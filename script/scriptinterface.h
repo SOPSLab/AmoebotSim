@@ -14,6 +14,8 @@
 #include "alg/ring.h"
 #include "alg/rhomboid.h"
 #include "sim/simulator.h"
+#include "alg/compact.h"
+#include "alg/square.h"
 
 /*
  * The methods of the following class are automatically available during runtime as command in the command-line.
@@ -47,6 +49,8 @@ public slots:
     void triangle(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void ring(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void rhomboid(const unsigned int numParticles = 100, const float holeProb = 0.0, const int sideLength = 10);
+    void compact(const unsigned int numParticles = 100, const float holeProb = 0.0);
+    void square(const unsigned int numParticles = 100, const float holeProb = 0.0);
 
 private:
     Simulator& sim;
@@ -202,5 +206,23 @@ inline void ScriptInterface::rhomboid(const unsigned int numParticles, const flo
     }
 
     sim.setSystem(Rhomboid::Rhomboid::instance(numParticles, holeProb, sideLength));
+}
+inline void ScriptInterface::compact(const unsigned int numParticles, const float holeProb)
+{
+    if(holeProb < 0.0f || holeProb > 1.0f) {
+        sim.log("holeProb in [0.0, 1.0] required", true);
+        return;
+    }
+
+    sim.setSystem(Compact::Compact::instance(numParticles, holeProb));
+}
+inline void ScriptInterface::square(const unsigned int numParticles, const float holeProb)
+{
+    if(holeProb < 0.0f || holeProb > 1.0f) {
+        sim.log("holeProb in [0.0, 1.0] required", true);
+        return;
+    }
+
+    sim.setSystem(Square::Square::instance(numParticles, holeProb));
 }
 #endif // SCRIPTINTERFACE_H
