@@ -4,12 +4,13 @@
  *              a convex shape with no holes.
 */
 
- // NOTE: 0 - 5 increases counter-clockwise
+// NOTE: 0 - 5 increases counter-clockwise
 
 #include <set>
 #include <random>
 #include <QTime>
 #include <QDebug>
+#include <string.h>
 #include "compact.h"
 #include "sim/particle.h"
 #include "sim/system.h"
@@ -18,7 +19,7 @@ namespace Compact {
     CompactFlag::CompactFlag()
         : point(false),
           followIndicator(false),
-          nextFollowDir(-1)
+          nextFollowDirOffset(-1)
     {}
 
     CompactFlag::CompactFlag(const CompactFlag& other)
@@ -27,7 +28,7 @@ namespace Compact {
           point(other.point),
           followIndicator(other.followIndicator),
           contractDir(other.contractDir),
-          nextFollowDir(other.nextFollowDir)
+          nextFollowDirOffset(other.nextFollowDirOffset)
     {}
 
     Compact::Compact(const State _state)
@@ -55,10 +56,10 @@ namespace Compact {
         std::set<Node> occupied, candidates;
 
         // Create Seed Particle
-        system->insert(Particle(new Compact(State::Seed), randDir(), Node(0,0), -1));
+        system->insert(Particle(new Compact(State::Seed),  (), Node(0,0), -1));
         occupied.insert(Node(0,0));
 
-        for(int dir = 0; dir<6;dir++){
+        for(int dir = 0; dir<6; dir++){
             candidates.insert(Node(0,0).nodeInDir(dir));
         }
 
@@ -91,107 +92,115 @@ namespace Compact {
     }
 
     Movement Compact::execute() {
-        if(state == State::Finished || state == State::Seed) {
-            return Movement(MovementType::Empty);
-        }
+        if(state == State::Seed) { // State::Finished will eventually be included here as well
+            headMarkDir = -1;
+            unsetFollowIndicator();
 
-        // complete a movement if the particle is expanded in the appropriate manner (handover or normal contraction)
-        if(isExpanded()) {
-            Q_ASSERT(state == State::Leader || state == State::Follower); // the only particles that do expansion contraction should be Leaders and Followers
-
-            // want some way of recalculating compactness after a contraction
-            /*if(isLocallyCompact()) {
-                setState(State::Compact);
-            }
-            else {
-                setState(State::NotCompact);
+            // roaming root (TODO: IN-PROGRESS)
+            /*if(!hasNeighborInState(State::Idle) && !hasNeighborInState(State::Leader) && !hasNeighborInState(State::Follower)) {
+                followDir = firstNeighborInState(State::Active);
+                headMarkDir = followDir;
+                setFollowIndicatorLabel(followDir);
+                outFlags[followDir].passingRoot = true;
             }*/
 
-            // wipe any possible nextFollowDir outflags
-            // setNextFollowDir(-1, -1);
-
-            if(tailReceivesFollowIndicator()) {
-                if(followIndicatorMatchState(State::Follower)) {
-                    setNextFollowDir(-1);
-                    return Movement(MovementType::HandoverContract, tailContractionLabel());
-                }
-                else if(followIndicatorMatchState(State::Active)) {
-                    return Movement(MovementType::Idle); // TODO: potential bottleneck, but it needs to wait until the child actually decides to follow in order to contract
-                }
-            }
-            else {
-                setNextFollowDir(-1);
-                return Movement(MovementType::Contract, tailContractionLabel());
-            }
+            return Movement(MovementType::Idle);
         }
 
+        /* IDEA: let the seed become a normal particle at some point
+
+        if(state == State::Seed && !hasNeighborInState(State::Idle)) {
+            setState(State::Active);
+            return Movement(MovementType::Idle);
+        }*/
+
+        // ORIENTATION: IN-PROGRESS
         if(state == State::Idle) {
             auto label = firstNeighborInState(State::Seed);
+            
             if(label == -1) {
-                label = std::max(std::max(firstNeighborInState(State::Active), firstNeighborInState(State::Compact)), firstNeighborInState(State::NotCompact));
+                label = firstNeighborInState(State::Active);
             }
 
             if(label != -1) {
                 setState(State::Active);
-                followDir = labelToDir(label);
+                followDir = label;
                 setFollowIndicatorLabel(followDir);
                 headMarkDir = followDir;
+            }
 
-                return Movement(MovementType::Idle); // not sure we need a return here, could just keep going through the rest?
+            return Movement(MovementType::Idle);
+        }
+
+        // MOVEMENT AFTER EXPANSION: IN-PROGRESS
+        // complete a movement if the particle is expanded in the appropriate manner (handover or normal contraction)
+        if(isExpanded() && !hasNeighborInState(State::Idle)) { // do not contract away from a particle that hasn't oriented yet
+            Q_ASSERT(state == State::Leader || state == State::Follower); // the only particles that do expansion contraction should be Leaders and Followers
+
+            setFollowIndicatorLabel(followDir);
+
+            if(!tailReceivesFollowIndicator() && !hasNeighborInState(State::Leader)) { // particle does not have children in the spanning tree
+                // reset next follow direction offsets
+                setState(State::Active);
+                return Movement(MovementType::Contract, tailContractionLabel());
+            }
+            else if(followIndicatorMatchState(State::Follower) || followIndicatorMatchState(State::Active)) { // I don't really like the Active piece here
+                // reset next follow direction offsets?
+                setState(State::Active);
+                return Movement(MovementType::HandoverContract, tailContractionLabel());
+            }
+            else {
+                qDebug() << "can't contract yet";
+                return Movement(MovementType::Idle);
             }
         }
 
-        if(state == State::Active || state == State::Compact || state == State::NotCompact) {
-            // assumption: by the time a particle is Active, its inFlags[followDir] is never nullptr, we maintain the spanning tree
-            if(inFlags[followDir]->isExpanded()) {
-                // if we could assume that the only expanded particles are Leaders or Followers, we could make this part cleaner
-                if(inFlags[followDir]->state == State::Leader) {
-                    setState(State::Follower);
-
-                    int expandDir = followDir;
-                    setContractDir(expandDir);
-                    qDebug() << "Point 0: followDir = " << followDir;
-                    followDir = inFlags[followDir]->nextFollowDir; // orients follower to where the leader was pointing before expansion
-                    qDebug() << "Point 1: followDir = " << followDir;
-                    headMarkDir = followDir;
-                    setFollowIndicatorLabel(dirToHeadLabelAfterExpansion(followDir, expandDir)); // not 100% sure what this does
-
-                    return Movement(MovementType::Expand, expandDir);
-                }
-                else if(inFlags[followDir]->state == State::Follower) {
-                    setState(State::Follower);
-
-                    int expandDir = followDir;
-                    setContractDir(expandDir);
-                    followDir = updatedFollowDir(); // orients follower toward the contracted position of the particle in is following
-                    headMarkDir = followDir;
-                    qDebug() << "Point 2: followDir = " << followDir;
-                    setFollowIndicatorLabel(dirToHeadLabelAfterExpansion(followDir, expandDir)); // not 100% sure what this does
-
-                    return Movement(MovementType::Expand, expandDir);
-                }
+        if(state == State::Active) {
+            if(hasNeighborInState(State::Idle)) {
+                return Movement(MovementType::Idle);
             }
-        }
-        
-        if(!isLocallyCompact() && !hasNeighborInState(State::Idle) && !hasNeighborExpanded()) {
-            setState(State::Leader);
+            else if(inFlags[followDir]->state == State::Leader) {
+                setState(State::Follower);
 
-            // choose a child if necessary and give it nextFollowDir
-            /* int childDir = getChildDir();
-            if(childDir != -1) { // otherwise, it doesn't need any followers because they don't exist
-                setNextFollowDir(followDir, childDir);
-                qDebug() << "nextFollowDir set: childDir = " << childDir << "\nfollowDir = " << followDir << "\noutFlags[" << childDir << "]->nextFollowDir = " << outFlags[childDir].nextFollowDir; 
-            } */
+                int expandDir = followDir;
+                setContractDir(expandDir);
+                followDir = (followDir + inFlags[followDir]->nextFollowDirOffset) % 6; // may need to double-check this works
+                headMarkDir = followDir;
+                setFollowIndicatorLabel(dirAfterExpansionTable[followDir][expandDir]);
 
-            setNextFollowDir(followDir);
-            int expandDir = getMoveDir();
-            setContractDir(expandDir);
-            followDir = (expandDir + 4) % 6; // +4 is the same as -2 mod 6
-            headMarkDir = followDir;
-            qDebug() << "Point 3: followDir = " << followDir;
-            setFollowIndicatorLabel(dirToHeadLabelAfterExpansion(followDir, expandDir)); // pretty sure this is correct
+                return Movement(MovementType::Expand, expandDir);
+            }
+            else if(inFlags[followDir]->state == State::Follower) {
+                setState(State::Follower);
 
-            return Movement(MovementType::Expand, expandDir);
+                int expandDir = followDir;
+                setContractDir(expandDir);
+                followDir = updatedFollowDir(); // revisit this function, but it does work
+                headMarkDir = followDir;
+                setFollowIndicatorLabel(dirAfterExpansionTable[followDir][expandDir]);
+
+                return Movement(MovementType::Expand, expandDir);
+            }
+            else if(!isLocallyCompact() && receivesFollowIndicator() && !hasNeighborInState(State::Leader) && !hasNeighborInState(State::Follower)) {
+                setState(State::Leader);
+
+                int expandDir = firstEmptyNeighbor();
+                setContractDir(expandDir);
+                setNextFollowDirOffset(followDir, expandDir);
+                followDir = (expandDir + 3) % 6; // direct itself at the space it was just in
+                headMarkDir = followDir;
+                setFollowIndicatorLabel(dirAfterExpansionTable[followDir][expandDir]);
+
+                return Movement(MovementType::Expand, expandDir);
+            }
+            /*else if(!receivesFollowIndicator() && !hasNeighborInState(State::Leader) && !hasNeighborInState(State::Follower)) {
+                // perform a leaf switch
+                followDir = firstNeighborInState(State::Active);
+                headMarkDir = followDir;
+                setFollowIndicatorLabel(followDir);
+
+                return Movement(MovementType::Idle);
+            }*/
         }
 
         return Movement(MovementType::Idle);
@@ -301,6 +310,16 @@ namespace Compact {
         }
     }
 
+    bool Compact::receivesFollowIndicator() const {
+        for(int i = 0; i < 10; i++) {
+            if(inFlags[i] != nullptr && inFlags[i]->followIndicator) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     bool Compact::tailReceivesFollowIndicator() const {
         for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
             auto label = *it;
@@ -311,6 +330,18 @@ namespace Compact {
                 }
             }
         }
+
+        /*for(int label = 0; label < 2; ++label) {
+            if(inFlags[sideLabelsFromTail().at(label)] != nullptr && inFlags[sideLabelsFromTail().at(label)]->followIndicator) {
+                return true;
+            }
+        }
+
+        for(int label = 0; label < 3; ++label) {
+            if(inFlags[backLabels().at(label)] != nullptr && inFlags[backLabels().at(label)]->followIndicator) {
+                return true;
+            }
+        }*/
 
         return false;
     }
@@ -411,15 +442,16 @@ namespace Compact {
     }
 
     int Compact::firstEmptyNeighbor() {
-        // look for empty space starting at head direction and proceeding clockwise, should only be done on particles ready to move
-        Q_ASSERT(isContracted()); // can comment this out as long as getMoveDir() is the only caller
+        // look for empty space starting at head direction and proceeding counter-clockwise, should only be done on particles ready to move
+        Q_ASSERT(isContracted());
+        Q_ASSERT(!isLocallyCompact());
 
-        for(int label = headMarkDir; label < 6; label++) {
+        for(int label = followDir; label < 6; label++) {
             if(inFlags[label] == nullptr) {
                 return label;
             }
         }
-        for(int label = 0; label < headMarkDir; label++) {
+        for(int label = 0; label < followDir; label++) {
             if(inFlags[label] == nullptr) {
                 return label;
             }
@@ -428,49 +460,18 @@ namespace Compact {
         return -1;
     }
 
-    bool Compact::hasNeighborExpanded() {
-        for(int label = 0; label < 10; label++) {
-            if(inFlags[label] != nullptr && inFlags[label]->isExpanded()) {
-                return true;
+    void Compact::setNextFollowDirOffset(const int currentFollowDir, const int expandDir) {
+        if(currentFollowDir == -1) {
+            for(int label = 0; label < 10; ++label) {
+                outFlags[label].nextFollowDirOffset = -1; // temporary; how to reset when dealing with offsets?
             }
         }
-
-        return false;
-    }
-
-    int Compact::getChildDir() {
-        Q_ASSERT(isContracted()); // should call this only before a movement
-
-        int backLabel = (followDir + 3) % 6;
-        for(int i = 0; i < 3; i++) {
-            int left = (backLabel + i) % 6;
-            int right = (backLabel - i) % 6;
-
-            if(inFlags[left] != nullptr && inFlags[left]->followIndicator) {
-                return left;
-            }
-            else if(inFlags[right] != nullptr && inFlags[right]->followIndicator) {
-                return right;
-            }
-        }
-
-        return -1;
-    }
-
-    void Compact::setNextFollowDir(const int nextFollowDir) {
-        for (int label = 0; label < 10; ++label) {
-            outFlags[label].nextFollowDir = nextFollowDir;
+        else {
+            for(int label = 0; label < 6; ++label) {
+                if(inFlags[label] != nullptr && label != currentFollowDir) { // only set nextFollowDirOffset for potential children
+                    outFlags[dirAfterExpansionTable[label][expandDir]].nextFollowDirOffset = (currentFollowDir - label + 9) % 6;
+                }
+            }            
         }
     }
-
-    /* void Compact::setNextFollowDir(const int nextFollowDir, const int childDir) {
-        for(int label = 0; label < 10; label++) {
-            if(label == childDir) {
-                outFlags[label].nextFollowDir = nextFollowDir;
-            }
-            else {
-                outFlags[label].nextFollowDir = -1;
-            }
-        }
-    } */
 }

@@ -30,10 +30,11 @@ namespace Compact
         CompactFlag();
         CompactFlag(const CompactFlag& other);
         State state;
-        bool point; // 
+        bool point;
         bool followIndicator;
+        bool passingRoot;
         int contractDir;
-        int nextFollowDir;
+        int nextFollowDirOffset;
     };
 
     class Compact : public AlgorithmWithFlags<CompactFlag>
@@ -67,18 +68,17 @@ namespace Compact
         bool followIndicatorMatchState(State _state) const;
 
         // Things I've added:
+        bool receivesFollowIndicator() const;
         int neighborCount();
         int adjacentNeighborCount();
         bool isLocallyCompact();
         int firstEmptyNeighbor();
-        bool hasNeighborExpanded();
-        int getChildDir();
-        void setNextFollowDir(const int nextFollowDir);
-        // void setNextFollowDir(const int nextFollowDir, const int childDir);
+        void setNextFollowDirOffset(const int currentFollowDir, const int expandDir);
 
     protected:
         State state;
         int followDir;
+        const int dirAfterExpansionTable[6][6] = {{0,8,0,0,0,2}, {3,1,1,1,1,3}, {4,4,4,2,2,4}, {5,5,7,5,3,5}, {6,6,8,8,6,6}, {7,7,9,9,9,9}};
     };
 }
 
