@@ -56,7 +56,7 @@ namespace Compact {
         std::set<Node> occupied, candidates;
 
         // Create Seed Particle
-        system->insert(Particle(new Compact(State::Seed),  (), Node(0,0), -1));
+        system->insert(Particle(new Compact(State::Seed), randDir(), Node(0,0), -1));
         occupied.insert(Node(0,0));
 
         for(int dir = 0; dir<6; dir++){

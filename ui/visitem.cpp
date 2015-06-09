@@ -6,6 +6,7 @@
 #include <QMutexLocker>
 #include <QOpenGLFunctions_2_0>
 #include <QOpenGLTexture>
+#include <QTime>
 #include <QTimer>
 #include <QQuickWindow>
 
@@ -80,6 +81,15 @@ void VisItem::focusOnCenterOfMass()
     }
 
     focusPosGui = sum / numNodes;
+}
+
+void VisItem::saveScreenshot(QString filePath)
+{
+    if(filePath == "") {
+        filePath = QString("amoebotsim_") + QString::number(QTime::currentTime().msecsSinceStartOfDay()) + QString(".png");
+    }
+
+    window()->grabWindow().save(filePath);
 }
 
 void VisItem::sync()
