@@ -93,16 +93,9 @@ namespace Compact {
 
     Movement Compact::execute() {
         if(state == State::Seed) { // State::Finished will eventually be included here as well
+            followDir = -1;
             headMarkDir = -1;
             unsetFollowIndicator();
-
-            // roaming root (TODO: IN-PROGRESS)
-            /*if(!hasNeighborInState(State::Idle) && !hasNeighborInState(State::Leader) && !hasNeighborInState(State::Follower)) {
-                followDir = firstNeighborInState(State::Active);
-                headMarkDir = followDir;
-                setFollowIndicatorLabel(followDir);
-                outFlags[followDir].passingRoot = true;
-            }*/
 
             return Movement(MovementType::Idle);
         }
@@ -140,13 +133,15 @@ namespace Compact {
             setFollowIndicatorLabel(followDir);
 
             if(!tailReceivesFollowIndicator() && !hasNeighborInState(State::Leader)) { // particle does not have children in the spanning tree
-                // reset next follow direction offsets
+                // TODO: reset next follow direction offsets?
                 setState(State::Active);
+                qDebug() << "doing a normal contraction, rand timestamp: " << randDir(); // DEBUG: This is definitely the case where the spanning trees pull apart
                 return Movement(MovementType::Contract, tailContractionLabel());
             }
             else if(followIndicatorMatchState(State::Follower) || followIndicatorMatchState(State::Active)) { // I don't really like the Active piece here
                 // reset next follow direction offsets?
                 setState(State::Active);
+                qDebug() << "tried to do a handover contract, rand timestamp: " << randDir();
                 return Movement(MovementType::HandoverContract, tailContractionLabel());
             }
             else {
@@ -177,7 +172,8 @@ namespace Compact {
                 setContractDir(expandDir);
                 followDir = updatedFollowDir(); // revisit this function, but it does work
                 headMarkDir = followDir;
-                setFollowIndicatorLabel(dirAfterExpansionTable[followDir][expandDir]);
+                //setFollowIndicatorLabel(dirAfterExpansionTable[followDir][expandDir]);
+                setFollowIndicatorLabel(dirToHeadLabelAfterExpansion(followDir, expandDir));
 
                 return Movement(MovementType::Expand, expandDir);
             }
@@ -330,18 +326,6 @@ namespace Compact {
                 }
             }
         }
-
-        /*for(int label = 0; label < 2; ++label) {
-            if(inFlags[sideLabelsFromTail().at(label)] != nullptr && inFlags[sideLabelsFromTail().at(label)]->followIndicator) {
-                return true;
-            }
-        }
-
-        for(int label = 0; label < 3; ++label) {
-            if(inFlags[backLabels().at(label)] != nullptr && inFlags[backLabels().at(label)]->followIndicator) {
-                return true;
-            }
-        }*/
 
         return false;
     }
