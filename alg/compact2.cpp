@@ -131,7 +131,7 @@ Movement Compact2::execute()
                 setState(State::Active);
                 setParentLabel(followDir);
                 return Movement(MovementType::HandoverContract, tailContractionLabel());
-            } else if(backHasNeighborInState(State::Leader)) {
+            } else if(leaderAsChild()) {
                 return Movement(MovementType::Idle);
             } else {
                 setState(State::Active);
@@ -312,6 +312,17 @@ bool Compact2::backHasNeighborInState(State _state)
     for(auto it = backLabels().cbegin(); it != backLabels().cend(); ++it) {
         auto label = *it;
         if(inFlags[label] != nullptr && inFlags[label]->state == State::Leader) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Compact2::leaderAsChild()
+{
+    for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
+        auto label = *it;
+        if(inFlags[label] != nullptr && inFlags[label]->state == State::Leader && inFlags[label]->dir == inFlags[label]->oldFollowDir) {
             return true;
         }
     }

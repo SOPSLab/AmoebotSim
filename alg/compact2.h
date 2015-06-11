@@ -58,6 +58,7 @@ protected:
 
     bool tailHasChild();
     bool backHasNeighborInState(State _state);
+    bool leaderAsChild();
 
 protected:
     State state;
