@@ -44,30 +44,25 @@ public:
 
 protected:
     void setState(State _state);
+    void setOldFollowDir(int dir);
+    void setParentLabel(int parentLabel);
+    void unsetParentLabel();
+
     bool hasNeighborInState(State _state);
+    int neighborInStateDir(State _state);
+    int emptyNeighborDir();
     int determineFollowDir();
 
     bool isLocallyCompact();
-    int emptyNeighborDir();
-    int neighborInStateDir(State _state);
-
-    void setParentLabel(int parentLabel);
     bool isParent();
-
-    void setOldFolloowDir(int dir);
-
     bool tailHasChild();
-    bool backHasNeighborInState(State _state);
     bool leaderAsChild();
 
 protected:
     State state;
     int followDir;
-    int distanceToTravel;
 };
 
 }
-
-
 
 #endif // COMPACT2_H

@@ -7,10 +7,23 @@
 
 namespace Compact2
 {
+Compact2Flag::Compact2Flag()
+    : isParent(false),
+      oldFollowDir(-1)
+{
+}
+
+Compact2Flag::Compact2Flag(const Compact2Flag& other)
+    : Flag(other),
+      state(other.state),
+      isParent(other.isParent),
+      oldFollowDir(other.oldFollowDir)
+{
+}
+
 Compact2::Compact2(const State _state)
     : state(_state),
-      followDir(-1),
-      distanceToTravel(3)
+      followDir(-1)
 {
     setState(_state);
 }
@@ -18,8 +31,7 @@ Compact2::Compact2(const State _state)
 Compact2::Compact2(const Compact2& other)
     : AlgorithmWithFlags(other),
       state(other.state),
-      followDir(other.followDir),
-      distanceToTravel(other.distanceToTravel)
+      followDir(other.followDir)
 {
 }
 
@@ -113,11 +125,12 @@ Movement Compact2::execute()
             // become a leader
             if(isParent() && !isLocallyCompact()) {
                 setState(State::Leader);
-                setOldFolloowDir(followDir);
+                setOldFollowDir(followDir);
                 auto dir = emptyNeighborDir();
                 int tailDirAfterExpansion = (dir + 3) % 6;
                 followDir = tailDirAfterExpansion;
                 headMarkDir = tailDirAfterExpansion;
+                unsetParentLabel();
                 return Movement(MovementType::Expand, dir);
             }
         }
@@ -174,6 +187,29 @@ void Compact2::setState(State _state)
     }
 }
 
+void Compact2::setOldFollowDir(int dir)
+{
+    Q_ASSERT(0 <= dir && dir < 6);
+    for(int label = 0; label < 10; label++) {
+        outFlags[label].oldFollowDir = dir;
+    }
+}
+
+void Compact2::setParentLabel(int parentLabel)
+{
+    Q_ASSERT(0 <= parentLabel && parentLabel < 10);
+
+    for(int label = 0; label < 10; label++) {
+        outFlags[label].isParent = (label == parentLabel);
+    }
+}
+
+void Compact2::unsetParentLabel() {
+    for(int label = 0; label < 10; label++) {
+        outFlags[label].isParent = false;
+    }
+}
+
 bool Compact2::hasNeighborInState(State _state)
 {
     for(int label = 0; label < 10; label++) {
@@ -185,6 +221,37 @@ bool Compact2::hasNeighborInState(State _state)
         }
     }
     return false;
+}
+
+int Compact2::neighborInStateDir(State _state)
+{
+    Q_ASSERT(isContracted());
+    for(int dir = 0; dir < 6; dir++) {
+        if(inFlags[dir] != nullptr) {
+            const Compact2Flag& flag = *inFlags[dir];
+            if(flag.state == _state) {
+                return dir;
+            }
+        }
+    }
+    return -1;
+}
+
+int Compact2::emptyNeighborDir()
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(followDir != -1);
+
+    // FIX!
+    for(int offset = 0; offset < 6; offset++) {
+        int dir = (followDir + offset) % 6;
+        if(inFlags[dir] == nullptr) {
+            return dir;
+        }
+    }
+
+    Q_ASSERT(false);
+    return -1;
 }
 
 int Compact2::determineFollowDir()
@@ -238,46 +305,6 @@ bool Compact2::isLocallyCompact()
     return adjacentCount == count;
 }
 
-int Compact2::emptyNeighborDir()
-{
-    Q_ASSERT(isContracted());
-    Q_ASSERT(followDir != -1);
-
-    // FIX!
-    for(int offset = 0; offset < 6; offset++) {
-        int dir = (followDir + offset) % 6;
-        if(inFlags[dir] == nullptr) {
-            return dir;
-        }
-    }
-
-    Q_ASSERT(false);
-    return -1;
-}
-
-int Compact2::neighborInStateDir(State _state)
-{
-    Q_ASSERT(isContracted());
-    for(int dir = 0; dir < 6; dir++) {
-        if(inFlags[dir] != nullptr) {
-            const Compact2Flag& flag = *inFlags[dir];
-            if(flag.state == _state) {
-                return dir;
-            }
-        }
-    }
-    return -1;
-}
-
-void Compact2::setParentLabel(int parentLabel)
-{
-    Q_ASSERT(0 <= parentLabel && parentLabel < 10);
-
-    for(int label = 0; label < 10; label++) {
-        outFlags[label].isParent = (label == parentLabel);
-    }
-}
-
 bool Compact2::isParent()
 {
     for(int label = 0; label < 10; label++) {
@@ -288,30 +315,11 @@ bool Compact2::isParent()
     return false;
 }
 
-void Compact2::setOldFolloowDir(int dir)
-{
-    Q_ASSERT(0 <= dir && dir < 6);
-    for(int label = 0; label < 10; label++) {
-        outFlags[label].oldFollowDir = dir;
-    }
-}
-
 bool Compact2::tailHasChild()
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;
         if(inFlags[label] != nullptr && inFlags[label]->isParent) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool Compact2::backHasNeighborInState(State _state)
-{
-    for(auto it = backLabels().cbegin(); it != backLabels().cend(); ++it) {
-        auto label = *it;
-        if(inFlags[label] != nullptr && inFlags[label]->state == State::Leader) {
             return true;
         }
     }
@@ -329,17 +337,4 @@ bool Compact2::leaderAsChild()
     return false;
 }
 
-Compact2Flag::Compact2Flag()
-    : isParent(false),
-      oldFollowDir(-1)
-{
-}
-
-Compact2Flag::Compact2Flag(const Compact2Flag& other)
-    : Flag(other),
-      state(other.state),
-      isParent(other.isParent),
-      oldFollowDir(other.oldFollowDir)
-{
-}
 }
