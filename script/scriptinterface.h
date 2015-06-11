@@ -16,6 +16,7 @@
 #include "alg/rhomboid.h"
 #include "sim/simulator.h"
 #include "alg/compact.h"
+#include "alg/compact2.h"
 #include "alg/square.h"
 
 /*
@@ -53,6 +54,7 @@ public slots:
     void ring(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void rhomboid(const unsigned int numParticles = 100, const float holeProb = 0.0, const int sideLength = 10);
     void compact(const unsigned int numParticles = 100, const float holeProb = 0.0);
+    void compact2(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void square(const unsigned int numParticles = 100, const float holeProb = 0.0);
 
 private:
@@ -238,6 +240,15 @@ inline void ScriptInterface::compact(const unsigned int numParticles, const floa
     }
 
     sim.setSystem(Compact::Compact::instance(numParticles, holeProb));
+}
+inline void ScriptInterface::compact2(const unsigned int numParticles, const float holeProb)
+{
+    if(holeProb < 0.0f || holeProb > 1.0f) {
+        sim.log("holeProb in [0.0, 1.0] required", true);
+        return;
+    }
+
+    sim.setSystem(Compact2::Compact2::instance(numParticles, holeProb));
 }
 inline void ScriptInterface::square(const unsigned int numParticles, const float holeProb)
 {
