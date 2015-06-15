@@ -93,7 +93,7 @@ Movement Compact2::execute()
                 followDir = neighborInStateDir(State::Active);
             }
             if(followDir == -1) {
-                return Movement(MovementType::Idle);
+                return Movement(MovementType::Empty);
             } else {
                 setState(State::Active);
                 headMarkDir = followDir;
@@ -123,7 +123,7 @@ Movement Compact2::execute()
                 return Movement(MovementType::Expand, expandDir);
             }
             // become a leader
-            if(isParent() && !isLocallyCompact()) {
+            if(isParent() && !isLocallyCompact() && !hasNeighborInState(State::Follower)) {
                 setState(State::Leader);
                 setOldFollowDir(followDir);
                 auto dir = emptyNeighborDir();
@@ -132,6 +132,13 @@ Movement Compact2::execute()
                 headMarkDir = tailDirAfterExpansion;
                 unsetParentLabel();
                 return Movement(MovementType::Expand, dir);
+            }
+            // leaf switch
+            if(isLeaf() && countNeighbors() != 6 && !hasNeighborInState(State::Follower) && !hasNeighborInState(State::Leader)) {
+                followDir = leafSwitchDir();
+                headMarkDir = followDir;
+                setParentLabel(followDir);
+                return Movement(MovementType::Idle);
             }
         }
     } else { // isExpanded
@@ -175,9 +182,11 @@ void Compact2::setState(State _state)
     } else if(state == State::Leader) {
         headMarkColor = 0xcc0000; tailMarkColor = 0xcc0000; // Red
     } else if(state == State::Follower) {
-        headMarkColor = 0x3366FF; tailMarkColor = 0x3366FF; // Blue
+        headMarkColor = 0x3366ff; tailMarkColor = 0x3366ff; // Blue
     } else if(state == State::Active) {
         headMarkColor = 0x505050; tailMarkColor = 0xe0e0e0; // Grey
+    } else if(state == State::Finished) {
+        headMarkColor = 0x006600; tailMarkColor = 0x006600; // Dark Green
     } else { // phase == Phase::Idle
         headMarkColor = -1; tailMarkColor = -1; // No color
     }
@@ -210,7 +219,7 @@ void Compact2::unsetParentLabel() {
     }
 }
 
-bool Compact2::hasNeighborInState(State _state)
+bool Compact2::hasNeighborInState(const State _state)
 {
     for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr) {
@@ -221,6 +230,20 @@ bool Compact2::hasNeighborInState(State _state)
         }
     }
     return false;
+}
+
+bool Compact2::hasNNeighborsInState(const int n, const State _state)
+{
+    // UPDATE: later, this needs to work for contracted and expanded particles
+
+    int count = 0;
+    for(int label = 0; label < 6; label++) {
+        if(inFlags[label] != nullptr && inFlags[label]->state == _state) {
+            ++count;
+        }
+    }
+
+    return count >= n;
 }
 
 int Compact2::neighborInStateDir(State _state)
@@ -240,17 +263,36 @@ int Compact2::neighborInStateDir(State _state)
 int Compact2::emptyNeighborDir()
 {
     Q_ASSERT(isContracted());
-    Q_ASSERT(followDir != -1);
+    Q_ASSERT(followDir != -1); // must have a followDir
+    Q_ASSERT(inFlags[followDir] != nullptr); // can't be oriented to an empty space
 
-    // FIX!
-    for(int offset = 0; offset < 6; offset++) {
-        int dir = (followDir + offset) % 6;
-        if(inFlags[dir] == nullptr) {
-            return dir;
+    for(int offset = 1; offset <= 3; offset++) {
+        int left = (followDir + offset) % 6;
+        int right = (followDir - offset + 6) % 6;
+        if(inFlags[right] == nullptr) {
+            return right;
+        } else if(inFlags[left] == nullptr) {
+            return left;
         }
     }
 
     Q_ASSERT(false);
+    return -1;
+}
+
+int Compact2::borderNeighborDir()
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(followDir != -1);
+    Q_ASSERT(inFlags[followDir] != nullptr);
+
+    for(int offset = 0; offset < 6; offset++) {
+        int dir = (followDir + offset) % 6;
+        if(inFlags[dir] != nullptr && inFlags[(dir + 1) % 6] == nullptr) {
+            return dir;
+        }
+    }
+
     return -1;
 }
 
@@ -267,16 +309,28 @@ int Compact2::determineFollowDir()
     return -1;
 }
 
+int Compact2::leafSwitchDir()
+{
+    Q_ASSERT(isLeaf());
+    Q_ASSERT(isContracted());
+
+    int switchDir;
+
+    while(true) {
+        switchDir = randDir();
+        if(inFlags[switchDir] != nullptr && (inFlags[switchDir]->state == State::Active || inFlags[switchDir]->state == State::Seed || inFlags[switchDir]->state == State::Finished)) {
+            break;
+        }
+    }
+
+    return switchDir;
+}
+
 bool Compact2::isLocallyCompact()
 {
     Q_ASSERT(isContracted());
 
-    int count = 0;
-    for(int dir = 0; dir < 6; dir++) {
-        if(inFlags[dir] != nullptr) {
-            count++;
-        }
-    }
+    int count = countNeighbors();
 
     if(0 == count || count == 6) {
         return true;
@@ -315,6 +369,11 @@ bool Compact2::isParent()
     return false;
 }
 
+bool Compact2::isLeaf()
+{
+    return !isParent();
+}
+
 bool Compact2::tailHasChild()
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
@@ -335,6 +394,19 @@ bool Compact2::leaderAsChild()
         }
     }
     return false;
+}
+
+int Compact2::countNeighbors()
+{
+    int count = 0;
+    int max = (isContracted()) ? 6 : 10;
+
+    for(int label = 0; label < max; label++) { // FIX: doesn't this construction double count the side neighbors for expanded particles?
+        if(inFlags[label] != nullptr) {
+            count++;
+        }
+    }
+    return count;
 }
 
 }

@@ -13,7 +13,8 @@ enum class State {
     Leader,
     Follower,
     Active,
-    Idle
+    Idle,
+    Finished
 };
 
 class Compact2Flag : public Flag
@@ -49,18 +50,25 @@ protected:
     void unsetParentLabel();
 
     bool hasNeighborInState(State _state);
+    bool hasNNeighborsInState(const int n, const State _state);
     int neighborInStateDir(State _state);
     int emptyNeighborDir();
+    int borderNeighborDir();
     int determineFollowDir();
+    int leafSwitchDir();
 
     bool isLocallyCompact();
     bool isParent();
+    bool isLeaf();
     bool tailHasChild();
     bool leaderAsChild();
 
 protected:
     State state;
     int followDir;
+
+private:
+    int countNeighbors();
 };
 
 }

@@ -30,7 +30,6 @@ HEADERS += \
     alg/line.h \
     alg/rhomboid.h \
     alg/square.h \
-    alg/compact.h \
     alg/boundedobjcoating.h \
     alg/compact2.h
 
@@ -53,7 +52,6 @@ SOURCES += \
     alg/line.cpp \
     alg/rhomboid.cpp \
     alg/square.cpp \
-    alg/compact.cpp \
     alg/boundedobjcoating.cpp \
     alg/compact2.cpp
 
