@@ -1,19 +1,19 @@
 #include <set>
 #include <random>
 
-#include "compact2.h"
+#include "compaction.h"
 #include "sim/particle.h"
 #include "sim/system.h"
 
-namespace Compact2
+namespace Compaction
 {
-Compact2Flag::Compact2Flag()
+CompactionFlag::CompactionFlag()
     : isParent(false),
       oldFollowDir(-1)
 {
 }
 
-Compact2Flag::Compact2Flag(const Compact2Flag& other)
+CompactionFlag::CompactionFlag(const CompactionFlag& other)
     : Flag(other),
       state(other.state),
       isParent(other.isParent),
@@ -21,31 +21,31 @@ Compact2Flag::Compact2Flag(const Compact2Flag& other)
 {
 }
 
-Compact2::Compact2(const State _state)
+Compaction::Compaction(const State _state)
     : state(_state),
       followDir(-1)
 {
     setState(_state);
 }
 
-Compact2::Compact2(const Compact2& other)
+Compaction::Compaction(const Compaction& other)
     : AlgorithmWithFlags(other),
       state(other.state),
       followDir(other.followDir)
 {
 }
 
-Compact2::~Compact2()
+Compaction::~Compaction()
 {
 }
 
-System* Compact2::instance(const unsigned int size, const double holeProb)
+System* Compaction::instance(const unsigned int size, const double holeProb)
 {
     System* system = new System();
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(new Compact2(State::Seed), randDir(), Node(0,0), -1));
+    system->insert(Particle(new Compaction(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6; dir++){
@@ -75,12 +75,12 @@ System* Compact2::instance(const unsigned int size, const double holeProb)
             }
         }
         // Insert new idle particle
-        system->insert(Particle(new Compact2(State::Idle), randDir(), head, -1));
+        system->insert(Particle(new Compaction(State::Idle), randDir(), head, -1));
     }
     return system;
 }
 
-Movement Compact2::execute()
+Movement Compaction::execute()
 {
     if(state == State::Seed) {
         return Movement(MovementType::Empty);
@@ -164,17 +164,17 @@ Movement Compact2::execute()
     return Movement(MovementType::Idle);
 }
 
-Algorithm* Compact2::clone()
+Algorithm* Compaction::clone()
 {
-    return new Compact2(*this);
+    return new Compaction(*this);
 }
 
-bool Compact2::isDeterministic() const
+bool Compaction::isDeterministic() const
 {
-    return true;
+    return false; // uses randomization in leaf switch
 }
 
-void Compact2::setState(State _state)
+void Compaction::setState(const State _state)
 {
     state = _state;
     if(state == State::Seed) {
@@ -185,8 +185,6 @@ void Compact2::setState(State _state)
         headMarkColor = 0x3366ff; tailMarkColor = 0x3366ff; // Blue
     } else if(state == State::Active) {
         headMarkColor = 0x505050; tailMarkColor = 0xe0e0e0; // Grey
-    } else if(state == State::Finished) {
-        headMarkColor = 0x006600; tailMarkColor = 0x006600; // Dark Green
     } else { // phase == Phase::Idle
         headMarkColor = -1; tailMarkColor = -1; // No color
     }
@@ -196,7 +194,7 @@ void Compact2::setState(State _state)
     }
 }
 
-void Compact2::setOldFollowDir(int dir)
+void Compaction::setOldFollowDir(const int dir)
 {
     Q_ASSERT(0 <= dir && dir < 6);
     for(int label = 0; label < 10; label++) {
@@ -204,7 +202,7 @@ void Compact2::setOldFollowDir(int dir)
     }
 }
 
-void Compact2::setParentLabel(int parentLabel)
+void Compaction::setParentLabel(const int parentLabel)
 {
     Q_ASSERT(0 <= parentLabel && parentLabel < 10);
 
@@ -213,17 +211,17 @@ void Compact2::setParentLabel(int parentLabel)
     }
 }
 
-void Compact2::unsetParentLabel() {
+void Compaction::unsetParentLabel() {
     for(int label = 0; label < 10; label++) {
         outFlags[label].isParent = false;
     }
 }
 
-bool Compact2::hasNeighborInState(const State _state)
+bool Compaction::hasNeighborInState(const State _state) const
 {
     for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr) {
-            const Compact2Flag& flag = *inFlags[label];
+            const CompactionFlag& flag = *inFlags[label];
             if(flag.state == _state) {
                 return true;
             }
@@ -232,26 +230,12 @@ bool Compact2::hasNeighborInState(const State _state)
     return false;
 }
 
-bool Compact2::hasNNeighborsInState(const int n, const State _state)
-{
-    // UPDATE: later, this needs to work for contracted and expanded particles
-
-    int count = 0;
-    for(int label = 0; label < 6; label++) {
-        if(inFlags[label] != nullptr && inFlags[label]->state == _state) {
-            ++count;
-        }
-    }
-
-    return count >= n;
-}
-
-int Compact2::neighborInStateDir(State _state)
+int Compaction::neighborInStateDir(const State _state) const
 {
     Q_ASSERT(isContracted());
     for(int dir = 0; dir < 6; dir++) {
         if(inFlags[dir] != nullptr) {
-            const Compact2Flag& flag = *inFlags[dir];
+            const CompactionFlag& flag = *inFlags[dir];
             if(flag.state == _state) {
                 return dir;
             }
@@ -260,7 +244,7 @@ int Compact2::neighborInStateDir(State _state)
     return -1;
 }
 
-int Compact2::emptyNeighborDir()
+int Compaction::emptyNeighborDir() const
 {
     Q_ASSERT(isContracted());
     Q_ASSERT(followDir != -1); // must have a followDir
@@ -280,36 +264,7 @@ int Compact2::emptyNeighborDir()
     return -1;
 }
 
-int Compact2::borderNeighborDir()
-{
-    Q_ASSERT(isContracted());
-    Q_ASSERT(followDir != -1);
-    Q_ASSERT(inFlags[followDir] != nullptr);
-
-    for(int offset = 0; offset < 6; offset++) {
-        int dir = (followDir + offset) % 6;
-        if(inFlags[dir] != nullptr && inFlags[(dir + 1) % 6] == nullptr) {
-            return dir;
-        }
-    }
-
-    return -1;
-}
-
-int Compact2::determineFollowDir()
-{
-    for(int label = 0; label < 10; label++) {
-        if(inFlags[label] != nullptr) {
-            const Compact2Flag& flag = *inFlags[label];
-            if(flag.state == State::Leader || flag.state == State::Follower) {
-                return labelToDir(label);
-            }
-        }
-    }
-    return -1;
-}
-
-int Compact2::leafSwitchDir()
+int Compaction::leafSwitchDir() const
 {
     Q_ASSERT(isLeaf());
     Q_ASSERT(isContracted());
@@ -318,7 +273,7 @@ int Compact2::leafSwitchDir()
 
     while(true) {
         switchDir = randDir();
-        if(inFlags[switchDir] != nullptr && (inFlags[switchDir]->state == State::Active || inFlags[switchDir]->state == State::Seed || inFlags[switchDir]->state == State::Finished)) {
+        if(inFlags[switchDir] != nullptr && (inFlags[switchDir]->state == State::Active || inFlags[switchDir]->state == State::Seed)) {
             break;
         }
     }
@@ -326,7 +281,7 @@ int Compact2::leafSwitchDir()
     return switchDir;
 }
 
-bool Compact2::isLocallyCompact()
+bool Compaction::isLocallyCompact() const
 {
     Q_ASSERT(isContracted());
 
@@ -359,7 +314,7 @@ bool Compact2::isLocallyCompact()
     return adjacentCount == count;
 }
 
-bool Compact2::isParent()
+bool Compaction::isParent() const
 {
     for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr && inFlags[label]->isParent) {
@@ -369,12 +324,12 @@ bool Compact2::isParent()
     return false;
 }
 
-bool Compact2::isLeaf()
+bool Compaction::isLeaf() const
 {
     return !isParent();
 }
 
-bool Compact2::tailHasChild()
+bool Compaction::tailHasChild() const
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;
@@ -385,7 +340,7 @@ bool Compact2::tailHasChild()
     return false;
 }
 
-bool Compact2::leaderAsChild()
+bool Compaction::leaderAsChild() const
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;
@@ -396,7 +351,7 @@ bool Compact2::leaderAsChild()
     return false;
 }
 
-int Compact2::countNeighbors()
+int Compaction::countNeighbors() const
 {
     int count = 0;
     int max = (isContracted()) ? 6 : 10;
