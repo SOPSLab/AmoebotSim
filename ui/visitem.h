@@ -1,4 +1,4 @@
-#ifndef VISITEM_H
+ #ifndef VISITEM_H
 #define VISITEM_H
 
 #include <cmath>
