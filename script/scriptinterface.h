@@ -15,8 +15,9 @@
 #include "alg/ring.h"
 #include "alg/rhomboid.h"
 #include "sim/simulator.h"
-#include "alg/compaction.h"
 #include "alg/square.h"
+#include "alg/compaction.h"
+#include "alg/holeelimination.h"
 
 /*
  * The methods of the following class are automatically available during runtime as command in the command-line.
@@ -52,8 +53,9 @@ public slots:
     void triangle(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void ring(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void rhomboid(const unsigned int numParticles = 100, const float holeProb = 0.0, const int sideLength = 10);
-    void compaction(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void square(const unsigned int numParticles = 100, const float holeProb = 0.0);
+    void compaction(const unsigned int numParticles = 100, const float holeProb = 0.0);
+    void holeelimination(const unsigned int numParticles = 100, const float holeProb = 0.0);
 
 private:
     Simulator& sim;
@@ -230,6 +232,15 @@ inline void ScriptInterface::rhomboid(const unsigned int numParticles, const flo
 
     sim.setSystem(Rhomboid::Rhomboid::instance(numParticles, holeProb, sideLength));
 }
+inline void ScriptInterface::square(const unsigned int numParticles, const float holeProb)
+{
+    if(holeProb < 0.0f || holeProb > 1.0f) {
+        sim.log("holeProb in [0.0, 1.0] required", true);
+        return;
+    }
+
+    sim.setSystem(Square::Square::instance(numParticles, holeProb));
+}
 inline void ScriptInterface::compaction(const unsigned int numParticles, const float holeProb)
 {
     if(holeProb < 0.0f || holeProb > 1.0f) {
@@ -239,13 +250,13 @@ inline void ScriptInterface::compaction(const unsigned int numParticles, const f
 
     sim.setSystem(Compaction::Compaction::instance(numParticles, holeProb));
 }
-inline void ScriptInterface::square(const unsigned int numParticles, const float holeProb)
+inline void ScriptInterface::holeelimination(const unsigned int numParticles, const float holeProb)
 {
     if(holeProb < 0.0f || holeProb > 1.0f) {
         sim.log("holeProb in [0.0, 1.0] required", true);
         return;
     }
 
-    sim.setSystem(Square::Square::instance(numParticles, holeProb));
+    sim.setSystem(HoleElimination::HoleElimination::instance(numParticles, holeProb));
 }
 #endif // SCRIPTINTERFACE_H
