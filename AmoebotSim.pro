@@ -66,7 +66,3 @@ OTHER_FILES += \
     res/qml/A_ResultTextField.qml \
     res/qml/A_TextField.qml \
     res/qml/main.qml
-
-DISTFILES += \
-    res/vertexshader.vert \
-    res/fragmentshader.frag
