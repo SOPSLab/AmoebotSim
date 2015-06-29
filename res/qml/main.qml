@@ -4,6 +4,7 @@ import VisItem 1.0
 
 ApplicationWindow {
     visible: true
+    color: "black"
     minimumWidth: 800
     minimumHeight: 600
     title: "AmoebotSim"

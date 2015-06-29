@@ -30,11 +30,11 @@ void Simulator::init()
 {
     if(roundTimer == nullptr) {
         roundTimer = new QTimer(this);
-        roundTimer->setInterval(2);
+        roundTimer->setInterval(100);
         connect(roundTimer, &QTimer::timeout, this, &Simulator::round);
 
         updateTimer = new QTimer(this);
-        updateTimer->setInterval(16);
+        updateTimer->setInterval(33);
         connect(updateTimer, &QTimer::timeout, [&](){emit updateSystem(new System(*system));});
         updateTimer->start();
     }
