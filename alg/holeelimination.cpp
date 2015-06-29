@@ -84,13 +84,7 @@ System* HoleElimination::instance(const unsigned int size, const double holeProb
 
 Movement HoleElimination::execute()
 {
-    // set docking indicators
-    if(state == State::Seed) {
-        for(int dir = 0; dir < 6; dir++) {
-            setDockingLabel(dir);
-        }
-        return Movement(MovementType::Idle);
-    } else if(state == State::Finished) {
+    if(state == State::Seed || state == State::Finished) {
         return Movement(MovementType::Empty);
     }
 
@@ -134,7 +128,14 @@ Movement HoleElimination::execute()
             }
 
             // become finished
-            if(dockingDir() != -1) {
+            if(hasNeighborInState(State::Seed)) {
+                setState(State::Finished);
+                followDir = neighborInStateDir(State::Seed);
+                headMarkDir = followDir;
+                setParentLabel(followDir);
+                setDockingLabel((followDir + 3) % 6);
+                return Movement(MovementType::Idle);
+            } else if(dockingDir() != -1) {
                 setState(State::Finished);
                 followDir = dockingDir();
                 headMarkDir = followDir;
@@ -230,7 +231,7 @@ void HoleElimination::setState(const State _state)
     } else if(state == State::Active) {
         headMarkColor = 0x505050; tailMarkColor = 0xe0e0e0; // Grey
     } else if(state == State::Finished) {
-        headMarkColor = 0xffaa00; tailMarkColor = 0xffaa00; // Gold
+        headMarkColor = 0x000000; tailMarkColor = 0x000000; // Black
     } else { // phase == Phase::Idle
         headMarkColor = -1; tailMarkColor = -1; // No color
     }

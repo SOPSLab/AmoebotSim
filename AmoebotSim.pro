@@ -32,7 +32,8 @@ HEADERS += \
     alg/square.h \
     alg/boundedobjcoating.h \
     alg/compaction.h \
-    alg/holeelimination.h
+    alg/holeelimination.h \
+    alg/holeelimcoating.h
 
 SOURCES += \
     alg/algorithm.cpp \
@@ -55,7 +56,8 @@ SOURCES += \
     alg/square.cpp \
     alg/boundedobjcoating.cpp \
     alg/compaction.cpp \
-    alg/holeelimination.cpp
+    alg/holeelimination.cpp \
+    alg/holeelimcoating.cpp
 
 RESOURCES += \
     res/qml.qrc \
