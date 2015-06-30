@@ -11,7 +11,7 @@ namespace HoleElimCoating
 enum class State {
     Seed,
     Idle,
-    Leader,
+    Walking,
     Follower,
     Finished
 };

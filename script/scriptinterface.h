@@ -19,6 +19,7 @@
 #include "alg/compaction.h"
 #include "alg/holeelimination.h"
 #include "alg/holeelimcoating.h"
+#include "alg/holeelimhybrid.h"
 
 /*
  * The methods of the following class are automatically available during runtime as command in the command-line.
@@ -58,6 +59,7 @@ public slots:
     void compaction(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void holeelimination(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void holeelimcoating(const unsigned int numParticles = 100, const float holeProb = 0.0);
+    void holeelimhybrid(const unsigned int numParticles = 100, const float holeProb = 0.0);
 
 private:
     Simulator& sim;
@@ -269,5 +271,14 @@ inline void ScriptInterface::holeelimcoating(const unsigned int numParticles, co
     }
 
     sim.setSystem(HoleElimCoating::HoleElimCoating::instance(numParticles, holeProb));
+}
+inline void ScriptInterface::holeelimhybrid(const unsigned int numParticles, const float holeProb)
+{
+    if(holeProb < 0.0f || holeProb > 1.0f) {
+        sim.log("holeProb in [0.0, 1.0] required", true);
+        return;
+    }
+
+    sim.setSystem(HoleElimHybrid::HoleElimHybrid::instance(numParticles, holeProb));
 }
 #endif // SCRIPTINTERFACE_H

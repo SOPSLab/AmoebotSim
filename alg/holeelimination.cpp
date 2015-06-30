@@ -224,16 +224,16 @@ void HoleElimination::setState(const State _state)
     state = _state;
     if(state == State::Seed) {
         headMarkColor = 0x00ff00; tailMarkColor = 0x00ff00; // Green
+    } else if(state == State::Idle) {
+        headMarkColor = -1; tailMarkColor = -1; // No color
+    } else if(state == State::Active) {
+        headMarkColor = 0x505050; tailMarkColor = 0xe0e0e0; // Grey
     } else if(state == State::Leader) {
         headMarkColor = 0xcc0000; tailMarkColor = 0xcc0000; // Red
     } else if(state == State::Follower) {
-        headMarkColor = 0x3366ff; tailMarkColor = 0x3366ff; // Blue
-    } else if(state == State::Active) {
-        headMarkColor = 0x505050; tailMarkColor = 0xe0e0e0; // Grey
-    } else if(state == State::Finished) {
+        headMarkColor = 0x0066ff; tailMarkColor = 0x0066ff; // Blue
+    } else { // phase == Phase::Finished
         headMarkColor = 0x000000; tailMarkColor = 0x000000; // Black
-    } else { // phase == Phase::Idle
-        headMarkColor = -1; tailMarkColor = -1; // No color
     }
 
     for(int i = 0; i < 10; i++) {

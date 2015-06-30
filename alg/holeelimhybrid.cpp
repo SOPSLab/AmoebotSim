@@ -1,51 +1,53 @@
 #include <set>
 #include <random>
 
-#include "compaction.h"
+#include "holeelimhybrid.h"
 #include "sim/particle.h"
 #include "sim/system.h"
 
-namespace Compaction
+namespace HoleElimHybrid
 {
-CompactionFlag::CompactionFlag()
+HoleElimHybridFlag::HoleElimHybridFlag()
     : isParent(false),
-      oldFollowDir(-1)
+      oldFollowDir(-1),
+      dockingIndicator(false)
 {
 }
 
-CompactionFlag::CompactionFlag(const CompactionFlag& other)
+HoleElimHybridFlag::HoleElimHybridFlag(const HoleElimHybridFlag& other)
     : Flag(other),
       state(other.state),
       isParent(other.isParent),
-      oldFollowDir(other.oldFollowDir)
+      oldFollowDir(other.oldFollowDir),
+      dockingIndicator(other.dockingIndicator)
 {
 }
 
-Compaction::Compaction(const State _state)
+HoleElimHybrid::HoleElimHybrid(const State _state)
     : state(_state),
       followDir(-1)
 {
     setState(_state);
 }
 
-Compaction::Compaction(const Compaction& other)
+HoleElimHybrid::HoleElimHybrid(const HoleElimHybrid& other)
     : AlgorithmWithFlags(other),
       state(other.state),
       followDir(other.followDir)
 {
 }
 
-Compaction::~Compaction()
+HoleElimHybrid::~HoleElimHybrid()
 {
 }
 
-System* Compaction::instance(const unsigned int size, const double holeProb)
+System* HoleElimHybrid::instance(const unsigned int size, const double holeProb)
 {
     System* system = new System();
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(new Compaction(State::Seed), randDir(), Node(0,0), -1));
+    system->insert(Particle(new HoleElimHybrid(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6; dir++){
@@ -75,14 +77,14 @@ System* Compaction::instance(const unsigned int size, const double holeProb)
             }
         }
         // Insert new idle particle
-        system->insert(Particle(new Compaction(State::Idle), randDir(), head, -1));
+        system->insert(Particle(new HoleElimHybrid(State::Idle), randDir(), head, -1));
     }
     return system;
 }
 
-Movement Compaction::execute()
+Movement HoleElimHybrid::execute()
 {
-    if(state == State::Seed) {
+    if(state == State::Seed || state == State::Finished) {
         return Movement(MovementType::Empty);
     }
 
@@ -101,10 +103,12 @@ Movement Compaction::execute()
                 return Movement(MovementType::Idle);
             }
         } else if(state == State::Active) {
+            // do nothing until your neighbors are oriented
             if(hasNeighborInState(State::Idle)) {
                 return Movement(MovementType::Idle);
             }
-            // become a follower of leader
+
+            // become a follower of a leader
             if(inFlags[followDir]->state == State::Leader && !inFlags[followDir]->fromHead) {
                 setState(State::Follower);
                 int expandDir = followDir;
@@ -113,8 +117,8 @@ Movement Compaction::execute()
                 setParentLabel(dirToHeadLabelAfterExpansion(followDir, expandDir));
                 return Movement(MovementType::Expand, expandDir);
             }
-            // become a follower of follower
-            if(inFlags[followDir]->state == State::Follower && !inFlags[followDir]->fromHead) {
+            // become a follower of a follower or walking particle
+            if((inFlags[followDir]->state == State::Follower || inFlags[followDir]->state == State::Walking) && !inFlags[followDir]->fromHead) {
                 setState(State::Follower);
                 int expandDir = followDir;
                 followDir = (followDir + inFlags[followDir]->tailDir - inFlags[followDir]->dir + 6) % 6;
@@ -122,6 +126,19 @@ Movement Compaction::execute()
                 setParentLabel(dirToHeadLabelAfterExpansion(followDir, expandDir));
                 return Movement(MovementType::Expand, expandDir);
             }
+
+            // become walking
+            if(hasNeighborInState(State::Seed) || hasNeighborInState(State::Finished)) {
+                setState(State::Walking);
+                followDir = neighborInStateDir(State::Seed);
+                if(followDir == -1) {
+                    followDir = neighborInStateDir(State::Finished);
+                }
+                headMarkDir = followDir;
+                setParentLabel(followDir);
+                return Movement(MovementType::Idle);
+            }
+
             // become a leader
             if(isParent() && !isLocallyCompact() && !hasNeighborInState(State::Follower)) {
                 setState(State::Leader);
@@ -133,12 +150,41 @@ Movement Compaction::execute()
                 unsetParentLabel();
                 return Movement(MovementType::Expand, dir);
             }
-            // leaf switch
-            if(isLeaf() && countNeighbors() != 6 && !hasNeighborInState(State::Follower) && !hasNeighborInState(State::Leader)) {
-                followDir = leafSwitchDir();
+        } else if(state == State::Walking) {
+            if(hasNeighborInState(State::Seed)) { // finish and set a docking label on the axis
+                setState(State::Finished);
+                followDir = neighborInStateDir(State::Seed);
                 headMarkDir = followDir;
                 setParentLabel(followDir);
+                setDockingLabel((followDir + 3) % 6);
                 return Movement(MovementType::Idle);
+            } else { // adjacent to some finished particle(s)
+                // become finished if possible
+                //if(dockingDir() != -1 && randInt(0,9) == 0) { // used to walk over axis positions, which generally creates a more convex structure
+                if(dockingDir() != -1) {
+                    setState(State::Finished);
+                    followDir = dockingDir();
+                    headMarkDir = followDir;
+                    setParentLabel(followDir);
+                    setDockingLabel((followDir + 3) % 6);
+                    return Movement(MovementType::Idle);
+                } else if(adjFinishDir() != -1) {
+                    setState(State::Finished);
+                    followDir = adjFinishDir();
+                    headMarkDir = followDir;
+                    setParentLabel(followDir);
+                    return Movement(MovementType::Idle);
+                }
+
+                // otherwise, expand around the border, if possible
+                if(borderFinishedDir() != -1) {
+                    int borderDir = borderFinishedDir();
+                    int expandDir = (borderDir + 1) % 6;
+                    followDir = (borderDir + 5) % 6;
+                    headMarkDir = followDir;
+                    setParentLabel(dirToHeadLabelAfterExpansion(followDir, expandDir));
+                    return Movement(MovementType::Expand, expandDir);
+                }
             }
         }
     } else { // isExpanded
@@ -158,35 +204,42 @@ Movement Compaction::execute()
                 setParentLabel(followDir);
                 return Movement(MovementType::Contract, tailContractionLabel());
             }
+        } else if(state == State::Walking && !hasNeighborInState(State::Leader)) {
+            setParentLabel(followDir);
+            return tailHasChild() ? Movement(MovementType::HandoverContract, tailContractionLabel()) : Movement(MovementType::Contract, tailContractionLabel());
         }
     }
 
     return Movement(MovementType::Idle);
 }
 
-Algorithm* Compaction::clone()
+Algorithm* HoleElimHybrid::clone()
 {
-    return new Compaction(*this);
+    return new HoleElimHybrid(*this);
 }
 
-bool Compaction::isDeterministic() const
+bool HoleElimHybrid::isDeterministic() const
 {
     return false; // uses randomization in leaf switch
 }
 
-void Compaction::setState(const State _state)
+void HoleElimHybrid::setState(const State _state)
 {
     state = _state;
     if(state == State::Seed) {
         headMarkColor = 0x00ff00; tailMarkColor = 0x00ff00; // Green
-    } else if (state == State::Idle) {
+    } else if(state == State::Idle) {
         headMarkColor = -1; tailMarkColor = -1; // No color
     } else if(state == State::Active) {
         headMarkColor = 0x505050; tailMarkColor = 0xe0e0e0; // Grey
     } else if(state == State::Leader) {
         headMarkColor = 0xcc0000; tailMarkColor = 0xcc0000; // Red
-    } else { // state == State:: Follower
+    } else if(state == State::Follower) {
         headMarkColor = 0x0066ff; tailMarkColor = 0x0066ff; // Blue
+    } else if(state == State::Walking) {
+        headMarkColor = 0xffb000; tailMarkColor = 0xffb000; // Yellow
+    } else { // phase == Phase::Finished
+        headMarkColor = 0x000000; tailMarkColor = 0x000000; // Black
     }
 
     for(int i = 0; i < 10; i++) {
@@ -194,7 +247,7 @@ void Compaction::setState(const State _state)
     }
 }
 
-void Compaction::setOldFollowDir(const int dir)
+void HoleElimHybrid::setOldFollowDir(const int dir)
 {
     Q_ASSERT(0 <= dir && dir < 6);
     for(int label = 0; label < 10; label++) {
@@ -202,7 +255,7 @@ void Compaction::setOldFollowDir(const int dir)
     }
 }
 
-void Compaction::setParentLabel(const int parentLabel)
+void HoleElimHybrid::setParentLabel(const int parentLabel)
 {
     Q_ASSERT(0 <= parentLabel && parentLabel < 10);
 
@@ -211,40 +264,43 @@ void Compaction::setParentLabel(const int parentLabel)
     }
 }
 
-void Compaction::unsetParentLabel() {
+void HoleElimHybrid::unsetParentLabel()
+{
     for(int label = 0; label < 10; label++) {
         outFlags[label].isParent = false;
     }
 }
 
-bool Compaction::hasNeighborInState(const State _state) const
+void HoleElimHybrid::setDockingLabel(const int dockingLabel)
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= dockingLabel && dockingLabel < 6);
+
+    outFlags[dockingLabel].dockingIndicator = true;
+}
+
+bool HoleElimHybrid::hasNeighborInState(const State _state) const
 {
     for(int label = 0; label < 10; label++) {
-        if(inFlags[label] != nullptr) {
-            const CompactionFlag& flag = *inFlags[label];
-            if(flag.state == _state) {
-                return true;
-            }
+        if(inFlags[label] != nullptr && inFlags[label]->state == _state) {
+            return true;
         }
     }
     return false;
 }
 
-int Compaction::neighborInStateDir(const State _state) const
+int HoleElimHybrid::neighborInStateDir(const State _state) const
 {
     Q_ASSERT(isContracted());
     for(int dir = 0; dir < 6; dir++) {
-        if(inFlags[dir] != nullptr) {
-            const CompactionFlag& flag = *inFlags[dir];
-            if(flag.state == _state) {
-                return dir;
-            }
+        if(inFlags[dir] != nullptr && inFlags[dir]->state == _state) {
+            return dir;
         }
     }
     return -1;
 }
 
-int Compaction::emptyNeighborDir() const
+int HoleElimHybrid::emptyNeighborDir() const
 {
     Q_ASSERT(isContracted());
     Q_ASSERT(followDir != -1); // must have a followDir
@@ -259,29 +315,58 @@ int Compaction::emptyNeighborDir() const
             return left;
         }
     }
-
-    Q_ASSERT(false);
     return -1;
 }
 
-int Compaction::leafSwitchDir() const
+int HoleElimHybrid::dockingDir() const
 {
-    Q_ASSERT(isLeaf());
-    Q_ASSERT(isContracted());
+    Q_ASSERT(isContracted()); // only contracted particles should dock/finish
 
-    int switchDir;
-
-    while(true) {
-        switchDir = randDir();
-        if(inFlags[switchDir] != nullptr && (inFlags[switchDir]->state == State::Active || inFlags[switchDir]->state == State::Seed)) {
-            break;
+    for(int dir = 0; dir < 6; dir++) {
+        if(inFlags[dir] != nullptr && inFlags[dir]->dockingIndicator) {
+            return dir;
         }
     }
-
-    return switchDir;
+    return -1; // does not receive a docking indicator
 }
 
-bool Compaction::isLocallyCompact() const
+int HoleElimHybrid::adjFinishDir() const
+{
+    Q_ASSERT(isContracted());
+
+    for(int dir = 0; dir < 6; dir++) {
+        if(inFlags[dir] != nullptr && inFlags[dir]->state == State::Finished) {
+            int left = (dir + 1) % 6, right = (dir + 5) % 6;
+            if((inFlags[left] != nullptr && inFlags[left]->state == State::Finished) && (inFlags[right] != nullptr && inFlags[right]->state == State::Finished)) {
+                return dir;
+            }
+        }
+    }
+    return -1;
+}
+
+int HoleElimHybrid::borderFinishedDir() const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(followDir != -1);
+    Q_ASSERT(inFlags[followDir] != nullptr);
+
+    for(int offset = 0; offset < 6; offset++) {
+        int dir = (followDir + offset) % 6;
+        if(inFlags[dir] != nullptr && inFlags[dir]->state == State::Finished && inFlags[(dir + 1) % 6] == nullptr) {
+            return dir;
+        }
+    }
+    for(int offset = 0; offset < 6; offset++) {
+        int dir = (followDir + offset) % 6;
+        if(inFlags[dir] != nullptr && inFlags[dir]->state == State::Finished && inFlags[(dir + 5) % 6] == nullptr) {
+            return dir;
+        }
+    }
+    return -1;
+}
+
+bool HoleElimHybrid::isLocallyCompact() const
 {
     Q_ASSERT(isContracted());
 
@@ -303,8 +388,7 @@ bool Compaction::isLocallyCompact() const
 
     int adjacentCount = 0;
     for(int offset = 0; offset < 6; offset++) {
-        int dir = (firstOccupiedDir + offset) % 6;
-        if(inFlags[dir] != nullptr) {
+        if(inFlags[(firstOccupiedDir + offset) % 6] != nullptr) {
             adjacentCount++;
         } else {
             break;
@@ -314,7 +398,7 @@ bool Compaction::isLocallyCompact() const
     return adjacentCount == count;
 }
 
-bool Compaction::isParent() const
+bool HoleElimHybrid::isParent() const
 {
     for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr && inFlags[label]->isParent) {
@@ -324,12 +408,12 @@ bool Compaction::isParent() const
     return false;
 }
 
-bool Compaction::isLeaf() const
+bool HoleElimHybrid::isLeaf() const
 {
     return !isParent();
 }
 
-bool Compaction::tailHasChild() const
+bool HoleElimHybrid::tailHasChild() const
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;
@@ -340,7 +424,7 @@ bool Compaction::tailHasChild() const
     return false;
 }
 
-bool Compaction::leaderAsChild() const
+bool HoleElimHybrid::leaderAsChild() const
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;
@@ -351,7 +435,7 @@ bool Compaction::leaderAsChild() const
     return false;
 }
 
-int Compaction::countNeighbors() const
+int HoleElimHybrid::countNeighbors() const
 {
     int count = 0;
     int max = (isContracted()) ? 6 : 10;
@@ -365,3 +449,5 @@ int Compaction::countNeighbors() const
 }
 
 }
+
+

@@ -1,11 +1,11 @@
-#ifndef COMPACTION_H
-#define COMPACTION_H
+#ifndef HOLEELIMHYBRID_H
+#define HOLEELIMHYBRID_H
 
 #include "alg/algorithmwithflags.h"
 
 class System;
 
-namespace Compaction
+namespace HoleElimHybrid
 {
 
 enum class State {
@@ -13,26 +13,29 @@ enum class State {
     Idle,
     Active,
     Leader,
-    Follower
+    Follower,
+    Walking,
+    Finished
 };
 
-class CompactionFlag : public Flag
+class HoleElimHybridFlag : public Flag
 {
 public:
-    CompactionFlag();
-    CompactionFlag(const CompactionFlag& other);
+    HoleElimHybridFlag();
+    HoleElimHybridFlag(const HoleElimHybridFlag& other);
 
     State state;
     bool isParent;
     int oldFollowDir;
+    bool dockingIndicator;
 };
 
-class Compaction : public AlgorithmWithFlags<CompactionFlag>
+class HoleElimHybrid : public AlgorithmWithFlags<HoleElimHybridFlag>
 {
 public:
-    Compaction(const State _state);
-    Compaction(const Compaction& other);
-    virtual ~Compaction();
+    HoleElimHybrid(const State _state);
+    HoleElimHybrid(const HoleElimHybrid& other);
+    virtual ~HoleElimHybrid();
 
     static System* instance(const unsigned int size, const double holeProb);
 
@@ -47,11 +50,14 @@ protected:
     void setOldFollowDir(const int dir);
     void setParentLabel(const int parentLabel);
     void unsetParentLabel();
+    void setDockingLabel(const int dockingLabel);
 
     bool hasNeighborInState(const State _state) const;
     int neighborInStateDir(const State _state) const;
     int emptyNeighborDir() const;
-    int leafSwitchDir() const;
+    int dockingDir() const;
+    int adjFinishDir() const;
+    int borderFinishedDir() const;
 
     bool isLocallyCompact() const;
     bool isParent() const;
@@ -59,7 +65,6 @@ protected:
     bool tailHasChild() const;
     bool leaderAsChild() const;
 
-protected:
     State state;
     int followDir;
 
@@ -69,4 +74,4 @@ private:
 
 }
 
-#endif // COMPACTION_H
+#endif // HOLEELIMHYBRID_H

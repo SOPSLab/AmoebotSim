@@ -89,19 +89,19 @@ Movement HoleElimCoating::execute()
 
     if(isContracted()) {
         if(state == State::Idle) {
-            // if adjacent to the seed or a finished particle, become a leader
+            // if adjacent to the seed or a finished particle, become a walking particle
             followDir = neighborInStateDir(State::Seed);
             if(followDir == -1) {
                 followDir = neighborInStateDir(State::Finished);
             }
             if(followDir != -1) {
-                setState(State::Leader);
+                setState(State::Walking);
                 headMarkDir = followDir;
                 setParentLabel(followDir);
                 return Movement(MovementType::Idle);
             }
-            // otherwise, if adjacent to a leader or follower, become a follower
-            followDir = neighborInStateDir(State::Leader);
+            // otherwise, if adjacent to a walking particle or follower, become a follower
+            followDir = neighborInStateDir(State::Walking);
             if(followDir == -1) {
                 followDir = neighborInStateDir(State::Follower);
             }
@@ -113,7 +113,7 @@ Movement HoleElimCoating::execute()
             } else { // has all idle neighbors, and can wait for a change
                 return Movement(MovementType::Empty);
             }
-        } else if(state == State::Leader) {
+        } else if(state == State::Walking) {
             if(hasNeighborInState(State::Seed)) { // finish and set a docking label on the axis
                 setState(State::Finished);
                 followDir = neighborInStateDir(State::Seed);
@@ -123,6 +123,7 @@ Movement HoleElimCoating::execute()
                 return Movement(MovementType::Idle);
             } else { // adjacent to some finished particle(s)
                 // become finished if possible
+                //if(dockingDir() != -1 && randInt(0,9) == 0) { // used to walk over axis positions, which generally creates a more convex structure
                 if(dockingDir() != -1) {
                     setState(State::Finished);
                     followDir = dockingDir();
@@ -156,7 +157,7 @@ Movement HoleElimCoating::execute()
                 setParentLabel(dirToHeadLabelAfterExpansion(followDir, expandDir));
                 return Movement(MovementType::Expand, expandDir);
             } else if(hasNeighborInState(State::Finished)) {
-                setState(State::Leader);
+                setState(State::Walking);
                 followDir = neighborInStateDir(State::Finished);
                 headMarkDir = followDir;
                 setParentLabel(followDir);
@@ -186,14 +187,14 @@ void HoleElimCoating::setState(const State _state)
     state = _state;
     if(state == State::Seed) {
         headMarkColor = 0x00ff00; tailMarkColor = 0x00ff00; // Green
-    } else if(state == State::Leader) {
-        headMarkColor = 0xcc0000; tailMarkColor = 0xcc0000; // Red
-    } else if(state == State::Follower) {
-        headMarkColor = 0x3366ff; tailMarkColor = 0x3366ff; // Blue
-    } else if(state == State::Finished) {
-        headMarkColor = 0x000000; tailMarkColor = 0x000000; // Black
-    } else { // phase == Phase::Idle
+    } else if(state == State::Idle) {
         headMarkColor = -1; tailMarkColor = -1; // No color
+    } else if(state == State::Walking) {
+        headMarkColor = 0xffb000; tailMarkColor = 0xffb000; // Yellow
+    } else if(state == State::Follower) {
+        headMarkColor = 0x0066ff; tailMarkColor = 0x0066ff; // Blue
+    } else { // phase == Phase::Finished
+        headMarkColor = 0x000000; tailMarkColor = 0x000000; // Black
     }
 
     for(int i = 0; i < 10; i++) {
