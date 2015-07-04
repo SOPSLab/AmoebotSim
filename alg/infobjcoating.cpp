@@ -48,7 +48,7 @@ System* InfObjCoating::instance(const int numParticles, const float holeProb)
     Node pos;
     int lastOffset = 0;
     while(system->size() < 2 * numParticles) {
-        system->insert(Particle(new InfObjCoating(Phase::Static), randDir(), pos));
+        system->insert(Particle(std::make_shared<InfObjCoating>(Phase::Static), randDir(), pos));
         occupied.insert(pos);
         orderedSurface.push_back(pos);
         int offset;
@@ -87,7 +87,7 @@ System* InfObjCoating::instance(const int numParticles, const float holeProb)
         std::set<Node> nextCandidates;
         for(auto it = candidates.begin(); it != candidates.end() && numNonStaticParticles < numParticles; ++it) {
             if(randBool(1.0f - holeProb)) {
-                system->insert(Particle(new InfObjCoating(Phase::Inactive), randDir(), *it));
+                system->insert(Particle(std::make_shared<InfObjCoating>(Phase::Inactive), randDir(), *it));
                 numNonStaticParticles++;
 
                 for(int dir = 1; dir <= 2; dir++) {
@@ -170,9 +170,9 @@ Movement InfObjCoating::execute()
     }
 }
 
-Algorithm* InfObjCoating::clone()
+std::shared_ptr<Algorithm> InfObjCoating::clone()
 {
-    return new InfObjCoating(*this);
+    return std::make_shared<InfObjCoating>(*this);
 }
 
 bool InfObjCoating::isDeterministic() const

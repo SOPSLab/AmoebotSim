@@ -50,7 +50,7 @@ System* Line::instance(const unsigned int size, const double holeProb)
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(new Line(State::Seed), randDir(), Node(0,0), -1));
+    system->insert(Particle(std::make_shared<Line>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -80,7 +80,7 @@ System* Line::instance(const unsigned int size, const double holeProb)
             }
         }
         // Insert new idle particle
-        system->insert(Particle(new Line(State::Idle), randDir(), head, -1));
+        system->insert(Particle(std::make_shared<Line>(State::Idle), randDir(), head, -1));
     }
     return system;
 }
@@ -166,9 +166,9 @@ Movement Line::execute()
     }
 }
 
-Algorithm* Line::clone()
+std::shared_ptr<Algorithm> Line::clone()
 {
-    return new Line(*this);
+    return std::make_shared<Line>(*this);
 }
 
 bool Line::isDeterministic() const

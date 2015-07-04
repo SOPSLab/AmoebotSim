@@ -47,7 +47,7 @@ namespace Square
 		static System* instance(const unsigned int numParticles, const double holeProb);
 
 		virtual Movement execute();
-		virtual Algorithm* clone();
+		virtual std::shared_ptr<Algorithm> clone() override;
 		virtual bool isDeterministic() const;
 
 	protected:

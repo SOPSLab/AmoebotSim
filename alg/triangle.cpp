@@ -52,7 +52,7 @@ System* Triangle::instance(const unsigned int size, const double holeProb)
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(new Triangle(State::Seed), randDir(), Node(0,0), -1));
+    system->insert(Particle(std::make_shared<Triangle>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -82,7 +82,7 @@ System* Triangle::instance(const unsigned int size, const double holeProb)
             }
         }
         // Insert new idle particle
-        system->insert(Particle(new Triangle(State::Idle), randDir(), head, -1));
+        system->insert(Particle(std::make_shared<Triangle>(State::Idle), randDir(), head, -1));
     }
     return system;
 }
@@ -168,9 +168,9 @@ Movement Triangle::execute()
     }
 }
 
-Algorithm* Triangle::clone()
+std::shared_ptr<Algorithm> Triangle::clone()
 {
-    return new Triangle(*this);
+    return std::make_shared<Triangle>(*this);
 }
 
 bool Triangle::isDeterministic() const

@@ -38,7 +38,7 @@ public:
     static System* instance(const unsigned int size, const double holeProb);
 
     virtual Movement execute();
-    virtual Algorithm* clone();
+    virtual std::shared_ptr<Algorithm> clone() override;
     virtual bool isDeterministic() const;
 
 protected:

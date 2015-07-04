@@ -3,6 +3,7 @@
 
 #include <array>
 #include <vector>
+#include <memory>
 
 #include "alg/algorithm.h"
 #include "sim/movement.h"
@@ -11,7 +12,7 @@
 class Particle
 {
 public:
-    Particle(Algorithm* _algorithm, const int _orientation, const Node _head, const int _tailDir = -1);
+    Particle(std::shared_ptr<Algorithm> _algorithm, const int _orientation, const Node _head, const int _tailDir = -1);
     Particle(const Particle& other);
     virtual ~Particle();
 
@@ -51,8 +52,8 @@ public:
     int tailDir; // global direction
 
 protected:
-    Algorithm* algorithm;
-    Algorithm* newAlgorithm;
+    std::shared_ptr<Algorithm> algorithm;
+    std::shared_ptr<Algorithm> newAlgorithm;
 
 private:
     static const std::vector<int> sixLabels;

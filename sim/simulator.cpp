@@ -5,8 +5,6 @@
 #include "sim/simulator.h"
 
 Simulator::Simulator()
-    : roundTimer(nullptr),
-      system(nullptr)
 {
     engine.setGlobalObject(engine.newQObject(new ScriptInterface(*this), QScriptEngine::ScriptOwnership));
 }
@@ -29,13 +27,13 @@ void Simulator::setSystem(System* _system)
 void Simulator::init()
 {
     if(roundTimer == nullptr) {
-        roundTimer = new QTimer(this);
+        roundTimer = std::make_shared<QTimer>(this);
         roundTimer->setInterval(100);
-        connect(roundTimer, &QTimer::timeout, this, &Simulator::round);
+        connect(roundTimer.get(), &QTimer::timeout, this, &Simulator::round);
 
-        updateTimer = new QTimer(this);
+        updateTimer = std::make_shared<QTimer>(this);
         updateTimer->setInterval(33);
-        connect(updateTimer, &QTimer::timeout, [&](){emit updateSystem(new System(*system));});
+        connect(updateTimer.get(), &QTimer::timeout, [&](){emit updateSystem(new System(*system));});
         updateTimer->start();
     }
 }

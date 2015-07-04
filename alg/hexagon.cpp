@@ -49,7 +49,7 @@ System* Hexagon::instance(const unsigned int size, const double holeProb)
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(new Hexagon(State::Seed), randDir(), Node(0,0), -1));
+    system->insert(Particle(std::make_shared<Hexagon>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -79,7 +79,7 @@ System* Hexagon::instance(const unsigned int size, const double holeProb)
             }
         }
         // Insert new idle particle
-        system->insert(Particle(new Hexagon(State::Idle), randDir(), head, -1));
+        system->insert(Particle(std::make_shared<Hexagon>(State::Idle), randDir(), head, -1));
     }
     return system;
 }
@@ -156,9 +156,9 @@ Movement Hexagon::execute()
     }
 }
 
-Algorithm* Hexagon::clone()
+std::shared_ptr<Algorithm> Hexagon::clone()
 {
-    return new Hexagon(*this);
+    return std::make_shared<Hexagon>(*this);
 }
 
 bool Hexagon::isDeterministic() const

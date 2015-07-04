@@ -47,7 +47,7 @@ System* HoleElimination::instance(const unsigned int size, const double holeProb
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(new HoleElimination(State::Seed), randDir(), Node(0,0), -1));
+    system->insert(Particle(std::make_shared<HoleElimination>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6; dir++){
@@ -77,7 +77,7 @@ System* HoleElimination::instance(const unsigned int size, const double holeProb
             }
         }
         // Insert new idle particle
-        system->insert(Particle(new HoleElimination(State::Idle), randDir(), head, -1));
+        system->insert(Particle(std::make_shared<HoleElimination>(State::Idle), randDir(), head, -1));
     }
     return system;
 }
@@ -209,9 +209,9 @@ Movement HoleElimination::execute()
     return Movement(MovementType::Idle);
 }
 
-Algorithm* HoleElimination::clone()
+std::shared_ptr<Algorithm> HoleElimination::clone()
 {
-    return new HoleElimination(*this);
+    return std::make_shared<HoleElimination>(*this);
 }
 
 bool HoleElimination::isDeterministic() const

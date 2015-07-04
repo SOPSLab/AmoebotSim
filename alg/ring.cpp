@@ -56,7 +56,7 @@ System* Ring::instance(const unsigned int size, const double holeProb)
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(new Ring(State::Seed), randDir(), Node(0,0), -1));
+    system->insert(Particle(std::make_shared<Ring>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -86,14 +86,14 @@ System* Ring::instance(const unsigned int size, const double holeProb)
             }
         }
         // Insert new idle particle
-        system->insert(Particle(new Ring(State::Idle), randDir(), head, -1));
+        system->insert(Particle(std::make_shared<Ring>(State::Idle), randDir(), head, -1));
     }
     return system;
 }
 
-Algorithm* Ring::clone()
+std::shared_ptr<Algorithm> Ring::clone()
 {
-    return new Ring(*this);
+    return std::make_shared<Ring>(*this);
 }
 
 bool Ring::isDeterministic() const

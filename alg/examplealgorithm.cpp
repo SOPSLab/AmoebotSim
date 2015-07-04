@@ -34,7 +34,7 @@ System* ExampleAlgorithm::instance(const int numParticles)
         int orientation = randDir();
         Node position = Node(x - numParticles / 2, 0);
         int tailDir = -1;
-        system->insert(Particle(new ExampleAlgorithm(phase), orientation, position, tailDir));
+        system->insert(Particle(std::make_shared<ExampleAlgorithm>(phase), orientation, position, tailDir));
     }
     return system; // Note that the ownership goes to the caller!
 }
@@ -94,10 +94,10 @@ Movement ExampleAlgorithm::execute()
     }
 }
 
-Algorithm* ExampleAlgorithm::clone()
+std::shared_ptr<Algorithm> ExampleAlgorithm::clone()
 {
     // Use (correctly implemented) copy constructor to do the cloning.
-    return new ExampleAlgorithm(*this);
+    return std::make_shared<ExampleAlgorithm>(*this);
 }
 
 bool ExampleAlgorithm::isDeterministic() const

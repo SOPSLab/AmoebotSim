@@ -107,7 +107,7 @@ public:
      * to achieve this is to implement a correct copy constructor and use it to implement cloning, as is done in this
      * example algorithm.
      * */
-    virtual Algorithm* clone();
+    virtual std::shared_ptr<Algorithm> clone() override;
 
     /*
      * In principle, algorithms can be probabilistic. Return true if this algorithm is fully deterministic and false

@@ -38,27 +38,23 @@ const float VisItem::triangleHeight = sqrtf(0.75f);
 
 VisItem::VisItem(QQuickItem* parent) :
     GLItem(parent),
-    gridTex(nullptr),
-    particleTex(nullptr),
     zoomGui(zoomInit),
-    system(nullptr),
     blinkValue(-1.0f)
 {
     setAcceptedMouseButtons(Qt::LeftButton);
 
-    renderTimer = new QTimer(this);
+    renderTimer = std::make_shared<QTimer>(this);
     renderTimer->start(15);
 
-    blinkTimer = new QTimer(this);
-    connect(blinkTimer, &QTimer::timeout, [&](){blinkValue += 0.1; if(blinkValue >= 1.0) blinkValue = -1.0;});
+    blinkTimer = std::make_shared<QTimer>(this);
+    connect(blinkTimer.get(), &QTimer::timeout, [&](){blinkValue += 0.1; if(blinkValue >= 1.0) blinkValue = -1.0;});
     blinkTimer->start(15);
 }
 
 void VisItem::updateSystem(System* _system)
 {
     QMutexLocker locker(&systemMutex);
-    delete system;
-    system = _system;
+    system.reset(_system);
 }
 
 void VisItem::focusOnCenterOfMass()
@@ -100,19 +96,19 @@ void VisItem::sync()
 
 void VisItem::initialize()
 {
-    gridTex = new QOpenGLTexture(QImage(":/textures/grid.png").mirrored());
+    gridTex = std::make_shared<QOpenGLTexture>(QImage(":/textures/grid.png").mirrored());
     gridTex->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
     gridTex->setWrapMode(QOpenGLTexture::Repeat);
     gridTex->bind();
     gridTex->generateMipMaps();
 
-    particleTex = new QOpenGLTexture(QImage(":textures/particle.png").mirrored());
+    particleTex = std::make_shared<QOpenGLTexture>(QImage(":textures/particle.png").mirrored());
     particleTex->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
     particleTex->bind();
     particleTex->generateMipMaps();
 
     Q_ASSERT(window() != nullptr);
-    connect(renderTimer, &QTimer::timeout, window(), &QQuickWindow::update);
+    connect(renderTimer.get(), &QTimer::timeout, window(), &QQuickWindow::update);
 }
 
 void VisItem::paint()
@@ -152,11 +148,8 @@ void VisItem::deinitialize()
 {
     renderTimer->disconnect();
 
-    delete particleTex;
-    particleTex = nullptr;
-
-    delete gridTex;
-    gridTex = nullptr;
+    particleTex.reset();
+    gridTex.reset();
 }
 
 void VisItem::setupCamera()

@@ -7,37 +7,37 @@
 
 Application::Application(int argc, char *argv[]) :
     QGuiApplication(argc, argv),
-    engine(new QQmlApplicationEngine()),
-    sim(new Simulator()),
-    simThread(new QThread(this))
+    engine(std::make_shared<QQmlApplicationEngine>()),
+    sim(std::make_shared<Simulator>()),
+    simThread(std::make_shared<QThread>(this))
 {
     qmlRegisterType<VisItem>("VisItem", 1, 0, "VisItem");
     engine->load(QUrl(QStringLiteral("qrc:///qml/main.qml")));
 
-    sim->moveToThread(simThread);
+    sim->moveToThread(simThread.get());
 
     // setup connections between GUI and Simulator
     VisItem* vis = engine->rootObjects().at(0)->findChild<VisItem*>();
-    connect(sim, &Simulator::updateSystem, vis, &VisItem::updateSystem);
-    connect(sim, &Simulator::saveScreenshotSignal, vis, &VisItem::saveScreenshot);
-    connect(engine->rootObjects().at(0), SIGNAL(start()), sim, SLOT(start()));
-    connect(engine->rootObjects().at(0), SIGNAL(stop() ), sim, SLOT(stop() ));
-    connect(engine->rootObjects().at(0), SIGNAL(round()), sim, SLOT(round()));
-    connect(vis, &VisItem::roundForParticleAt, sim, &Simulator::roundForParticleAt);
-    connect(engine->rootObjects().at(0), SIGNAL(executeCommand(QString)), sim, SLOT(executeCommand(QString)));
-    connect(sim,
+    connect(sim.get(), &Simulator::updateSystem, vis, &VisItem::updateSystem);
+    connect(sim.get(), &Simulator::saveScreenshotSignal, vis, &VisItem::saveScreenshot);
+    connect(engine->rootObjects().at(0), SIGNAL(start()), sim.get(), SLOT(start()));
+    connect(engine->rootObjects().at(0), SIGNAL(stop() ), sim.get(), SLOT(stop() ));
+    connect(engine->rootObjects().at(0), SIGNAL(round()), sim.get(), SLOT(round()));
+    connect(vis, &VisItem::roundForParticleAt, sim.get(), &Simulator::roundForParticleAt);
+    connect(engine->rootObjects().at(0), SIGNAL(executeCommand(QString)), sim.get(), SLOT(executeCommand(QString)));
+    connect(sim.get(),
             &Simulator::log,
             [&](const QString msg, const bool isError){
                 QMetaObject::invokeMethod(engine->rootObjects().at(0), "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
             }
     );
-    connect(sim,
+    connect(sim.get(),
             &Simulator::started,
             [&](){
                 QMetaObject::invokeMethod(engine->rootObjects().at(0), "setLabelStop");
             }
     );
-    connect(sim,
+    connect(sim.get(),
             &Simulator::stopped,
             [&](){
                 QMetaObject::invokeMethod(engine->rootObjects().at(0), "setLabelStart");
@@ -56,8 +56,8 @@ Application::Application(int argc, char *argv[]) :
             }
     );
 
-    connect(simThread, &QThread::started, sim, &Simulator::init);
-    connect(simThread, &QThread::finished, sim, &Simulator::finished);
+    connect(simThread.get(), &QThread::started, sim.get(), &Simulator::init);
+    connect(simThread.get(), &QThread::finished, sim.get(), &Simulator::finished);
 
     simThread->start();
 }
@@ -67,6 +67,4 @@ Application::~Application()
     sim->abortScript();
     simThread->quit();
     simThread->wait();
-    delete sim;
-    delete engine;
 }

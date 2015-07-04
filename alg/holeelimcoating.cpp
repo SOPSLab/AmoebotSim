@@ -45,7 +45,7 @@ System* HoleElimCoating::instance(const unsigned int size, const double holeProb
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(new HoleElimCoating(State::Seed), randDir(), Node(0,0), -1));
+    system->insert(Particle(std::make_shared<HoleElimCoating>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6; dir++){
@@ -75,7 +75,7 @@ System* HoleElimCoating::instance(const unsigned int size, const double holeProb
             }
         }
         // Insert new idle particle
-        system->insert(Particle(new HoleElimCoating(State::Idle), randDir(), head, -1));
+        system->insert(Particle(std::make_shared<HoleElimCoating>(State::Idle), randDir(), head, -1));
     }
     return system;
 }
@@ -172,9 +172,9 @@ Movement HoleElimCoating::execute()
     return Movement(MovementType::Idle);
 }
 
-Algorithm* HoleElimCoating::clone()
+std::shared_ptr<Algorithm> HoleElimCoating::clone()
 {
-    return new HoleElimCoating(*this);
+    return std::make_shared<HoleElimCoating>(*this);
 }
 
 bool HoleElimCoating::isDeterministic() const

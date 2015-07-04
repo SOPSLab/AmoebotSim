@@ -1,6 +1,8 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
+#include <memory>
+
 #include <QScriptEngine>
 
 #include "system.h"
@@ -53,8 +55,8 @@ public slots:
 
 protected:
     QScriptEngine engine;
-    QTimer* roundTimer;
-    QTimer* updateTimer;
+    std::shared_ptr<QTimer> roundTimer;
+    std::shared_ptr<QTimer> updateTimer;
 
     System* system;
 };
