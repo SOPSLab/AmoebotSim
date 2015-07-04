@@ -192,7 +192,7 @@ void VisItem::drawGrid(const Quad& view)
 
     // Draw screen-filling quad with gridTex according to above texture coordinates.
     gridTex->bind();
-    glColor4f(0.8f, 0.8f, 0.8f, 1.0f);
+    glfn->glColor4f(0.8f, 0.8f, 0.8f, 1.0f);
     glfn->glBegin(GL_QUADS);
     glfn->glTexCoord2f(gridTexCoords.left, gridTexCoords.bottom);
     glfn->glVertex2f(view.left, view.bottom);
@@ -225,7 +225,7 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
         // draw mark around head
         if(p.headMarkColor() != -1) {
             QRgb color = p.headMarkColor();
-            glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
+            glfn->glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
             const QPointF& texOffset = particleTexOffsets[p.headMarkDir() + 8];
             glfn->glTexCoord2f(texOffset.x(), texOffset.y());
             glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
@@ -241,7 +241,7 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
         if(p.tailDir != -1 && p.tailMarkColor() > -1) {
             auto pos = nodeToWorldCoord(p.tail());
             QRgb color = p.tailMarkColor();
-            glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
+            glfn->glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
             const QPointF& texOffset = particleTexOffsets[p.tailMarkDir() + 8];
             glfn->glTexCoord2f(texOffset.x(), texOffset.y());
             glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
@@ -254,7 +254,7 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
         }
 
         // draw particle
-        glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+        glfn->glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
         const QPointF& texOffset = particleTexOffsets[p.tailDir + 1];
         glfn->glTexCoord2f(texOffset.x(), texOffset.y());
         glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
@@ -270,7 +270,7 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
 void VisItem::drawDisconnectionNode()
 {
     auto pos = nodeToWorldCoord(system->getDisconnectionNode());
-    glColor4i(255 << 23, 0, 0, (0.6f * fabsf(blinkValue) + 0.4f) * (180 << 23));
+    glfn->glColor4i(255 << 23, 0, 0, (0.6f * fabsf(blinkValue) + 0.4f) * (180 << 23));
     const QPointF& texOffset = particleTexOffsets[14];
     glfn->glBegin(GL_QUADS);
     glfn->glTexCoord2f(texOffset.x(), texOffset.y());

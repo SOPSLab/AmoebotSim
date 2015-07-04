@@ -4,7 +4,7 @@ The following instructions should get you started working with AmoebotSim; pleas
 
 ###Setup###
 
-1. Download and install the latest version of Qt [1], __version 5.3 or newer is required__. In my experience, the online installer works best. On windows, please make sure to use the MinGW platform (there are checkboxes under _Qt 5.x.x_ and under _Tools_) and not MSVC. In general, the additional platforms (Android, iOS, ...) are not required and can be left out to decrease the size of the installation.
+1. Download and install the latest version of Qt [1], __version 5.3 or newer is required__. In my experience, the online installer works best. On windows, please make sure to use the MinGW platform (there are checkboxes under _Qt 5.x.x_ and under _Tools_) and not MSVC. In general, the additional platforms (Android, iOS, ...) are not required and can be left out to decrease the size of the installation. When installing Qt 5.5 make sure you also install the qt script module (there's a checkbox under Qt 5.5). 
 
 2. Clone this repository using Git. The address of the repository depends on your BitBucket username and can be found in the top right corner of the project site on BitBucket [2]. If you want to use a GUI-Application for Git and you are on Windows or OS X , I can recommend Source Tree [3].
 
