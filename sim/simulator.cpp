@@ -40,6 +40,12 @@ void Simulator::init()
     }
 }
 
+//Is called when thread in which simulator is living is about to finish -> Clean up the simulator.
+void Simulator::finished(){
+    roundTimer->stop();
+    updateTimer->stop();
+}
+
 void Simulator::round()
 {
     system->round();

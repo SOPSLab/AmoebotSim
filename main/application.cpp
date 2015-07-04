@@ -56,7 +56,9 @@ Application::Application(int argc, char *argv[]) :
             }
     );
 
-    connect(simThread, SIGNAL(started()), sim, SLOT(init()));
+    connect(simThread, &QThread::started, sim, &Simulator::init);
+    connect(simThread, &QThread::finished, sim, &Simulator::finished);
+
     simThread->start();
 }
 
