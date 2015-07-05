@@ -21,6 +21,7 @@ public:
 
 signals:
     void updateSystem(System* _system);
+    void roundDurationChanged(int ms);
 
     void started();
     void stopped();

@@ -2,7 +2,7 @@
 #define APPLICATION_H
 
 #include <memory>
-
+#include <qdebug.h>
 #include <QGuiApplication>
 
 #include "ui/commandhistorymanager.h"

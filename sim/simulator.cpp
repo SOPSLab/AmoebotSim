@@ -152,6 +152,7 @@ int Simulator::getNumMovements() const
 void Simulator::setRoundDuration(int ms)
 {
     roundTimer->setInterval(ms);
+    emit roundDurationChanged(ms);
 }
 
 void Simulator::saveScreenshotSlot(const QString filePath)

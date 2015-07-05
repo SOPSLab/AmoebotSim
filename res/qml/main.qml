@@ -51,6 +51,51 @@ ApplicationWindow {
         anchors.fill: parent
     }
 
+
+
+    Slider {
+
+        id: roundDurationSlider
+        objectName: "roundDurationSlider"
+        maximumValue: 100.0
+        minimumValue: 1.0
+        stepSize: 1.0
+        updateValueWhileDragging: true
+        value: 100.0
+
+        orientation: Qt.Vertical
+        implicitHeight: 300
+        anchors.bottom: buttonRow.top
+        anchors.right: vis.right
+        anchors.rightMargin: 25
+        anchors.bottomMargin: 10
+
+        signal roundDurationChanged(int value)
+        property bool reactOnSet: false;
+
+        onValueChanged: {
+            roundDurationChanged(value)
+            roundDurationText.text = value + " ms"
+        }
+
+        onPressedChanged: {
+            reactOnSet = !reactOnSet
+        }
+
+        function setRoundDuration(val){
+            if(!reactOnSet){
+                value = val
+            }
+        }
+
+        Text{
+            id: roundDurationText
+            text: ""
+            anchors.bottom: roundDurationSlider.top
+            anchors.bottomMargin: 10
+        }
+    }
+
     Row {
         id: buttonRow
         spacing: 10
@@ -123,6 +168,7 @@ ApplicationWindow {
             } else if(event.key === Qt.Key_B && (event.modifiers & Qt.ControlModifier)) {
                 startStopButton.visible = !startStopButton.visible
                 roundButton.visible = !roundButton.visible
+                roundDurationSlider.visible = !roundDurationSlider.visible
                 event.accepted = true
             } else if(event.key === Qt.Key_E && (event.modifiers & Qt.ControlModifier)) {
                 if(startStopButton.text === "start") {
