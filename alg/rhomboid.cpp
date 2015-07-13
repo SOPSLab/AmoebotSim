@@ -48,9 +48,9 @@ Rhomboid::~Rhomboid()
 {
 }
 
-System* Rhomboid::instance(const unsigned int size, const double holeProb, const int sideLength)
+std::shared_ptr<System> Rhomboid::instance(const unsigned int size, const double holeProb, const int sideLength)
 {
-    System* system = new System();
+    std::shared_ptr<System> system = std::make_shared<System>();
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle

@@ -11,16 +11,14 @@ Simulator::Simulator()
 
 Simulator::~Simulator()
 {
-    delete system;
 }
 
-void Simulator::setSystem(System* _system)
+void Simulator::setSystem(std::shared_ptr<System> _system)
 {
     if(roundTimer != nullptr) {
         roundTimer->stop();
         emit stopped();
     }
-    delete system;
     system = _system;
 }
 
@@ -33,7 +31,7 @@ void Simulator::init()
 
         updateTimer = std::make_shared<QTimer>(this);
         updateTimer->setInterval(33);
-        connect(updateTimer.get(), &QTimer::timeout, [&](){emit updateSystem(new System(*system));});
+        connect(updateTimer.get(), &QTimer::timeout, [&](){emit updateSystem(std::make_shared<System>(*system));});
         updateTimer->start();
     }
 }
@@ -64,7 +62,7 @@ void Simulator::round()
 
 #ifdef QT_DEBUG
     // increases the chance that when the debugger stops the visualization shows the actual configuration of the system
-    emit updateSystem(new System(*system));
+    emit updateSystem(std::make_shared<System>(*system));
 #endif
 }
 
@@ -96,7 +94,7 @@ void Simulator::roundForParticleAt(const int x, const int y)
 
     #ifdef QT_DEBUG
         // increases the chance that when the debugger stops the visualization shows the actual configuration of the system
-        emit updateSystem(new System(*system));
+        emit updateSystem(std::make_shared<System>(*system));
     #endif
     }
 }
@@ -158,6 +156,6 @@ void Simulator::setRoundDuration(int ms)
 void Simulator::saveScreenshotSlot(const QString filePath)
 {
     // first make sure the visualization has the most recent system
-    emit updateSystem(new System(*system));
+    emit updateSystem(std::make_shared<System>(*system));
     emit saveScreenshotSignal(filePath);
 }

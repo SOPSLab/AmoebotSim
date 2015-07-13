@@ -36,7 +36,7 @@ public:
     Hexagon(const Hexagon& other);
     virtual ~Hexagon();
 
-    static System* instance(const unsigned int size, const double holeProb);
+    static std::shared_ptr<System> instance(const unsigned int size, const double holeProb);
 
     virtual Movement execute();
     virtual std::shared_ptr<Algorithm> clone() override;

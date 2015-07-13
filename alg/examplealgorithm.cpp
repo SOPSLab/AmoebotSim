@@ -25,10 +25,10 @@ ExampleAlgorithm::~ExampleAlgorithm()
 {
 }
 
-System* ExampleAlgorithm::instance(const int numParticles)
+std::shared_ptr<System> ExampleAlgorithm::instance(const int numParticles)
 {
     // Create a line of particles where the right-most one is a leader.
-    System* system = new System();
+    std::shared_ptr<System> system = std::make_shared<System>();
     for(int x = 0; x < numParticles; x++) {
         Phase phase = x == numParticles - 1 ? Phase::Leader : Phase::Idle;
         int orientation = randDir();

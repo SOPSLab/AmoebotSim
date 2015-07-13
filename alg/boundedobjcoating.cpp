@@ -52,9 +52,9 @@ BoundedObjCoating::~BoundedObjCoating()
 {
 }
 
-System* BoundedObjCoating::instance(const int numStaticParticles, const int numParticles, const float holeProb)
+std::shared_ptr<System> BoundedObjCoating::instance(const int numStaticParticles, const int numParticles, const float holeProb)
 {
-    System* system = new System();
+    std::shared_ptr<System> system = std::make_shared<System>();
 
     std::deque<Node> orderedSurface;
     std::set<Node> occupied;

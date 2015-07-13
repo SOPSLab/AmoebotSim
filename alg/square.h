@@ -44,7 +44,7 @@ namespace Square
 		Square(const Square& other);
 		virtual ~Square();
 
-		static System* instance(const unsigned int numParticles, const double holeProb);
+		static std::shared_ptr<System> instance(const unsigned int numParticles, const double holeProb);
 
 		virtual Movement execute();
 		virtual std::shared_ptr<Algorithm> clone() override;

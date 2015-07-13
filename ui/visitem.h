@@ -36,7 +36,7 @@ signals:
     void roundForParticleAt(const int x, const int y);
 
 public slots:
-    void updateSystem(System* _system);
+    void updateSystem(std::shared_ptr<System> _system);
     void focusOnCenterOfMass();
     void saveScreenshot(QString filePath = "");
 

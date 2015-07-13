@@ -97,7 +97,7 @@ public:
      * does not check it and will most probably fail in very unpleasent and undebuggable ways if the requirement is not
      * satisfied.
      * */
-    static System* instance(const int numParticles);
+    static std::shared_ptr<System> instance(const int numParticles);
 
     // This method essentially determines the behavior of a particle. See description above.
     virtual Movement execute();

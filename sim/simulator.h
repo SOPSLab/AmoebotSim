@@ -17,10 +17,10 @@ public:
     explicit Simulator();
     virtual ~Simulator();
 
-    void setSystem(System* _system);
+    void setSystem(std::shared_ptr<System> _system);
 
 signals:
-    void updateSystem(System* _system);
+    void updateSystem(std::shared_ptr<System> _system);
     void roundDurationChanged(int ms);
 
     void started();
@@ -59,7 +59,7 @@ protected:
     std::shared_ptr<QTimer> roundTimer;
     std::shared_ptr<QTimer> updateTimer;
 
-    System* system;
+    std::shared_ptr<System> system;
 };
 
 #endif // SIMULATOR_H

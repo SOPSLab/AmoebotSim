@@ -38,9 +38,9 @@ InfObjCoating::~InfObjCoating()
 {
 }
 
-System* InfObjCoating::instance(const int numParticles, const float holeProb)
+std::shared_ptr<System> InfObjCoating::instance(const int numParticles, const float holeProb)
 {
-    System* system = new System();
+    std::shared_ptr<System> system = std::make_shared<System>();
 
     std::deque<Node> orderedSurface;
     std::set<Node> occupied;

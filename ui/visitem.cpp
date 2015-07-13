@@ -51,10 +51,10 @@ VisItem::VisItem(QQuickItem* parent) :
     blinkTimer->start(15);
 }
 
-void VisItem::updateSystem(System* _system)
+void VisItem::updateSystem(std::shared_ptr<System> _system)
 {
     QMutexLocker locker(&systemMutex);
-    system.reset(_system);
+    system = _system;
 }
 
 void VisItem::focusOnCenterOfMass()

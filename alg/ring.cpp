@@ -50,9 +50,9 @@ Ring::~Ring()
 {
 }
 
-System* Ring::instance(const unsigned int size, const double holeProb)
+std::shared_ptr<System> Ring::instance(const unsigned int size, const double holeProb)
 {
-    System* system = new System();
+    std::shared_ptr<System> system = std::make_shared<System>();
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
