@@ -1,5 +1,6 @@
 import QtQuick 2.2
 import QtQuick.Controls 1.2
+import QtQuick.Layouts 1.1
 import VisItem 1.0
 
 ApplicationWindow {
@@ -46,15 +47,71 @@ ApplicationWindow {
         commandField.text = cmd
     }
 
+    function setNumMovements(num)
+    {
+        numMovementsText.text = num
+    }
+
+    function setRounds(rounds)
+    {
+        roundsText.text = rounds
+    }
+
     VisItem {
         id: vis
         anchors.fill: parent
     }
 
+    RowLayout{
+        id: roundsRow
+        anchors.right: vis.right
+        anchors.top: vis.top
+        anchors.rightMargin: 30
+        anchors.topMargin: 10
+
+        Rectangle{
+            Layout.preferredWidth: 60
+            Text{
+                anchors.right: parent.right
+                text: "Rounds: "
+            }
+        }
+        Rectangle{
+            Layout.preferredWidth: 20
+            Text{
+                id: roundsText
+                anchors.left: parent.left
+                text: "0"
+            }
+        }
+    }
+
+    RowLayout{
+        id: numMovementsRow
+        anchors.top: roundsRow.bottom
+        anchors.right: vis.right
+        anchors.rightMargin: 30
+        anchors.topMargin: 15
+
+        Rectangle{
+            Layout.preferredWidth: 60
+            Text{
+                anchors.right: parent.right
+                text: "Movements: "
+            }
+        }
+        Rectangle{
+            Layout.preferredWidth: 20
+            Text{
+                id: numMovementsText
+                anchors.left: parent.left
+                text: "0"
+            }
+        }
+    }
 
 
     Slider {
-
         id: roundDurationSlider
         objectName: "roundDurationSlider"
         maximumValue: 100.0
@@ -158,6 +215,8 @@ ApplicationWindow {
         }
 
         focus: true
+        property int ui_state: 0
+
         Keys.onPressed: {
             if(event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
                 resultField.visible = false
@@ -166,9 +225,24 @@ ApplicationWindow {
                 commandField.forceActiveFocus()
                 event.accepted = true
             } else if(event.key === Qt.Key_B && (event.modifiers & Qt.ControlModifier)) {
-                startStopButton.visible = !startStopButton.visible
-                roundButton.visible = !roundButton.visible
-                roundDurationSlider.visible = !roundDurationSlider.visible
+                ui_state++
+                if (ui_state >= 3)
+                    ui_state = 0
+
+                if (ui_state == 0){
+                    startStopButton.visible = true
+                    roundButton.visible = true
+                    roundDurationSlider.visible = true
+                    roundsRow.visible = true
+                    numMovementsRow.visible = true
+                }else if (ui_state == 1){
+                    roundDurationSlider.visible = false
+                    roundsRow.visible = false
+                    numMovementsRow.visible = false
+                }else if (ui_state == 2){
+                    startStopButton.visible = false
+                    roundButton.visible = false
+                }
                 event.accepted = true
             } else if(event.key === Qt.Key_E && (event.modifiers & Qt.ControlModifier)) {
                 if(startStopButton.text === "start") {

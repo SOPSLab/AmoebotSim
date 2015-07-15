@@ -22,6 +22,8 @@ public:
 signals:
     void updateSystem(std::shared_ptr<System> _system);
     void roundDurationChanged(int ms);
+    void numMovementsChanged(int num);
+    void roundsChanged(int round);
 
     void started();
     void stopped();

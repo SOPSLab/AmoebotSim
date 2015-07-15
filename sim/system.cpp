@@ -9,7 +9,8 @@
 
 System::System()
     : systemState(SystemState::Valid),
-      numMovements(0)
+      numMovements(0),
+      rounds(0)
 {
     uint32_t seed;
     std::random_device device;
@@ -80,6 +81,8 @@ System::SystemState System::round()
         systemState = SystemState::Terminated;
         return systemState;
     }
+
+    rounds++;
 
     std::deque<Particle*> shuffledParticles;
     for(auto it = particles.begin(); it != particles.end(); ++it) {
@@ -177,6 +180,11 @@ Node System::getDisconnectionNode() const
 int System::getNumMovements() const
 {
     return numMovements;
+}
+
+int System::getRounds() const
+{
+    return rounds;
 }
 
 std::array<const Flag*, 10> System::assembleFlags(Particle& p)

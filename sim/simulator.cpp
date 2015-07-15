@@ -20,6 +20,8 @@ void Simulator::setSystem(std::shared_ptr<System> _system)
         emit stopped();
     }
     system = _system;
+    emit numMovementsChanged(system->getNumMovements());
+    emit roundsChanged(system->getRounds());
 }
 
 void Simulator::init()
@@ -59,6 +61,9 @@ void Simulator::round()
         roundTimer->stop();
         emit stopped();
     }
+
+    emit numMovementsChanged(system->getNumMovements());
+    emit roundsChanged(system->getRounds());
 
 #ifdef QT_DEBUG
     // increases the chance that when the debugger stops the visualization shows the actual configuration of the system

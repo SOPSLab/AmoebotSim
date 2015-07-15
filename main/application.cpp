@@ -36,11 +36,21 @@ Application::Application(int argc, char *argv[]) :
 
     connect(slider, SIGNAL(roundDurationChanged(int)), sim.get(), SLOT(setRoundDuration(int)));
     connect(sim.get(), &Simulator::roundDurationChanged,
-            [slider](const int& x){
-              QMetaObject::invokeMethod(slider, "setRoundDuration", Q_ARG(QVariant, QVariant(x)));
+            [slider](const int& ms){
+              QMetaObject::invokeMethod(slider, "setRoundDuration", Q_ARG(QVariant, QVariant(ms)));
             }
     );
 
+    connect(sim.get(),  &Simulator::roundsChanged,
+            [qmlRoot](const int& rounds){
+                QMetaObject::invokeMethod(qmlRoot, "setRounds", Q_ARG(QVariant, rounds));
+            }
+    );
+    connect(sim.get(),  &Simulator::numMovementsChanged,
+            [qmlRoot](const int& num){
+                QMetaObject::invokeMethod(qmlRoot, "setNumMovements", Q_ARG(QVariant, num));
+            }
+    );
     connect(sim.get(),  &Simulator::log,
             [qmlRoot](const QString msg, const bool isError){
                 QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
