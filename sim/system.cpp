@@ -82,8 +82,6 @@ System::SystemState System::round()
         return systemState;
     }
 
-    rounds++;
-
     std::deque<Particle*> shuffledParticles;
     for(auto it = particles.begin(); it != particles.end(); ++it) {
         shuffledParticles.push_back(&(*it));
@@ -91,7 +89,6 @@ System::SystemState System::round()
     std::shuffle(shuffledParticles.begin(), shuffledParticles.end(), rng);
 
     bool hasBlockedParticles = false;
-
     while(shuffledParticles.size() > 0) {
         Particle* p = shuffledParticles.front();
         auto inFlags = assembleFlags(*p);
@@ -105,13 +102,16 @@ System::SystemState System::round()
             continue;
         } else if(m.type == MovementType::Idle) {
             p->apply();
+            rounds++;
             return systemState;
         } else if(m.type == MovementType::Expand) {
             if(handleExpansion(*p, m.label)) {
+                rounds++;
                 return systemState;
             }
         } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
             if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
+                rounds++;
                 return systemState;
             }
         }
