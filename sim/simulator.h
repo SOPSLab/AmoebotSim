@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include <QScriptEngine>
+#include <QJSEngine>
 
 #include "system.h"
 
@@ -57,7 +57,7 @@ public slots:
     void saveScreenshotSlot(const QString filePath);
 
 protected:
-    QScriptEngine engine;
+    QJSEngine engine;
     std::shared_ptr<QTimer> roundTimer;
     std::shared_ptr<QTimer> updateTimer;
 

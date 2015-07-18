@@ -1,4 +1,3 @@
-#include <QScriptValue>
 #include <QTimer>
 
 #include "script/scriptinterface.h"
@@ -6,7 +5,14 @@
 
 Simulator::Simulator()
 {
-    engine.setGlobalObject(engine.newQObject(new ScriptInterface(*this), QScriptEngine::ScriptOwnership));
+  //It's not possible to set ScriptInterface's slots as global functions in the JS-Engine.
+  //Therefore create a ScriptInterface object and bind it to the global variable 'obj'.
+  auto obj = engine.newQObject(new ScriptInterface(*this));
+  engine.globalObject().setProperty("obj", obj);
+
+  //Then bind obj's methods (which are ScriptInterface's slots) to the global scope in 'this',
+  //so that all methods are globally accessible.
+  engine.evaluate("Object.keys(obj).forEach(function(key){ this[key] = obj[key]})");
 }
 
 Simulator::~Simulator()
@@ -106,7 +112,7 @@ void Simulator::roundForParticleAt(const int x, const int y)
 
 void Simulator::executeCommand(const QString cmd)
 {
-    QScriptValue result = engine.evaluate(cmd);
+    auto result = engine.evaluate(cmd);
     if(!result.isUndefined()) {
         emit log(result.toString(), result.isError());
     }
@@ -119,7 +125,7 @@ void Simulator::runScript(const QString script)
 
 void Simulator::abortScript()
 {
-    engine.abortEvaluation();
+    //engine.abortEvaluation();
 }
 
 bool Simulator::getSystemValid()
