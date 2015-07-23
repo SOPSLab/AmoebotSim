@@ -57,9 +57,8 @@ SOURCES += \
     alg/square.cpp \
     alg/boundedobjcoating.cpp \
     alg/compaction.cpp \
-    alg/holeelimination.cpp \
-    alg/holeelimcoating.cpp \
-    alg/holeelimhybrid.cpp
+    alg/holeelimstandard.cpp \
+    alg/holeelimcompaction.cpp
 
 RESOURCES += \
     res/qml.qrc \

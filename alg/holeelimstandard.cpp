@@ -77,12 +77,12 @@ System* HoleElimCoating::instance(const unsigned int size, const double holeProb
         // Insert new idle particle
         system->insert(Particle(new HoleElimCoating(State::Idle), randDir(), head, -1));
     }
+
     return system;
 }
 
 Movement HoleElimCoating::execute()
 {
-    // set docking indicators
     if(state == State::Seed || state == State::Finished) {
         return Movement(MovementType::Empty);
     }
@@ -150,18 +150,18 @@ Movement HoleElimCoating::execute()
                 }
             }
         } else if(state == State::Follower) {
-            if(inFlags[followDir]->isExpanded() && !inFlags[followDir]->fromHead) {
-                int expandDir = followDir;
-                followDir = (followDir + inFlags[followDir]->tailDir - inFlags[followDir]->dir + 6) % 6;
-                headMarkDir = followDir;
-                setParentLabel(dirToHeadLabelAfterExpansion(followDir, expandDir));
-                return Movement(MovementType::Expand, expandDir);
-            } else if(hasNeighborInState(State::Finished)) {
+            if(hasNeighborInState(State::Finished)) {
                 setState(State::Walking);
                 followDir = neighborInStateDir(State::Finished);
                 headMarkDir = followDir;
                 setParentLabel(followDir);
                 return Movement(MovementType::Idle);
+            } else if(inFlags[followDir]->isExpanded() && !inFlags[followDir]->fromHead) {
+                int expandDir = followDir;
+                followDir = (followDir + inFlags[followDir]->tailDir - inFlags[followDir]->dir + 6) % 6;
+                headMarkDir = followDir;
+                setParentLabel(dirToHeadLabelAfterExpansion(followDir, expandDir));
+                return Movement(MovementType::Expand, expandDir);
             }
         }
     } else if(isExpanded() && !hasNeighborInState(State::Idle)) { // do not disconnect the system by contracting away from an unoriented particle

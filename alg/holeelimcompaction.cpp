@@ -79,6 +79,7 @@ System* HoleElimHybrid::instance(const unsigned int size, const double holeProb)
         // Insert new idle particle
         system->insert(Particle(new HoleElimHybrid(State::Idle), randDir(), head, -1));
     }
+
     return system;
 }
 
@@ -204,7 +205,7 @@ Movement HoleElimHybrid::execute()
                 setParentLabel(followDir);
                 return Movement(MovementType::Contract, tailContractionLabel());
             }
-        } else if(state == State::Walking && !hasNeighborInState(State::Leader)) {
+        } else if(state == State::Walking && !leaderAsChild()) {
             setParentLabel(followDir);
             return tailHasChild() ? Movement(MovementType::HandoverContract, tailContractionLabel()) : Movement(MovementType::Contract, tailContractionLabel());
         }
