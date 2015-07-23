@@ -34,10 +34,10 @@ public:
     InfObjCoating(const InfObjCoating& other);
     virtual ~InfObjCoating();
 
-    static System* instance(const int numParticles, const float holeProb);
+    static std::shared_ptr<System> instance(const int numParticles, const float holeProb);
 
     virtual Movement execute();
-    virtual Algorithm* clone();
+    virtual std::shared_ptr<Algorithm> clone() override;
     virtual bool isDeterministic() const;
 
 protected:

@@ -41,13 +41,13 @@ HoleElimHybrid::~HoleElimHybrid()
 {
 }
 
-System* HoleElimHybrid::instance(const unsigned int size, const double holeProb)
+std::shared_ptr<System> HoleElimHybrid::instance(const unsigned int size, const double holeProb)
 {
-    System* system = new System();
+    std::shared_ptr<System> system = std::make_shared<System>();
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(new HoleElimHybrid(State::Seed), randDir(), Node(0,0), -1));
+    system->insert(Particle(std::make_shared<HoleElimHybrid>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6; dir++){
@@ -77,7 +77,7 @@ System* HoleElimHybrid::instance(const unsigned int size, const double holeProb)
             }
         }
         // Insert new idle particle
-        system->insert(Particle(new HoleElimHybrid(State::Idle), randDir(), head, -1));
+        system->insert(Particle(std::make_shared<HoleElimHybrid>(State::Idle), randDir(), head, -1));
     }
 
     return system;
@@ -214,9 +214,9 @@ Movement HoleElimHybrid::execute()
     return Movement(MovementType::Idle);
 }
 
-Algorithm* HoleElimHybrid::clone()
+std::shared_ptr<Algorithm> HoleElimHybrid::clone()
 {
-    return new HoleElimHybrid(*this);
+    return std::make_shared<HoleElimHybrid>(*this);
 }
 
 bool HoleElimHybrid::isDeterministic() const

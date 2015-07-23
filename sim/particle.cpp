@@ -23,12 +23,11 @@ const std::array<std::array<int, 10>, 6> Particle::labelDir =
     {{0, 1, 0, 1, 2, 3, 4, 3, 4, 5}}
 }};
 
-Particle::Particle(Algorithm* _algorithm, const int _orientation, const Node _head, const int _tailDir)
+Particle::Particle(std::shared_ptr<Algorithm> _algorithm, const int _orientation, const Node _head, const int _tailDir)
     : orientation(_orientation),
       head(_head),
       tailDir(_tailDir),
-      algorithm(_algorithm),
-      newAlgorithm(nullptr)
+      algorithm(_algorithm)
 {
     Q_ASSERT(_algorithm != nullptr);
 }
@@ -37,20 +36,16 @@ Particle::Particle(const Particle& other)
     : orientation(other.orientation),
       head(other.head),
       tailDir(other.tailDir),
-      algorithm(other.algorithm->clone()),
-      newAlgorithm(nullptr)
+      algorithm(other.algorithm->clone())
 {
 }
 
 Particle::~Particle()
 {
-    delete algorithm;
-    delete newAlgorithm;
 }
 
 Particle& Particle::operator=(const Particle& other)
 {
-    delete algorithm;
     orientation = other.orientation;
     head = other.head;
     tailDir = other.tailDir;
@@ -68,16 +63,15 @@ Movement Particle::executeAlgorithm(std::array<const Flag*, 10>& inFlag)
 void Particle::apply()
 {
     Q_ASSERT(newAlgorithm != nullptr);
-    delete algorithm;
     algorithm = newAlgorithm;
-    newAlgorithm = nullptr;
+    newAlgorithm.reset();
 }
 
 void Particle::discard()
 {
     Q_ASSERT(newAlgorithm != nullptr);
-    delete newAlgorithm;
-    newAlgorithm = nullptr;
+    newAlgorithm.reset();
+    //newAlgorithm = nullptr;
 }
 
 const Flag* Particle::getFlagForNodeInDir(const Node node, const int dir)

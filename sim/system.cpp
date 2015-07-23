@@ -9,7 +9,8 @@
 
 System::System()
     : systemState(SystemState::Valid),
-      numMovements(0)
+      numMovements(0),
+      rounds(0)
 {
     uint32_t seed;
     std::random_device device;
@@ -88,7 +89,6 @@ System::SystemState System::round()
     std::shuffle(shuffledParticles.begin(), shuffledParticles.end(), rng);
 
     bool hasBlockedParticles = false;
-
     while(shuffledParticles.size() > 0) {
         Particle* p = shuffledParticles.front();
         auto inFlags = assembleFlags(*p);
@@ -102,13 +102,16 @@ System::SystemState System::round()
             continue;
         } else if(m.type == MovementType::Idle) {
             p->apply();
+            rounds++;
             return systemState;
         } else if(m.type == MovementType::Expand) {
             if(handleExpansion(*p, m.label)) {
+                rounds++;
                 return systemState;
             }
         } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
             if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
+                rounds++;
                 return systemState;
             }
         }
@@ -177,6 +180,11 @@ Node System::getDisconnectionNode() const
 int System::getNumMovements() const
 {
     return numMovements;
+}
+
+int System::getRounds() const
+{
+    return rounds;
 }
 
 std::array<const Flag*, 10> System::assembleFlags(Particle& p)

@@ -36,10 +36,10 @@ public:
     Rhomboid(const Rhomboid& other);
     virtual ~Rhomboid();
 
-    static System* instance(const unsigned int size, const double holeProb, const int sideLength);
+    static std::shared_ptr<System> instance(const unsigned int size, const double holeProb, const int sideLength);
 
     virtual Movement execute();
-    virtual Algorithm* clone();
+    virtual std::shared_ptr<Algorithm> clone() override;
     virtual bool isDeterministic() const;
 
 protected:

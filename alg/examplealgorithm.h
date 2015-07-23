@@ -97,7 +97,7 @@ public:
      * does not check it and will most probably fail in very unpleasent and undebuggable ways if the requirement is not
      * satisfied.
      * */
-    static System* instance(const int numParticles);
+    static std::shared_ptr<System> instance(const int numParticles);
 
     // This method essentially determines the behavior of a particle. See description above.
     virtual Movement execute();
@@ -107,7 +107,7 @@ public:
      * to achieve this is to implement a correct copy constructor and use it to implement cloning, as is done in this
      * example algorithm.
      * */
-    virtual Algorithm* clone();
+    virtual std::shared_ptr<Algorithm> clone() override;
 
     /*
      * In principle, algorithms can be probabilistic. Return true if this algorithm is fully deterministic and false

@@ -4,59 +4,85 @@
 #include "main/application.h"
 #include "sim/simulator.h"
 #include "ui/visitem.h"
+#include <iostream>
+
+Q_DECLARE_METATYPE(std::shared_ptr<System>)
 
 Application::Application(int argc, char *argv[]) :
     QGuiApplication(argc, argv),
-    engine(new QQmlApplicationEngine()),
-    sim(new Simulator()),
-    simThread(new QThread(this))
+    engine(std::make_shared<QQmlApplicationEngine>()),
+    sim(std::make_shared<Simulator>()),
+    simThread(std::make_shared<QThread>(this))
 {
+
+    //register shared_ptr<System> to allow using it as a parameter in signals/slots
+    qRegisterMetaType<std::shared_ptr<System>>();
+
     qmlRegisterType<VisItem>("VisItem", 1, 0, "VisItem");
     engine->load(QUrl(QStringLiteral("qrc:///qml/main.qml")));
-
-    sim->moveToThread(simThread);
+    auto qmlRoot = engine->rootObjects().first();
 
     // setup connections between GUI and Simulator
-    VisItem* vis = engine->rootObjects().at(0)->findChild<VisItem*>();
-    connect(sim, &Simulator::updateSystem, vis, &VisItem::updateSystem);
-    connect(sim, &Simulator::saveScreenshotSignal, vis, &VisItem::saveScreenshot);
-    connect(engine->rootObjects().at(0), SIGNAL(start()), sim, SLOT(start()));
-    connect(engine->rootObjects().at(0), SIGNAL(stop() ), sim, SLOT(stop() ));
-    connect(engine->rootObjects().at(0), SIGNAL(round()), sim, SLOT(round()));
-    connect(vis, &VisItem::roundForParticleAt, sim, &Simulator::roundForParticleAt);
-    connect(engine->rootObjects().at(0), SIGNAL(executeCommand(QString)), sim, SLOT(executeCommand(QString)));
-    connect(sim,
-            &Simulator::log,
-            [&](const QString msg, const bool isError){
-                QMetaObject::invokeMethod(engine->rootObjects().at(0), "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
+    auto vis = qmlRoot->findChild<VisItem*>();
+    auto slider = qmlRoot->findChild<QObject*>("roundDurationSlider");
+
+    connect(sim.get(), &Simulator::updateSystem, vis, &VisItem::updateSystem);
+    connect(sim.get(), &Simulator::saveScreenshotSignal, vis, &VisItem::saveScreenshot);
+    connect(qmlRoot, SIGNAL(start()), sim.get(), SLOT(start()));
+    connect(qmlRoot, SIGNAL(stop() ), sim.get(), SLOT(stop() ));
+    connect(qmlRoot, SIGNAL(round()), sim.get(), SLOT(round()));
+    connect(vis, &VisItem::roundForParticleAt, sim.get(), &Simulator::roundForParticleAt);
+    connect(qmlRoot, SIGNAL(executeCommand(QString)), sim.get(), SLOT(executeCommand(QString)));
+
+    connect(slider, SIGNAL(roundDurationChanged(int)), sim.get(), SLOT(setRoundDuration(int)));
+    connect(sim.get(), &Simulator::roundDurationChanged,
+            [slider](const int& ms){
+              QMetaObject::invokeMethod(slider, "setRoundDuration", Q_ARG(QVariant, QVariant(ms)));
             }
     );
-    connect(sim,
-            &Simulator::started,
-            [&](){
-                QMetaObject::invokeMethod(engine->rootObjects().at(0), "setLabelStop");
+
+    connect(sim.get(),  &Simulator::roundsChanged,
+            [qmlRoot](const int& rounds){
+                QMetaObject::invokeMethod(qmlRoot, "setRounds", Q_ARG(QVariant, rounds));
             }
     );
-    connect(sim,
-            &Simulator::stopped,
-            [&](){
-                QMetaObject::invokeMethod(engine->rootObjects().at(0), "setLabelStart");
+    connect(sim.get(),  &Simulator::numMovementsChanged,
+            [qmlRoot](const int& num){
+                QMetaObject::invokeMethod(qmlRoot, "setNumMovements", Q_ARG(QVariant, num));
+            }
+    );
+    connect(sim.get(),  &Simulator::log,
+            [qmlRoot](const QString msg, const bool isError){
+                QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
+            }
+    );
+    connect(sim.get(), &Simulator::started,
+            [qmlRoot](){
+                QMetaObject::invokeMethod(qmlRoot, "setLabelStop");
+            }
+    );
+    connect(sim.get(), &Simulator::stopped,
+            [qmlRoot](){
+                QMetaObject::invokeMethod(qmlRoot, "setLabelStart");
             }
     );
 
     // setup connections between GUI and CommmandHistoryManager
-    connect(engine->rootObjects().at(0), SIGNAL(executeCommand(QString)), &commandHistoryManager, SLOT(commandExecuted(QString)));
-    connect(engine->rootObjects().at(0), SIGNAL(commandFieldUp()), &commandHistoryManager, SLOT(up()));
-    connect(engine->rootObjects().at(0), SIGNAL(commandFieldDown()), &commandHistoryManager, SLOT(down()));
-    connect(engine->rootObjects().at(0), SIGNAL(commandFieldReset()), &commandHistoryManager, SLOT(reset()));
-    connect(&commandHistoryManager,
-            &CommandHistoryManager::setCommand,
-            [&](const QString& command){
-                QMetaObject::invokeMethod(engine->rootObjects().at(0), "setCommand", Q_ARG(QVariant, command));
+    connect(qmlRoot, SIGNAL(executeCommand(QString)), &commandHistoryManager, SLOT(commandExecuted(QString)));
+    connect(qmlRoot, SIGNAL(commandFieldUp()), &commandHistoryManager, SLOT(up()));
+    connect(qmlRoot, SIGNAL(commandFieldDown()), &commandHistoryManager, SLOT(down()));
+    connect(qmlRoot, SIGNAL(commandFieldReset()), &commandHistoryManager, SLOT(reset()));
+    connect(&commandHistoryManager, &CommandHistoryManager::setCommand,
+            [qmlRoot](const QString& command){
+                QMetaObject::invokeMethod(qmlRoot, "setCommand", Q_ARG(QVariant, command));
             }
     );
 
-    connect(simThread, SIGNAL(started()), sim, SLOT(init()));
+    sim->moveToThread(simThread.get());
+    connect(simThread.get(), &QThread::started, sim.get(), &Simulator::init);
+    connect(simThread.get(), &QThread::finished, sim.get(), &Simulator::finished);
+
+
     simThread->start();
 }
 
@@ -65,6 +91,4 @@ Application::~Application()
     sim->abortScript();
     simThread->quit();
     simThread->wait();
-    delete sim;
-    delete engine;
 }

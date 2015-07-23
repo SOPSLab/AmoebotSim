@@ -48,13 +48,13 @@ Rhomboid::~Rhomboid()
 {
 }
 
-System* Rhomboid::instance(const unsigned int size, const double holeProb, const int sideLength)
+std::shared_ptr<System> Rhomboid::instance(const unsigned int size, const double holeProb, const int sideLength)
 {
-    System* system = new System();
+    std::shared_ptr<System> system = std::make_shared<System>();
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(new Rhomboid(State::Seed, sideLength), randDir(), Node(0,0), -1));
+    system->insert(Particle(std::make_shared<Rhomboid>(State::Seed, sideLength), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -84,7 +84,7 @@ System* Rhomboid::instance(const unsigned int size, const double holeProb, const
             }
         }
         // Insert new idle particle
-        system->insert(Particle(new Rhomboid(State::Idle, sideLength), randDir(), head, -1));
+        system->insert(Particle(std::make_shared<Rhomboid>(State::Idle, sideLength), randDir(), head, -1));
     }
     return system;
 }
@@ -188,9 +188,9 @@ Movement Rhomboid::execute()
     }
 }
 
-Algorithm* Rhomboid::clone()
+std::shared_ptr<Algorithm> Rhomboid::clone()
 {
-    return new Rhomboid(*this);
+    return std::make_shared<Rhomboid>(*this);
 }
 
 bool Rhomboid::isDeterministic() const

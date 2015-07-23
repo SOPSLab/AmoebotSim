@@ -5,6 +5,7 @@
 #include <chrono>
 #include <random>
 #include <vector>
+#include <memory>
 
 #include <QtGlobal>
 
@@ -20,7 +21,7 @@ public:
     virtual ~Algorithm();
 
     virtual Movement execute(std::array<const Flag*, 10>& flags) = 0;
-    virtual Algorithm* clone() = 0;
+    virtual std::shared_ptr<Algorithm> clone() = 0;
     virtual bool isDeterministic() const = 0;
 
     virtual const Flag* flagAt(const int i) const = 0;

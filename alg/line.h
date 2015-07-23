@@ -35,10 +35,10 @@ public:
     Line(const Line& other);
     virtual ~Line();
 
-    static System* instance(const unsigned int size, const double holeProb);
+    static std::shared_ptr<System> instance(const unsigned int size, const double holeProb);
 
     virtual Movement execute();
-    virtual Algorithm* clone();
+    virtual std::shared_ptr<Algorithm> clone() override;
     virtual bool isDeterministic() const;
 
 protected:

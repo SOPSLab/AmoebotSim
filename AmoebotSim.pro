@@ -1,4 +1,4 @@
-QT      += core gui qml quick script
+QT      += core gui qml quick
 CONFIG  += c++11
 
 TARGET    = AmoebotSim

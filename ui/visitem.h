@@ -36,7 +36,7 @@ signals:
     void roundForParticleAt(const int x, const int y);
 
 public slots:
-    void updateSystem(System* _system);
+    void updateSystem(std::shared_ptr<System> _system);
     void focusOnCenterOfMass();
     void saveScreenshot(QString filePath = "");
 
@@ -77,10 +77,10 @@ protected:
     // height of a triangle in our equilateral triangular grid if the side length is 1
     static const float triangleHeight;
 
-    QTimer* renderTimer;
+    std::shared_ptr<QTimer> renderTimer;
 
-    QOpenGLTexture* gridTex;
-    QOpenGLTexture* particleTex;
+    std::shared_ptr<QOpenGLTexture> gridTex;
+    std::shared_ptr<QOpenGLTexture> particleTex;
 
     bool tranlatingGui;
     // these variables are used by two threads
@@ -93,11 +93,11 @@ protected:
     float zoomGui;
     float zoom;
 
-    System* system;
+    std::shared_ptr<System> system;
 
     QMutex systemMutex;
 
-    QTimer* blinkTimer;
+    std::shared_ptr<QTimer> blinkTimer;
     float blinkValue;
 };
 

@@ -1,6 +1,8 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
+#include <memory>
+#include <qdebug.h>
 #include <QGuiApplication>
 
 #include "ui/commandhistorymanager.h"
@@ -18,10 +20,10 @@ public:
     ~Application();
 
 protected:
-    QQmlApplicationEngine* engine;
+    std::shared_ptr<QQmlApplicationEngine> engine;
 
-    Simulator* sim;
-    QThread* simThread;
+    std::shared_ptr<Simulator> sim;
+    std::shared_ptr<QThread> simThread;
 
     CommandHistoryManager commandHistoryManager;
 };

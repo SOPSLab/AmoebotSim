@@ -52,9 +52,9 @@ BoundedObjCoating::~BoundedObjCoating()
 {
 }
 
-System* BoundedObjCoating::instance(const int numStaticParticles, const int numParticles, const float holeProb)
+std::shared_ptr<System> BoundedObjCoating::instance(const int numStaticParticles, const int numParticles, const float holeProb)
 {
-    System* system = new System();
+    std::shared_ptr<System> system = std::make_shared<System>();
 
     std::deque<Node> orderedSurface;
     std::set<Node> occupied;
@@ -64,7 +64,7 @@ System* BoundedObjCoating::instance(const int numStaticParticles, const int numP
     Node End;
     int lastOffset = 0;
     while(system->size() < numStaticParticles) {
-        system->insert(Particle(new BoundedObjCoating(Phase::Static), randDir(), pos));
+        system->insert(Particle(std::make_shared<BoundedObjCoating>(Phase::Static), randDir(), pos));
         occupied.insert(pos);
         orderedSurface.push_back(pos);
         int offset;
@@ -86,7 +86,7 @@ System* BoundedObjCoating::instance(const int numStaticParticles, const int numP
     Node pos2= Node((End.x)-1 ,End.y);//start of the right border
 
     while(counter < yMax) {
-        system->insert(Particle(new BoundedObjCoating(Phase::Border), randDir(), pos1));
+        system->insert(Particle(std::make_shared<BoundedObjCoating>(Phase::Border), randDir(), pos1));
         occupied.insert(pos1);
         orderedSurface.push_back(pos1);
         int offset;
@@ -102,7 +102,7 @@ System* BoundedObjCoating::instance(const int numStaticParticles, const int numP
 
     counter =0;
     while(counter < yMax) {
-        system->insert(Particle(new BoundedObjCoating(Phase::Border), randDir(), pos2));
+        system->insert(Particle(std::make_shared<BoundedObjCoating>(Phase::Border), randDir(), pos2));
         occupied.insert(pos2);
         orderedSurface.push_back(pos2);
         int offset;
@@ -146,7 +146,7 @@ System* BoundedObjCoating::instance(const int numStaticParticles, const int numP
         std::set<Node> nextCandidates;
         for(auto it = candidates.begin(); it != candidates.end() && numNonStaticParticles < numParticles; ++it) {
             if(randBool(1.0f - holeProb)) {
-                system->insert(Particle(new BoundedObjCoating(Phase::Inactive), randDir(), *it));
+                system->insert(Particle(std::make_shared<BoundedObjCoating>(Phase::Inactive), randDir(), *it));
                 numNonStaticParticles++;
 
                 for(int dir = 1; dir <= 2; dir++) {
@@ -321,9 +321,9 @@ Movement BoundedObjCoating::execute()
     }
 }
 
-Algorithm* BoundedObjCoating::clone()
+std::shared_ptr<Algorithm> BoundedObjCoating::clone()
 {
-    return new BoundedObjCoating(*this);
+    return std::make_shared<BoundedObjCoating>(*this);
 }
 
 bool BoundedObjCoating::isDeterministic() const
