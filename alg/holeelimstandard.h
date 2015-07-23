@@ -1,41 +1,38 @@
-#ifndef HOLEELIMHYBRID_H
-#define HOLEELIMHYBRID_H
+#ifndef HOLEELIMSTANDARD_H
+#define HOLEELIMSTANDARD_H
 
 #include "alg/algorithmwithflags.h"
 
 class System;
 
-namespace HoleElimHybrid
+namespace HoleElimStandard
 {
 
 enum class State {
     Seed,
     Idle,
-    Active,
-    Leader,
-    Follower,
     Walking,
+    Follower,
     Finished
 };
 
-class HoleElimHybridFlag : public Flag
+class HoleElimStandardFlag : public Flag
 {
 public:
-    HoleElimHybridFlag();
-    HoleElimHybridFlag(const HoleElimHybridFlag& other);
+    HoleElimStandardFlag();
+    HoleElimStandardFlag(const HoleElimStandardFlag& other);
 
     State state;
     bool isParent;
-    int oldFollowDir;
     bool dockingIndicator;
 };
 
-class HoleElimHybrid : public AlgorithmWithFlags<HoleElimHybridFlag>
+class HoleElimStandard : public AlgorithmWithFlags<HoleElimStandardFlag>
 {
 public:
-    HoleElimHybrid(const State _state);
-    HoleElimHybrid(const HoleElimHybrid& other);
-    virtual ~HoleElimHybrid();
+    HoleElimStandard(const State _state);
+    HoleElimStandard(const HoleElimStandard& other);
+    virtual ~HoleElimStandard();
 
     static std::shared_ptr<System> instance(const unsigned int size, const double holeProb);
 
@@ -47,31 +44,20 @@ public:
 
 protected:
     void setState(const State _state);
-    void setOldFollowDir(const int dir);
     void setParentLabel(const int parentLabel);
-    void unsetParentLabel();
     void setDockingLabel(const int dockingLabel);
 
     bool hasNeighborInState(const State _state) const;
     int neighborInStateDir(const State _state) const;
-    int emptyNeighborDir() const;
     int dockingDir() const;
     int adjFinishDir() const;
     int borderFinishedDir() const;
-
-    bool isLocallyCompact() const;
-    bool isParent() const;
-    bool isLeaf() const;
     bool tailHasChild() const;
-    bool leaderAsChild() const;
 
     State state;
     int followDir;
-
-private:
-    int countNeighbors() const;
 };
 
 }
 
-#endif // HOLEELIMHYBRID_H
+#endif // HOLEELIMSTANDARD_H

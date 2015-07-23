@@ -1,11 +1,11 @@
-#ifndef HOLEELIMINATION_H
-#define HOLEELIMINATION_H
+#ifndef HOLEELIMCOMPACTION_H
+#define HOLEELIMCOMPACTION_H
 
 #include "alg/algorithmwithflags.h"
 
 class System;
 
-namespace HoleElimination
+namespace HoleElimCompaction
 {
 
 enum class State {
@@ -14,14 +14,15 @@ enum class State {
     Active,
     Leader,
     Follower,
+    Walking,
     Finished
 };
 
-class HoleEliminationFlag : public Flag
+class HoleElimCompactionFlag : public Flag
 {
 public:
-    HoleEliminationFlag();
-    HoleEliminationFlag(const HoleEliminationFlag& other);
+    HoleElimCompactionFlag();
+    HoleElimCompactionFlag(const HoleElimCompactionFlag& other);
 
     State state;
     bool isParent;
@@ -29,12 +30,12 @@ public:
     bool dockingIndicator;
 };
 
-class HoleElimination : public AlgorithmWithFlags<HoleEliminationFlag>
+class HoleElimCompaction : public AlgorithmWithFlags<HoleElimCompactionFlag>
 {
 public:
-    HoleElimination(const State _state);
-    HoleElimination(const HoleElimination& other);
-    virtual ~HoleElimination();
+    HoleElimCompaction(const State _state);
+    HoleElimCompaction(const HoleElimCompaction& other);
+    virtual ~HoleElimCompaction();
 
     static std::shared_ptr<System> instance(const unsigned int size, const double holeProb);
 
@@ -50,12 +51,10 @@ protected:
     void setParentLabel(const int parentLabel);
     void unsetParentLabel();
     void setDockingLabel(const int dockingLabel);
-    void unsetDockingLabel();
 
     bool hasNeighborInState(const State _state) const;
     int neighborInStateDir(const State _state) const;
     int emptyNeighborDir() const;
-    int leafSwitchDir() const;
     int dockingDir() const;
     int adjFinishDir() const;
     int borderFinishedDir() const;
@@ -75,4 +74,4 @@ private:
 
 }
 
-#endif // HOLEELIMINATION_H
+#endif // HOLEELIMCOMPACTION_H

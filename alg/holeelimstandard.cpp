@@ -1,19 +1,19 @@
 #include <set>
 #include <random>
 
-#include "holeelimcoating.h"
+#include "holeelimstandard.h"
 #include "sim/particle.h"
 #include "sim/system.h"
 
-namespace HoleElimCoating
+namespace HoleElimStandard
 {
-HoleElimCoatingFlag::HoleElimCoatingFlag()
+HoleElimStandardFlag::HoleElimStandardFlag()
     : isParent(false),
       dockingIndicator(false)
 {
 }
 
-HoleElimCoatingFlag::HoleElimCoatingFlag(const HoleElimCoatingFlag& other)
+HoleElimStandardFlag::HoleElimStandardFlag(const HoleElimStandardFlag& other)
     : Flag(other),
       state(other.state),
       isParent(other.isParent),
@@ -21,31 +21,31 @@ HoleElimCoatingFlag::HoleElimCoatingFlag(const HoleElimCoatingFlag& other)
 {
 }
 
-HoleElimCoating::HoleElimCoating(const State _state)
+HoleElimStandard::HoleElimStandard(const State _state)
     : state(_state),
       followDir(-1)
 {
     setState(_state);
 }
 
-HoleElimCoating::HoleElimCoating(const HoleElimCoating& other)
+HoleElimStandard::HoleElimStandard(const HoleElimStandard& other)
     : AlgorithmWithFlags(other),
       state(other.state),
       followDir(other.followDir)
 {
 }
 
-HoleElimCoating::~HoleElimCoating()
+HoleElimStandard::~HoleElimStandard()
 {
 }
 
-std::shared_ptr<System> HoleElimCoating::instance(const unsigned int size, const double holeProb)
+std::shared_ptr<System> HoleElimStandard::instance(const unsigned int size, const double holeProb)
 {
     std::shared_ptr<System> system = std::make_shared<System>();
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(std::make_shared<HoleElimCoating>(State::Seed), randDir(), Node(0,0), -1));
+    system->insert(Particle(std::make_shared<HoleElimStandard>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6; dir++){
@@ -75,13 +75,13 @@ std::shared_ptr<System> HoleElimCoating::instance(const unsigned int size, const
             }
         }
         // Insert new idle particle
-        system->insert(Particle(std::make_shared<HoleElimCoating>(State::Idle), randDir(), head, -1));
+        system->insert(Particle(std::make_shared<HoleElimStandard>(State::Idle), randDir(), head, -1));
     }
 
     return system;
 }
 
-Movement HoleElimCoating::execute()
+Movement HoleElimStandard::execute()
 {
     if(state == State::Seed || state == State::Finished) {
         return Movement(MovementType::Empty);
@@ -172,17 +172,17 @@ Movement HoleElimCoating::execute()
     return Movement(MovementType::Idle);
 }
 
-std::shared_ptr<Algorithm> HoleElimCoating::clone()
+std::shared_ptr<Algorithm> HoleElimStandard::clone()
 {
-    return std::make_shared<HoleElimCoating>(*this);
+    return std::make_shared<HoleElimStandard>(*this);
 }
 
-bool HoleElimCoating::isDeterministic() const
+bool HoleElimStandard::isDeterministic() const
 {
     return true;
 }
 
-void HoleElimCoating::setState(const State _state)
+void HoleElimStandard::setState(const State _state)
 {
     state = _state;
     if(state == State::Seed) {
@@ -202,7 +202,7 @@ void HoleElimCoating::setState(const State _state)
     }
 }
 
-void HoleElimCoating::setParentLabel(const int parentLabel)
+void HoleElimStandard::setParentLabel(const int parentLabel)
 {
     Q_ASSERT(0 <= parentLabel && parentLabel < 10);
 
@@ -211,7 +211,7 @@ void HoleElimCoating::setParentLabel(const int parentLabel)
     }
 }
 
-void HoleElimCoating::setDockingLabel(const int dockingLabel)
+void HoleElimStandard::setDockingLabel(const int dockingLabel)
 {
     Q_ASSERT(isContracted());
     Q_ASSERT(0 <= dockingLabel && dockingLabel < 6);
@@ -219,7 +219,7 @@ void HoleElimCoating::setDockingLabel(const int dockingLabel)
     outFlags[dockingLabel].dockingIndicator = true;
 }
 
-bool HoleElimCoating::hasNeighborInState(const State _state) const
+bool HoleElimStandard::hasNeighborInState(const State _state) const
 {
     for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr && inFlags[label]->state == _state) {
@@ -229,7 +229,7 @@ bool HoleElimCoating::hasNeighborInState(const State _state) const
     return false;
 }
 
-int HoleElimCoating::neighborInStateDir(const State _state) const
+int HoleElimStandard::neighborInStateDir(const State _state) const
 {
     Q_ASSERT(isContracted());
     for(int dir = 0; dir < 6; dir++) {
@@ -240,7 +240,7 @@ int HoleElimCoating::neighborInStateDir(const State _state) const
     return -1;
 }
 
-int HoleElimCoating::dockingDir() const
+int HoleElimStandard::dockingDir() const
 {
     Q_ASSERT(isContracted()); // only contracted particles should dock/finish
 
@@ -252,7 +252,7 @@ int HoleElimCoating::dockingDir() const
     return -1; // does not receive a docking indicator
 }
 
-int HoleElimCoating::adjFinishDir() const
+int HoleElimStandard::adjFinishDir() const
 {
     Q_ASSERT(isContracted());
 
@@ -267,7 +267,7 @@ int HoleElimCoating::adjFinishDir() const
     return -1;
 }
 
-int HoleElimCoating::borderFinishedDir() const
+int HoleElimStandard::borderFinishedDir() const
 {
     Q_ASSERT(isContracted());
     Q_ASSERT(followDir != -1);
@@ -282,7 +282,7 @@ int HoleElimCoating::borderFinishedDir() const
     return -1;
 }
 
-bool HoleElimCoating::tailHasChild() const
+bool HoleElimStandard::tailHasChild() const
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;

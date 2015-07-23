@@ -1,20 +1,20 @@
 #include <set>
 #include <random>
 
-#include "holeelimhybrid.h"
+#include "holeelimcompaction.h"
 #include "sim/particle.h"
 #include "sim/system.h"
 
-namespace HoleElimHybrid
+namespace HoleElimCompaction
 {
-HoleElimHybridFlag::HoleElimHybridFlag()
+HoleElimCompactionFlag::HoleElimCompactionFlag()
     : isParent(false),
       oldFollowDir(-1),
       dockingIndicator(false)
 {
 }
 
-HoleElimHybridFlag::HoleElimHybridFlag(const HoleElimHybridFlag& other)
+HoleElimCompactionFlag::HoleElimCompactionFlag(const HoleElimCompactionFlag& other)
     : Flag(other),
       state(other.state),
       isParent(other.isParent),
@@ -23,31 +23,31 @@ HoleElimHybridFlag::HoleElimHybridFlag(const HoleElimHybridFlag& other)
 {
 }
 
-HoleElimHybrid::HoleElimHybrid(const State _state)
+HoleElimCompaction::HoleElimCompaction(const State _state)
     : state(_state),
       followDir(-1)
 {
     setState(_state);
 }
 
-HoleElimHybrid::HoleElimHybrid(const HoleElimHybrid& other)
+HoleElimCompaction::HoleElimCompaction(const HoleElimCompaction& other)
     : AlgorithmWithFlags(other),
       state(other.state),
       followDir(other.followDir)
 {
 }
 
-HoleElimHybrid::~HoleElimHybrid()
+HoleElimCompaction::~HoleElimCompaction()
 {
 }
 
-std::shared_ptr<System> HoleElimHybrid::instance(const unsigned int size, const double holeProb)
+std::shared_ptr<System> HoleElimCompaction::instance(const unsigned int size, const double holeProb)
 {
     std::shared_ptr<System> system = std::make_shared<System>();
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(std::make_shared<HoleElimHybrid>(State::Seed), randDir(), Node(0,0), -1));
+    system->insert(Particle(std::make_shared<HoleElimCompaction>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6; dir++){
@@ -77,13 +77,13 @@ std::shared_ptr<System> HoleElimHybrid::instance(const unsigned int size, const 
             }
         }
         // Insert new idle particle
-        system->insert(Particle(std::make_shared<HoleElimHybrid>(State::Idle), randDir(), head, -1));
+        system->insert(Particle(std::make_shared<HoleElimCompaction>(State::Idle), randDir(), head, -1));
     }
 
     return system;
 }
 
-Movement HoleElimHybrid::execute()
+Movement HoleElimCompaction::execute()
 {
     if(state == State::Seed || state == State::Finished) {
         return Movement(MovementType::Empty);
@@ -214,17 +214,17 @@ Movement HoleElimHybrid::execute()
     return Movement(MovementType::Idle);
 }
 
-std::shared_ptr<Algorithm> HoleElimHybrid::clone()
+std::shared_ptr<Algorithm> HoleElimCompaction::clone()
 {
-    return std::make_shared<HoleElimHybrid>(*this);
+    return std::make_shared<HoleElimCompaction>(*this);
 }
 
-bool HoleElimHybrid::isDeterministic() const
+bool HoleElimCompaction::isDeterministic() const
 {
     return false; // uses randomization in leaf switch
 }
 
-void HoleElimHybrid::setState(const State _state)
+void HoleElimCompaction::setState(const State _state)
 {
     state = _state;
     if(state == State::Seed) {
@@ -248,7 +248,7 @@ void HoleElimHybrid::setState(const State _state)
     }
 }
 
-void HoleElimHybrid::setOldFollowDir(const int dir)
+void HoleElimCompaction::setOldFollowDir(const int dir)
 {
     Q_ASSERT(0 <= dir && dir < 6);
     for(int label = 0; label < 10; label++) {
@@ -256,7 +256,7 @@ void HoleElimHybrid::setOldFollowDir(const int dir)
     }
 }
 
-void HoleElimHybrid::setParentLabel(const int parentLabel)
+void HoleElimCompaction::setParentLabel(const int parentLabel)
 {
     Q_ASSERT(0 <= parentLabel && parentLabel < 10);
 
@@ -265,14 +265,14 @@ void HoleElimHybrid::setParentLabel(const int parentLabel)
     }
 }
 
-void HoleElimHybrid::unsetParentLabel()
+void HoleElimCompaction::unsetParentLabel()
 {
     for(int label = 0; label < 10; label++) {
         outFlags[label].isParent = false;
     }
 }
 
-void HoleElimHybrid::setDockingLabel(const int dockingLabel)
+void HoleElimCompaction::setDockingLabel(const int dockingLabel)
 {
     Q_ASSERT(isContracted());
     Q_ASSERT(0 <= dockingLabel && dockingLabel < 6);
@@ -280,7 +280,7 @@ void HoleElimHybrid::setDockingLabel(const int dockingLabel)
     outFlags[dockingLabel].dockingIndicator = true;
 }
 
-bool HoleElimHybrid::hasNeighborInState(const State _state) const
+bool HoleElimCompaction::hasNeighborInState(const State _state) const
 {
     for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr && inFlags[label]->state == _state) {
@@ -290,7 +290,7 @@ bool HoleElimHybrid::hasNeighborInState(const State _state) const
     return false;
 }
 
-int HoleElimHybrid::neighborInStateDir(const State _state) const
+int HoleElimCompaction::neighborInStateDir(const State _state) const
 {
     Q_ASSERT(isContracted());
     for(int dir = 0; dir < 6; dir++) {
@@ -301,7 +301,7 @@ int HoleElimHybrid::neighborInStateDir(const State _state) const
     return -1;
 }
 
-int HoleElimHybrid::emptyNeighborDir() const
+int HoleElimCompaction::emptyNeighborDir() const
 {
     Q_ASSERT(isContracted());
     Q_ASSERT(followDir != -1); // must have a followDir
@@ -319,7 +319,7 @@ int HoleElimHybrid::emptyNeighborDir() const
     return -1;
 }
 
-int HoleElimHybrid::dockingDir() const
+int HoleElimCompaction::dockingDir() const
 {
     Q_ASSERT(isContracted()); // only contracted particles should dock/finish
 
@@ -331,7 +331,7 @@ int HoleElimHybrid::dockingDir() const
     return -1; // does not receive a docking indicator
 }
 
-int HoleElimHybrid::adjFinishDir() const
+int HoleElimCompaction::adjFinishDir() const
 {
     Q_ASSERT(isContracted());
 
@@ -346,7 +346,7 @@ int HoleElimHybrid::adjFinishDir() const
     return -1;
 }
 
-int HoleElimHybrid::borderFinishedDir() const
+int HoleElimCompaction::borderFinishedDir() const
 {
     Q_ASSERT(isContracted());
     Q_ASSERT(followDir != -1);
@@ -367,7 +367,7 @@ int HoleElimHybrid::borderFinishedDir() const
     return -1;
 }
 
-bool HoleElimHybrid::isLocallyCompact() const
+bool HoleElimCompaction::isLocallyCompact() const
 {
     Q_ASSERT(isContracted());
 
@@ -399,7 +399,7 @@ bool HoleElimHybrid::isLocallyCompact() const
     return adjacentCount == count;
 }
 
-bool HoleElimHybrid::isParent() const
+bool HoleElimCompaction::isParent() const
 {
     for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr && inFlags[label]->isParent) {
@@ -409,12 +409,12 @@ bool HoleElimHybrid::isParent() const
     return false;
 }
 
-bool HoleElimHybrid::isLeaf() const
+bool HoleElimCompaction::isLeaf() const
 {
     return !isParent();
 }
 
-bool HoleElimHybrid::tailHasChild() const
+bool HoleElimCompaction::tailHasChild() const
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;
@@ -425,7 +425,7 @@ bool HoleElimHybrid::tailHasChild() const
     return false;
 }
 
-bool HoleElimHybrid::leaderAsChild() const
+bool HoleElimCompaction::leaderAsChild() const
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;
@@ -436,7 +436,7 @@ bool HoleElimHybrid::leaderAsChild() const
     return false;
 }
 
-int HoleElimHybrid::countNeighbors() const
+int HoleElimCompaction::countNeighbors() const
 {
     int count = 0;
     int max = (isContracted()) ? 6 : 10;

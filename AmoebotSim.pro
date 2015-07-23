@@ -32,9 +32,8 @@ HEADERS += \
     alg/square.h \
     alg/boundedobjcoating.h \
     alg/compaction.h \
-    alg/holeelimination.h \
-    alg/holeelimcoating.h \
-    alg/holeelimhybrid.h
+    alg/holeelimstandard.h \
+    alg/holeelimcompaction.h
 
 SOURCES += \
     alg/algorithm.cpp \
