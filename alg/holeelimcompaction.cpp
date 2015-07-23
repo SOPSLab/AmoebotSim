@@ -41,43 +41,57 @@ HoleElimCompaction::~HoleElimCompaction()
 {
 }
 
-std::shared_ptr<System> HoleElimCompaction::instance(const unsigned int size, const double holeProb)
+std::shared_ptr<System> HoleElimCompaction::instance(const unsigned int size)
 {
     std::shared_ptr<System> system = std::make_shared<System>();
-    std::set<Node> occupied, candidates;
+    std::set<Node> occupied, seedComponent;
+    std::deque<Node> queue;
 
-    // Create Seed Particle
-    system->insert(Particle(std::make_shared<HoleElimCompaction>(State::Seed), randDir(), Node(0,0), -1));
-    occupied.insert(Node(0,0));
-
-    for(int dir = 0; dir<6; dir++){
-        candidates.insert(Node(0,0).nodeInDir(dir));
-    }
-
-    while(occupied.size() < size && !candidates.empty()){
-        auto index = randInt(0, candidates.size());
-        auto it = candidates.begin();
-        while (index != 0){
-            ++it;
-            index--;
-        }
-
-        Node head = *it;
-        candidates.erase(it);
-        occupied.insert(head);
-
-        if(randBool(holeProb)){
-            continue;
-        }
-
-        for(int dir = 0; dir < 6; dir++){
-            auto neighbor = head.nodeInDir(dir);
-            if(occupied.find(neighbor) == occupied.end() && candidates.find(neighbor) == candidates.end()){
-                candidates.insert(neighbor);
+    // define a square region of (2*size) particles, where every position has a 0.5 chance of being occupied
+    int regionSize = sqrt(2.0 * size);
+    for(int x = 0; x < regionSize; ++x) {
+        for(int y = 0; y < regionSize; ++y) {
+            if(randBool()) {
+                occupied.insert(Node(x,y));
             }
         }
-        // Insert new idle particle
-        system->insert(Particle(std::make_shared<HoleElimCompaction>(State::Idle), randDir(), head, -1));
+    }
+
+    // randomly choose one of the occupied positions to be the seed
+    int seedIndex = randInt(0, occupied.size());
+    int i = 0;
+    Node seed;
+    for(auto it = occupied.begin(); it != occupied.end(); ++it) {
+        if(i == seedIndex) {
+            seed = *it;
+            occupied.erase(it);
+            break;
+        }
+        ++i;
+    }
+
+    // perform a flooding search beginning at the seed to discover the seed's connected component
+    queue.push_back(seed);
+    while(!queue.empty()) {
+        Node n = queue.front();
+        queue.pop_front();
+        for(int dir = 0; dir < 6; ++dir) {
+            Node neighbor = n.nodeInDir(dir);
+            auto nodeIt = occupied.find(neighbor);
+            if(nodeIt != occupied.end()) {
+                queue.push_back(neighbor);
+                seedComponent.insert(neighbor);
+                occupied.erase(nodeIt);
+            }
+        }
+    }
+
+    // insert the seed and all particles from its component into the system
+    system->insert(Particle(std::make_shared<HoleElimCompaction>(State::Seed), randDir(), seed, -1));
+    while(!seedComponent.empty()) {
+        auto node = *seedComponent.begin();
+        seedComponent.erase(seedComponent.begin());
+        system->insert(Particle(std::make_shared<HoleElimCompaction>(State::Idle), randDir(), node, -1));
     }
 
     return system;

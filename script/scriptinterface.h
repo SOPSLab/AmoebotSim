@@ -55,9 +55,9 @@ public slots:
     void ring(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void rhomboid(const unsigned int numParticles = 100, const float holeProb = 0.0, const int sideLength = 10);
     void square(const unsigned int numParticles = 100, const float holeProb = 0.0);
-    void compaction(const unsigned int numParticles = 100, const float holeProb = 0.0);
-    void holeelimstandard(const unsigned int numParticles = 100, const float holeProb = 0.0);
-    void holeelimcompaction(const unsigned int numParticles = 100, const float holeProb = 0.0);
+    void compaction(const unsigned int numParticles = 100);
+    void holeelimstandard(const unsigned int numParticles = 100);
+    void holeelimcompaction(const unsigned int numParticles = 100);
 
 private:
     Simulator& sim;
@@ -243,31 +243,16 @@ inline void ScriptInterface::square(const unsigned int numParticles, const float
 
     sim.setSystem(Square::Square::instance(numParticles, holeProb));
 }
-inline void ScriptInterface::compaction(const unsigned int numParticles, const float holeProb)
+inline void ScriptInterface::compaction(const unsigned int numParticles)
 {
-    if(holeProb < 0.0f || holeProb > 1.0f) {
-        sim.log("holeProb in [0.0, 1.0] required", true);
-        return;
-    }
-
-    sim.setSystem(Compaction::Compaction::instance(numParticles, holeProb));
+    sim.setSystem(Compaction::Compaction::instance(numParticles));
 }
-inline void ScriptInterface::holeelimstandard(const unsigned int numParticles, const float holeProb)
+inline void ScriptInterface::holeelimstandard(const unsigned int numParticles)
 {
-    if(holeProb < 0.0f || holeProb > 1.0f) {
-        sim.log("holeProb in [0.0, 1.0] required", true);
-        return;
-    }
-
-    sim.setSystem(HoleElimStandard::HoleElimStandard::instance(numParticles, holeProb));
+    sim.setSystem(HoleElimStandard::HoleElimStandard::instance(numParticles));
 }
-inline void ScriptInterface::holeelimcompaction(const unsigned int numParticles, const float holeProb)
+inline void ScriptInterface::holeelimcompaction(const unsigned int numParticles)
 {
-    if(holeProb < 0.0f || holeProb > 1.0f) {
-        sim.log("holeProb in [0.0, 1.0] required", true);
-        return;
-    }
-
-    sim.setSystem(HoleElimCompaction::HoleElimCompaction::instance(numParticles, holeProb));
+    sim.setSystem(HoleElimCompaction::HoleElimCompaction::instance(numParticles));
 }
 #endif // SCRIPTINTERFACE_H

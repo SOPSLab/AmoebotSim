@@ -34,7 +34,7 @@ public:
     HoleElimStandard(const HoleElimStandard& other);
     virtual ~HoleElimStandard();
 
-    static std::shared_ptr<System> instance(const unsigned int size, const double holeProb);
+    static std::shared_ptr<System> instance(const unsigned int size);
 
     virtual Movement execute();
 
