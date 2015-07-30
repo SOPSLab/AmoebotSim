@@ -58,6 +58,7 @@ protected:
     static QPointF nodeToWorldCoord(Node node);
     static Node worldCoordToNode(QPointF worldCord);
     QPointF windowCoordToWorldCoord(const QPointF windowCoord);
+    const QPointF indexToParticleTexPos(const int index) const;
 
     void mousePressEvent(QMouseEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
@@ -70,7 +71,6 @@ protected:
     static constexpr float zoomAttenuation = 500.0f;
 
     // these values are a consequence of how the particle texture was created
-    static const std::array<QPointF, 16> particleTexOffsets;
     static constexpr float oneFourth = 1.0f / 4.0f;
     static constexpr float halfQuadSideLength = 256.0f / 220.0f;
 

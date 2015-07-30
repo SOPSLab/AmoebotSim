@@ -14,26 +14,6 @@
 #include "sim/system.h"
 #include "ui/visitem.h"
 
-const std::array<QPointF, 16> VisItem::particleTexOffsets =
-{{
-     QPointF(0.0f / 4.0f , 0.0f / 4.0f),
-     QPointF(1.0f / 4.0f , 0.0f / 4.0f),
-     QPointF(2.0f / 4.0f , 0.0f / 4.0f),
-     QPointF(3.0f / 4.0f , 0.0f / 4.0f),
-     QPointF(0.0f / 4.0f , 1.0f / 4.0f),
-     QPointF(1.0f / 4.0f , 1.0f / 4.0f),
-     QPointF(2.0f / 4.0f , 1.0f / 4.0f),
-     QPointF(3.0f / 4.0f , 1.0f / 4.0f),
-     QPointF(0.0f / 4.0f , 2.0f / 4.0f),
-     QPointF(1.0f / 4.0f , 2.0f / 4.0f),
-     QPointF(2.0f / 4.0f , 2.0f / 4.0f),
-     QPointF(3.0f / 4.0f , 2.0f / 4.0f),
-     QPointF(0.0f / 4.0f , 3.0f / 4.0f),
-     QPointF(1.0f / 4.0f , 3.0f / 4.0f),
-     QPointF(2.0f / 4.0f , 3.0f / 4.0f),
-     QPointF(3.0f / 4.0f , 3.0f / 4.0f)
-}};
-
 const float VisItem::triangleHeight = sqrtf(0.75f);
 
 VisItem::VisItem(QQuickItem* parent) :
@@ -219,7 +199,7 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
         if(p.headMarkColor() != -1) {
             QRgb color = p.headMarkColor();
             glfn->glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
-            const QPointF& texOffset = particleTexOffsets[p.headMarkDir() + 8];
+            const QPointF& texOffset = indexToParticleTexPos(p.headMarkDir() + 8);
             glfn->glTexCoord2f(texOffset.x(), texOffset.y());
             glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
             glfn->glTexCoord2f(texOffset.x() + oneFourth, texOffset.y());
@@ -235,7 +215,7 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
             auto pos = nodeToWorldCoord(p.tail());
             QRgb color = p.tailMarkColor();
             glfn->glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
-            const QPointF& texOffset = particleTexOffsets[p.tailMarkDir() + 8];
+            const QPointF& texOffset = indexToParticleTexPos(p.tailMarkDir() + 8);
             glfn->glTexCoord2f(texOffset.x(), texOffset.y());
             glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
             glfn->glTexCoord2f(texOffset.x() + oneFourth, texOffset.y());
@@ -248,7 +228,7 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
 
         // draw particle
         glfn->glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-        const QPointF& texOffset = particleTexOffsets[p.tailDir + 1];
+        const QPointF& texOffset = indexToParticleTexPos(p.tailDir + 1);
         glfn->glTexCoord2f(texOffset.x(), texOffset.y());
         glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
         glfn->glTexCoord2f(texOffset.x() + oneFourth, texOffset.y());
@@ -264,7 +244,7 @@ void VisItem::drawDisconnectionNode()
 {
     auto pos = nodeToWorldCoord(system->getDisconnectionNode());
     glfn->glColor4i(255 << 23, 0, 0, (0.6f * fabsf(blinkValue) + 0.4f) * (180 << 23));
-    const QPointF& texOffset = particleTexOffsets[14];
+    const QPointF& texOffset = indexToParticleTexPos(14);
     glfn->glBegin(GL_QUADS);
     glfn->glTexCoord2f(texOffset.x(), texOffset.y());
     glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
@@ -316,6 +296,16 @@ QPointF VisItem::windowCoordToWorldCoord(const QPointF windowCoord)
     const float x = view.left + (view.right - view.left) * windowCoord.x() / width();
     const float y = view.top + (view.bottom - view.top ) * windowCoord.y() / height();
     return QPointF(x, y);
+}
+
+const QPointF VisItem::indexToParticleTexPos(const int index) const
+{
+    static const int texSize = 4;
+
+    float column = index % texSize;
+    float row = index / texSize;
+
+    return QPointF(column / static_cast<float>(texSize), row / static_cast<float>(texSize));
 }
 
 void VisItem::mousePressEvent(QMouseEvent* e)

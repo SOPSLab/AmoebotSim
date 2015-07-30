@@ -19,6 +19,7 @@
 #include "alg/compaction.h"
 #include "alg/holeelimstandard.h"
 #include "alg/holeelimcompaction.h"
+#include "alg/leaderelection_agentcycles.h"
 
 /*
  * The methods of the following class are automatically available during runtime as command in the command-line.
@@ -58,6 +59,7 @@ public slots:
     void compaction(const unsigned int numParticles = 100);
     void holeelimstandard(const unsigned int numParticles = 100);
     void holeelimcompaction(const unsigned int numParticles = 100);
+    void leaderelectionagentcycles(const unsigned int numParticles = 100);
 
 private:
     Simulator& sim;
@@ -254,5 +256,9 @@ inline void ScriptInterface::holeelimstandard(const unsigned int numParticles)
 inline void ScriptInterface::holeelimcompaction(const unsigned int numParticles)
 {
     sim.setSystem(HoleElimCompaction::HoleElimCompaction::instance(numParticles));
+}
+inline void ScriptInterface::leaderelectionagentcycles(const unsigned int numParticles)
+{
+    sim.setSystem(LeaderElectionAgentCycles::LeaderElectionAgentCycles::instance(numParticles));
 }
 #endif // SCRIPTINTERFACE_H
