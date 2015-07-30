@@ -71,7 +71,7 @@ protected:
     static constexpr float zoomAttenuation = 500.0f;
 
     // these values are a consequence of how the particle texture was created
-    static constexpr float oneFourth = 1.0f / 4.0f;
+    static constexpr float oneEighth = 1.0f / 8.0f;
     static constexpr float halfQuadSideLength = 256.0f / 220.0f;
 
     // height of a triangle in our equilateral triangular grid if the side length is 1
