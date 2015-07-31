@@ -1,5 +1,6 @@
 #include <array>
 #include <cmath>
+#include <iostream>
 
 #include <QColor>
 #include <QImage>
@@ -35,6 +36,21 @@ void VisItem::updateSystem(std::shared_ptr<System> _system)
 {
     QMutexLocker locker(&systemMutex);
     system = _system;
+}
+
+void VisItem::setZoom(float factor){
+  //std::cout << "setZoomTo: " << factor <<std::endl;
+  zoomGui = factor;
+  if(zoomGui < zoomMin) {
+      zoomGui = zoomMin;
+  } else if(zoomGui > zoomMax) {
+      zoomGui = zoomMax;
+  }
+}
+
+void VisItem::moveCameraTo(float worldX, float worldY){
+  //std::cout << "moveCameraTo: " << worldX <<" "<<worldY <<std::endl;
+  focusPosGui = QPointF(worldX, worldY);
 }
 
 void VisItem::focusOnCenterOfMass()

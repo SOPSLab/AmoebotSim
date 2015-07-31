@@ -34,7 +34,9 @@ HEADERS += \
     alg/compaction.h \
     alg/holeelimstandard.h \
     alg/holeelimcompaction.h \
-    alg/leaderelection_agentcycles.h
+    alg/leaderelection_agentcycles.h \
+    alg/universalcoating.h \
+    alg/leaderelectiondemo.h
 
 SOURCES += \
     alg/algorithm.cpp \
@@ -59,7 +61,9 @@ SOURCES += \
     alg/compaction.cpp \
     alg/holeelimstandard.cpp \
     alg/holeelimcompaction.cpp \
-    alg/leaderelection_agentcycles.cpp
+    alg/leaderelection_agentcycles.cpp \
+    alg/universalcoating.cpp \
+    alg/leaderelectiondemo.cpp
 
 RESOURCES += \
     res/qml.qrc \

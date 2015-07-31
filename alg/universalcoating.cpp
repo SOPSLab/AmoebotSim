@@ -1,0 +1,1487 @@
+
+#include <algorithm>
+#include <cmath>
+#include <deque>
+#include <set>
+
+#include "alg/universalcoating.h"
+#include "sim/particle.h"
+#include "sim/system.h"
+#include <QDebug>
+
+
+namespace UniversalCoating
+{
+UniversalCoatingFlag::UniversalCoatingFlag()
+    : followIndicator(false),
+      Lnumber(-1),
+      NumFinishedNeighbors(0),
+      leadComplaint(false),
+      seedBound(false),
+      block(false),
+      tokenValue(-1),
+      tokenD1(0),
+      tokenD2(0),
+      tokenD3(0),
+      tokenCurrentDir(-1),
+      isSendingToken(false),
+      ownTokenValue(-1),
+      buildBorder(false)
+
+{
+}
+
+UniversalCoatingFlag::UniversalCoatingFlag(const UniversalCoatingFlag& other)
+    : Flag(other),
+      phase(other.phase),
+      contractDir(other.contractDir),
+      followIndicator(other.followIndicator),
+      Lnumber(other.Lnumber),
+      NumFinishedNeighbors(other.NumFinishedNeighbors),
+      leadComplaint(other.leadComplaint),
+      seedBound(other.seedBound),
+      block(other.block),
+      tokenValue(other.tokenValue),
+      tokenD1(other.tokenD1),
+      tokenD2(other.tokenD2),
+      tokenD3(other.tokenD3),
+      tokenCurrentDir(other.tokenCurrentDir),
+      isSendingToken(other.isSendingToken),
+      ownTokenValue(other.ownTokenValue),
+      buildBorder(other.buildBorder)
+{
+}
+
+UniversalCoating::UniversalCoating(const Phase _phase)
+{
+    setPhase(_phase);
+    Lnumber = -1;
+    downDir = -1;
+    leftDir = -1;
+    rightDir = -1;
+    NumFinishedNeighbors = 0;
+    reachedSeedBound = false;
+    hasComplained = false;
+    pullDir = -1;
+    holdCount = 0;
+    startedOffSurface = false;
+    parentStage = -1;
+    childStage=  -1;
+    ownTokenValue = -1;
+    hasLost = false;
+    superLeader= false;
+    borderPasses = 0;
+}
+
+UniversalCoating::UniversalCoating(const UniversalCoating& other)
+    : AlgorithmWithFlags(other),
+      phase(other.phase),
+      followDir(other.followDir),
+      Lnumber(other.Lnumber),
+      downDir(other.downDir),
+      leftDir(other.leftDir),
+      rightDir(other.rightDir),
+      NumFinishedNeighbors(other.NumFinishedNeighbors),
+      reachedSeedBound(other.reachedSeedBound),
+      hasComplained(other.hasComplained),
+      pullDir(other.pullDir),
+      holdCount(other.holdCount),
+      startedOffSurface(other.startedOffSurface),
+      parentStage(other.parentStage),
+      childStage(other.childStage),
+      ownTokenValue(other.ownTokenValue),
+      hasLost(other.hasLost),
+      borderPasses(other.borderPasses)
+{
+}
+
+UniversalCoating::~UniversalCoating()
+{
+}
+
+std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles, const int numParticles, const float holeProb, const bool leftBorder, const bool rightBorder)
+{
+    std::shared_ptr<System> system = std::make_shared<System>();
+    std::deque<Node> orderedSurface;
+    std::set<Node> occupied;
+    Node pos;
+    Node Start;
+    Node End;
+    int lastOffset = 0;
+
+    bool first = !leftBorder && !rightBorder;
+    while(system->size() < numStaticParticles) {
+        if(first)
+        {
+            system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));
+            first = false;
+        }
+        else
+        {
+            system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));
+        }
+        occupied.insert(pos);
+        orderedSurface.push_back(pos);
+        int offset;
+        if(lastOffset == 4) {
+            offset = randInt(3, 5);
+        } else {
+            offset = randInt(2, 5);
+        }
+        lastOffset = offset;
+        End=pos;
+        pos = pos.nodeInDir(offset);
+    }
+
+    //arbitrary borders
+    lastOffset = 0;
+    int counter=0;
+    int yMax= numParticles;
+    Node pos1= Node(Start.x + 1 ,Start.y);//start of the left border
+    Node pos2= Node((End.x)-1 ,End.y);//start of the right border
+    if(leftBorder)
+    {
+        while(counter < yMax) {
+            system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Border), randDir(), pos1));
+            occupied.insert(pos1);
+            orderedSurface.push_back(pos1);
+            int offset;
+            if(lastOffset == 3) {
+                offset = randInt(1, 4);
+            } else {
+                offset = randInt(1, 3);
+            }
+            lastOffset = offset;
+            pos1 = pos1.nodeInDir(offset);
+            counter++;
+        }
+    }
+    if(rightBorder)
+    {
+        counter =0;
+        while(counter < yMax) {
+            system->insert( Particle(std::make_shared<UniversalCoating>(Phase::Border), randDir(), pos2));
+            occupied.insert(pos2);
+            orderedSurface.push_back(pos2);
+            int offset;
+            if(lastOffset == 2) {
+                offset = randInt(1, 3);
+            } else {
+                offset = randInt(1, 4);
+            }
+            lastOffset = offset;
+            pos2 = pos2.nodeInDir(offset);
+            counter++;
+        }
+
+    }
+    //arbitrary borders
+
+    std::set<Node> candidates;
+    int count = 0;
+    for(auto it = orderedSurface.begin(); it != orderedSurface.end(); ++it) {
+        if(count >= sqrt(numParticles)) {
+            break;
+        }
+        count++;
+
+        for(int dir = 1; dir <= 2; dir++) {
+            const Node node = it->nodeInDir(dir);
+            if(occupied.find(node) == occupied.end()) {
+                candidates.insert(node);
+                occupied.insert(node);
+            }
+        }
+    }
+
+    yMax=0;
+    int numNonStaticParticles = 0;
+    while(numNonStaticParticles < numParticles) {
+        if(candidates.empty()) {
+            return system;
+        }
+
+        std::set<Node> nextCandidates;
+        for(auto it = candidates.begin(); it != candidates.end() && numNonStaticParticles < numParticles; ++it) {
+            if(randBool(1.0f - holeProb)) {
+                system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Inactive), randDir(), *it));
+                numNonStaticParticles++;
+
+                for(int dir = 1; dir <= 2; dir++) {
+                    const Node node = it->nodeInDir(dir);
+                    if(occupied.find(node) == occupied.end()) {
+                        nextCandidates.insert(node);
+                        occupied.insert(node);
+
+                        if(node.y > yMax) {
+                            yMax = node.y;
+                        }
+                    }
+                }
+            }
+        }
+        nextCandidates.swap(candidates);
+    }
+
+    return system;
+}
+
+
+Movement UniversalCoating::execute()
+{
+ updateNeighborStages();
+
+    if(phase == Phase::Lead || phase == Phase::retiredLeader)
+        unsetFollowIndicator();
+
+    if(isExpanded()) {
+        clearHeldToken();
+        if(phase == Phase::Lead)
+        {
+            if(phase == Phase::Lead && hasNeighborInPhase(Phase::Border))
+            {
+                borderPasses++;
+            }
+
+            if(hasNeighborInPhase(Phase::Inactive) || tailReceivesFollowIndicator()) {
+                return Movement(MovementType::HandoverContract, tailContractionLabel());
+            } else {
+
+                return Movement(MovementType::Contract, tailContractionLabel());
+            }
+        }
+        if(phase==Phase::Follow)
+        {
+            setFollowIndicatorLabel(followDir);
+        }
+
+        int activeFollowers = 0;
+        for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
+            auto label = *it;
+            if(inFlags[label] != nullptr && !neighborIsInPhase(label,Phase::Static)) {
+                if(inFlags[label]->followIndicator) {
+                    activeFollowers++;
+                }
+            }
+        }
+        if( activeFollowers<2 && outFlags[0].block == true)//only if making a change
+        {
+            for(int label = 0; label<10; label++)
+            {
+                outFlags[label].block =false;
+            }
+            return Movement(MovementType::Idle);
+        }
+
+        setFollowIndicatorLabel(followDir);
+        superLeader = isSuperLeader();//to know when contracted
+        if(hasNeighborInPhase(Phase::Inactive) || tailReceivesFollowIndicator()) {
+
+            if(phase==Phase::Hold && isSuperLeader())
+            {
+                setPhase(Phase::Normal);
+
+            }
+            return Movement(MovementType::HandoverContract, tailContractionLabel());
+        } else {
+            if(phase==Phase::Hold && isSuperLeader())
+            {
+                setPhase(Phase::Normal);
+            }
+            return Movement(MovementType::Contract, tailContractionLabel());
+        }
+    } else {
+        //particle is contracted
+        if(phase!=Phase::Inactive && phase!=Phase::Static && phase!=Phase::Border)
+        {
+            setBlock();
+            if(hasNeighborInPhase(Phase::Static))
+            {
+                handleElectionTokens();
+                if(phase == Phase::Border)
+                    return Movement(MovementType::Idle);
+            }
+
+            if(hasNeighborInPhase(Phase::retiredLeader) && phase!=Phase::Lead && phase!=Phase::retiredLeader) {
+                setPhase(Phase::Lead);
+                downDir= getDownDir();
+
+                if(downDir == -1)
+                    return Movement(MovementType::Idle);
+                else downDir=labelToDir(downDir);
+
+                Lnumber = getLnumber();
+                setLayerNumber(Lnumber);
+                unsetFollowIndicator();
+                setPhase(Phase::Lead);
+
+            }
+        }
+        if(phase == Phase::Inactive) {
+            if(hasNeighborInPhase(Phase::Static)) {
+                setPhase(Phase::Normal);
+                startedOffSurface = false;
+
+                downDir= getDownDir();
+                if(downDir == -1)
+                    return Movement(MovementType::Idle);
+                else downDir=labelToDir(downDir);
+
+                Lnumber = getLnumber();
+                setLayerNumber(Lnumber);
+
+                return Movement(MovementType::Idle);
+            }
+            startedOffSurface = true;
+            auto label = firstNeighborInPhase(Phase::Wait);
+            if(hasNeighborInPhase(Phase::Normal))
+            {
+                label = firstNeighborInPhase(Phase::Normal);
+            }
+            if(label != -1) {
+                setPhase(Phase::Wait);
+                followDir = labelToDir(label);
+                setFollowIndicatorLabel(followDir);
+                headMarkDir = followDir;
+
+                setPhase(Phase::Wait);
+                return Movement(MovementType::Idle);
+            }
+
+            return Movement(MovementType::Empty);
+
+        }
+
+        else if(phase!=Phase::Static && phase!=Phase::Border)
+        {
+            //layering block
+            if(hasNeighborInPhase(Phase::Static))
+            {
+                downDir= getDownDir();
+
+                if(downDir == -1)
+                {
+                    return Movement(MovementType::Idle);
+                }
+                else downDir=labelToDir(downDir);
+
+                Lnumber = getLnumber();
+                setLayerNumber(Lnumber);
+                int moveDir = getMoveDir();
+
+
+                if (neighborIsInPhase(moveDir, Phase::Border) || neighborIsInPhaseandLayer(moveDir, Phase::retiredLeader, Lnumber)|| reachedSeedBound)//??aya checke Lnumber nemikhad? ghanunan na age movedir dorost amal karde bashe
+                {
+                    setPhase(Phase::retiredLeader);
+                    getLeftDir();
+                    Q_ASSERT(leftDir>=0 && leftDir<=5);
+                    NumFinishedNeighbors = CountFinishedSides(leftDir, rightDir);
+                    setNumFinishedNeighbors(NumFinishedNeighbors);
+                    headMarkDir = downDir;//-1;
+
+                    setPhase(Phase::retiredLeader);
+
+                    return Movement(MovementType::Idle);
+                }
+            }
+            else
+            {
+                if((hasNeighborInPhase(Phase::Lead)||hasNeighborInPhase(Phase::Follow))&& (phase == Phase::Normal ||phase==Phase::Send || phase == Phase::Hold || phase==Phase::Wait))
+                {
+                    auto label = std::max(firstNeighborInPhase(Phase::Follow), firstNeighborInPhase(Phase::Lead));
+                    if(label != -1) {
+                        setPhase(Phase::Follow);
+                        followDir = labelToDir(label);
+                        setFollowIndicatorLabel(followDir);
+                        headMarkDir = followDir;
+
+                        setPhase(Phase::Follow);
+                        return Movement(MovementType::Idle);
+                    }
+                }
+            }
+            //phase changing block
+            if(phase == Phase::Normal)
+            {
+                if(hasNeighborInPhase(Phase::Static))
+                {
+                    auto label = getMoveDir();
+                    if(label != -1) {
+
+                        followDir = labelToDir(label);
+                        setFollowIndicatorLabel(followDir);
+                        headMarkDir = followDir;
+                    }
+                }
+
+                for(int label = 0;label<10;label++)
+                {
+                    if((neighborIsInPhase(label,Phase::Send) ) && inFlags[label]!=nullptr && inFlags[label]->followIndicator)
+                    {
+                        holdCount++;
+                        childStage = 0;
+                    }
+
+                }
+
+                if(holdCount>0)
+                {
+                    holdCount--;
+                    setPhase(Phase::Hold);
+                }
+                else if(!hasComplained && startedOffSurface && !neighborIsInPhase(headMarkDir,Phase::Send))
+                {
+                    setPhase(Phase::Hold);
+                    hasComplained = true;
+                }
+
+            }
+            else if (phase==Phase::Wait)
+            {
+                if(!hasComplained && !hasNeighborInPhase(Phase::Inactive) )
+                {
+                    setPhase(Phase::Hold);
+                    hasComplained = true;
+                }
+
+                else if(hasNeighborInPhase(Phase::Static))
+                {
+                    setPhase(Phase::Normal);
+                }
+
+            }
+            else if(phase == Phase:: Hold)
+            {
+                if(hasNeighborInPhase(Phase::Static)&&!(parentActivated()||neighborIsInPhase(headMarkDir,Phase::Inactive)))
+                {
+                    int moveDir = getMoveDir();
+                    setContractDir(moveDir);
+                    headMarkDir = moveDir;
+                    followDir = headMarkDir;
+                    auto temp = dirToHeadLabelAfterExpansion(followDir, moveDir);
+                    setFollowIndicatorLabel(temp);
+
+                    if(!(inFlags[moveDir]!=nullptr && (inFlags[moveDir]->isContracted())) )
+                    {
+                        clearHeldToken();
+                        return Movement(MovementType::Expand, moveDir);
+                    }
+                }
+                bool childrenNormal = true;
+                for(int label = 0;label<10;label++)
+                {
+                    if(inFlags[label]!=nullptr && inFlags[label]->followIndicator  && (neighborIsInPhase(label,Phase::Send)))
+                        childrenNormal = false;
+                }
+
+                if(neighborIsInPhase(headMarkDir,Phase::Normal))
+                {
+                    if(childrenNormal || childStage!=0)
+                    {
+                        setPhase(Phase::Send);
+
+                    }
+                }
+            }
+            else if(phase == Phase::Send)
+            {
+                if(parentStage == 1)
+                {
+                    setPhase(Phase::Normal);
+                    parentStage = -1;
+                }
+                else if(!parentActivated())
+                {
+                    parentStage = -1;
+                    setPhase(Phase::Hold);
+                }
+            }
+            else if(phase == Phase::Lead)
+            {
+
+                downDir= getDownDir();
+                if(downDir == -1)
+                {
+                    setPhase(Phase::Follow);
+                    return Movement(MovementType::Idle);
+                }
+                else
+                    downDir=labelToDir(downDir);
+
+                //check for tunnel against border, if necessary/possible, fillit
+
+                Lnumber = getLnumber();
+                setLayerNumber(Lnumber);
+                int moveDir = getMoveDir();
+
+                if (neighborIsInPhase(moveDir, Phase::Border)|| neighborIsInPhaseandLayer(moveDir, Phase::retiredLeader, Lnumber) ||(hasNeighborInPhase(Phase::Border)&& borderPasses>1))//??aya checke Lnumber nemikhad? ghanunan na age movedir dorost amal karde bashe
+                {
+
+                    setPhase(Phase::retiredLeader);
+                    getLeftDir();
+                    Q_ASSERT(leftDir>=0 && leftDir<=5);
+                    NumFinishedNeighbors = CountFinishedSides(leftDir, rightDir);
+                    setNumFinishedNeighbors(NumFinishedNeighbors);
+                    headMarkDir = downDir;//-1;
+
+                    setPhase(Phase::retiredLeader);
+
+                    return Movement(MovementType::Idle);
+                }
+
+
+                setContractDir(moveDir);
+                headMarkDir = downDir;
+                setPhase(Phase::Lead);
+                clearHeldToken();
+
+                return Movement(MovementType::Expand, moveDir);
+
+            }
+            else if(phase == Phase::Follow) {
+                Q_ASSERT(inFlags[followDir] != nullptr);
+                if(hasNeighborInPhase(Phase::Static)) {
+                    setPhase(Phase::Lead);
+                    downDir= getDownDir();
+
+                    if(downDir == -1)
+                        return Movement(MovementType::Idle);
+                    else downDir=labelToDir(downDir);
+
+                    Lnumber = getLnumber();
+                    setLayerNumber(Lnumber);
+                    unsetFollowIndicator();
+
+                    setPhase(Phase::Lead);
+                    return Movement(MovementType::Idle);
+                }
+                if(hasNeighborInPhase(Phase::retiredLeader)) {
+
+
+                    setPhase(Phase::Lead);
+                    downDir= getDownDir();
+
+                    if(downDir == -1)
+                        return Movement(MovementType::Idle);
+                    else downDir=labelToDir(downDir);
+
+                    Lnumber = getLnumber();
+                    setLayerNumber(Lnumber);
+                    unsetFollowIndicator();
+
+                    setPhase(Phase::Lead);
+
+                    return Movement(MovementType::Idle);
+                }
+                if(inFlags[followDir]->isExpanded() && !inFlags[followDir]->fromHead) {
+                    int expansionDir = followDir;
+                    setContractDir(expansionDir);
+                    followDir = updatedFollowDir();
+                    headMarkDir = followDir;
+                    auto temp = dirToHeadLabelAfterExpansion(followDir, expansionDir);
+                    Q_ASSERT(labelToDirAfterExpansion(temp, expansionDir) == followDir);
+                    setFollowIndicatorLabel(temp);
+                    return Movement(MovementType::Expand, expansionDir);
+                }
+                return Movement(MovementType::Idle);
+
+            }
+
+            else if(phase == Phase::retiredLeader )
+            {
+                //if(hasNeighborInPhase(Phase::Border))
+               //  qDebug()<<"retired leader by border";
+
+                for(int label= 0; label<10;label++)
+                {
+                    if(inFlags[label]!=nullptr && inFlags[label]->buildBorder)
+                    {
+                        setPhase(Phase::Border);
+                        int borderBuildDir = (headMarkDir+3)%6;
+                        while(neighborIsInPhase(borderBuildDir,Phase::Static))
+                            borderBuildDir = (borderBuildDir+1)%6;
+                        outFlags[borderBuildDir].buildBorder= true;
+                        qDebug()<<"trying to border?";
+                        return Movement(MovementType::Idle);
+                    }
+                }
+                getLeftDir();
+                Q_ASSERT(leftDir >=0 && leftDir<=5);
+                NumFinishedNeighbors = CountFinishedSides(leftDir, rightDir);
+                setNumFinishedNeighbors(NumFinishedNeighbors);
+                Q_ASSERT(NumFinishedNeighbors>=0 && NumFinishedNeighbors<=2);
+                if(NumFinishedNeighbors==2)
+                {
+                    if(reachedSeedBound)
+                    {
+                        int seedBoundFlagDir= (downDir+3)%6;
+                        int tries = 0;
+                        while(neighborIsInPhase(seedBoundFlagDir,Phase::Static) || ( neighborIsInPhase(seedBoundFlagDir,Phase::retiredLeader) && tries<10 ) )
+                        {
+                            seedBoundFlagDir = (seedBoundFlagDir+1)%6;
+                            tries++;
+                        }
+                        outFlags[seedBoundFlagDir].seedBound = true;
+                    }
+                }
+                setPhase(Phase::retiredLeader);
+                for(int label =0; label<10;label++)
+                {
+                    if(inFlags[label]!=nullptr && inFlags[label]->seedBound && !reachedSeedBound)
+                    {
+                        qDebug()<<"retired stuck to bound";
+                    }
+                }
+                return Movement(MovementType::Idle);
+
+            }
+            //motion block
+            if(phase == Phase::Normal || phase==Phase::Hold || phase == Phase::Wait || phase==Phase::Send )
+            {
+                updateNeighborStages();
+                setFollowIndicatorLabel(followDir);
+                if(followDir>-1 && followDir<10 && headMarkDir>-1&& !hasNeighborInPhase(Phase::Inactive))
+                {
+                    if(inFlags[followDir]!=nullptr  && inFlags[followDir]->isExpanded() && !inFlags[followDir]->fromHead && (!inFlags[followDir]->block || !hasNeighborInPhase(Phase::Static)) ) {
+                        int expansionDir = followDir;
+
+                        setContractDir(expansionDir);
+                        followDir = updatedFollowDir();
+                        headMarkDir = followDir;
+                        auto temp = dirToHeadLabelAfterExpansion(followDir, expansionDir);
+                        Q_ASSERT(labelToDirAfterExpansion(temp, expansionDir) == followDir);
+                        setFollowIndicatorLabel(temp);
+                        clearHeldToken();
+                        return Movement(MovementType::Expand, expansionDir);
+                    }
+                }
+
+
+
+                return Movement(MovementType::Idle);
+            }
+        }
+    }
+
+    return Movement(MovementType::Empty);
+}
+
+std::shared_ptr<Algorithm> UniversalCoating::clone()
+{
+    return std::make_shared<UniversalCoating>(*this);
+}
+
+bool UniversalCoating::isDeterministic() const
+{
+    return true;
+}
+
+void UniversalCoating::setPhase(const Phase _phase)
+{
+    phase = _phase;
+
+    if(phase == Phase::Normal)
+    {
+        headMarkColor = 0xff0000;
+        tailMarkColor = 0xff0000;
+    }
+    else if (phase==Phase::Wait)
+    {
+        headMarkColor = 0x0000ff;
+        tailMarkColor = 0x0000ff;
+    }
+    else if(phase == Phase:: Hold)
+    {
+        headMarkColor = 0xFF69B4;
+        tailMarkColor = 0xFF69B4;
+    }
+    else if(phase == Phase::Send)
+    {
+        headMarkColor = 0x00ff00;
+        tailMarkColor = 0x00ff00;
+    }
+
+    else if(phase == Phase::retiredLeader){
+      //  if(NumFinishedNeighbors ==2)
+       // {
+            headMarkColor = 0x00ff00;
+            tailMarkColor = 0x00ff00;
+        //}
+    }
+    else if(phase == Phase::Seed)
+    {
+        headMarkColor = 0xFF69B4;
+        tailMarkColor = 0xFF69B4;
+    }
+
+    else if(phase == Phase::Inactive) {
+        headMarkColor = -1;
+        tailMarkColor = -1;
+    } else  if(phase == Phase::Border)
+    {
+        headMarkColor = 0xd3d3d3;
+        tailMarkColor = 0xd3d3d3;
+
+    }
+    else  if(phase == Phase::Follow)
+    {
+        headMarkColor = 0xFFA500;
+        tailMarkColor = 0xFFA500;
+    }
+    else
+
+    { // phase == Phase::Static
+        headMarkColor = 0x000000;
+        tailMarkColor = 0x000000;
+    }
+
+    for(int label = 0; label < 10; label++) {
+        outFlags[label].phase = phase;
+    }
+    /*if(phase!=Phase::Static && hasNeighborInPhase(Phase::Static))
+    {
+        headMarkColor = 0xFF0000;
+        tailMarkColor = 0xFF0000;
+    }
+
+    else if(phase!=Phase::Static)
+    {
+        headMarkColor = 0x0000FF;
+        tailMarkColor = 0x0000FF;
+    }
+*/
+    //new colors block...
+    if(phase == Phase::Normal || phase == Phase::Wait )
+    {
+        headMarkColor = 0x0000FF;
+        tailMarkColor = 0x0000FF;
+    }
+    else if(phase == Phase::Hold || phase ==Phase::Send)
+    {
+        headMarkColor = 0xFF69B4;
+        tailMarkColor = 0xFF69B4;
+    }
+    else if(phase ==Phase::Lead)
+    {
+        headMarkColor = 0xFF0000;
+        tailMarkColor = 0xFF0000;
+    }
+}
+
+bool UniversalCoating::neighborIsInPhase(const int label, const Phase _phase) const
+{
+    Q_ASSERT(0 <= label && label <= 9);
+    return (inFlags[label] != nullptr && inFlags[label]->phase == _phase);
+}
+
+bool UniversalCoating::neighborIsInPhaseandLayer(const int label, const Phase _phase, const int L) const
+{
+    Q_ASSERT(isContracted());
+
+    return (inFlags[label] != nullptr && inFlags[label]->phase == _phase && inFlags[label]->Lnumber == L);
+}
+
+int UniversalCoating::firstNeighborInPhase(const Phase _phase) const
+{
+
+    for(int label = 0; label < 10; label++) {
+        if(neighborIsInPhase(label, _phase)) {
+            return label;
+        }
+    }
+    return -1;
+}
+
+int UniversalCoating::firstNeighborInPhaseandLayer(const Phase _phase, const int L) const
+{
+    for(int label = 0; label < 10; label++) {
+        if(neighborIsInPhaseandLayer(label, _phase, L)){
+            return label;
+        }
+    }
+    return -1;
+}
+bool UniversalCoating::hasNeighborInPhase(const Phase _phase) const
+{
+    return (firstNeighborInPhase(_phase) != -1);
+}
+
+void UniversalCoating::setContractDir(const int contractDir)
+{
+    for(int label = 0; label < 10; label++) {
+        outFlags[label].contractDir = contractDir;
+    }
+}
+
+int UniversalCoating::updatedFollowDir() const
+{
+    int contractDir = inFlags[followDir]->contractDir;
+    int offset = (followDir - inFlags[followDir]->dir + 9) % 6;
+    int tempFollowDir = (contractDir + offset) % 6;
+    Q_ASSERT(0 <= tempFollowDir && tempFollowDir <= 5);
+    return tempFollowDir;
+}
+
+void UniversalCoating::unsetFollowIndicator()
+{
+    for(int i = 0; i < 10; i++) {
+        outFlags[i].followIndicator = false;
+    }
+}
+
+void UniversalCoating::setFollowIndicatorLabel(const int label)
+{
+    for(int i = 0; i < 10; i++) {
+        outFlags[i].followIndicator = (i == label);
+    }
+}
+
+bool UniversalCoating::tailReceivesFollowIndicator() const
+{
+    for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
+        auto label = *it;
+        if(inFlags[label] != nullptr) {
+            if(inFlags[label]->followIndicator) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+int UniversalCoating::getMoveDir() const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(Lnumber!=-1);
+    int label= -1;
+    if(Lnumber %2 == 0)
+    {
+        label = firstNeighborInPhase(Phase::Static);
+        if(label != -1)
+        {
+            label = (label+5)%6;
+            while (neighborIsInPhase(label, Phase::Static)){
+                label = (label+5)%6;
+            }
+        }
+        else
+        {
+            label = firstNeighborInPhaseandLayer(Phase::retiredLeader, (Lnumber+1)%2);
+            label = (label+5)%6;
+            while (neighborIsInPhaseandLayer(label, Phase::retiredLeader, (Lnumber+1)%2)){
+
+                label = (label+5)%6;
+            }
+        }
+    }
+    else
+    {
+        label = firstNeighborInPhase(Phase::Static);
+        if(label != -1)
+        {
+            label = (label+1)%6;
+            while (neighborIsInPhase(label, Phase::Static)){
+                label = (label+1)%6;
+            }
+        }
+        else
+        {
+            label = firstNeighborInPhaseandLayer(Phase::retiredLeader, (Lnumber+1)%2);
+            label = (label+1)%6;
+            while (neighborIsInPhaseandLayer(label, Phase::retiredLeader, (Lnumber+1)%2)){
+                label = (label+1)%6;
+            }
+        }
+    }
+    Q_ASSERT(0 <= label && label <= 5);
+    return labelToDir(label);
+}
+
+int UniversalCoating::getDownDir() const
+{
+    Q_ASSERT(isContracted());
+    //Q_ASSERT(phase==Phase::Lead);
+
+    int label= -1;
+    if(hasNeighborInPhase(Phase::Static)) {
+        label = firstNeighborInPhase(Phase::Static);
+
+    }
+    else
+    {
+        int ZeroLayerGreens=0;
+        int OneLayerGreens = 0;
+        if(hasNeighborInPhase(Phase::retiredLeader))
+        {
+            ZeroLayerGreens = countGreenNeighbors(Phase::retiredLeader, 0);
+            OneLayerGreens =  countGreenNeighbors(Phase::retiredLeader, 1);
+            if(ZeroLayerGreens>0 && OneLayerGreens==0) //down is obviously towards that only layer of retired leaders
+            {
+                label= firstNeighborInPhaseandLayer(Phase::retiredLeader, 0);
+                Q_ASSERT(label>=0 && label<=5);
+            }
+            else if(ZeroLayerGreens==0 && OneLayerGreens>0)
+            {
+                label = firstNeighborInPhaseandLayer(Phase::retiredLeader, 1);
+                Q_ASSERT(label>=0 && label<=5);
+
+            }else //from each layer there are some retireds. So we need to decide based on f
+            {
+                if(countRetiredareFinished(0) == ZeroLayerGreens)
+                {
+                    label= firstNeighborInPhaseandLayer(Phase::retiredLeader, 0);
+                }
+                else if(countRetiredareFinished(1) == OneLayerGreens)
+                {
+                    label = firstNeighborInPhaseandLayer(Phase::retiredLeader, 1);
+                }
+
+                else label= -1;
+            }
+        }
+    }
+    return label;
+}
+
+int UniversalCoating::getLnumber() const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(downDir != -1);
+    Q_ASSERT(inFlags[downDir] != nullptr);
+    if(inFlags[downDir] != nullptr)
+    {
+        if(inFlags[downDir]->phase == Phase::Static)
+            return 0;
+        else
+            return (inFlags[downDir]->Lnumber +1)%2;
+    }
+    //Method has to return an integer in every case. Please check if 0 is a suitable value in this case. [Stanislaw Eppinger]
+    return 0;
+}
+
+void UniversalCoating::getLeftDir()
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(phase == Phase::retiredLeader);
+    Q_ASSERT(downDir != -1);
+
+    int label= downDir;
+    int leftside= -1, rightside= -1;
+    if(neighborIsInPhase(label, Phase::Static))
+    {
+        label = (label+5)%6;
+        while (neighborIsInPhase(label, Phase::Static)){
+            label = (label+5)%6;
+        }
+        leftside= label;
+    }
+    else
+    {
+        label= downDir;
+        if(neighborIsInPhase(label, Phase::retiredLeader))
+        {
+            label = (label+5)%6;
+            while (neighborIsInPhaseandLayer(label, Phase::retiredLeader, (Lnumber+1)%2)){
+                label = (label+5)%6;
+            }
+            leftside= label;
+        }
+    }
+
+    label= downDir;
+    if(neighborIsInPhase(label, Phase::Static))
+    {
+        label = (label+1)%6;
+        while (neighborIsInPhase(label, Phase::Static)){
+            label = (label+1)%6;
+        }
+        rightside= label;
+    }
+    else
+    {   label= downDir;
+        if(neighborIsInPhase(label, Phase::retiredLeader))
+        {
+            label = (label+1)%6;
+            while (neighborIsInPhaseandLayer(label, Phase::retiredLeader, (Lnumber+1)%2)){
+                label = (label+1)%6;
+            }
+            rightside= label;
+        }
+    }
+
+    leftDir = labelToDir(leftside);
+    rightDir= labelToDir(rightside);
+}
+
+int UniversalCoating::countGreenNeighbors(const Phase _phase, const int L) const
+{
+    int count=0;
+    for(int dir = 0; dir < 10; dir++) {
+        if(neighborIsInPhaseandLayer(dir, _phase, L) ) {
+            count++;
+        }
+    }
+    return count;
+}
+void UniversalCoating::setLayerNumber(const int _Lnumber){
+    Q_ASSERT(_Lnumber==0 || _Lnumber==1);
+    for(int label = 0; label < 10; label++){
+        outFlags[label].Lnumber= _Lnumber;
+    }
+}
+
+int UniversalCoating::CountFinishedSides(const int _leftDir, const int _rightDir) const
+{
+    int count=0;
+    Q_ASSERT(_leftDir != -1);
+    //I have not put leftdit into my outflags but I am accessing thme from my inflags!
+    if(neighborIsInPhase(_leftDir, Phase::Border) || neighborIsInPhase(_leftDir, Phase::retiredLeader))
+        count++;
+    if(neighborIsInPhase(_rightDir, Phase::Border) || neighborIsInPhase(_rightDir, Phase::retiredLeader))
+        count++;
+
+    return count;
+}
+
+int UniversalCoating::countRetiredareFinished(const int _Lnumber) const
+{
+    int countFinished =0;
+    for(int dir = 0; dir < 10; dir++) {
+        if(neighborIsInPhaseandLayer(dir, Phase::retiredLeader, _Lnumber) && inFlags[dir]->NumFinishedNeighbors == 2) {
+            countFinished++; //number of retired leaders p has with layer number =0
+
+        }
+    }
+
+    return countFinished;
+}
+
+void UniversalCoating::setNumFinishedNeighbors(const int _NumFinishedNeighbors)
+{
+    for(int i = 0; i < 10; i++) {
+        outFlags[i].NumFinishedNeighbors = _NumFinishedNeighbors;
+    }
+}
+bool UniversalCoating::inFrontOfLeadC() const
+{
+    for(int label =0; label<10; label++)
+    {
+        if(inFlags[label]!=nullptr && inFlags[label]->leadComplaint)
+        {
+            return true;
+        }
+
+    }
+    return false;
+
+}
+void UniversalCoating::setLeadComplaint(bool value)
+{
+    for(int label = 0; label<10;label++)
+    {
+        outFlags[label].leadComplaint = value;
+    }
+
+}
+void UniversalCoating::setBlock()
+{
+
+    bool block = false;
+
+    if(hasNeighborInPhase(Phase::Static))
+    {
+        /* for(int label = 0; label<10; label++)
+        {
+            if((neighborIsInPhase(label,Phase::Wait) || neighborIsInPhase(label,Phase::Hold)|| neighborIsInPhase(label,Phase::Send)) && label!=headMarkDir && inFlags[label]!=nullptr && inFlags[label]->followIndicator)
+            {
+                block = true;
+                break;
+            }
+        }*/
+        auto label = firstNeighborInPhase(Phase::Static);
+        int behindLabel = (label+1)%6;
+        int frontLabel = label;
+        while(neighborIsInPhase(frontLabel,Phase::Static))
+        {
+            frontLabel = (frontLabel+5)%6;
+        }
+        int checkLabel = (behindLabel+1)%6;
+        int count = 0;
+        while(checkLabel!=frontLabel)
+        {
+            if(inFlags[checkLabel]!=nullptr && inFlags[checkLabel]->followIndicator)
+                count++;
+            checkLabel = (checkLabel+1)%6;
+        }
+        if(count>0)
+        {
+            block = true;
+        }
+
+    }
+    for(int label = 0; label<10; label++)
+    {
+        outFlags[label].block =block;
+
+    }
+}
+void UniversalCoating::expandedSetBlock()
+{
+
+
+}
+bool UniversalCoating::isSuperLeader()
+{
+
+    int headNeighbors = 0;
+    int tailNeighbors = 0;
+    auto label = firstNeighborInPhase(Phase::Static);
+    if(label != -1)
+    {
+        label = (label+9)%10;
+        while (neighborIsInPhase(label, Phase::Static)){
+            label = (label+9)%10;
+        }
+        if(inFlags[label]!=nullptr)
+            headNeighbors++;
+    }
+    label = firstNeighborInPhase(Phase::Static);
+    if(label != -1)
+    {
+        label = (label+1)%10;
+        if(inFlags[label]!=nullptr)
+            tailNeighbors++;
+
+    }
+    if(hasNeighborInPhase(Phase::Static) && headNeighbors==0)// && tailNeighbors == 1)
+        return true;
+    return false;
+}
+void UniversalCoating::updateParentStage()
+{
+    if(headMarkDir>-1)
+    {
+
+        if(parentStage == -1)
+        {
+            if(!neighborIsInPhase(headMarkDir,Phase::Hold))
+                parentStage = 0;
+        }
+        else if(parentStage == 0)
+        {
+            if(neighborIsInPhase(headMarkDir,Phase::Hold))
+                parentStage = 1;
+        }
+        else if (parentStage == 1)
+        {
+            if(!neighborIsInPhase(headMarkDir,Phase::Hold))
+                parentStage = -1;
+        }
+
+
+    }
+}
+void UniversalCoating::updateChildStage()
+{
+    if(childStage == -1)
+    {
+        bool hasHoldingChild = false;
+        for(int label = 0; label<10;label++)
+        {
+            if(inFlags[label]!=nullptr && neighborIsInPhase(label,Phase::Hold))
+            {
+                hasHoldingChild = true;
+            }
+        }
+        if(hasHoldingChild)
+        {
+            childStage = 0;
+        }
+        else
+        {
+            childStage = 1;
+        }
+    }
+    //1, 0 stay until self changes, resets childStage to -1
+
+}
+void UniversalCoating::updateNeighborStages()
+{
+    if(phase ==Phase::Send || phase==Phase::Hold)
+        updateParentStage();
+    else
+        parentStage = -1;
+
+
+    if(phase!=Phase::Hold)
+        childStage = -1;
+}
+
+bool UniversalCoating::parentActivated()
+{
+    if(neighborIsInPhase(headMarkDir,Phase::Hold) || neighborIsInPhase(headMarkDir,Phase::Send)
+            ||neighborIsInPhase(headMarkDir,Phase::Wait) || neighborIsInPhase(headMarkDir,Phase::Normal))
+        return true;
+
+    return false;
+}
+
+
+void UniversalCoating::handleElectionTokens()
+{
+
+    //step 1: set up token values to random numbers
+    if(ownTokenValue== -1)
+    {
+        ownTokenValue = 1;//rand() % 10;
+        for(int label=0;label<10;label++)
+        {
+            outFlags[label].ownTokenValue = ownTokenValue;
+        }
+        qDebug()<<"init: "<<ownTokenValue;
+        //initializing some tokens- those who have an already active parent to send to
+        if(headMarkDir>-1 && parentActivated())
+        {
+            sendOwnToken();
+        }
+    }
+
+    //step 2: if sending a token and its either received or beat by the one in front, remove
+    if(outFlags[0].tokenValue!=-1)
+    {
+
+        //if matches or loses to that in front, clear it.
+        int   surfaceParent = headMarkDir;
+
+        if(surfaceParent!=-1)
+        {
+            //   if(inFlags[surfaceParent]!=nullptr) qDebug()<<"parent: "<<inFlags[surfaceParent]->ownTokenValue;
+            if(inFlags[surfaceParent]!=nullptr && inFlags[surfaceParent]->tokenValue >= outFlags[0].tokenValue)
+            {
+                clearHeldToken();
+            }
+        }
+    }
+    //step 3: receive tokens if beat own/currently held token; update distance counts
+    auto surfaceFollower = firstNeighborInPhase(Phase::Static);
+    if(surfaceFollower!=-1)
+    {
+        while(neighborIsInPhase(surfaceFollower,Phase::Static))
+            surfaceFollower = (surfaceFollower+1)%6;
+    }
+
+    if(surfaceFollower != -1)
+    {
+        if(inFlags[surfaceFollower]!=nullptr  && inFlags[surfaceFollower]->tokenValue!=-1)
+        {
+            int d1 = inFlags[surfaceFollower]->tokenD1;
+            int d2 = inFlags[surfaceFollower]->tokenD2;
+            if(inFlags[surfaceFollower]->tokenValue == ownTokenValue  )
+            {
+                clearHeldToken();
+
+                qDebug()<<"received own1: "<<ownTokenValue<<" from "<<inFlags[surfaceFollower]->ownTokenValue<<" "<< d1<<" "<<d2;
+                qDebug()<<"tokenCDir: "<<inFlags[surfaceFollower]->tokenCurrentDir;
+                for(int label = 0; label<10;label++)
+                {
+                    outFlags[label].tokenValue = inFlags[surfaceFollower]->tokenValue;
+                    outFlags[label].tokenCurrentDir = inFlags[surfaceFollower]->tokenCurrentDir;
+                    outFlags[label].tokenD1 = d1;
+                    outFlags[label].tokenD2 = d2;
+                }
+                updateTokenDirs(surfaceFollower);
+                qDebug()<<"new cDir"<<outFlags[0].tokenCurrentDir;
+
+                qDebug()<<"received own2: "<<ownTokenValue<<" from "<<inFlags[surfaceFollower]->ownTokenValue<<" "<< outFlags[0].tokenD1<<" "<< outFlags[0].tokenD2<<" "<< outFlags[0].tokenD3;
+
+                if(outFlags[0].tokenD1==0 &&  outFlags[0].tokenD2 ==0 )
+                {
+                    clearHeldToken();
+                    setPhase(Phase::retiredLeader);
+                    downDir=labelToDir(downDir);
+                    Lnumber = getLnumber();
+                    setLayerNumber(Lnumber);
+
+                    setPhase(Phase::retiredLeader);
+                    getLeftDir();
+                    Q_ASSERT(leftDir>=0 && leftDir<=5);
+                    NumFinishedNeighbors = CountFinishedSides(leftDir, rightDir);
+                    setNumFinishedNeighbors(NumFinishedNeighbors);
+                    headMarkDir = downDir;//-1;
+
+                    int borderBuildDir = (headMarkDir+3)%6;
+                    qDebug()<<"init border build dir: "<<borderBuildDir;
+                    while(neighborIsInPhase(borderBuildDir,Phase::Static))
+                    {
+                        borderBuildDir = (borderBuildDir+1)%6;
+                        qDebug()<<"tried: "<<borderBuildDir;
+                     }
+                    qDebug()<<"border set: "<<borderBuildDir<<"head: "<<headMarkDir;
+                    outFlags[borderBuildDir].buildBorder = true;
+                    setPhase(Phase::Border);
+                }
+                else
+                {
+                    newOwnToken();
+                    return;
+                }
+
+            }
+            //follower's token beats both held token and own token
+            else if(inFlags[surfaceFollower]->tokenValue > outFlags[0].tokenValue && inFlags[surfaceFollower]->tokenValue>ownTokenValue )
+            {
+                //  qDebug()<<"received other: "<< inFlags[surfaceFollower]->tokenD1<<" "<< inFlags[surfaceFollower]->tokenD2<<" "<< inFlags[surfaceFollower]->tokenD3;
+
+                for(int label = 0; label<10;label++)
+                {
+                    outFlags[label].tokenValue = inFlags[surfaceFollower]->tokenValue;
+                    outFlags[label].tokenCurrentDir = inFlags[surfaceFollower]->tokenCurrentDir;
+                    outFlags[label].tokenD1 =d1;
+                    outFlags[label].tokenD2 =d2;
+
+
+                    if(outFlags[label].tokenValue<10)
+                    {
+                    headMarkColor = 0x0000ff;
+                    tailMarkColor = 0x0000ff;
+                    }
+                    else if(outFlags[label].tokenValue<20)
+                    {
+                        headMarkColor = 0x00ff00;
+                        tailMarkColor = 0x0000ff;
+
+                    }
+                    else if(outFlags[label].tokenValue<30)
+                    {
+                        headMarkColor = 0xff0000;
+                        tailMarkColor = 0x0000ff;
+
+                    }
+                    else if(outFlags[label].tokenValue<40)
+                    {
+                        headMarkColor = 0x0ff000;
+                        tailMarkColor = 0x0000ff;
+
+                    }
+                }
+                updateTokenDirs(surfaceFollower);
+            }
+            else if(outFlags[0].tokenValue> ownTokenValue)
+            {
+            }
+            else
+            {
+                sendOwnToken();
+            }
+        }
+    }
+    if(phase ==Phase::retiredLeader) clearHeldToken();
+
+
+}
+
+void UniversalCoating::clearHeldToken()
+{
+    for(int label = 0; label<10; label++)
+    {
+        outFlags[label].tokenValue = -1;
+        outFlags[label].tokenD1 = 0;
+        outFlags[label].tokenD2 = 0;
+        outFlags[label].tokenD3 = 0;
+        outFlags[label].tokenCurrentDir = -1;
+        outFlags[label].isSendingToken = false;
+    }
+}
+
+void UniversalCoating::updateTokenDirs(int recDir)
+{
+    int recOppositeDir = (recDir+3)%6;
+    int offset =headMarkDir - recOppositeDir;
+    if(offset == 5) offset = -1;
+    if(offset == -5) offset = 1;
+    int tokenCurrentDir = outFlags[0].tokenCurrentDir;
+    if(tokenCurrentDir == -1) //uninitialized- so this is axis #1, start counting here
+    {
+        tokenCurrentDir = 0;
+    }
+    else
+    {
+        tokenCurrentDir = (tokenCurrentDir+offset+6)%6;
+
+    }
+    for(int label = 0;label<10;label++)
+        outFlags[label].tokenCurrentDir = tokenCurrentDir;
+    switch(tokenCurrentDir)
+    {
+    // modify (D1,D2) pair
+    case 0:
+        for(int label = 0; label<10;label++)
+        {
+            outFlags[label].tokenD1+=2;
+        }
+        break;
+    case 1:
+        for(int label = 0; label<10;label++)
+        {
+            outFlags[label].tokenD1++;
+            outFlags[label].tokenD2++;
+        }
+        break;
+    case 2:
+        for(int label = 0; label<10;label++)
+        {
+            outFlags[label].tokenD1--;
+            outFlags[label].tokenD2++;
+        }
+        break;
+    case 3:
+        for(int label = 0; label<10;label++)
+        {
+            outFlags[label].tokenD1-=2;
+        }
+        break;
+    case 4:
+        for(int label = 0; label<10;label++)
+        {
+            outFlags[label].tokenD1--;
+            outFlags[label].tokenD2--;
+        }
+        break;
+    case 5:
+        for(int label = 0; label<10;label++)
+        {
+            outFlags[label].tokenD1++;
+            outFlags[label].tokenD2--;
+        }
+        break;
+    }
+}
+
+
+void UniversalCoating::setSendingToken(bool value)
+{
+    for(int label=0; label<10; label++)
+        outFlags[label].isSendingToken = value;
+}
+void UniversalCoating::sendOwnToken()
+{
+    clearHeldToken();
+
+    for(int label=0;label<10;label++)
+    {
+        outFlags[label].tokenValue = ownTokenValue;
+        outFlags[label].tokenD1 = 0;
+        outFlags[label].tokenD2 = 0;
+        outFlags[label].tokenD3 = 0;
+    }
+}
+void UniversalCoating::newOwnToken()
+{
+    clearHeldToken();
+    qDebug()<<"change : "<<ownTokenValue;
+    ownTokenValue = rand() % 40;
+    qDebug()<<"to: "<<ownTokenValue;
+    sendOwnToken();
+}
+
+}
