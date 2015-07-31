@@ -20,7 +20,8 @@
 #include "alg/holeelimstandard.h"
 #include "alg/holeelimcompaction.h"
 #include "alg/leaderelection_agentcycles.h"
-
+#include "alg/universalcoating.h"
+#include "alg/leaderelectiondemo.h"
 /*
  * The methods of the following class are automatically available during runtime as command in the command-line.
  * */
@@ -60,7 +61,8 @@ public slots:
     void holeelimstandard(const unsigned int numParticles = 100);
     void holeelimcompaction(const unsigned int numParticles = 100);
     void leaderelectionagentcycles(const unsigned int numParticles = 100);
-
+    void universalcoating(const int numStaticParticles=50, const int numParticles=50, const float holeProb = 0.2, const bool leftB=false, const bool rightB=false);
+    void leaderelectiondemo();
 private:
     Simulator& sim;
 };
@@ -260,5 +262,18 @@ inline void ScriptInterface::holeelimcompaction(const unsigned int numParticles)
 inline void ScriptInterface::leaderelectionagentcycles(const unsigned int numParticles)
 {
     sim.setSystem(LeaderElectionAgentCycles::LeaderElectionAgentCycles::instance(numParticles));
+}
+inline void ScriptInterface::leaderelectiondemo()
+{
+   sim.setSystem(LeaderElectionDemo::LeaderElectionDemo::instance());
+}
+inline void ScriptInterface::universalcoating(const  int numStaticParticles, const int numParticles, const float holeProb, const bool leftBorder , const bool rightBorder)
+{
+    if(holeProb < 0.0f || holeProb > 1.0f) {
+        sim.log("holeProb in [0.0, 1.0] required", true);
+        return;
+    }
+   sim.setSystem(UniversalCoating::UniversalCoating::instance(numStaticParticles ,numParticles,holeProb, leftBorder, rightBorder));
+
 }
 #endif // SCRIPTINTERFACE_H
