@@ -224,6 +224,36 @@ int Particle::tailMarkDir() const
     }
 }
 
+std::array<int, 18> Particle::borderColors() const
+{
+    return algorithm->borderColors;
+}
+
+int Particle::borderDir(const int dir) const
+{
+    Q_ASSERT(-1 <= dir && dir <= 17);
+    if(dir == -1) {
+        return -1;
+    } else {
+        return (3 * orientation + dir) % 18;
+    }
+}
+
+std::array<int, 6> Particle::borderPointColors() const
+{
+    return algorithm->borderPointColors;
+}
+
+int Particle::borderPointDir(const int dir) const
+{
+    Q_ASSERT(-1 <= dir && dir <= 5);
+    if(dir == -1) {
+        return -1;
+    } else {
+        return (orientation + dir) % 6;
+    }
+}
+
 bool Particle::algorithmIsDeterministic() const
 {
     return algorithm->isDeterministic();

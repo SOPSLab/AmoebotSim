@@ -237,6 +237,40 @@ void VisItem::drawParticle(const Particle& p, const Quad& view)
         glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
         glfn->glTexCoord2f(texOffset.x(), texOffset.y() + oneEighth);
         glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
+
+        // draw borders
+        for(auto i = 0; i < p.borderColors().size(); ++i) {
+            if(p.borderColors().at(i) != -1) {
+                QRgb color = p.borderColors().at(i);
+                glfn->glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
+                const QPointF& texOffset = indexToParticleTexPos(p.borderDir(i) + 21);
+                glfn->glTexCoord2f(texOffset.x(), texOffset.y());
+                glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
+                glfn->glTexCoord2f(texOffset.x() + oneEighth, texOffset.y());
+                glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() - halfQuadSideLength);
+                glfn->glTexCoord2f(texOffset.x() + oneEighth, texOffset.y() + oneEighth);
+                glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
+                glfn->glTexCoord2f(texOffset.x(), texOffset.y() + oneEighth);
+                glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
+            }
+        }
+
+        // draw border points
+        for(auto i = 0; i < p.borderPointColors().size(); ++i) {
+            if(p.borderPointColors().at(i) != -1) {
+                QRgb color = p.borderPointColors().at(i);
+                glfn->glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 255 << 23);
+                const QPointF& texOffset = indexToParticleTexPos(p.borderPointDir(i) + 15);
+                glfn->glTexCoord2f(texOffset.x(), texOffset.y());
+                glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
+                glfn->glTexCoord2f(texOffset.x() + oneEighth, texOffset.y());
+                glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() - halfQuadSideLength);
+                glfn->glTexCoord2f(texOffset.x() + oneEighth, texOffset.y() + oneEighth);
+                glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
+                glfn->glTexCoord2f(texOffset.x(), texOffset.y() + oneEighth);
+                glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
+            }
+        }
     }
 }
 

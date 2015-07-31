@@ -1,4 +1,5 @@
 #include <set>
+#include <QDebug>
 
 #include "leaderelection_agentcycles.h"
 #include "sim/particle.h"
@@ -93,32 +94,30 @@ Movement LeaderElectionAgentCycles::execute()
     } else { // state == State::Idle
         if(numNeighbors() == 0 || numNeighbors() == 6) { // a particle with no neighbors or that is completely surrounded has no agents
             setState(State::Finished);
-        } else { // has some unoccupied neighborhood component
-            std::set<int> dirs = {0,1,2,3,4,5};
+        } else { // create agents and borders in unoccupied components
             int agentNum = 0;
-
             for(int dir = 0; dir < 6; ++dir) {
-                if(inFlags[dir] == nullptr && dirs.find(dir) != dirs.end()) {
+                if(inFlags[dir] == nullptr && inFlags[(dir + 1) % 6] != nullptr) {
                     Q_ASSERT(agentNum < 3);
+
+                    // record agent information
                     agents.at(agentNum).agentDir = dir;
                     agents.at(agentNum).nextAgentDir = getNextAgentDir(dir);
                     agents.at(agentNum).prevAgentDir = getPrevAgentDir(dir);
-                    ++agentNum;
 
-                    if(agents.at(agentNum).nextAgentDir == agents.at(agentNum).prevAgentDir) {
-                        dirs.clear(); // all positions have been considered
-                    } else { // remove positions covered by this new agent
-                        int removeDir = agents.at(agentNum).prevAgentDir;
-                        while(removeDir != agents.at(agentNum).nextAgentDir) {
-                            dirs.erase(removeDir);
-                            removeDir = (removeDir - 1 + 6) % 6;
+                    // make agent colors and borders
+                    borderPointColors.at(dir) = 0x999999;
+                    int tempDir = (agents.at(agentNum).nextAgentDir + 1) % 6;
+                    while(tempDir != agents.at(agentNum).prevAgentDir) {
+                        if((tempDir + 1) % 6 == agents.at(agentNum).prevAgentDir) {
+                            borderColors.at(3 * tempDir + 1) = 0x009900;
+                        } else {
+                            borderColors.at(3 * tempDir + 2) = 0x009900;
                         }
+                        tempDir = (tempDir + 1) % 6;
                     }
-                }
-                dirs.erase(dir);
 
-                if(dirs.empty()) {
-                    break;
+                    agentNum++;
                 }
             }
 
@@ -186,7 +185,7 @@ int LeaderElectionAgentCycles::getPrevAgentDir(const int agentDir) const
 int LeaderElectionAgentCycles::numNeighbors() const
 {
     int count = 0;
-    for(int dir = 0; dir < 5; ++dir) {
+    for(int dir = 0; dir < 6; ++dir) {
         if(inFlags[dir] != nullptr) {
             ++count;
         }

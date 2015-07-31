@@ -74,6 +74,10 @@ public:
     int tailMarkColor;
     int tailMarkDir;
 
+    // the line segments for borders can exist in 18 different positions (see res/particle.png)
+    std::array<int, 18> borderColors;
+    std::array<int, 6> borderPointColors;
+
 protected:
     static std::mt19937 rng;
 
@@ -101,6 +105,8 @@ inline Algorithm::Algorithm()
       headMarkDir(-1),
       tailMarkColor(-1),
       tailMarkDir(-1),
+      borderColors({-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}),
+      borderPointColors({-1,-1,-1,-1,-1,-1}),
       _tailDir(-1)
 {
     static bool rngInitialized = false;
@@ -125,6 +131,8 @@ inline Algorithm::Algorithm(const Algorithm& other)
       headMarkDir(other.headMarkDir),
       tailMarkColor(other.tailMarkColor),
       tailMarkDir(other.tailMarkDir),
+      borderColors(other.borderColors),
+      borderPointColors(other.borderPointColors),
       _tailDir(other._tailDir)
 {
 }

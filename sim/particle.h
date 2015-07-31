@@ -42,6 +42,10 @@ public:
     int headMarkDir() const;
     int tailMarkColor() const;
     int tailMarkDir() const;
+    std::array<int, 18> borderColors() const;
+    int borderDir(const int dir) const;
+    std::array<int, 6> borderPointColors() const;
+    int borderPointDir(const int dir) const;
     bool algorithmIsDeterministic() const;
 
     template<int n> static int posMod(const int a);
