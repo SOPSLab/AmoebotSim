@@ -27,6 +27,8 @@ Application::Application(int argc, char *argv[]) :
     auto slider = qmlRoot->findChild<QObject*>("roundDurationSlider");
 
     connect(sim.get(), &Simulator::updateSystem, vis, &VisItem::updateSystem);
+    connect(sim.get(), &Simulator::moveCameraTo, vis, &VisItem::moveCameraTo);
+    connect(sim.get(), &Simulator::setZoom, vis, &VisItem::setZoom);
     connect(sim.get(), &Simulator::saveScreenshotSignal, vis, &VisItem::saveScreenshot);
     connect(qmlRoot, SIGNAL(start()), sim.get(), SLOT(start()));
     connect(qmlRoot, SIGNAL(stop() ), sim.get(), SLOT(stop() ));

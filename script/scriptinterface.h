@@ -47,6 +47,8 @@ public slots:
     int getNumMovements();
 
     void setRoundDuration(int ms);
+    void moveCameraTo(float worldX, float worldY);
+    void setZoom(float factor);
 
     void exampleAlgorithm(const int numParticles);
     void infObjCoating(const int numParticles, const float holeProb = 0.2);
@@ -149,6 +151,14 @@ inline int ScriptInterface::getNumMovements()
 inline void ScriptInterface::setRoundDuration(int ms)
 {
     sim.setRoundDuration(ms);
+}
+
+inline void ScriptInterface::moveCameraTo(float worldX, float worldY){
+  emit sim.moveCameraTo(worldX, worldY);
+}
+
+inline void ScriptInterface::setZoom(float factor){
+  emit sim.setZoom(factor);
 }
 
 inline void ScriptInterface::exampleAlgorithm(const int numParticles)

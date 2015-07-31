@@ -55,8 +55,8 @@ UniversalCoatingFlag::UniversalCoatingFlag(const UniversalCoatingFlag& other)
 UniversalCoating::UniversalCoating(const Phase _phase)
 {
     setPhase(_phase);
-    downDir = -1;
     Lnumber = -1;
+    downDir = -1;
     leftDir = -1;
     rightDir = -1;
     NumFinishedNeighbors = 0;
@@ -67,9 +67,9 @@ UniversalCoating::UniversalCoating(const Phase _phase)
     startedOffSurface = false;
     parentStage = -1;
     childStage=  -1;
-    superLeader= false;
     ownTokenValue = -1;
     hasLost = false;
+    superLeader= false;
     borderPasses = 0;
 }
 
@@ -77,8 +77,8 @@ UniversalCoating::UniversalCoating(const UniversalCoating& other)
     : AlgorithmWithFlags(other),
       phase(other.phase),
       followDir(other.followDir),
-      downDir(other.downDir),
       Lnumber(other.Lnumber),
+      downDir(other.downDir),
       leftDir(other.leftDir),
       rightDir(other.rightDir),
       NumFinishedNeighbors(other.NumFinishedNeighbors),
@@ -616,7 +616,7 @@ Movement UniversalCoating::execute()
                     {
                         int seedBoundFlagDir= (downDir+3)%6;
                         int tries = 0;
-                        while(neighborIsInPhase(seedBoundFlagDir,Phase::Static) ||neighborIsInPhase(seedBoundFlagDir,Phase::retiredLeader) && tries<10)
+                        while(neighborIsInPhase(seedBoundFlagDir,Phase::Static) || ( neighborIsInPhase(seedBoundFlagDir,Phase::retiredLeader) && tries<10 ) )
                         {
                             seedBoundFlagDir = (seedBoundFlagDir+1)%6;
                             tries++;
@@ -954,8 +954,9 @@ int UniversalCoating::getLnumber() const
             return 0;
         else
             return (inFlags[downDir]->Lnumber +1)%2;
-
     }
+    //Method has to return an integer in every case. Please check if 0 is a suitable value in this case. [Stanislaw Eppinger]
+    return 0;
 }
 
 void UniversalCoating::getLeftDir()

@@ -24,6 +24,8 @@ signals:
     void roundDurationChanged(int ms);
     void numMovementsChanged(int num);
     void roundsChanged(int round);
+    void moveCameraTo(float worldX, float wordlY);
+    void setZoom(float factor);
 
     void started();
     void stopped();
