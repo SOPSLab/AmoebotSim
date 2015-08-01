@@ -4,11 +4,20 @@ import QtQuick.Layouts 1.1
 import VisItem 1.0
 
 ApplicationWindow {
+    id: appWindow
     visible: true
     color: "black"
     minimumWidth: 800
     minimumHeight: 600
     title: "AmoebotSim"
+
+    onWidthChanged: {
+        vis.width = width
+    }
+
+    onHeightChanged: {
+        vis.height = height
+    }
 
     signal start()
     signal stop()
@@ -57,9 +66,32 @@ ApplicationWindow {
         roundsText.text = rounds
     }
 
+    function setResolution(_width, _height){
+        if(_width >= appWindow.minimumWidth){
+            appWindow.width = _width
+        } else {
+            appWindow.width = appWindow.minimumWidth
+        }
+
+        if(_height >= appWindow.minimumHeight){
+            appWindow.height = _height
+        } else {
+            appWindow.height = appWindow.minimumHeight
+        }
+    }
+
+    function setFullscreen(){
+        showFullScreen()
+    }
+
+    function setWindowed(){
+        //Check link for values: http://doc.qt.io/qt-5/qwindow.html#Visibility-enum
+        if(appWindow.visibility == 5)
+            showMaximized()
+    }
+
     VisItem {
         id: vis
-        anchors.fill: parent
     }
 
     RowLayout{

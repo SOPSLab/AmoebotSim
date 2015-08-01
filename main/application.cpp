@@ -68,6 +68,22 @@ Application::Application(int argc, char *argv[]) :
                 QMetaObject::invokeMethod(qmlRoot, "setLabelStart");
             }
     );
+    connect(sim.get(), &Simulator::setResolution,
+            [qmlRoot](const int width, const int height){
+                QMetaObject::invokeMethod(qmlRoot, "setResolution", Q_ARG(QVariant, width), Q_ARG(QVariant, height));
+            }
+    );
+    connect(sim.get(), &Simulator::setFullscreen,
+            [qmlRoot](){
+                QMetaObject::invokeMethod(qmlRoot, "setFullscreen");
+            }
+    );
+    connect(sim.get(), &Simulator::setWindowed,
+            [qmlRoot](){
+                QMetaObject::invokeMethod(qmlRoot, "setWindowed");
+            }
+    );
+
 
     // setup connections between GUI and CommmandHistoryManager
     connect(qmlRoot, SIGNAL(executeCommand(QString)), &commandHistoryManager, SLOT(commandExecuted(QString)));

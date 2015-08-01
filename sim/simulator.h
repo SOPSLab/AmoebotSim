@@ -26,6 +26,9 @@ signals:
     void roundsChanged(int round);
     void moveCameraTo(float worldX, float wordlY);
     void setZoom(float factor);
+    void setResolution(const int width, const int height);
+    void setFullscreen();
+    void setWindowed();
 
     void started();
     void stopped();

@@ -49,6 +49,9 @@ public slots:
     void setRoundDuration(int ms);
     void moveCameraTo(float worldX, float worldY);
     void setZoom(float factor);
+    void setResolution(const int width, const int height);
+    void setFullscreen();
+    void setWindowed();
 
     void exampleAlgorithm(const int numParticles);
     void infObjCoating(const int numParticles, const float holeProb = 0.2);
@@ -159,6 +162,18 @@ inline void ScriptInterface::moveCameraTo(float worldX, float worldY){
 
 inline void ScriptInterface::setZoom(float factor){
   emit sim.setZoom(factor);
+}
+
+inline void ScriptInterface::setFullscreen(){
+  emit sim.setFullscreen();
+}
+
+inline void ScriptInterface::setWindowed(){
+  emit sim.setWindowed();
+}
+
+inline void ScriptInterface::setResolution(const int width, const int height){
+  emit sim.setResolution(width, height);
 }
 
 inline void ScriptInterface::exampleAlgorithm(const int numParticles)
