@@ -10,11 +10,15 @@ namespace LeaderElectionAgentCycles
 
 enum class State {
     Idle,
+    Candidate,
+    Demoted,
+    Leader,
     Finished
 };
 
 typedef struct {
     int agentDir, nextAgentDir, prevAgentDir;
+    State state;
 } Agent;
 
 class LeaderElectionAgentCyclesFlag : public Flag
@@ -24,6 +28,8 @@ public:
     LeaderElectionAgentCyclesFlag(const LeaderElectionAgentCyclesFlag& other);
 
     State state;
+    int announceToken, ackToken;
+    bool receivedAnnounceToken, receivedAckToken;
 };
 
 class LeaderElectionAgentCycles : public AlgorithmWithFlags<LeaderElectionAgentCyclesFlag>
@@ -40,12 +46,20 @@ public:
 
 protected:
     void setState(const State _state);
+    void setAgentState(const int agentDir, const State state);
+    void updateParticleState();
+    void updateBorderColors();
+    bool hasAgentInState(State state) const;
     int getNextAgentDir(const int agentDir) const;
     int getPrevAgentDir(const int agentDir) const;
     int numNeighbors() const;
 
     State state;
     std::array<Agent, 3> agents;
+
+    // information for coin flip subphase
+    bool waitingForTransferAck;
+    bool gotAnnounceBeforeAck;
 };
 
 }
