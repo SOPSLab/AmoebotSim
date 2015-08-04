@@ -19,6 +19,9 @@ enum class State {
 typedef struct {
     int agentDir, nextAgentDir, prevAgentDir;
     State state;
+    // information for coin flip subphase
+    bool waitingForTransferAck;
+    bool gotAnnounceBeforeAck;
 } Agent;
 
 class LeaderElectionAgentCyclesFlag : public Flag
@@ -56,10 +59,6 @@ protected:
 
     State state;
     std::array<Agent, 3> agents;
-
-    // information for coin flip subphase
-    bool waitingForTransferAck;
-    bool gotAnnounceBeforeAck;
 };
 
 }
