@@ -1359,16 +1359,18 @@ void LeaderElectionDemo::handleElectionTokens()
                 tokenValue = 3;
             }
             //behind next leader- send EOS
-             if (tokenValue ==3 && inFlags[surfaceParent]->ownTokenValue == -1 && inFlags[surfaceFollower]->tokenValue!=3)
+            else if (tokenValue ==3 && inFlags[surfaceParent]->ownTokenValue == -1 && inFlags[surfaceFollower]->tokenValue!=3)
             {
+                qDebug()<<"behind leader, 3->2"<<inFlags[surfaceParent]->ownTokenValue<<" "<<inFlags[surfaceFollower]->tokenValue;
                 tokenValue = 2;
             }
             //behind another who has start
             else if(tokenValue ==3 && inFlags[surfaceParent]->tokenValue ==3 && inFlags[surfaceFollower]->tokenValue!=3)
             {
-                 tokenValue = 1;
+                tokenValue = 1;
 
             }
+
 
         }
         else if(ownTokenValue == -1)
@@ -1390,43 +1392,44 @@ void LeaderElectionDemo::handleElectionTokens()
 
                 //receives own passive tokens
 
-
-                //receives cover/eos token- if self is clear
-                if(tokenValue == 0 && inFlags[surfaceFollower]->tokenValue>-1 &&(inFlags[surfaceParent]->tokenValue == 1 ||inFlags[surfaceParent]->tokenValue == 2))
+                if(tokenValue!=3)
                 {
-                    tokenValue = -1* inFlags[surfaceParent]->tokenValue;
-                    qDebug()<<"candidate received token";
-                }
-                //switches to send if receive complete
-                else if(inFlags[surfaceParent]->tokenValue <1 && tokenValue < 0 && activeTokenValue==0 && inFlags[surfaceFollower]->activeTokenValue>-1)
-                {
-                    activeTokenValue = -1 *tokenValue;
-                    tokenValue = 0;//end passive token, start an active token
+                    //receives cover/eos token- if self is clear
+                    if(tokenValue == 0 && inFlags[surfaceFollower]->tokenValue>-1 &&(inFlags[surfaceParent]->tokenValue == 1 ||inFlags[surfaceParent]->tokenValue == 2))
+                    {
+                        tokenValue = -1* inFlags[surfaceParent]->tokenValue;
+                        qDebug()<<"candidate received token";
+                    }
+                    //switches to send if receive complete
+                    else if(inFlags[surfaceParent]->tokenValue <1 && tokenValue < 0 && activeTokenValue==0 && inFlags[surfaceFollower]->activeTokenValue>-1)
+                    {
+                        activeTokenValue = -1 *tokenValue;
+                        tokenValue = 0;//end passive token, start an active token
 
-                    qDebug()<<"candidate forwarded token";
+                        qDebug()<<"candidate forwarded token";
+                    }
+                    //clear if send complete
+                    else if(inFlags[surfaceFollower]->tokenValue<0 && tokenValue > 0 )
+                    {
+                        tokenValue = 0;
+                        qDebug()<<"candidate cleared";
+                    }
                 }
-                //clear if send complete
-                else if(inFlags[surfaceFollower]->tokenValue<0 && tokenValue > 0 )
-                {
-                    tokenValue = 0;
-                    qDebug()<<"candidate cleared";
-                }
-
                 //receives other's active tokens- give up candidacy
                 if(activeTokenValue == 0 && inFlags[surfaceFollower]->activeTokenValue>-1 &&  inFlags[surfaceParent]->activeTokenValue >0 )
                 {
                     activeTokenValue = -1 * inFlags[surfaceParent]->activeTokenValue;
                 }
-                else if (activeTokenValue>0 && inFlags[surfaceFollower]->activeTokenValue <0)
+                else if ((activeTokenValue == 1 || activeTokenValue==2) && inFlags[surfaceFollower]->activeTokenValue <0)
                 {
                     activeTokenValue = 0;
                 }
-                //match with received token- clear it and go to subphase 3- would be 2 but candidate ends the matching in this dir so finished, revoke own
+                //match with received token, don't revoke self but go to matched
                 else if(activeTokenValue == -1 && inFlags[surfaceParent]->activeTokenValue == 0)
                 {
                     activeTokenValue = 0;
                     ownTokenValue = 0;
-                    currentSubPhase = 3;
+                    currentSubPhase = 2;
                 }
                 //match with eos token, clear it and go to subphase 3 finished (no transfer, just revoke)
                 else if(activeTokenValue == -2 && inFlags[surfaceParent]->activeTokenValue == 0)
@@ -1437,42 +1440,24 @@ void LeaderElectionDemo::handleElectionTokens()
                 }
 
                 if(inFlags[surfaceFollower]->subPhase ==3 )
-                   {
-                       currentSubPhase = 3;
-                       tokenValue = 3;//new start token
-                       activeTokenValue = 0;
-                   }
+                {
+                    currentSubPhase = 3;
+                    tokenValue = 3;//new start token
+                    activeTokenValue = 0;
+                }
                 if(inFlags[surfaceFollower]->subPhase ==4)
-                   {
-                       currentSubPhase = 4;
-                       tokenValue = 3;//new start token
-                       activeTokenValue = 0;
-                   }
+                {
+                    currentSubPhase = 5;
+                    tokenValue = 3;//new start token
+                    activeTokenValue = 0;
+                    //  ownTokenValue = 0;
+                    qDebug()<<"demoted";
+                }
+
             }
 
             else if(ownTokenValue == 0)
             {
-                //passive block  - 1s and 2s
-
-                //receives cover/eos token- if self is clear
-                if(tokenValue == 0 && inFlags[surfaceFollower]->tokenValue>-1 && (inFlags[surfaceParent]->tokenValue == 1 ||inFlags[surfaceParent]->tokenValue == 2))
-                {
-                    tokenValue = -1* inFlags[surfaceParent]->tokenValue;
-                    qDebug()<<"noncandidate received: "+tokenValue;
-                }
-                //switches to send if receive complete
-                else if(inFlags[surfaceParent]->tokenValue <1 && (tokenValue == -1 || tokenValue == -2))
-                {
-                    tokenValue = -1 * tokenValue;
-                    qDebug()<<"noncandidate sending: "+tokenValue;
-                }
-                //clear if send complete
-                else if(inFlags[surfaceFollower]->tokenValue<0 && (tokenValue == 1 || tokenValue == 2) )
-                {
-                    tokenValue = 0;
-                    qDebug()<<"noncandidate cleared";
-
-                }
 
                 //active block
                 if(activeTokenValue == 0 && inFlags[surfaceFollower]->activeTokenValue>-1 &&  inFlags[surfaceParent]->activeTokenValue >0 )
@@ -1504,7 +1489,30 @@ void LeaderElectionDemo::handleElectionTokens()
                     }
 
                 }
+                //passive block  - 1s and 2s
+                if(tokenValue!=3)
+                {
+                    //receives cover/eos token- if self is clear
+                    if(tokenValue == 0 && inFlags[surfaceFollower]->tokenValue>-1 && (inFlags[surfaceParent]->tokenValue == 1 ||inFlags[surfaceParent]->tokenValue == 2))
+                    {
+                        tokenValue = -1* inFlags[surfaceParent]->tokenValue;
+                        qDebug()<<"noncandidate received: "<<tokenValue;
+                    }
+                    //switches to send if receive complete
+                    else if(inFlags[surfaceParent]->tokenValue <1 && (tokenValue == -1 || tokenValue == -2))
+                    {
+                        tokenValue = -1 * tokenValue;
+                        qDebug()<<"noncandidate sending: "<<tokenValue;
+                    }
+                    //clear if send complete
+                    else if(inFlags[surfaceFollower]->tokenValue<0 && (tokenValue == 1 || tokenValue == 2) )
+                    {
+                        tokenValue = 0;
+                        qDebug()<<"noncandidate cleared";
 
+                    }
+
+                }
 
             }
 
@@ -1515,23 +1523,25 @@ void LeaderElectionDemo::handleElectionTokens()
 
             if(ownTokenValue == 0)
             {
-                //passive tokens- receive, pass along
-                if(tokenValue == 0 && inFlags[surfaceFollower]->tokenValue>-1 && inFlags[surfaceParent]->tokenValue >0)
+                if(tokenValue!=3)
                 {
-                    tokenValue = -1 * inFlags[surfaceParent]->tokenValue ;
+                    //passive tokens- receive, pass along
+                    if(tokenValue == 0 && inFlags[surfaceFollower]->tokenValue>-1 && (inFlags[surfaceParent]->tokenValue ==1 || inFlags[surfaceParent]->tokenValue ==2) )
+                    {
+                        tokenValue = -1 * inFlags[surfaceParent]->tokenValue ;
+                    }
+                    else if (tokenValue > 0 && inFlags[surfaceFollower]->tokenValue <0)
+                    {
+                        tokenValue = 0;
+                    }
+                    //since already matched, sending received token
+                    else if(tokenValue < 0 && inFlags[surfaceParent]->tokenValue <1)
+                    {
+                        tokenValue = -1 * tokenValue;
+                    }
                 }
-                else if (tokenValue > 0 && inFlags[surfaceFollower]->tokenValue <0)
-                {
-                    tokenValue = 0;
-                }
-                //since already matched, sending received token
-                else if(tokenValue < 0 && inFlags[surfaceParent]->tokenValue <1)
-                {
-                    tokenValue = -1 * tokenValue;
-                }
-
                 //active tokens- receive, pass along
-                if(activeTokenValue == 0 && inFlags[surfaceFollower]->activeTokenValue>-1 && inFlags[surfaceParent]->activeTokenValue >0)
+                if(activeTokenValue == 0 && inFlags[surfaceFollower]->activeTokenValue>-1 && (inFlags[surfaceParent]->activeTokenValue == 1 ||inFlags[surfaceParent]->activeTokenValue == 2) )
                 {
                     activeTokenValue = -1 * inFlags[surfaceParent]->activeTokenValue ;
                 }
@@ -1547,75 +1557,27 @@ void LeaderElectionDemo::handleElectionTokens()
                 if(inFlags[surfaceFollower]->subPhase ==3 )
                 {
                     currentSubPhase = 3;
-                    tokenValue = 0;
+                    //                    tokenValue = 0;
                     activeTokenValue = 0;
                 }
 
-                if(inFlags[surfaceFollower]->subPhase ==4 )
+                if(currentSubPhase !=5 && inFlags[surfaceFollower]->subPhase ==4 )
                 {
                     currentSubPhase = 4;
-                    tokenValue = 0;
+                    //            tokenValue = 0;
                     activeTokenValue = 0;
                 }
 
             }
 
-            else if(ownTokenValue == 2)
-            {
-                //passive block  - 1s and 2s
-
-                //receives cover/eos token- if self is clear
-                if(tokenValue == 0 && inFlags[surfaceFollower]->tokenValue>-1 && (inFlags[surfaceParent]->tokenValue == 1 ||inFlags[surfaceParent]->tokenValue == 2))
-                {
-                    tokenValue = -1* inFlags[surfaceParent]->tokenValue;
-                    qDebug()<<"noncandidate received: "+tokenValue;
-                }
-                //switches to send if receive complete
-                else if(inFlags[surfaceParent]->tokenValue <1 && (tokenValue == -1 || tokenValue == -2))
-                {
-                   tokenValue = 0;
-                }
-                //clear if send complete
-                else if(inFlags[surfaceFollower]->tokenValue<0 && (tokenValue == 1 || tokenValue == 2) )
-                {
-                    tokenValue = 0;
-                    qDebug()<<"former cleared";
-                }
-
-                //active block
-                if(activeTokenValue == 0 && inFlags[surfaceFollower]->activeTokenValue>-1 &&  inFlags[surfaceParent]->activeTokenValue >0 )
-                {
-                    activeTokenValue = -1 * inFlags[surfaceParent]-> activeTokenValue ;
-                }
-                else if (activeTokenValue > 0 && inFlags[surfaceFollower]->activeTokenValue <0)
-                {
-                    activeTokenValue = 0;
-                }
-                //match with received token- clear it and go to subphase 2
-                else if(activeTokenValue == -1 && inFlags[surfaceParent]->activeTokenValue == 0)
-                {
-                    activeTokenValue = 0;
-                    currentSubPhase = 2;
-                }
-                //match with eos token, clear it and go to subphase 3 (finished) or 4 transfer
-                else if(activeTokenValue == -2 && inFlags[surfaceParent]->activeTokenValue == 0)
-                {
-                    activeTokenValue = 0;
-                    tokenValue = 0;
-                    currentSubPhase = 3 ;
-                }
-            }
 
         }
         if (currentSubPhase == 3)//finished
         {
             if(ownTokenValue == 0 && inFlags[surfaceParent]->subPhase == 0)
                 currentSubPhase = 0;
-            //else if (inFlags[surfaceParent]->ownTokenValue == -1)
-             //   currentSubPhase = 0;
 
-            if(ownTokenValue == 2)
-                ownTokenValue = 0;
+
 
             if(ownTokenValue == -1)
             {
@@ -1625,25 +1587,50 @@ void LeaderElectionDemo::handleElectionTokens()
         }
         else if(currentSubPhase == 4)//transfer
         {
-            if(ownTokenValue == 0 && inFlags[surfaceParent]->subPhase == 0)
-                currentSubPhase = 0;
-            //else if (inFlags[surfaceParent]->ownTokenValue == -1)
-             //   currentSubPhase = 0;
+            if(ownTokenValue == 0 && inFlags[surfaceParent]->subPhase == 0)//5(parent)
+                currentSubPhase = 5;
 
-            if(ownTokenValue == 2)
-                ownTokenValue = 0;
+
 
             if(ownTokenValue == -1)
             {
-                currentSubPhase = 0;
+                currentSubPhase = 5;
             }
         }
+        if (currentSubPhase == 5)//go from transfer awknowledged to finished
+        {
+            if(ownTokenValue == 0 && inFlags[surfaceParent]->subPhase == 0)
+            {
+                currentSubPhase = 0;
+
+            }
+            if(ownTokenValue == -1 &&  inFlags[surfaceParent]->subPhase == 0)
+            {
+                ownTokenValue = 0;
+                qDebug()<<"Finish demote";
+            }
+        }
+    }
+    //this helps by cleaning up the stranded bit when the next candidate gets covered, but still leaves some cases
+    if(currentSubPhase == 2 && inFlags[surfaceParent]->subPhase ==0)
+    {
+        currentSubPhase = 0;
+        activeTokenValue = 0;
+    }
+    if(currentSubPhase >0 && ownTokenValue ==0 && inFlags[surfaceFollower]->subPhase ==5)
+    {
+        currentSubPhase = 5;
+    }
+    if(currentSubPhase > 0 && ownTokenValue == -1 &&  inFlags[surfaceFollower]->subPhase ==5)
+    {
+        currentSubPhase =0;
     }
     for(int i =0; i<10;i++)
     {
         outFlags[i].subPhase = currentSubPhase;
         outFlags[i].tokenValue = tokenValue;
         outFlags[i].activeTokenValue = activeTokenValue;
+        outFlags[i].ownTokenValue = ownTokenValue;
 
     }
     qDebug()<<"   subphase: "<<currentSubPhase<<" tokenval: "<<tokenValue<<" active: " <<activeTokenValue;
@@ -1679,6 +1666,10 @@ void LeaderElectionDemo::handleElectionTokens()
         {
             headMarkColor = 0x661A80;
         }
+        else if(outFlags[0].subPhase ==5)
+        {
+            headMarkColor = 0x545454;
+        }
     }
     else if(ownTokenValue == 0)
     {
@@ -1710,6 +1701,10 @@ void LeaderElectionDemo::handleElectionTokens()
         else if(outFlags[0].subPhase ==4)
         {
             headMarkColor = 0xB691C2;
+        }
+        else if(outFlags[0].subPhase ==5)
+        {
+            headMarkColor = 0xd3d3d3;
         }
     }
     else if (ownTokenValue ==2)
