@@ -9,20 +9,23 @@ namespace LeaderElectionAgentCycles
 {
 
 enum class State {
-    Idle,
+    Idle = 0,
     Candidate,
     Demoted,
     Leader,
     Finished
 };
 
+enum class TokenType {
+    CandidacyAnnounce = 0,
+    CandidacyAck
+};
+
 typedef struct {
-    int agentDir, nextAgentDir, prevAgentDir;
-    State state;
-    // information for coin flip subphase
-    bool waitingForTransferAck;
-    bool gotAnnounceBeforeAck;
-} Agent;
+    TokenType type;
+    int value;
+    bool receivedToken;
+} Token;
 
 class LeaderElectionAgentCyclesFlag : public Flag
 {
@@ -31,12 +34,30 @@ public:
     LeaderElectionAgentCyclesFlag(const LeaderElectionAgentCyclesFlag& other);
 
     State state;
-    int announceToken, ackToken;
-    bool receivedAnnounceToken, receivedAckToken;
+    std::array<Token, 2> tokens;
 };
 
 class LeaderElectionAgentCycles : public AlgorithmWithFlags<LeaderElectionAgentCyclesFlag>
 {
+private:
+    class LeaderElectionAgent
+    {
+    public:
+        LeaderElectionAgent();
+
+        LeaderElectionAgentCycles* alg;
+        State state;
+        int agentDir, nextAgentDir, prevAgentDir;
+        bool waitingForTransferAck, gotAnnounceBeforeAck;
+
+        void setState(const State _state);
+        bool canSendToken(TokenType type, int dir) const;
+        void sendToken(TokenType type, int dir, int value);
+        int peekAtToken(TokenType type, int dir) const;
+        Token receiveToken(TokenType type, int dir);
+        void tokenCleanup();
+    };
+
 public:
     LeaderElectionAgentCycles(const State _state);
     LeaderElectionAgentCycles(const LeaderElectionAgentCycles& other);
@@ -49,7 +70,6 @@ public:
 
 protected:
     void setState(const State _state);
-    void setAgentState(const int agentDir, const State state);
     void updateParticleState();
     void updateBorderColors();
     bool hasAgentInState(State state) const;
@@ -58,7 +78,7 @@ protected:
     int numNeighbors() const;
 
     State state;
-    std::array<Agent, 3> agents;
+    std::array<LeaderElectionAgent, 3> agents;
 };
 
 }

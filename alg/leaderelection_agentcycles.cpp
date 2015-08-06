@@ -8,17 +8,88 @@
 namespace LeaderElectionAgentCycles
 {
 
-LeaderElectionAgentCyclesFlag::LeaderElectionAgentCyclesFlag() :
-    announceToken(-1), ackToken(-1),
-    receivedAnnounceToken(false), receivedAckToken(false)
-{}
+LeaderElectionAgentCyclesFlag::LeaderElectionAgentCyclesFlag()
+{
+    int typenum = 0;
+    for(auto token = tokens.begin(); token != tokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        ++typenum;
+    }
+}
 
 LeaderElectionAgentCyclesFlag::LeaderElectionAgentCyclesFlag(const LeaderElectionAgentCyclesFlag& other) :
     Flag(other),
     state(other.state),
-    announceToken(other.announceToken), ackToken(other.ackToken),
-    receivedAnnounceToken(other.receivedAnnounceToken), receivedAckToken(other.receivedAckToken)
+    tokens(other.tokens)
 {}
+
+LeaderElectionAgentCycles::LeaderElectionAgent::LeaderElectionAgent() :
+    alg(nullptr),
+    state(State::Idle),
+    waitingForTransferAck(false), gotAnnounceBeforeAck(false)
+{}
+
+void LeaderElectionAgentCycles::LeaderElectionAgent::setState(const State _state)
+{
+    state = _state;
+    if(state == State::Idle) {
+        alg->borderPointColors.at(agentDir) = -1;
+    } else if(state == State::Candidate) {
+        alg->borderPointColors.at(agentDir) = 0xff0000;
+    } else if(state == State::Demoted) {
+        alg->borderPointColors.at(agentDir) = 0x999999;
+    } else { // state == State::Leader
+        alg->borderPointColors.at(agentDir) = 0x00ff00;
+    }
+}
+
+bool LeaderElectionAgentCycles::LeaderElectionAgent::canSendToken(TokenType type, int dir) const
+{
+    return (alg->outFlags[dir].tokens.at((int) type).value == -1 && !alg->inFlags[dir]->tokens.at((int) type).receivedToken);
+}
+
+void LeaderElectionAgentCycles::LeaderElectionAgent::sendToken(TokenType type, int dir, int value)
+{
+    Q_ASSERT(canSendToken(type, dir));
+    alg->outFlags[dir].tokens.at((int) type).value = value;
+}
+
+int LeaderElectionAgentCycles::LeaderElectionAgent::peekAtToken(TokenType type, int dir) const
+{
+    if(alg->outFlags[dir].tokens.at((int) type).receivedToken) {
+        // if this agent has already read this token, don't peek the same value again
+        return -1;
+    } else {
+        return alg->inFlags[dir]->tokens.at((int) type).value;
+    }
+}
+
+Token LeaderElectionAgentCycles::LeaderElectionAgent::receiveToken(TokenType type, int dir)
+{
+    Q_ASSERT(peekAtToken(type, dir) != -1);
+    alg->outFlags[dir].tokens.at((int) type).receivedToken = true;
+    return alg->inFlags[dir]->tokens.at((int) type);
+}
+
+void LeaderElectionAgentCycles::LeaderElectionAgent::tokenCleanup()
+{
+    // destroy copies of tokens if they've already been read
+    if(alg->inFlags[nextAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).receivedToken) {
+        alg->outFlags[nextAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).value = -1;
+    }
+    if(alg->inFlags[prevAgentDir]->tokens.at((int) TokenType::CandidacyAck).receivedToken) {
+        alg->outFlags[prevAgentDir].tokens.at((int) TokenType::CandidacyAck).value = -1;
+    }
+    // reset received token flags if the old copy has been destroyed
+    if(alg->inFlags[prevAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).value == -1) {
+        alg->outFlags[prevAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).receivedToken = false;
+    }
+    if(alg->inFlags[nextAgentDir]->tokens.at((int) TokenType::CandidacyAck).value == -1) {
+        alg->outFlags[nextAgentDir].tokens.at((int) TokenType::CandidacyAck).receivedToken = false;
+    }
+}
 
 LeaderElectionAgentCycles::LeaderElectionAgentCycles(const State _state) :
     state(_state)
@@ -107,10 +178,11 @@ Movement LeaderElectionAgentCycles::execute()
                     Q_ASSERT(agentNum < 3);
 
                     // record agent information
+                    agents.at(agentNum).alg = this; // simulator stuffs
                     agents.at(agentNum).agentDir = dir;
                     agents.at(agentNum).nextAgentDir = getNextAgentDir(dir);
                     agents.at(agentNum).prevAgentDir = getPrevAgentDir(dir);
-                    setAgentState(dir, State::Candidate);
+                    agents.at(agentNum).setState(State::Candidate);
 
                     // make agent borders
                     int tempDir = (agents.at(agentNum).nextAgentDir + 1) % 6;
@@ -130,79 +202,56 @@ Movement LeaderElectionAgentCycles::execute()
     } else { // particle is in a state where it may need to do something
         for(auto agent = agents.begin(); agent != agents.end(); ++agent) {
             if(agent->state != State::Idle) {
+                agent->alg = this; // simulator stuff, this is necessary for any of the token functions to work
+                agent->tokenCleanup(); // clean token remnants before doing new actions
+
                 // NOTE: this only considers the subphase for coin flipping for now, will evolve as more things get added
                 if(agent->state == State::Candidate) {
-                    qDebug() << "Criteria for creating announcement: " << (!agent->waitingForTransferAck) << ", " << (outFlags[agent->nextAgentDir].announceToken == -1) << ", " << (!inFlags[agent->nextAgentDir]->receivedAnnounceToken);
-
                     // PART 1: perform tasks related to consuming/passing announcements
-                    if(inFlags[agent->nextAgentDir]->receivedAnnounceToken) {
-                        // if the next agent has read the announcement I created, then I can destroy my copy
-                        outFlags[agent->nextAgentDir].announceToken = -1;
-                    } else if(inFlags[agent->prevAgentDir]->announceToken == -1) {
-                        // if the previous agent has destroyed its copy of the announcement I consumed, then I reset my signal
-                        outFlags[agent->prevAgentDir].receivedAnnounceToken = false;
-                    } else if(inFlags[agent->prevAgentDir]->announceToken != -1 && !outFlags[agent->prevAgentDir].receivedAnnounceToken &&
-                            outFlags[agent->prevAgentDir].ackToken == -1 && !inFlags[agent->prevAgentDir]->receivedAckToken) {
+                    if(inFlags[agent->prevAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).value != -1 && !outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).receivedToken &&
+                            outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAck).value == -1 && !inFlags[agent->prevAgentDir]->tokens.at((int) TokenType::CandidacyAck).receivedToken) {
                         // if there is an announcement waiting to be received by me and it is safe to create an acknowledgement, consume the announcement
                         if(agent->waitingForTransferAck) {
                            agent->gotAnnounceBeforeAck = true;
                         }
-                        outFlags[agent->prevAgentDir].receivedAnnounceToken = true;
-                        outFlags[agent->prevAgentDir].ackToken = 1;
+                        outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).receivedToken = true;
+                        outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAck).value = 1;
                     }
 
                     // PART 2: perform tasks related to consuming/passing acknowledgements
-                    if(inFlags[agent->prevAgentDir]->receivedAckToken) {
-                        // if the previous agent has read the acknowledgement I created, then I can destroy my copy
-                        outFlags[agent->prevAgentDir].ackToken = -1;
-                    } else if(inFlags[agent->nextAgentDir]->ackToken == -1) {
-                        // if the next agent has destroyed its copy of the acknowledgement I consumed, then I reset my signal
-                        outFlags[agent->nextAgentDir].receivedAckToken = false;
-                    } else if(inFlags[agent->nextAgentDir]->ackToken != -1 && !outFlags[agent->nextAgentDir].receivedAckToken) {
+                    if(inFlags[agent->nextAgentDir]->tokens.at((int) TokenType::CandidacyAck).value != -1 && !outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAck).receivedToken) {
                         // if there is an acknowledgement waiting to be received by me and I am ready to read, consume the acknowledgement
                         if(!agent->gotAnnounceBeforeAck) {
-                            setAgentState(agent->agentDir, State::Demoted);
+                            agent->setState(State::Demoted);
                         }
                         agent->waitingForTransferAck = false;
                         agent->gotAnnounceBeforeAck = false;
-                        outFlags[agent->nextAgentDir].receivedAckToken = true;
+                        outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAck).receivedToken = true;
                         if(agent->state == State::Demoted) {
                             continue; // if this agent has performed a state change, then it shouldn't perform any more computations
                         }
                     }
 
                     // PART 3: if I am not waiting for an acknowlegdement of my previous announcement and I win the coin flip, announce a transfer of candidacy
-                    if(!agent->waitingForTransferAck && randBool() && outFlags[agent->nextAgentDir].announceToken == -1 && !inFlags[agent->nextAgentDir]->receivedAnnounceToken) {
-                        outFlags[agent->nextAgentDir].announceToken = 1;
+                    if(!agent->waitingForTransferAck && randBool() && outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).value == -1 && !inFlags[agent->nextAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).receivedToken) {
+                        outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).value = 1;
                         agent->waitingForTransferAck = true;
                     }
                 } else if(agent->state == State::Demoted) {
                     // PART 1: perform tasks related to passing announcements forward
-                    if(outFlags[agent->nextAgentDir].announceToken == -1 && inFlags[agent->prevAgentDir]->announceToken != -1 &&
-                            !outFlags[agent->prevAgentDir].receivedAnnounceToken && !inFlags[agent->nextAgentDir]->receivedAnnounceToken) {
+                    if(outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).value == -1 && inFlags[agent->prevAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).value != -1 &&
+                            !outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).receivedToken && !inFlags[agent->nextAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).receivedToken) {
                         // if there is an announcement waiting to be passed that I have not already read and the next agent is ready, then pass it on
-                        outFlags[agent->nextAgentDir].announceToken = inFlags[agent->prevAgentDir]->announceToken;
-                        outFlags[agent->prevAgentDir].receivedAnnounceToken = true;
-                    } else if(inFlags[agent->nextAgentDir]->receivedAnnounceToken) {
-                        // if the next agent has read from me, then I can destroy my copy
-                        outFlags[agent->nextAgentDir].announceToken = -1;
-                    } else if(inFlags[agent->prevAgentDir]->announceToken == -1) {
-                        // if the previous agent has destroyed its copy, then I reset my signal
-                        outFlags[agent->prevAgentDir].receivedAnnounceToken = false;
+                        outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).value = inFlags[agent->prevAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).value;
+                        outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).receivedToken = true;
                     }
 
                     // PART 2: perform tasks related to passing acknowledgements backward
-                    if(outFlags[agent->prevAgentDir].ackToken == -1 && inFlags[agent->nextAgentDir]->ackToken != -1 &&
-                            !outFlags[agent->nextAgentDir].receivedAckToken && !inFlags[agent->prevAgentDir]->receivedAckToken) {
+                    if(outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAck).value == -1 && inFlags[agent->nextAgentDir]->tokens.at((int) TokenType::CandidacyAck).value != -1 &&
+                            !outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAck).receivedToken && !inFlags[agent->prevAgentDir]->tokens.at((int) TokenType::CandidacyAck).receivedToken) {
                         // if there is an acknowledgement waiting to be passed that I have not already read and the previous agent is ready, then pass it on
-                        outFlags[agent->prevAgentDir].ackToken = inFlags[agent->nextAgentDir]->ackToken;
-                        outFlags[agent->nextAgentDir].receivedAckToken = true;
-                    } else if(inFlags[agent->prevAgentDir]->receivedAckToken) {
-                        // if the previous agent has read from me, then I can destroy my copy
-                        outFlags[agent->prevAgentDir].ackToken = -1;
-                    } else if(inFlags[agent->nextAgentDir]->ackToken == -1) {
-                        // if the next agent has destroyed its copy, then I reset my signal
-                        outFlags[agent->nextAgentDir].receivedAckToken = false;
+                        outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAck).value = inFlags[agent->nextAgentDir]->tokens.at((int) TokenType::CandidacyAck).value;
+                        outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAck).receivedToken = true;
                     }
                 }
             }
@@ -246,26 +295,6 @@ void LeaderElectionAgentCycles::setState(const State _state)
     }
 }
 
-void LeaderElectionAgentCycles::setAgentState(const int agentDir, const State state)
-{
-    for(auto it = agents.begin(); it != agents.end(); ++it) {
-        if(it->agentDir == agentDir) {
-            it->state = state;
-            if(it->state == State::Idle) {
-                borderPointColors.at(it->agentDir) = -1;
-            } else if(it->state == State::Candidate) {
-                borderPointColors.at(it->agentDir) = 0xff0000;
-            } else if(it->state == State::Demoted) {
-                borderPointColors.at(it->agentDir) = 0x999999;
-            } else { // it->state == State::Leader
-                borderPointColors.at(it->agentDir) = 0x00ff00;
-            }
-
-            break;
-        }
-    }
-}
-
 void LeaderElectionAgentCycles::updateParticleState()
 {
     if(hasAgentInState(State::Leader)) {
@@ -279,14 +308,13 @@ void LeaderElectionAgentCycles::updateParticleState()
 
 void LeaderElectionAgentCycles::updateBorderColors()
 {
-//    const static int announceTokenColor = 0xff0000;
     const static int ackTokenColor = 0xff0000;
     const static int defaultColor = 0x666666;
 
     for(auto it = agents.begin(); it != agents.end(); ++it) {
         if(it->state != State::Idle) {
             // color acknowledgement tokens
-            int paintColor = (outFlags[it->prevAgentDir].ackToken != -1) ? ackTokenColor : defaultColor;
+            int paintColor = (outFlags[it->prevAgentDir].tokens.at((int) TokenType::CandidacyAck).value != -1) ? ackTokenColor : defaultColor;
             int dir = it->agentDir;
             while(dir != it->prevAgentDir) {
                 if(dir == (it->prevAgentDir - 1 + 6) % 6) {
@@ -353,4 +381,3 @@ int LeaderElectionAgentCycles::numNeighbors() const
 }
 
 }
-
