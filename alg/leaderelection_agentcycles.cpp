@@ -207,51 +207,41 @@ Movement LeaderElectionAgentCycles::execute()
 
                 // NOTE: this only considers the subphase for coin flipping for now, will evolve as more things get added
                 if(agent->state == State::Candidate) {
-                    // PART 1: perform tasks related to consuming/passing announcements
-                    if(inFlags[agent->prevAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).value != -1 && !outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).receivedToken &&
-                            outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAck).value == -1 && !inFlags[agent->prevAgentDir]->tokens.at((int) TokenType::CandidacyAck).receivedToken) {
-                        // if there is an announcement waiting to be received by me and it is safe to create an acknowledgement, consume the announcement
+                    // if there is an announcement waiting to be received by me and it is safe to create an acknowledgement, consume the announcement
+                    if(agent->peekAtToken(TokenType::CandidacyAnnounce, agent->prevAgentDir) != -1 && agent->canSendToken(TokenType::CandidacyAck, agent->prevAgentDir)) {
+                        agent->receiveToken(TokenType::CandidacyAnnounce, agent->prevAgentDir);
+                        agent->sendToken(TokenType::CandidacyAck, agent->prevAgentDir, 1);
                         if(agent->waitingForTransferAck) {
                            agent->gotAnnounceBeforeAck = true;
                         }
-                        outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).receivedToken = true;
-                        outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAck).value = 1;
                     }
 
-                    // PART 2: perform tasks related to consuming/passing acknowledgements
-                    if(inFlags[agent->nextAgentDir]->tokens.at((int) TokenType::CandidacyAck).value != -1 && !outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAck).receivedToken) {
-                        // if there is an acknowledgement waiting to be received by me and I am ready to read, consume the acknowledgement
+                    // if there is an acknowledgement waiting to be received by me and I am ready to read, consume the acknowledgement
+                    if(agent->peekAtToken(TokenType::CandidacyAck, agent->nextAgentDir) != -1) {
+                        agent->receiveToken(TokenType::CandidacyAck, agent->nextAgentDir);
                         if(!agent->gotAnnounceBeforeAck) {
                             agent->setState(State::Demoted);
                         }
                         agent->waitingForTransferAck = false;
                         agent->gotAnnounceBeforeAck = false;
-                        outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAck).receivedToken = true;
                         if(agent->state == State::Demoted) {
                             continue; // if this agent has performed a state change, then it shouldn't perform any more computations
                         }
                     }
 
-                    // PART 3: if I am not waiting for an acknowlegdement of my previous announcement and I win the coin flip, announce a transfer of candidacy
-                    if(!agent->waitingForTransferAck && randBool() && outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).value == -1 && !inFlags[agent->nextAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).receivedToken) {
-                        outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).value = 1;
+                    // if I am not waiting for an acknowlegdement of my previous announcement and I win the coin flip, announce a transfer of candidacy
+                    if(!agent->waitingForTransferAck && randBool() && agent->canSendToken(TokenType::CandidacyAnnounce, agent->nextAgentDir)) {
+                        agent->sendToken(TokenType::CandidacyAnnounce, agent->nextAgentDir, 1);
                         agent->waitingForTransferAck = true;
                     }
                 } else if(agent->state == State::Demoted) {
-                    // PART 1: perform tasks related to passing announcements forward
-                    if(outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).value == -1 && inFlags[agent->prevAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).value != -1 &&
-                            !outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).receivedToken && !inFlags[agent->nextAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).receivedToken) {
-                        // if there is an announcement waiting to be passed that I have not already read and the next agent is ready, then pass it on
-                        outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).value = inFlags[agent->prevAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).value;
-                        outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).receivedToken = true;
+                    // pass announcements forward
+                    if(agent->peekAtToken(TokenType::CandidacyAnnounce, agent->prevAgentDir) != -1 && agent->canSendToken(TokenType::CandidacyAnnounce, agent->nextAgentDir)) {
+                        agent->sendToken(TokenType::CandidacyAnnounce, agent->nextAgentDir, agent->receiveToken(TokenType::CandidacyAnnounce, agent->prevAgentDir).value);
                     }
-
-                    // PART 2: perform tasks related to passing acknowledgements backward
-                    if(outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAck).value == -1 && inFlags[agent->nextAgentDir]->tokens.at((int) TokenType::CandidacyAck).value != -1 &&
-                            !outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAck).receivedToken && !inFlags[agent->prevAgentDir]->tokens.at((int) TokenType::CandidacyAck).receivedToken) {
-                        // if there is an acknowledgement waiting to be passed that I have not already read and the previous agent is ready, then pass it on
-                        outFlags[agent->prevAgentDir].tokens.at((int) TokenType::CandidacyAck).value = inFlags[agent->nextAgentDir]->tokens.at((int) TokenType::CandidacyAck).value;
-                        outFlags[agent->nextAgentDir].tokens.at((int) TokenType::CandidacyAck).receivedToken = true;
+                    // pass acknowledgements backward
+                    if(agent->peekAtToken(TokenType::CandidacyAck, agent->nextAgentDir) != -1 && agent->canSendToken(TokenType::CandidacyAck, agent->prevAgentDir)) {
+                        agent->sendToken(TokenType::CandidacyAck, agent->prevAgentDir, agent->receiveToken(TokenType::CandidacyAck, agent->nextAgentDir).value);
                     }
                 }
             }
