@@ -16,9 +16,18 @@ enum class State {
     Finished
 };
 
+enum class Subphase {
+    SegmentComparison,
+    CoinFlip,
+    SolitudeVerification,
+    BorderDetection
+};
+
 enum class TokenType {
     CandidacyAnnounce = 0,
-    CandidacyAck
+    CandidacyAck,
+    SolitudeLead,
+    SolitudeVector
 };
 
 typedef struct {
@@ -34,7 +43,7 @@ public:
     LeaderElectionAgentCyclesFlag(const LeaderElectionAgentCyclesFlag& other);
 
     State state;
-    std::array<Token, 2> tokens;
+    std::array<Token, 4> tokens;
 };
 
 class LeaderElectionAgentCycles : public AlgorithmWithFlags<LeaderElectionAgentCyclesFlag>
@@ -47,8 +56,9 @@ private:
 
         LeaderElectionAgentCycles* alg;
         State state;
+        Subphase subphase;
         int agentDir, nextAgentDir, prevAgentDir;
-        bool waitingForTransferAck, gotAnnounceBeforeAck;
+        bool waitingForTransferAck, gotAnnounceBeforeAck; // coin flipping information
 
         void setState(const State _state);
         bool canSendToken(TokenType type, int dir) const;

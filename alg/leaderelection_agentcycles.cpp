@@ -183,6 +183,7 @@ Movement LeaderElectionAgentCycles::execute()
                     agents.at(agentNum).nextAgentDir = getNextAgentDir(dir);
                     agents.at(agentNum).prevAgentDir = getPrevAgentDir(dir);
                     agents.at(agentNum).setState(State::Candidate);
+                    agents.at(agentNum).subphase = Subphase::CoinFlip; // TODO: eventually this needs to be Subphase::SegementComparison
 
                     // make agent borders
                     int tempDir = (agents.at(agentNum).nextAgentDir + 1) % 6;
@@ -205,8 +206,8 @@ Movement LeaderElectionAgentCycles::execute()
                 agent->alg = this; // simulator stuff, this is necessary for any of the token functions to work
                 agent->tokenCleanup(); // clean token remnants before doing new actions
 
-                // NOTE: this only considers the subphase for coin flipping for now, will evolve as more things get added
                 if(agent->state == State::Candidate) {
+                    // NOTE: the first block of tasks should be performed by any candidate, regardless of subphase
                     // if there is an announcement waiting to be received by me and it is safe to create an acknowledgement, consume the announcement
                     if(agent->peekAtToken(TokenType::CandidacyAnnounce, agent->prevAgentDir) != -1 && agent->canSendToken(TokenType::CandidacyAck, agent->prevAgentDir)) {
                         agent->receiveToken(TokenType::CandidacyAnnounce, agent->prevAgentDir);
@@ -216,23 +217,27 @@ Movement LeaderElectionAgentCycles::execute()
                         }
                     }
 
-                    // if there is an acknowledgement waiting to be received by me and I am ready to read, consume the acknowledgement
-                    if(agent->peekAtToken(TokenType::CandidacyAck, agent->nextAgentDir) != -1) {
-                        agent->receiveToken(TokenType::CandidacyAck, agent->nextAgentDir);
-                        if(!agent->gotAnnounceBeforeAck) {
-                            agent->setState(State::Demoted);
+                    // NOTE: the next block of tasks are dependent upon subphase
+                    if(agent->subphase == Subphase::CoinFlip) {
+                        // if there is an acknowledgement waiting to be received by me and I am ready to read, consume the acknowledgement and proceed to the next subphase
+                        if(agent->peekAtToken(TokenType::CandidacyAck, agent->nextAgentDir) != -1) {
+                            agent->receiveToken(TokenType::CandidacyAck, agent->nextAgentDir);
+                            agent->subphase = Subphase::SolitudeVerification;
+                            if(!agent->gotAnnounceBeforeAck) {
+                                agent->setState(State::Demoted);
+                            }
+                            agent->waitingForTransferAck = false;
+                            agent->gotAnnounceBeforeAck = false;
+                            if(agent->state == State::Demoted) {
+                                continue; // if this agent has performed a state change, then it shouldn't perform any more computations
+                            }
+                        } else if(!agent->waitingForTransferAck && randBool() && agent->canSendToken(TokenType::CandidacyAnnounce, agent->nextAgentDir)) {
+                            // if I am not waiting for an acknowlegdement of my previous announcement and I win the coin flip, announce a transfer of candidacy
+                            agent->sendToken(TokenType::CandidacyAnnounce, agent->nextAgentDir, 1);
+                            agent->waitingForTransferAck = true;
                         }
-                        agent->waitingForTransferAck = false;
-                        agent->gotAnnounceBeforeAck = false;
-                        if(agent->state == State::Demoted) {
-                            continue; // if this agent has performed a state change, then it shouldn't perform any more computations
-                        }
-                    }
+                    } else if(agent->subphase == Subphase::SolitudeVerification) {
 
-                    // if I am not waiting for an acknowlegdement of my previous announcement and I win the coin flip, announce a transfer of candidacy
-                    if(!agent->waitingForTransferAck && randBool() && agent->canSendToken(TokenType::CandidacyAnnounce, agent->nextAgentDir)) {
-                        agent->sendToken(TokenType::CandidacyAnnounce, agent->nextAgentDir, 1);
-                        agent->waitingForTransferAck = true;
                     }
                 } else if(agent->state == State::Demoted) {
                     // pass announcements forward
