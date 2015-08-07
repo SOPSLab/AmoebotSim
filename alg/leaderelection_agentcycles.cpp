@@ -28,7 +28,8 @@ LeaderElectionAgentCyclesFlag::LeaderElectionAgentCyclesFlag(const LeaderElectio
 LeaderElectionAgentCycles::LeaderElectionAgent::LeaderElectionAgent() :
     alg(nullptr),
     state(State::Idle),
-    waitingForTransferAck(false), gotAnnounceBeforeAck(false)
+    waitingForTransferAck(false), gotAnnounceBeforeAck(false),
+    createdLead(false), isSoleCandidate(true), generateVectorDir(-1)
 {}
 
 void LeaderElectionAgentCycles::LeaderElectionAgent::setState(const State _state)
@@ -82,12 +83,36 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::tokenCleanup()
     if(alg->inFlags[prevAgentDir]->tokens.at((int) TokenType::CandidacyAck).receivedToken) {
         alg->outFlags[prevAgentDir].tokens.at((int) TokenType::CandidacyAck).value = -1;
     }
+    if(alg->inFlags[nextAgentDir]->tokens.at((int) TokenType::SolitudeLeadL1).receivedToken) {
+        alg->outFlags[nextAgentDir].tokens.at((int) TokenType::SolitudeLeadL1).value = -1;
+    }
+    if(alg->inFlags[prevAgentDir]->tokens.at((int) TokenType::SolitudeLeadL2).receivedToken) {
+        alg->outFlags[prevAgentDir].tokens.at((int) TokenType::SolitudeLeadL2).value = -1;
+    }
+    if(alg->inFlags[nextAgentDir]->tokens.at((int) TokenType::SolitudeVectorL1).receivedToken) {
+        alg->outFlags[nextAgentDir].tokens.at((int) TokenType::SolitudeVectorL1).value = -1;
+    }
+    if(alg->inFlags[prevAgentDir]->tokens.at((int) TokenType::SolitudeVectorL2).receivedToken) {
+        alg->outFlags[prevAgentDir].tokens.at((int) TokenType::SolitudeVectorL2).value = -1;
+    }
     // reset received token flags if the old copy has been destroyed
     if(alg->inFlags[prevAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).value == -1) {
         alg->outFlags[prevAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).receivedToken = false;
     }
     if(alg->inFlags[nextAgentDir]->tokens.at((int) TokenType::CandidacyAck).value == -1) {
         alg->outFlags[nextAgentDir].tokens.at((int) TokenType::CandidacyAck).receivedToken = false;
+    }
+    if(alg->inFlags[prevAgentDir]->tokens.at((int) TokenType::SolitudeLeadL1).value == -1) {
+        alg->outFlags[prevAgentDir].tokens.at((int) TokenType::SolitudeLeadL1).receivedToken = false;
+    }
+    if(alg->inFlags[nextAgentDir]->tokens.at((int) TokenType::SolitudeLeadL2).value == -1) {
+        alg->outFlags[nextAgentDir].tokens.at((int) TokenType::SolitudeLeadL2).receivedToken = false;
+    }
+    if(alg->inFlags[prevAgentDir]->tokens.at((int) TokenType::SolitudeVectorL1).value == -1) {
+        alg->outFlags[prevAgentDir].tokens.at((int) TokenType::SolitudeVectorL1).receivedToken = false;
+    }
+    if(alg->inFlags[nextAgentDir]->tokens.at((int) TokenType::SolitudeVectorL2).value == -1) {
+        alg->outFlags[nextAgentDir].tokens.at((int) TokenType::SolitudeVectorL2).receivedToken = false;
     }
 }
 
@@ -216,11 +241,22 @@ Movement LeaderElectionAgentCycles::execute()
                            agent->gotAnnounceBeforeAck = true;
                         }
                     }
+                    // if there is a solitude lead token waiting to be put into lane 2, put it there if it doesn't pass a vector
+                    if(agent->peekAtToken(TokenType::SolitudeLeadL1, agent->prevAgentDir) != -1 && agent->canSendToken(TokenType::SolitudeLeadL2, agent->prevAgentDir) &&
+                            agent->canSendToken(TokenType::SolitudeVectorL2, agent->prevAgentDir)) {
+                        agent->receiveToken(TokenType::SolitudeLeadL1, agent->prevAgentDir);
+                        agent->sendToken(TokenType::SolitudeLeadL2, agent->prevAgentDir, 100); // lap 1, orientation no longer matters => 100
+                    }
+                    // if there is a vector waiting to be put into lane 2, put it there if it doesn't pass the solitude lead
+                    if(agent->peekAtToken(TokenType::SolitudeVectorL1, agent->prevAgentDir) != -1 && agent->canSendToken(TokenType::SolitudeVectorL2, agent->prevAgentDir) &&
+                            agent->canSendToken(TokenType::SolitudeLeadL2, agent->prevAgentDir)) {
+                        agent->sendToken(TokenType::SolitudeVectorL2, agent->prevAgentDir, agent->receiveToken(TokenType::SolitudeVectorL1, agent->prevAgentDir).value);
+                    }
 
                     // NOTE: the next block of tasks are dependent upon subphase
                     if(agent->subphase == Subphase::CoinFlip) {
-                        // if there is an acknowledgement waiting to be received by me and I am ready to read, consume the acknowledgement and proceed to the next subphase
                         if(agent->peekAtToken(TokenType::CandidacyAck, agent->nextAgentDir) != -1) {
+                            // if there is an acknowledgement waiting, consume the acknowledgement and proceed to the next subphase
                             agent->receiveToken(TokenType::CandidacyAck, agent->nextAgentDir);
                             agent->subphase = Subphase::SolitudeVerification;
                             if(!agent->gotAnnounceBeforeAck) {
@@ -228,15 +264,58 @@ Movement LeaderElectionAgentCycles::execute()
                             }
                             agent->waitingForTransferAck = false;
                             agent->gotAnnounceBeforeAck = false;
-                            if(agent->state == State::Demoted) {
+                            if(agent->state == State::Demoted) { // TODO: in the final version, this continue may not be necessary, so check back later
                                 continue; // if this agent has performed a state change, then it shouldn't perform any more computations
                             }
-                        } else if(!agent->waitingForTransferAck && randBool() && agent->canSendToken(TokenType::CandidacyAnnounce, agent->nextAgentDir)) {
+                        } else if(!agent->waitingForTransferAck && randBool()) {
                             // if I am not waiting for an acknowlegdement of my previous announcement and I win the coin flip, announce a transfer of candidacy
+                            Q_ASSERT(agent->canSendToken(TokenType::CandidacyAnnounce, agent->nextAgentDir)); // there shouldn't be a call to make two announcements
                             agent->sendToken(TokenType::CandidacyAnnounce, agent->nextAgentDir, 1);
                             agent->waitingForTransferAck = true;
                         }
                     } else if(agent->subphase == Subphase::SolitudeVerification) {
+                        if(agent->generateVectorDir != -1 && agent->canSendToken(TokenType::SolitudeVectorL1, agent->nextAgentDir) &&
+                                agent->canSendToken(TokenType::SolitudeLeadL1, agent->nextAgentDir)) {
+                            // if the agent needs to, generate a lane 1 vector token if doing so won't pass the lead token
+                            agent->sendToken(TokenType::SolitudeVectorL1, agent->nextAgentDir, agent->generateVectorDir);
+                            agent->generateVectorDir = -1;
+                        }
+
+                        if(agent->peekAtToken(TokenType::SolitudeVectorL2, agent->nextAgentDir) != -1) {
+                            // consume all vector tokens that have not been matched, decide that solitude has failed
+                            Q_ASSERT(agent->peekAtToken(TokenType::SolitudeVectorL2, agent->nextAgentDir) != 0); // matched tokens should have dropped
+                            agent->receiveToken(TokenType::SolitudeVectorL2, agent->nextAgentDir);
+                            agent->isSoleCandidate = false;
+                        } else if(agent->peekAtToken(TokenType::SolitudeLeadL2, agent->nextAgentDir) != -1) {
+                            // if the lead token has returned, either put it back in lane 1 (lap 1) or consume it and decide solitude (lap 2)
+                            if(agent->peekAtToken(TokenType::SolitudeLeadL2, agent->nextAgentDir) / 100 == 1) { // lead has just completed lap 1
+                                if(agent->canSendToken(TokenType::SolitudeLeadL1, agent->nextAgentDir) && agent->canSendToken(TokenType::SolitudeVectorL1, agent->nextAgentDir)) {
+                                    agent->receiveToken(TokenType::SolitudeLeadL2, agent->nextAgentDir);
+                                    agent->sendToken(TokenType::SolitudeLeadL1, agent->nextAgentDir, 200); // lap 2, orientation no longer matters => 200
+                                }
+                            } else if(agent->peekAtToken(TokenType::SolitudeLeadL2, agent->nextAgentDir) / 100 == 2) { // lead has just completed lap 2
+                                agent->receiveToken(TokenType::SolitudeLeadL2, agent->nextAgentDir);
+                                if(agent->isSoleCandidate) { // if this is the only candidate on the border, go on to the inner/outer border test
+                                    agent->setState(State::SoleCandidate);
+                                    agent->subphase = Subphase::BorderDetection;
+                                } else { // if solitude verification failed, then do another coin flip compeititon
+                                    agent->subphase = Subphase::CoinFlip;
+                                }
+                                agent->createdLead = false;
+                                agent->isSoleCandidate = true;
+                            } else { // TODO: temporary case, but we should be sure it never gets any other lap number
+                                Q_ASSERT(false);
+                            }
+                        } else if(!agent->createdLead) {
+                            // to begin the solitude verification, create a lead token with an orientation to communicate to everyone else
+                            Q_ASSERT(agent->canSendToken(TokenType::SolitudeLeadL1, agent->nextAgentDir)); // there shouldn't be a call to make two leads
+                            agent->sendToken(TokenType::SolitudeLeadL1, agent->nextAgentDir, 110); // lap 1 in direction (1,0) => 110
+                            agent->createdLead = true;
+                            agent->generateVectorDir = 10; // (1,0)
+
+                            // TODO: what happens if the very next agent on the cycle is another candidate?
+                        }
+                    } else if(agent->subphase == Subphase::BorderDetection) {
 
                     }
                 } else if(agent->state == State::Demoted) {

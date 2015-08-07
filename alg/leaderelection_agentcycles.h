@@ -11,6 +11,7 @@ namespace LeaderElectionAgentCycles
 enum class State {
     Idle = 0,
     Candidate,
+    SoleCandidate,
     Demoted,
     Leader,
     Finished
@@ -26,8 +27,10 @@ enum class Subphase {
 enum class TokenType {
     CandidacyAnnounce = 0,
     CandidacyAck,
-    SolitudeLead,
-    SolitudeVector
+    SolitudeLeadL1,
+    SolitudeLeadL2,
+    SolitudeVectorL1,
+    SolitudeVectorL2
 };
 
 typedef struct {
@@ -43,7 +46,7 @@ public:
     LeaderElectionAgentCyclesFlag(const LeaderElectionAgentCyclesFlag& other);
 
     State state;
-    std::array<Token, 4> tokens;
+    std::array<Token, 6> tokens;
 };
 
 class LeaderElectionAgentCycles : public AlgorithmWithFlags<LeaderElectionAgentCyclesFlag>
@@ -59,6 +62,8 @@ private:
         Subphase subphase;
         int agentDir, nextAgentDir, prevAgentDir;
         bool waitingForTransferAck, gotAnnounceBeforeAck; // coin flipping information
+        bool createdLead, isSoleCandidate; // solitude verification information
+        int generateVectorDir;
 
         void setState(const State _state);
         bool canSendToken(TokenType type, int dir) const;
