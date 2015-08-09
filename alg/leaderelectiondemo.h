@@ -45,12 +45,21 @@ public:
     int tokenCurrentDir;
     int ownTokenValue;
     bool buildBorder;
-    int xT;//x,y tokens for tracking distance passed
+    int xT;//x and y for orientation- actives move around to match with passive
     int yT;
     bool xTAccept;
     bool yTAccept;
+    int xB;//x and y for orientation- actives move around to match with passive
+    int yB;
+    bool xBAccept;
+    bool yBAccept;
+    int xP;//pasive x,y for matching with active x,y
+    int yP;
+    bool finishedVectors;
+    bool unmatchedVector;
     bool changeToken;
     bool handleVectors;
+
 
 };
 
@@ -109,6 +118,7 @@ protected:
     void updateNeighborStages();
 
     void handleElectionTokens();
+    void newHandleVectors(int currentSubPhase);
     void oldHandleElectionTokens();
     void clearHeldToken();
     void setTokenCoordinates(int recDir);
@@ -141,6 +151,7 @@ protected:
     int borderPasses;
     bool parentChanged;
     int id;
+    bool consumeOwnPassive;
 
 };
 }

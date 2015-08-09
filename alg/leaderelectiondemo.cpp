@@ -32,6 +32,12 @@ LeaderElectionDemoFlag::LeaderElectionDemoFlag()
       yT(-3),
       xTAccept(false),
       yTAccept(false),
+      xB(-3),
+      yB(-3),
+      xBAccept(false),
+      yBAccept(false),
+      finishedVectors(false),
+      unmatchedVector(false),
       changeToken(false),
       handleVectors(false)
 
@@ -61,6 +67,12 @@ LeaderElectionDemoFlag::LeaderElectionDemoFlag(const LeaderElectionDemoFlag& oth
       yT(other.yT),
       xTAccept(other.xTAccept),
       yTAccept(other.yTAccept),
+      xB(other.xB),
+      yB(other.yB),
+      xBAccept(other.xBAccept),
+      yBAccept(other.yBAccept),
+      finishedVectors(other.finishedVectors),
+      unmatchedVector(other.unmatchedVector),
       changeToken(other.changeToken),
       handleVectors(other.handleVectors)
 {
@@ -87,6 +99,7 @@ LeaderElectionDemo::LeaderElectionDemo(const Phase _phase)
     borderPasses = 0;
     parentChanged = false;
     id = -1;
+    consumeOwnPassive = false;
 }
 
 LeaderElectionDemo::LeaderElectionDemo(const LeaderElectionDemo& other)
@@ -109,7 +122,8 @@ LeaderElectionDemo::LeaderElectionDemo(const LeaderElectionDemo& other)
       hasLost(other.hasLost),
       borderPasses(other.borderPasses),
       parentChanged(other.parentChanged),
-      id(other.id)
+      id(other.id),
+      consumeOwnPassive(other.consumeOwnPassive)
 {
 }
 
@@ -129,12 +143,14 @@ std::shared_ptr<System> LeaderElectionDemo::instance()
     // begin hexagon structure
     int offset =0;
     int itercount =0;
-    while(system->size() < 12) {
+    int structSideLength=  2;
+    int numStructParticles = 6*structSideLength;
+    while(system->size() < numStructParticles) {
         system->insert(Particle(std::make_shared<LeaderElectionDemo>(Phase::Static), randDir(), pos));
         occupied.insert(pos);
 
         orderedSurface.push_back(pos);
-        if(itercount%2 ==0)
+        if(itercount%structSideLength ==0)
             offset--;
         if(offset<0) offset = 5;
         lastOffset = offset;
@@ -178,8 +194,11 @@ std::shared_ptr<System> LeaderElectionDemo::instance()
         for(auto it = candidates.begin(); it != candidates.end() && numNonStaticParticles < newNumParticles; ++it) {
             std::shared_ptr<LeaderElectionDemo> newParticle= std::make_shared<LeaderElectionDemo>(Phase::Inactive);
             newParticle->id = idCounter;
+            // if(idCounter!=0 && idCounter!=9)
+            // newParticle->ownTokenValue =0;
             system->insert(Particle(newParticle, randDir(), *it));
             numNonStaticParticles++;
+            //           qDebug()<<"init? "<<initSide<<"iter: "<<itercount;
             if(!initSide && (itercount-1)%3 ==0)
                 offset--;
             else if (initSide && itercount%2 ==0)
@@ -1311,7 +1330,7 @@ void LeaderElectionDemo::handleElectionTokens()
     {
         if(inFlags[surfaceFollower]->isContracted() && inFlags[surfaceParent]->isContracted() )//don't try and eliminate self till surrounded on surface
         {
-            if(inFlags[surfaceParent]->ownTokenValue == -1)
+            if(inFlags[surfaceParent]->ownTokenValue == -1 && inFlags[surfaceParent]->subPhase >-1)
             {
                 qDebug()<<"  changed to 0";
                 ownTokenValue = 0;
@@ -1328,7 +1347,7 @@ void LeaderElectionDemo::handleElectionTokens()
     int currentSubPhase = outFlags[0].subPhase;
     int tokenValue = outFlags[0].tokenValue;
     int activeTokenValue = outFlags[0].activeTokenValue;
-
+    bool finishedVectors = outFlags[0].finishedVectors;
     qDebug()<<"   subphase: "<<currentSubPhase<<" tokenval: "<<tokenValue<<" active: " <<activeTokenValue;
 
     if(currentSubPhase == -1)
@@ -1339,6 +1358,7 @@ void LeaderElectionDemo::handleElectionTokens()
     if(currentSubPhase == 0) //not started-- see if can initialize, or initialization chain has started
     {
         //candidate changes subphase to signal fs but doesn't send token
+
         if(ownTokenValue == -1)
         {
             currentSubPhase = 1;
@@ -1349,6 +1369,7 @@ void LeaderElectionDemo::handleElectionTokens()
         {
             currentSubPhase = 1;
         }
+        consumeOwnPassive = false;
     }
     else if (currentSubPhase>0)
     {
@@ -1430,6 +1451,7 @@ void LeaderElectionDemo::handleElectionTokens()
                     activeTokenValue = 0;
                     ownTokenValue = 0;
                     currentSubPhase = 2;
+                    consumeOwnPassive = true;
                 }
                 //match with eos token, clear it and go to subphase 3 finished (no transfer, just revoke)
                 else if(activeTokenValue == -2 && inFlags[surfaceParent]->activeTokenValue == 0)
@@ -1437,6 +1459,8 @@ void LeaderElectionDemo::handleElectionTokens()
                     activeTokenValue = 0;
                     currentSubPhase = 3;
                     ownTokenValue = 0;
+                    consumeOwnPassive = true;
+                    finishedVectors = true;
                 }
 
                 if(inFlags[surfaceFollower]->subPhase ==3 )
@@ -1537,7 +1561,16 @@ void LeaderElectionDemo::handleElectionTokens()
                     //since already matched, sending received token
                     else if(tokenValue < 0 && inFlags[surfaceParent]->tokenValue <1)
                     {
-                        tokenValue = -1 * tokenValue;
+                        if(consumeOwnPassive == true)
+                        {
+                            tokenValue = 0;
+                            qDebug()<<"consume own passive";
+
+                        }
+                        else
+                        {
+                            tokenValue = -1 * tokenValue;
+                        }
                     }
                 }
                 //active tokens- receive, pass along
@@ -1604,10 +1637,17 @@ void LeaderElectionDemo::handleElectionTokens()
                 currentSubPhase = 0;
 
             }
-            if(ownTokenValue == -1 &&  inFlags[surfaceParent]->subPhase == 0)
+            if(ownTokenValue == -1 )
             {
-                ownTokenValue = 0;
-                qDebug()<<"Finish demote";
+                if(inFlags[surfaceFollower]->subPhase == 5)//prevent perfect balance situation from both demoting
+                {
+                    currentSubPhase = 0;
+                }
+                else if(inFlags[surfaceParent]->subPhase == 0)
+                {
+                    ownTokenValue = 0;
+                    qDebug()<<"Finish demote";
+                }
             }
         }
     }
@@ -1623,7 +1663,7 @@ void LeaderElectionDemo::handleElectionTokens()
     }
     if(currentSubPhase > 0 && ownTokenValue == -1 &&  inFlags[surfaceFollower]->subPhase ==5)
     {
-        currentSubPhase =0;
+        currentSubPhase = 0;
     }
     for(int i =0; i<10;i++)
     {
@@ -1631,10 +1671,40 @@ void LeaderElectionDemo::handleElectionTokens()
         outFlags[i].tokenValue = tokenValue;
         outFlags[i].activeTokenValue = activeTokenValue;
         outFlags[i].ownTokenValue = ownTokenValue;
-
+        outFlags[i].finishedVectors = finishedVectors;
     }
     qDebug()<<"   subphase: "<<currentSubPhase<<" tokenval: "<<tokenValue<<" active: " <<activeTokenValue;
+    newHandleVectors(currentSubPhase);
+    //vectors stuff---------
 
+    if(currentSubPhase == 3)
+    {
+        if( !outFlags[0].handleVectors)
+        {
+            setTokenCoordinates(surfaceFollower);
+            for(int label = 0; label<10;label++)
+            {
+                outFlags[label].handleVectors =  true;
+            }
+
+        }
+        processTokenCoordinates(surfaceParent ,surfaceFollower);
+    }
+    else if(currentSubPhase == 0)
+    {
+        for(int label = 0; label<10;label++)
+        {
+            outFlags[label].handleVectors =  false;
+        }
+        clearVectorToken();
+    }
+    else
+    {
+        processTokenCoordinates(surfaceParent ,surfaceFollower);
+    }
+
+    qDebug()<<"   vectors: "<<outFlags[0].handleVectors<<" x: "<<outFlags[0].xT<<" y: "<<outFlags[0].yT;
+    qDebug()<<"   vector accepts x: "<<outFlags[0].xTAccept<<" y: "<<outFlags[0].yTAccept;
     if(ownTokenValue == -1)
     {
         if(outFlags[0].subPhase == -1)
@@ -1713,255 +1783,9 @@ void LeaderElectionDemo::handleElectionTokens()
     }
 
 }
-void LeaderElectionDemo::oldHandleElectionTokens()
+void LeaderElectionDemo::newHandleVectors(int currentSubPhase)
 {
-    qDebug()<<"handle election tokens";
-    //step 0: setup
-    auto surfaceFollower = firstNeighborInPhase(Phase::Static);
-    int   surfaceParent = headMarkDir;
-    if(surfaceFollower!=-1)
-    {
-        while(neighborIsInPhase(surfaceFollower,Phase::Static))
-            surfaceFollower = (surfaceFollower+1)%6;
-    }
-    //step 1: set up token values to random numbers
-    if(ownTokenValue== -1)
-    {
-        int prevOwn = ownTokenValue;
-        while(prevOwn == ownTokenValue)
-        {
-            ownTokenValue = rand() % 8;
-        }
-
-        for(int label=0;label<10;label++)
-        {
-            outFlags[label].ownTokenValue = ownTokenValue;
-        }
-        setTokenValue(ownTokenValue);
-        qDebug()<<"init: "<<ownTokenValue;
-
-    }
-    if(outFlags[0].tokenValue == -1)
-    {
-        setTokenValue(outFlags[0].ownTokenValue);
-    }
-
-    if(surfaceFollower != -1 && surfaceParent!=-1)
-    {
-        if(inFlags[surfaceFollower]!=nullptr  && inFlags[surfaceFollower]->tokenValue!=-1 && inFlags[surfaceParent]!=nullptr &&inFlags[surfaceParent]->tokenValue!=-1 )
-        {
-
-            //head
-            if(outFlags[0].tokenValue == outFlags[0].ownTokenValue)
-            {
-                //if not changing, can be passed over
-                if(inFlags[surfaceFollower]->tokenValue>outFlags[0].tokenValue && !outFlags[0].changeToken)
-                {
-                    setTokenValue(inFlags[surfaceFollower]->tokenValue);
-                    clearVectorToken();
-                }
-                //equal tail touching- start delta
-                else if(inFlags[surfaceFollower]->tokenValue==outFlags[0].ownTokenValue && !outFlags[0].handleVectors)
-                {
-
-                    if( !outFlags[0].changeToken)
-                    {
-                        //a direction hasn't been sent forward yet (can't check if direction set behind, could have been set by someone else)
-                        //if this is a head behind an equal head, this condition will prevent anything from happening
-                        if(inFlags[surfaceParent]->tokenCurrentDir == -1)
-                        {
-                            for(int label = 0; label<10;label++)
-                            {
-                                outFlags[label].changeToken =  true;
-                            }
-                            //change token
-                            ownTokenValue = rand() % 8;
-                            qDebug()<<"token: "<<outFlags[0].ownTokenValue<<" changed to "<<ownTokenValue;
-                            for(int label=0;label<10;label++)
-                            {
-                                outFlags[label].ownTokenValue = ownTokenValue;
-                            }
-                            setTokenValue(ownTokenValue);
-                        }
-                    }
-                }
-                //behind another head
-                if(inFlags[surfaceParent]->ownTokenValue ==inFlags[surfaceParent]->tokenValue && outFlags[0].changeToken)
-                {
-                    qDebug()<<"start change off";
-                    for(int label = 0; label<10;label++)
-                    {
-                        outFlags[label].changeToken =  false;
-                    }
-                }
-                //delta off when forward has received, off wave has returned;then start vectors for matching
-                if(inFlags[surfaceParent]->tokenValue == ownTokenValue && !inFlags[surfaceParent]->changeToken && outFlags[0].changeToken)
-                {
-                    for(int label = 0; label<10;label++)
-                    {
-                        outFlags[label].changeToken =  false;
-                        outFlags[label].handleVectors = true;
-                    }
-                    qDebug()<<"start vectors";
-                    setTokenCoordinates(followDir);
-                }
-                if(outFlags[0].handleVectors)
-                {
-                    processTokenCoordinates(surfaceParent,surfaceFollower);
-
-                    if(  !inFlags[surfaceParent]->handleVectors && inFlags[surfaceParent]->tokenCurrentDir!=-1
-                         && (outFlags[0].xT == -3 ||outFlags[0].xT == 0)
-                         && (outFlags[0].yT == -3 ||outFlags[0].yT == 0)
-                         && !outFlags[0].xTAccept && !outFlags[0].yTAccept)
-                    {
-                        qDebug()<<"have leader?";
-                        headMarkColor = 0xFFFF00;
-
-                    }
-                }
-            }
-            //non-head
-            else if((outFlags[0].tokenValue != outFlags[0].ownTokenValue) )
-            {
-
-                //delta passed and is different- prevents secondary forward wave
-                if(!outFlags[0].changeToken && inFlags[surfaceFollower]->changeToken
-                        && inFlags[surfaceFollower]->tokenValue!=outFlags[0].tokenValue)//because were same before, now explicitely changing
-                {
-                    for(int label = 0; label<10;label++)
-                    {
-                        outFlags[label].changeToken =  true;
-                        outFlags[label].tokenValue = inFlags[surfaceFollower]->tokenValue;
-                    }
-                    if(outFlags[0].tokenValue == outFlags[0].ownTokenValue)//accidently became "head", undo that:
-                    {
-                        qDebug()<<"non head changed own";
-                        ownTokenValue = outFlags[0].ownTokenValue;//to be safe
-                        int prevOwn = ownTokenValue;
-                        while(prevOwn == ownTokenValue)
-                        {
-                            ownTokenValue = rand() % 8;
-                        }
-
-                        for(int label = 0; label<10;label++)
-                        {
-                            outFlags[label].ownTokenValue= ownTokenValue;
-                        }
-
-                    }
-                }
-                //non-head beat by follower
-                else if(!outFlags[0].changeToken && inFlags[surfaceFollower]->tokenValue>outFlags[0].tokenValue)
-                {
-                    qDebug()<<"nonhead beat";
-                    setTokenValue(inFlags[surfaceFollower]->tokenValue);
-                    clearVectorToken();
-
-                }
-
-                //delta on, check about off
-                else if(outFlags[0].changeToken)
-                {
-                    //behind head; start change off
-                    if(inFlags[surfaceParent]->ownTokenValue ==inFlags[surfaceParent]->tokenValue )
-                    {
-                        qDebug()<<"start change off";
-                        for(int label = 0; label<10;label++)
-                        {
-
-                            outFlags[label].changeToken =  false;
-                        }
-                    }
-                    //behind someone with same value and change off- so continue back wave
-                    else if(inFlags[surfaceParent]->changeToken == false && inFlags[surfaceParent]->tokenValue == outFlags[0].tokenValue)
-                    {
-                        qDebug()<<"continue change off";
-                        for(int label = 0; label<10;label++)
-                        {
-                            outFlags[label].changeToken =  false;
-                        }
-                    }
-                }
-                //handle tokens passed
-                else  if(inFlags[surfaceFollower]->handleVectors && !outFlags[0].handleVectors && outFlags[0].tokenCurrentDir == -1)
-                {
-                    for(int label = 0; label<10;label++)
-                    {
-                        outFlags[label].handleVectors =  true;
-                    }
-                    setTokenCoordinates(surfaceFollower);
-                }
-                if (outFlags[0].handleVectors)
-                {
-                    //check if off
-                    processTokenCoordinates(surfaceParent,surfaceFollower);
-
-                    //if cleared, see if behind head or someone with handleV off
-                    if( (outFlags[0].xT == -3 ||outFlags[0].xT == 0)
-                            && (outFlags[0].yT == -3 ||outFlags[0].yT == 0)
-                            && !outFlags[0].xTAccept && !outFlags[0].yTAccept)
-                    {
-                        if(inFlags[surfaceParent]->ownTokenValue == inFlags[surfaceParent]->tokenValue ||
-                                !inFlags[surfaceParent]->handleVectors)
-                        {
-                            for(int label = 0; label<10;label++)
-                            {
-                                outFlags[label].handleVectors =  false;
-                            }
-                        }
-                    }
-                }
-
-
-            }
-
-            /*   //delta has been unset, but keep processing
-            if(!outFlags[0].changeToken && outFlags[0].tokenCurrentDir != -1 && !outFlags[0].handleVectors)
-            {
-                processTokenCoordinates(surfaceParent,surfaceFollower);
-            }*/
-        }
-    }
-
-    if(phase ==Phase::retiredLeader) clearHeldToken();
-
-    //debugs...
-    qDebug()<<"id: "<<ownTokenValue<<" held: "<<outFlags[0].tokenValue<<"token  dir: "<<outFlags[0].tokenCurrentDir<<" changeT: "<<outFlags[0].changeToken<<" handleV: "<<outFlags[0].handleVectors;
-    if(surfaceFollower!=-1 && surfaceParent!=-1 && inFlags[surfaceParent]!=nullptr && inFlags[surfaceFollower]!=nullptr)
-    {
-        qDebug()<<"in front of: "<<inFlags[surfaceFollower]->ownTokenValue<<" behind: "<<inFlags[surfaceParent]->ownTokenValue;
-    }
-
-
 }
-
-void LeaderElectionDemo::clearHeldToken()
-{
-    for(int label = 0; label<10; label++)
-    {
-        outFlags[label].tokenValue = -1;
-        outFlags[label].tokenD1 = 0;
-        outFlags[label].tokenD2 = 0;
-        outFlags[label].tokenD3 = 0;
-        outFlags[label].tokenCurrentDir = -1;
-        outFlags[label].subPhase = -1;
-
-    }
-}
-void LeaderElectionDemo::clearVectorToken()
-{
-    for(int label = 0; label<10; label++)
-    {
-        outFlags[label].xT = -3;
-        outFlags[label].yT = -3;
-        outFlags[label].xTAccept = false;
-        outFlags[label].yTAccept = false;
-        outFlags[label].tokenCurrentDir=-1;
-        outFlags[label].changeToken = false;
-        outFlags[label].handleVectors = false;
-    }
-}
-
 //sets up the initial tokenCoordinate vectors for matching
 void LeaderElectionDemo::setTokenCoordinates(int recDir)
 {
@@ -2022,8 +1846,38 @@ void LeaderElectionDemo::setTokenCoordinates(int recDir)
         outFlags[label].yT = yTtemp;
         outFlags[label].xTAccept = false;
         outFlags[label].yTAccept = false;
+        outFlags[label].xP = xTtemp;
+        outFlags[label].yP = yTtemp;
     }
 }
+void LeaderElectionDemo::clearHeldToken()
+{
+    for(int label = 0; label<10; label++)
+    {
+        outFlags[label].tokenValue = -1;
+        outFlags[label].tokenD1 = 0;
+        outFlags[label].tokenD2 = 0;
+        outFlags[label].tokenD3 = 0;
+        outFlags[label].tokenCurrentDir = -1;
+        outFlags[label].subPhase = -1;
+
+    }
+}
+void LeaderElectionDemo::clearVectorToken()
+{
+    for(int label = 0; label<10; label++)
+    {
+        outFlags[label].xT = -3;
+        outFlags[label].yT = -3;
+        outFlags[label].xTAccept = false;
+        outFlags[label].yTAccept = false;
+        outFlags[label].tokenCurrentDir=-1;
+        outFlags[label].changeToken = false;
+        outFlags[label].handleVectors = false;
+    }
+}
+
+
 //attempts to compress some vector component tokens toward the goal 0,0/blank,blank
 void LeaderElectionDemo::processTokenCoordinates(int parent, int follower)
 {
@@ -2032,136 +1886,41 @@ void LeaderElectionDemo::processTokenCoordinates(int parent, int follower)
 }
 void LeaderElectionDemo::processXTokenCoordinates(int parent, int follower)
 {
-    if(parent==-1 || follower == -1 || inFlags[parent]==nullptr || inFlags[follower]==nullptr)
-        return;
-
-    qDebug()<<"handling xtokens: "<<ownTokenValue<<"  "<<outFlags[0].xT<<" "<<outFlags[0].yT;
-    //xTokens
-    if(ownTokenValue == outFlags[0].tokenValue)//segment leader/head can clear once token taken, but otherwise they must stop here
-    {
-        if(outFlags[0].xT>-3 && inFlags[parent]->xTAccept)
+        qDebug()<<"process x token: "<<id<<" "<<outFlags[0].xT<<" "<<outFlags[0].xTAccept;
+    //something to accept, not currently holding anything
+        if(inFlags[follower]->xT != -3 && !inFlags[follower]->xTAccept &&
+                outFlags[0].xT==-3 && !outFlags[0].xTAccept)
         {
-            for(int label = 0;label<10;label++)
+            int value = inFlags[follower]->xT;
+              for(int i =0; i<10; i++)
+              {
+                  outFlags[i].xT = value;
+                  outFlags[i].xTAccept = true;
+              }
+        }
+        //has been accepted, still holding
+        else if(inFlags[parent]->xTAccept && outFlags[0].xT!=-3)
+        {
+            for(int i =0; i<10; i++)
             {
-                outFlags[label].xT = -3;
+                outFlags[i].xT = -3;
             }
         }
-    }
-    else
-    {
-        if(!outFlags[0].xTAccept && !inFlags[parent]->xTAccept  && !inFlags[follower]->xTAccept)
+        //is accepting, behind is cleared
+        else if(outFlags[0].xT!=-3 && outFlags[0].xTAccept && inFlags[follower]->xT==-3)
         {
-            qDebug()<<"b1";
-
-            if (outFlags[0].xT>-3 && inFlags[follower]->xT>-3)//-3 is "blank"
+            for(int i =0; i<10; i++)
             {
-                int testSum = outFlags[0].xT+ inFlags[follower]->xT;
-                if(testSum>-3 && testSum<3)//manageable range for combining 2 tokens
-                {
-                    for(int label = 0;label<10;label++)
-                    {
-                        outFlags[label].xT = testSum;
-                        outFlags[label].xTAccept = true;
-                    }
-                }
-
-            }
-            else if(outFlags[0].xT==-3&& inFlags[follower]->xT>-3)
-            {
-                for(int label = 0;label<10;label++)
-                {
-                    outFlags[label].xT = inFlags[follower]->xT;
-                    outFlags[label].xTAccept = true;
-                }
+                outFlags[i].xTAccept = false;
             }
         }
-        else if(outFlags[0].xTAccept && inFlags[follower]->xT == -3)
-        {
-            for(int label = 0;label<10;label++)
-            {
-                outFlags[label].xTAccept = false;
-            }
-
-        }
-
-        else if(outFlags[0].xT>-3 && inFlags[parent]->xTAccept)
-        {
-            for(int label = 0;label<10;label++)
-            {
-                outFlags[label].xT = -3;
-            }
-        }
-
-    }
-    qDebug()<<"xT: "<<outFlags[0].xT<<" accept? "<<outFlags[0].xTAccept;
-    //ytokens
+        qDebug()<<"after x token: "<<id<<" "<<outFlags[0].xT<<" "<<outFlags[0].xTAccept;
 
 }
+
 void LeaderElectionDemo::processYTokenCoordinates(int parent, int follower)
 {
-    if(parent==-1 || follower == -1 || inFlags[parent]==nullptr || inFlags[follower]==nullptr)
-        return;
 
-    qDebug()<<"handling ytokens: "<<ownTokenValue<<"  "<<outFlags[0].xT<<" "<<outFlags[0].yT;
-    //xTokens
-    if(ownTokenValue == outFlags[0].tokenValue)//segment leader/head can clear once token taken, but otherwise they must stop here
-    {
-        if(outFlags[0].yT>-3 && inFlags[parent]->yTAccept)
-        {
-            for(int label = 0;label<10;label++)
-            {
-                outFlags[label].yT = -3;
-            }
-        }
-    }
-    else
-    {
-        if(!outFlags[0].yTAccept && !inFlags[parent]->yTAccept  && !inFlags[follower]->yTAccept)
-        {
-            qDebug()<<"b1";
-
-            if (outFlags[0].yT>-3 && inFlags[follower]->yT>-3)//-3 is "blank"
-            {
-                int testSum = outFlags[0].yT+ inFlags[follower]->yT;
-                if(testSum>-3 && testSum<3)//manageable range for combining 2 tokens
-                {
-                    for(int label = 0;label<10;label++)
-                    {
-                        outFlags[label].yT = testSum;
-                        outFlags[label].yTAccept = true;
-                    }
-                }
-
-            }
-            else if(outFlags[0].yT==-3&& inFlags[follower]->yT>-3)
-            {
-                for(int label = 0;label<10;label++)
-                {
-                    outFlags[label].yT = inFlags[follower]->yT;
-                    outFlags[label].yTAccept = true;
-                }
-            }
-        }
-        else if(outFlags[0].yTAccept && inFlags[follower]->yT == -3)
-        {
-            for(int label = 0;label<10;label++)
-            {
-                outFlags[label].yTAccept = false;
-            }
-
-        }
-
-        else if(outFlags[0].yT>-3 && inFlags[parent]->yTAccept)
-        {
-            for(int label = 0;label<10;label++)
-            {
-                outFlags[label].yT = -3;
-            }
-        }
-
-    }
-    qDebug()<<"yT: "<<outFlags[0].yT<<" accept? "<<outFlags[0].yTAccept;
-    //ytokens
 
 }
 
