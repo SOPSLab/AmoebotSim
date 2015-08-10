@@ -130,6 +130,7 @@ void VisItem::paint()
     Quad view = calculateView(focusPos, zoom, width(), height());
     drawGrid(view);
 
+    QMutexLocker locker(&systemMutex);
     if(system == nullptr) {
         return;
     }
@@ -198,11 +199,8 @@ void VisItem::drawParticles(const Quad& view)
 {
     particleTex->bind();
     glfn->glBegin(GL_QUADS);
-    QMutexLocker locker(&systemMutex);
-    if(system != nullptr) {
-        for(int i = 0; i < system->size(); ++i) {
-            drawParticle(system->at(i), view);
-        }
+    for(int i = 0; i < system->size(); ++i) {
+        drawParticle(system->at(i), view);
     }
     glfn->glEnd();
 }

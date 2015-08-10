@@ -66,11 +66,18 @@ private:
         int generateVectorDir;
 
         void setState(const State _state);
+        void execute(LeaderElectionAgentCycles* _alg);
+
+    protected:
         bool canSendToken(TokenType type, int dir) const;
         void sendToken(TokenType type, int dir, int value);
         int peekAtToken(TokenType type, int dir) const;
         Token receiveToken(TokenType type, int dir);
         void tokenCleanup();
+
+        int encodeVector(std::pair<int, int> vector) const;
+        std::pair<int, int> decodeVector(int code);
+        std::pair<int, int> augmentDirVector(std::pair<int, int> vector, const int offset);
     };
 
 public:
