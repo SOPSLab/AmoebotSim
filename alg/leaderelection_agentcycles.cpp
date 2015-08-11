@@ -29,7 +29,8 @@ LeaderElectionAgentCycles::LeaderElectionAgent::LeaderElectionAgent() :
     alg(nullptr),
     state(State::Idle),
     waitingForTransferAck(false), gotAnnounceBeforeAck(false),
-    createdLead(false), isSoleCandidate(true), generateVectorDir(-1)
+    createdLead(false), sawUnmatchedToken(false), generateVectorDir(-1),
+    testingBorder(false)
 {}
 
 void LeaderElectionAgentCycles::LeaderElectionAgent::setState(const State _state)
@@ -43,8 +44,10 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::setState(const State _state
         alg->borderPointColors.at(agentDir) = 0xff9900; // Gold
     } else if(state == State::Demoted) {
         alg->borderPointColors.at(agentDir) = 0x999999; // Grey
-    } else { // state == State::Leader
+    } else if(state == State::Leader) {
         alg->borderPointColors.at(agentDir) = 0x00ff00; // Green
+    } else {
+        Q_ASSERT(false); // an agent shouldn't be any other state
     }
 }
 
@@ -55,7 +58,7 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
         tokenCleanup(); // clean token remnants before doing new actions
 
         if(state == State::Candidate) {
-            // NOTE: this first block of tasks should be performed by any candidate, regardless of subphase
+            // this first block of tasks should be performed by any candidate, regardless of subphase
             // if there is an announcement waiting to be received by me and it is safe to create an acknowledgement, consume the announcement
             if(peekAtToken(TokenType::CandidacyAnnounce, prevAgentDir) != -1 && canSendToken(TokenType::CandidacyAck, prevAgentDir)) {
                 receiveToken(TokenType::CandidacyAnnounce, prevAgentDir);
@@ -67,15 +70,19 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
             // if there is a solitude lead token waiting to be put into lane 2, put it there if it doesn't pass a vector token
             if(peekAtToken(TokenType::SolitudeLeadL1, prevAgentDir) != -1 && canSendToken(TokenType::SolitudeLeadL2, prevAgentDir) &&
                     canSendToken(TokenType::SolitudeVectorL2, prevAgentDir)) {
-                sendToken(TokenType::SolitudeLeadL2, prevAgentDir, receiveToken(TokenType::SolitudeLeadL1, prevAgentDir).value);
+                int leadValue = receiveToken(TokenType::SolitudeLeadL1, prevAgentDir).value;
+                if(leadValue / 100 == 1) { // if the lead is on lap 1, just pass on the value
+                    sendToken(TokenType::SolitudeLeadL2, prevAgentDir, (1000 * local_id) +leadValue);
+                } else { // if the lead is on lap 2, append this candidate's local id
+                    sendToken(TokenType::SolitudeLeadL2, prevAgentDir, leadValue);
+                }
             }
-            // if there is a vector waiting to be put into lane 2, put it there if it doesn't pass the solitude lead token
-            if(peekAtToken(TokenType::SolitudeVectorL1, prevAgentDir) != -1 && canSendToken(TokenType::SolitudeVectorL2, prevAgentDir) &&
-                    canSendToken(TokenType::SolitudeLeadL2, prevAgentDir)) {
+            // if there is a vector waiting to be put into lane 2, put it there
+            if(peekAtToken(TokenType::SolitudeVectorL1, prevAgentDir) != -1 && canSendToken(TokenType::SolitudeVectorL2, prevAgentDir)) {
                 sendToken(TokenType::SolitudeVectorL2, prevAgentDir, receiveToken(TokenType::SolitudeVectorL1, prevAgentDir).value);
             }
 
-            // NOTE: the next block of tasks are dependent upon subphase
+            // the next block of tasks are dependent upon subphase
             if(subphase == Subphase::CoinFlip) {
                 if(peekAtToken(TokenType::CandidacyAck, nextAgentDir) != -1) {
                     // if there is an acknowledgement waiting, consume the acknowledgement and proceed to the next subphase
@@ -94,9 +101,8 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
                     waitingForTransferAck = true;
                 }
             } else if(subphase == Subphase::SolitudeVerification) {
-                // if the agent needs to, generate a lane 1 vector token if doing so won't pass the lead token
-                if(generateVectorDir != -1 && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir) &&
-                        canSendToken(TokenType::SolitudeLeadL1, nextAgentDir)) {
+                // if the agent needs to, generate a lane 1 vector token
+                if(generateVectorDir != -1 && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir)) {
                     sendToken(TokenType::SolitudeVectorL1, nextAgentDir, generateVectorDir);
                     generateVectorDir = -1;
                 }
@@ -105,42 +111,47 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
                     // consume all vector tokens that have not been matched, decide that solitude has failed
                     Q_ASSERT(peekAtToken(TokenType::SolitudeVectorL2, nextAgentDir) != 0); // matched tokens should have dropped
                     receiveToken(TokenType::SolitudeVectorL2, nextAgentDir);
-                    isSoleCandidate = false;
+                    sawUnmatchedToken = true;
                 } else if(peekAtToken(TokenType::SolitudeLeadL2, nextAgentDir) != -1) {
                     // if the lead token has returned, either put it back in lane 1 (lap 1) or consume it and decide solitude (lap 2)
-                    if(peekAtToken(TokenType::SolitudeLeadL2, nextAgentDir) / 100 == 1) { // lead has just completed lap 1
-                        qDebug() << "lead finished lap 1, criteria for going into lane 1 again:" << canSendToken(TokenType::SolitudeLeadL1, nextAgentDir) << canSendToken(TokenType::SolitudeVectorL1, nextAgentDir);
+                    if((peekAtToken(TokenType::SolitudeLeadL2, nextAgentDir) % 1000) / 100 == 1) { // lead has just completed lap 1
                         if(canSendToken(TokenType::SolitudeLeadL1, nextAgentDir) && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir)) {
-                            qDebug() << "put lead back in lane 1";
-                            receiveToken(TokenType::SolitudeLeadL2, nextAgentDir);
-                            sendToken(TokenType::SolitudeLeadL1, nextAgentDir, 200); // lap 2, orientation no longer matters => 200
+                            int leadValue = receiveToken(TokenType::SolitudeLeadL2, nextAgentDir).value;
+                            sendToken(TokenType::SolitudeLeadL1, nextAgentDir, (leadValue / 1000) * 1000 + 200); // lap 2, orientation no longer matters => 200
                         }
-                    } else if(peekAtToken(TokenType::SolitudeLeadL2, nextAgentDir) / 100 == 2) { // lead has just completed lap 2
-                        qDebug() << "lead finished lap 2";
-                        receiveToken(TokenType::SolitudeLeadL2, nextAgentDir);
-                        if(isSoleCandidate) { // if this is the only candidate on the border, go on to the inner/outer border test
+                    } else if((peekAtToken(TokenType::SolitudeLeadL2, nextAgentDir) % 1000) / 100 == 2) { // lead has just completed lap 2
+                        int leadValue = receiveToken(TokenType::SolitudeLeadL2, nextAgentDir).value;
+                        if(!sawUnmatchedToken && (leadValue / 1000) == local_id) { // if it did not consume an unmatched token and it assures it's matching with itself, go to inner/outer test
                             setState(State::SoleCandidate);
-                            subphase = Subphase::BorderDetection;
-                            qDebug() << "set subphase to BorderDetection";
                         } else { // if solitude verification failed, then do another coin flip compeititon
                             subphase = Subphase::CoinFlip;
-                            qDebug() << "reset subphase to CoinFlip";
                         }
                         createdLead = false;
-                        isSoleCandidate = true;
+                        sawUnmatchedToken = false;
                         return; // completed subphase and thus shouldn't perform any more operations in this round
-                    } else { // TODO: temporary case, but we should be sure it never gets any other lap number
-                        Q_ASSERT(false);
                     }
                 } else if(!createdLead) {
-                    // to begin the solitude verification, create a lead token with an orientation to communicate to everyone else
-                    Q_ASSERT(canSendToken(TokenType::SolitudeLeadL1, nextAgentDir)); // there shouldn't be a call to make two leads
+                    // to begin the solitude verification, create a lead token with an orientation to communicate to its segment
+                    Q_ASSERT(canSendToken(TokenType::SolitudeLeadL1, nextAgentDir) && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir)); // there shouldn't be a call to make two leads
                     sendToken(TokenType::SolitudeLeadL1, nextAgentDir, 100 + encodeVector(std::make_pair(1,0))); // lap 1 in direction (1,0)
                     createdLead = true;
                     generateVectorDir = encodeVector(std::make_pair(1,0));
-
-                    // TODO: what happens if the very next agent on the cycle is another candidate?
                 }
+            }
+        } else if(state == State::SoleCandidate) {
+            if(!testingBorder) { // begin the inner/outer border test
+                Q_ASSERT(canSendToken(TokenType::BorderTest, nextAgentDir));
+                sendToken(TokenType::BorderTest, nextAgentDir, addNextBorder(0));
+                testingBorder = true;
+            } else if(peekAtToken(TokenType::BorderTest, prevAgentDir) != -1) { // test is complete
+                int borderSum = receiveToken(TokenType::BorderTest, prevAgentDir).value;
+                if(borderSum == 1) { // outer border, agent becomes the leader
+                    setState(State::Leader);
+                } else if(borderSum == 4) { // inner border, demote agent
+                    setState(State::Demoted);
+                }
+                testingBorder = false;
+                return; // completed subphase and thus shouldn't perform any more operations in this round
             }
         } else if(state == State::Demoted) {
             // SUBPHASE: Coin Flipping
@@ -172,16 +183,14 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
                     canSendToken(TokenType::SolitudeVectorL2, prevAgentDir)) {
                 sendToken(TokenType::SolitudeLeadL2, prevAgentDir, receiveToken(TokenType::SolitudeLeadL2, nextAgentDir).value);
             }
-            // if the agent needs to, generate a lane 1 vector token if doing so won't pass the lead token
-            if(generateVectorDir != -1 && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir) &&
-                    canSendToken(TokenType::SolitudeLeadL1, nextAgentDir)) {
+            // if the agent needs to, generate a lane 1 vector token
+            if(generateVectorDir != -1 && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir)) {
                 sendToken(TokenType::SolitudeVectorL1, nextAgentDir, generateVectorDir);
                 generateVectorDir = -1;
             }
             // perform token matching if there are incoming lane 1 and lane 2 vectors and the various passings are safe
             if(peekAtToken(TokenType::SolitudeVectorL1, prevAgentDir) != -1 && peekAtToken(TokenType::SolitudeVectorL2, nextAgentDir) != -1) {
-                if(canSendToken(TokenType::SolitudeVectorL1, nextAgentDir) && canSendToken(TokenType::SolitudeLeadL1, nextAgentDir) &&
-                        canSendToken(TokenType::SolitudeVectorL2, prevAgentDir) && canSendToken(TokenType::SolitudeLeadL2, prevAgentDir)) {
+                if(canSendToken(TokenType::SolitudeVectorL1, nextAgentDir) && canSendToken(TokenType::SolitudeVectorL2, prevAgentDir)) {
                     // decode vectors to do matching on
                     std::pair<int, int> vector1 = decodeVector(receiveToken(TokenType::SolitudeVectorL1, prevAgentDir).value);
                     std::pair<int, int> vector2 = decodeVector(receiveToken(TokenType::SolitudeVectorL2, nextAgentDir).value);
@@ -199,24 +208,23 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
                     if(vector2 != std::make_pair(0,0)) {
                         sendToken(TokenType::SolitudeVectorL2, prevAgentDir, encodeVector(vector2));
                     }
-                } else {
-                    qDebug() << "wanted to match, but couldn't because of blockage";
                 }
             } else {
-                // if there aren't both lanes of vectors, then pass lane 1 vectors forward (without passing the lead token)...
-                if(peekAtToken(TokenType::SolitudeVectorL1, prevAgentDir) != -1 && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir) &&
-                        canSendToken(TokenType::SolitudeLeadL1, nextAgentDir)) {
+                // if there aren't both lanes of vectors, then pass lane 1 vectors forward...
+                if(peekAtToken(TokenType::SolitudeVectorL1, prevAgentDir) != -1 && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir)) {
                     sendToken(TokenType::SolitudeVectorL1, nextAgentDir, receiveToken(TokenType::SolitudeVectorL1, prevAgentDir).value);
                 }
-                // ...and pass lane 2 vectors backward (without passing the lead token)
-                if(peekAtToken(TokenType::SolitudeVectorL2, nextAgentDir) != -1 && canSendToken(TokenType::SolitudeVectorL2, prevAgentDir) &&
-                        canSendToken(TokenType::SolitudeLeadL2, prevAgentDir)) {
+                // ...and pass lane 2 vectors backward
+                if(peekAtToken(TokenType::SolitudeVectorL2, nextAgentDir) != -1 && canSendToken(TokenType::SolitudeVectorL2, prevAgentDir)) {
                     sendToken(TokenType::SolitudeVectorL2, prevAgentDir, receiveToken(TokenType::SolitudeVectorL2, nextAgentDir).value);
                 }
             }
-        } else if(state == State::SoleCandidate) {
-            Q_ASSERT(subphase == Subphase::BorderDetection);
-            // TODO: Complete later.
+
+            // SUBPHASE: Inner/Outer Border Test
+            if(peekAtToken(TokenType::BorderTest, prevAgentDir) != -1 && canSendToken(TokenType::BorderTest, nextAgentDir)) {
+                int borderSum = addNextBorder(receiveToken(TokenType::BorderTest, prevAgentDir).value);
+                sendToken(TokenType::BorderTest, nextAgentDir, borderSum);
+            }
         }
     }
 }
@@ -270,6 +278,9 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::tokenCleanup()
     if(alg->inFlags[prevAgentDir]->tokens.at((int) TokenType::SolitudeVectorL2).receivedToken) {
         alg->outFlags[prevAgentDir].tokens.at((int) TokenType::SolitudeVectorL2).value = -1;
     }
+    if(alg->inFlags[nextAgentDir]->tokens.at((int) TokenType::BorderTest).receivedToken) {
+        alg->outFlags[nextAgentDir].tokens.at((int) TokenType::BorderTest).value = -1;
+    }
     // reset received token flags if the old copy has been destroyed
     if(alg->inFlags[prevAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).value == -1) {
         alg->outFlags[prevAgentDir].tokens.at((int) TokenType::CandidacyAnnounce).receivedToken = false;
@@ -288,6 +299,9 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::tokenCleanup()
     }
     if(alg->inFlags[nextAgentDir]->tokens.at((int) TokenType::SolitudeVectorL2).value == -1) {
         alg->outFlags[nextAgentDir].tokens.at((int) TokenType::SolitudeVectorL2).receivedToken = false;
+    }
+    if(alg->inFlags[prevAgentDir]->tokens.at((int) TokenType::BorderTest).value == -1) {
+        alg->outFlags[prevAgentDir].tokens.at((int) TokenType::BorderTest).receivedToken = false;
     }
 }
 
@@ -320,6 +334,19 @@ std::pair<int, int> LeaderElectionAgentCycles::LeaderElectionAgent::augmentDirVe
 
     Q_ASSERT(false); // the desired vector should be one of the unit directions
     return std::make_pair(0,0);
+}
+
+int LeaderElectionAgentCycles::LeaderElectionAgent::addNextBorder(int currentSum)
+{
+    // adjust offset in modulo 6 to be compatible with modulo 5 computations
+    int offsetMod6 = (prevAgentDir + 3) % 6 - nextAgentDir;
+    if(4 <= offsetMod6 && offsetMod6 <= 5) {
+        offsetMod6 -= 6;
+    } else if(-5 <= offsetMod6 && offsetMod6 <= -3) {
+        offsetMod6 += 6;
+    }
+
+    return (currentSum + offsetMod6 + 5) % 5;
 }
 
 LeaderElectionAgentCycles::LeaderElectionAgentCycles(const State _state) :
@@ -410,6 +437,7 @@ Movement LeaderElectionAgentCycles::execute()
 
                     // record agent information
                     agents.at(agentNum).alg = this; // simulator stuffs
+                    agents.at(agentNum).local_id = agentNum + 1;
                     agents.at(agentNum).agentDir = dir;
                     agents.at(agentNum).nextAgentDir = getNextAgentDir(dir);
                     agents.at(agentNum).prevAgentDir = getPrevAgentDir(dir);
@@ -455,8 +483,6 @@ bool LeaderElectionAgentCycles::isDeterministic() const
 
 void LeaderElectionAgentCycles::setState(const State _state)
 {
-    Q_ASSERT(_state != State::SoleCandidate); // the SoleCandidate state is for agents only, not particles
-
     state = _state;
     if(state == State::Idle) {
         headMarkColor = -1; tailMarkColor = -1; // No color
@@ -466,8 +492,10 @@ void LeaderElectionAgentCycles::setState(const State _state)
         headMarkColor = -1; tailMarkColor = -1; // Grey
     } else if(state == State::Leader) {
         headMarkColor = 0x00ff00; tailMarkColor = 0x00ff00; // Green
-    } else { // state == State::Finished
+    } else if(state == State::Finished) {
         headMarkColor = 0x000000; tailMarkColor = 0x000000; // Black
+    } else {
+        Q_ASSERT(false); // a particle shouldn't be any other state
     }
 
     for(int i = 0; i < 10; i++) {
@@ -479,7 +507,7 @@ void LeaderElectionAgentCycles::updateParticleState()
 {
     if(hasAgentInState(State::Leader)) {
         setState(State::Leader);
-    } else if(hasAgentInState(State::Candidate)) {
+    } else if(hasAgentInState(State::Candidate) || hasAgentInState(State::SoleCandidate)) {
         setState(State::Candidate);
     } else { // agents all have either state == State::Idle or state == State::Demoted
         setState(State::Demoted);

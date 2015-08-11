@@ -20,8 +20,7 @@ enum class State {
 enum class Subphase {
     SegmentComparison,
     CoinFlip,
-    SolitudeVerification,
-    BorderDetection
+    SolitudeVerification
 };
 
 enum class TokenType {
@@ -30,7 +29,8 @@ enum class TokenType {
     SolitudeLeadL1,
     SolitudeLeadL2,
     SolitudeVectorL1,
-    SolitudeVectorL2
+    SolitudeVectorL2,
+    BorderTest
 };
 
 typedef struct {
@@ -46,7 +46,7 @@ public:
     LeaderElectionAgentCyclesFlag(const LeaderElectionAgentCyclesFlag& other);
 
     State state;
-    std::array<Token, 6> tokens;
+    std::array<Token, 7> tokens;
 };
 
 class LeaderElectionAgentCycles : public AlgorithmWithFlags<LeaderElectionAgentCyclesFlag>
@@ -60,10 +60,12 @@ private:
         LeaderElectionAgentCycles* alg;
         State state;
         Subphase subphase;
+        int local_id; // 1, 2, or 3
         int agentDir, nextAgentDir, prevAgentDir;
         bool waitingForTransferAck, gotAnnounceBeforeAck; // coin flipping information
-        bool createdLead, isSoleCandidate; // solitude verification information
+        bool createdLead, sawUnmatchedToken; // solitude verification information
         int generateVectorDir;
+        bool testingBorder; // border test information
 
         void setState(const State _state);
         void execute(LeaderElectionAgentCycles* _alg);
@@ -78,6 +80,7 @@ private:
         int encodeVector(std::pair<int, int> vector) const;
         std::pair<int, int> decodeVector(int code);
         std::pair<int, int> augmentDirVector(std::pair<int, int> vector, const int offset);
+        int addNextBorder(int currentSum);
     };
 
 public:
