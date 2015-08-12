@@ -93,6 +93,16 @@ public:
     virtual std::shared_ptr<Algorithm> clone() override;
     virtual bool isDeterministic() const;
 
+    const std::map<std::string, int> colors = {
+        {"null", -1}, // no color
+        {"black", 0},
+        {"dark grey", 0x999999},
+        {"grey", 0x666666},
+        {"red", 0xff0000},
+        {"gold", 0xff9900},
+        {"green", 0x00ff00}
+    };
+
 protected:
     void setState(const State _state);
     void updateParticleState();

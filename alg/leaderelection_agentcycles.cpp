@@ -39,13 +39,13 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::setState(const State _state
     if(state == State::Idle) {
         alg->borderPointColors.at(agentDir) = -1; // no color
     } else if(state == State::Candidate) {
-        alg->borderPointColors.at(agentDir) = 0xff0000; // Red
+        alg->borderPointColors.at(agentDir) = alg->colors.at("red"); // Red
     } else if(state == State::SoleCandidate) {
-        alg->borderPointColors.at(agentDir) = 0xff9900; // Gold
+        alg->borderPointColors.at(agentDir) = alg->colors.at("gold"); // Gold
     } else if(state == State::Demoted) {
-        alg->borderPointColors.at(agentDir) = 0x999999; // Grey
+        alg->borderPointColors.at(agentDir) = alg->colors.at("dark grey"); // Grey
     } else if(state == State::Leader) {
-        alg->borderPointColors.at(agentDir) = 0x00ff00; // Green
+        alg->borderPointColors.at(agentDir) = alg->colors.at("green"); // Green
     } else {
         Q_ASSERT(false); // an agent shouldn't be any other state
     }
@@ -448,9 +448,9 @@ Movement LeaderElectionAgentCycles::execute()
                     int tempDir = (agents.at(agentNum).nextAgentDir + 1) % 6;
                     while(tempDir != agents.at(agentNum).prevAgentDir) {
                         if((tempDir + 1) % 6 == agents.at(agentNum).prevAgentDir) {
-                            borderColors.at(3 * tempDir + 1) = 0x666666;
+                            borderColors.at(3 * tempDir + 1) = colors.at("grey");
                         } else {
-                            borderColors.at(3 * tempDir + 2) = 0x666666;
+                            borderColors.at(3 * tempDir + 2) = colors.at("grey");
                         }
                         tempDir = (tempDir + 1) % 6;
                     }
@@ -491,9 +491,9 @@ void LeaderElectionAgentCycles::setState(const State _state)
     } else if(state == State::Demoted) {
         headMarkColor = -1; tailMarkColor = -1; // Grey
     } else if(state == State::Leader) {
-        headMarkColor = 0x00ff00; tailMarkColor = 0x00ff00; // Green
+        headMarkColor = colors.at("green"); tailMarkColor = colors.at("green"); // Green
     } else if(state == State::Finished) {
-        headMarkColor = 0x000000; tailMarkColor = 0x000000; // Black
+        headMarkColor = colors.at("black"); tailMarkColor = colors.at("black"); // Black
     } else {
         Q_ASSERT(false); // a particle shouldn't be any other state
     }
@@ -516,21 +516,16 @@ void LeaderElectionAgentCycles::updateParticleState()
 
 void LeaderElectionAgentCycles::updateBorderColors()
 {
-    const static int ackTokenColor = 0xff0000;
-    const static int solitudeLeadColor = 0xff9900;
-    const static int defaultColor = 0x666666;
-
     for(auto it = agents.begin(); it != agents.end(); ++it) {
         if(it->state != State::Idle) {
             // color acknowledgement tokens
             int paintColor;
             if(outFlags[it->prevAgentDir].tokens.at((int) TokenType::CandidacyAck).value != -1) {
-                paintColor = ackTokenColor;
-            } else if(outFlags[it->prevAgentDir].tokens.at((int) TokenType::SolitudeLeadL1).value != -1) {
-                paintColor = solitudeLeadColor;
+                paintColor = colors.at("red");
             } else {
-                paintColor = defaultColor;
+                paintColor = colors.at("grey");
             }
+
             int dir = it->agentDir;
             while(dir != it->prevAgentDir) {
                 if(dir == (it->prevAgentDir - 1 + 6) % 6) {
