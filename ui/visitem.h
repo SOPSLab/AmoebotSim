@@ -52,7 +52,10 @@ protected:
     void setupCamera();
     void drawGrid(const Quad& view);
     void drawParticles(const Quad& view);
-    void drawParticle(const Particle& p, const Quad& view);
+    void drawMarks(const Particle& p);
+    void drawParticle(const Particle& p);
+    void drawBorders(const Particle& p);
+    void drawBorderPoints(const Particle& p);
     void drawDisconnectionNode();
 
     static Quad calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight);
