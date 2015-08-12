@@ -1,5 +1,4 @@
 #include <set>
-#include <QDebug>
 
 #include "leaderelection.h"
 #include "sim/particle.h"
@@ -37,13 +36,11 @@ void LeaderElection::LeaderElectionAgent::setState(const State _state)
 {
     state = _state;
     if(state == State::Idle || state == State::Demoted || state == State::Leader || state == State::Finished) {
-        alg->borderPointColors.at(agentDir) = alg->colors.at("no color");
+        alg->borderPointColors.at(agentDir) = -1;
     } else if(state == State::Candidate) {
         setSubphase(subphase); // set color dependent on the candidate subphase
     } else if(state == State::SoleCandidate) {
-        alg->borderPointColors.at(agentDir) = alg->colors.at("green");
-    } else {
-        Q_ASSERT(false); // an agent shouldn't be any other state
+        alg->borderPointColors.at(agentDir) = QColor("lime").rgb();
     }
 }
 
@@ -53,9 +50,9 @@ void LeaderElection::LeaderElectionAgent::setSubphase(const Subphase _subphase)
     if(subphase == Subphase::SegmentComparison) {
         // TODO: eventually needs a color
     } else if(subphase == Subphase::CoinFlip) {
-        alg->borderPointColors.at(agentDir) = alg->colors.at("red");
+        alg->borderPointColors.at(agentDir) = QColor("red").rgb();
     } else if (subphase == Subphase::SolitudeVerification) {
-        alg->borderPointColors.at(agentDir) = alg->colors.at("dark blue");
+        alg->borderPointColors.at(agentDir) = QColor("deepskyblue").darker().rgb();
     }
 }
 
@@ -71,7 +68,7 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
             if(peekAtToken(TokenType::CandidacyAnnounce, prevAgentDir) != -1 && canSendToken(TokenType::CandidacyAck, prevAgentDir)) {
                 receiveToken(TokenType::CandidacyAnnounce, prevAgentDir);
                 sendToken(TokenType::CandidacyAck, prevAgentDir, 1);
-                paintBackSegment("grey");
+                paintBackSegment(QColor("dimgrey").rgb());
                 if(waitingForTransferAck) {
                    gotAnnounceBeforeAck = true;
                 }
@@ -82,10 +79,10 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
                 int leadValue = receiveToken(TokenType::SolitudeLeadL1, prevAgentDir).value;
                 if(leadValue / 100 == 1) { // if the lead is on lap 1, append this candidate's local id
                     sendToken(TokenType::SolitudeLeadL2, prevAgentDir, (1000 * local_id) + leadValue);
-                    paintBackSegment("blue");
+                    paintBackSegment(QColor("deepskyblue").rgb());
                 } else { // if the lead is on lap 2, just pass on the value
                     sendToken(TokenType::SolitudeLeadL2, prevAgentDir, leadValue);
-                    paintBackSegment("grey");
+                    paintBackSegment(QColor("dimgrey").rgb());
                 }
             }
             // if there is a vector waiting to be put into lane 2, put it there
@@ -98,7 +95,7 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
                 if(peekAtToken(TokenType::CandidacyAck, nextAgentDir) != -1) {
                     // if there is an acknowledgement waiting, consume the acknowledgement and proceed to the next subphase
                     receiveToken(TokenType::CandidacyAck, nextAgentDir);
-                    paintFrontSegment("grey");
+                    paintFrontSegment(QColor("dimgrey").rgb());
                     setSubphase(Subphase::SolitudeVerification);
                     if(!gotAnnounceBeforeAck) {
                         setState(State::Demoted);
@@ -110,7 +107,7 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
                     // if I am not waiting for an acknowlegdement of my previous announcement and I win the coin flip, announce a transfer of candidacy
                     Q_ASSERT(canSendToken(TokenType::CandidacyAnnounce, nextAgentDir)); // there shouldn't be a call to make two announcements
                     sendToken(TokenType::CandidacyAnnounce, nextAgentDir, 1);
-                    paintFrontSegment("red");
+                    paintFrontSegment(QColor("red").rgb());
                     waitingForTransferAck = true;
                 }
             } else if(subphase == Subphase::SolitudeVerification) {
@@ -131,11 +128,11 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
                         if(canSendToken(TokenType::SolitudeLeadL1, nextAgentDir) && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir)) {
                             int leadValue = receiveToken(TokenType::SolitudeLeadL2, nextAgentDir).value;
                             sendToken(TokenType::SolitudeLeadL1, nextAgentDir, (leadValue / 1000) * 1000 + 200); // lap 2, orientation no longer matters => 200
-                            paintFrontSegment("light blue");
+                            paintFrontSegment(QColor("deepskyblue").lighter().rgb());
                         }
                     } else if((peekAtToken(TokenType::SolitudeLeadL2, nextAgentDir) % 1000) / 100 == 2) { // lead has just completed lap 2
                         int leadValue = receiveToken(TokenType::SolitudeLeadL2, nextAgentDir).value;
-                        paintFrontSegment("grey");
+                        paintFrontSegment(QColor("dimgrey").rgb());
                         if(!sawUnmatchedToken && (leadValue / 1000) == local_id) { // if it did not consume an unmatched token and it assures it's matching with itself, go to inner/outer test
                             setState(State::SoleCandidate);
                         } else { // if solitude verification failed, then do another coin flip compeititon
@@ -149,7 +146,7 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
                     // to begin the solitude verification, create a lead token with an orientation to communicate to its segment
                     Q_ASSERT(canSendToken(TokenType::SolitudeLeadL1, nextAgentDir) && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir)); // there shouldn't be a call to make two leads
                     sendToken(TokenType::SolitudeLeadL1, nextAgentDir, 100 + encodeVector(std::make_pair(1,0))); // lap 1 in direction (1,0)
-                    paintFrontSegment("dark blue");
+                    paintFrontSegment(QColor("deepskyblue").darker().rgb());
                     createdLead = true;
                     generateVectorDir = encodeVector(std::make_pair(1,0));
                 }
@@ -158,11 +155,11 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
             if(!testingBorder) { // begin the inner/outer border test
                 Q_ASSERT(canSendToken(TokenType::BorderTest, nextAgentDir));
                 sendToken(TokenType::BorderTest, nextAgentDir, addNextBorder(0));
-                paintFrontSegment("no color");
+                paintFrontSegment(-1);
                 testingBorder = true;
             } else if(peekAtToken(TokenType::BorderTest, prevAgentDir) != -1) { // test is complete
                 int borderSum = receiveToken(TokenType::BorderTest, prevAgentDir).value;
-                paintBackSegment("no color");
+                paintBackSegment(-1);
                 if(borderSum == 1) { // outer border, agent becomes the leader
                     setState(State::Leader);
                 } else if(borderSum == 4) { // inner border, demote agent and set to finished
@@ -176,12 +173,12 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
             // pass announcements forward
             if(peekAtToken(TokenType::CandidacyAnnounce, prevAgentDir) != -1 && canSendToken(TokenType::CandidacyAnnounce, nextAgentDir)) {
                 sendToken(TokenType::CandidacyAnnounce, nextAgentDir, receiveToken(TokenType::CandidacyAnnounce, prevAgentDir).value);
-                paintFrontSegment("red"); paintBackSegment("red");
+                paintFrontSegment(QColor("red").rgb()); paintBackSegment(QColor("red").rgb());
             }
             // pass acknowledgements backward
             if(peekAtToken(TokenType::CandidacyAck, nextAgentDir) != -1 && canSendToken(TokenType::CandidacyAck, prevAgentDir)) {
                 sendToken(TokenType::CandidacyAck, prevAgentDir, receiveToken(TokenType::CandidacyAck, nextAgentDir).value);
-                paintFrontSegment("grey"); paintBackSegment("grey");
+                paintFrontSegment(QColor("dimgrey").rgb()); paintBackSegment(QColor("dimgrey").rgb());
             }
 
             // SUBPHASE: Solitude Verification
@@ -194,10 +191,10 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
                     int offset = (nextAgentDir - ((prevAgentDir + 3) % 6) + 6) % 6;
                     generateVectorDir = encodeVector(augmentDirVector(leadVector, offset));
                     sendToken(TokenType::SolitudeLeadL1, nextAgentDir, 100 + generateVectorDir); // lap 1 + new encoded direction vector
-                    paintFrontSegment("dark blue"); paintBackSegment("dark blue");
+                    paintFrontSegment(QColor("deepskyblue").darker().rgb()); paintBackSegment(QColor("deepskyblue").darker().rgb());
                 } else { // lead token is on its second pass, just send it forward
                     sendToken(TokenType::SolitudeLeadL1, nextAgentDir, code);
-                    paintFrontSegment("light blue"); paintBackSegment("light blue");
+                    paintFrontSegment(QColor("deepskyblue").lighter().rgb()); paintBackSegment(QColor("deepskyblue").lighter().rgb());
                 }
             }
             // pass lane 2 solitude lead token backward, if doing so does not pass a lane 2 vector token
@@ -206,9 +203,9 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
                 int leadValue = receiveToken(TokenType::SolitudeLeadL2, nextAgentDir).value;
                 sendToken(TokenType::SolitudeLeadL2, prevAgentDir, leadValue);
                 if((leadValue % 1000) / 100 == 1) { // first lap
-                    paintFrontSegment("blue"); paintBackSegment("blue");
+                    paintFrontSegment(QColor("deepskyblue").rgb()); paintBackSegment(QColor("deepskyblue").rgb());
                 } else { // second lap
-                    paintFrontSegment("grey"); paintBackSegment("grey");
+                    paintFrontSegment(QColor("dimgrey").rgb()); paintBackSegment(QColor("dimgrey").rgb());
                 }
             }
             // if the agent needs to, generate a lane 1 vector token
@@ -252,29 +249,27 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
             if(peekAtToken(TokenType::BorderTest, prevAgentDir) != -1 && canSendToken(TokenType::BorderTest, nextAgentDir)) {
                 int borderSum = addNextBorder(receiveToken(TokenType::BorderTest, prevAgentDir).value);
                 sendToken(TokenType::BorderTest, nextAgentDir, borderSum);
-                paintFrontSegment("no color"); paintBackSegment("no color");
+                paintFrontSegment(-1); paintBackSegment(-1);
                 setState(State::Finished);
             }
         }
     }
 }
 
-void LeaderElection::LeaderElectionAgent::paintFrontSegment(std::string color)
+void LeaderElection::LeaderElectionAgent::paintFrontSegment(const int color)
 {
-    Q_ASSERT(alg->colors.find(color) != alg->colors.end());
     int tempDir = agentDir;
     while(tempDir != (nextAgentDir + 1) % 6) {
         if((tempDir - 1 + 6) % 6 != nextAgentDir) {
-            alg->borderColors.at((3 * tempDir - 1 + 18) % 18) = alg->colors.at(color);
+            alg->borderColors.at((3 * tempDir - 1 + 18) % 18) = color;
         }
         tempDir = (tempDir - 1 + 6) % 6;
     }
 }
 
-void LeaderElection::LeaderElectionAgent::paintBackSegment(std::string color)
+void LeaderElection::LeaderElectionAgent::paintBackSegment(const int color)
 {
-    Q_ASSERT(alg->colors.find(color) != alg->colors.end());
-    alg->borderColors.at(3 * agentDir + 1) = alg->colors.at(color);
+    alg->borderColors.at(3 * agentDir + 1) = color;
 }
 
 bool LeaderElection::LeaderElectionAgent::canSendToken(TokenType type, int dir) const
@@ -492,8 +487,8 @@ Movement LeaderElection::execute()
                     agent->prevAgentDir = getPrevAgentDir(dir);
                     agent->setState(State::Candidate);
                     agent->setSubphase(Subphase::CoinFlip); // TODO: eventually this needs to be Subphase::SegementComparison
-                    agent->paintFrontSegment("grey");
-                    agent->paintBackSegment("grey");
+                    agent->paintFrontSegment(QColor("dimgrey").rgb());
+                    agent->paintBackSegment(QColor("dimgrey").rgb());
 
                     agentNum++;
                 }
@@ -525,9 +520,9 @@ void LeaderElection::setState(const State _state)
 {
     state = _state;
     if(state == State::Leader) {
-        headMarkColor = colors.at("green"); tailMarkColor = colors.at("green");
+        headMarkColor = QColor("lime").rgb(); tailMarkColor = QColor("lime").rgb();
     } else {
-        headMarkColor = colors.at("no color"); tailMarkColor = colors.at("no color");
+        headMarkColor = -1; tailMarkColor = -1;
     }
 
     for(int i = 0; i < 10; i++) {

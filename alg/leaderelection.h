@@ -2,6 +2,7 @@
 #define LEADERELECTION_H
 
 #include "alg/algorithmwithflags.h"
+#include <QColor>
 
 class System;
 
@@ -70,8 +71,8 @@ private:
         void setState(const State _state);
         void setSubphase(const Subphase _subphase);
         void execute(LeaderElection* _alg);
-        void paintFrontSegment(std::string color);
-        void paintBackSegment(std::string color);
+        void paintFrontSegment(const int color);
+        void paintBackSegment(const int color);
 
     protected:
         bool canSendToken(TokenType type, int dir) const;
@@ -95,20 +96,6 @@ public:
     virtual Movement execute();
     virtual std::shared_ptr<Algorithm> clone() override;
     virtual bool isDeterministic() const;
-
-    const std::map<std::string, int> colors = {
-        {"no color", -1}, // no color
-        {"black", 0},
-        {"dark grey", 0x999999},
-        {"grey", 0x666666},
-        {"red", 0xff0000},
-        {"gold", 0xff9900},
-        {"yellow", 0xffff00},
-        {"dark blue", 0x0000ff},
-        {"blue", 0x0099cc},
-        {"light blue", 0x66ccff},
-        {"green", 0x00ff00}
-    };
 
 protected:
     void setState(const State _state);
