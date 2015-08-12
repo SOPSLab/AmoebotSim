@@ -1,11 +1,11 @@
-#ifndef LEADERELECTION_AGENTCYCLES_H
-#define LEADERELECTION_AGENTCYCLES_H
+#ifndef LEADERELECTION_H
+#define LEADERELECTION_H
 
 #include "alg/algorithmwithflags.h"
 
 class System;
 
-namespace LeaderElectionAgentCycles
+namespace LeaderElection
 {
 
 enum class State {
@@ -18,7 +18,7 @@ enum class State {
 };
 
 enum class Subphase {
-    SegmentComparison,
+    SegmentComparison = 0,
     CoinFlip,
     SolitudeVerification
 };
@@ -39,17 +39,17 @@ typedef struct {
     bool receivedToken;
 } Token;
 
-class LeaderElectionAgentCyclesFlag : public Flag
+class LeaderElectionFlag : public Flag
 {
 public:
-    LeaderElectionAgentCyclesFlag();
-    LeaderElectionAgentCyclesFlag(const LeaderElectionAgentCyclesFlag& other);
+    LeaderElectionFlag();
+    LeaderElectionFlag(const LeaderElectionFlag& other);
 
     State state;
     std::array<Token, 7> tokens;
 };
 
-class LeaderElectionAgentCycles : public AlgorithmWithFlags<LeaderElectionAgentCyclesFlag>
+class LeaderElection : public AlgorithmWithFlags<LeaderElectionFlag>
 {
 private:
     class LeaderElectionAgent
@@ -57,7 +57,7 @@ private:
     public:
         LeaderElectionAgent();
 
-        LeaderElectionAgentCycles* alg;
+        LeaderElection* alg;
         State state;
         Subphase subphase;
         int local_id; // 1, 2, or 3
@@ -68,7 +68,10 @@ private:
         bool testingBorder; // border test information
 
         void setState(const State _state);
-        void execute(LeaderElectionAgentCycles* _alg);
+        void setSubphase(const Subphase _subphase);
+        void execute(LeaderElection* _alg);
+        void paintFrontSegment(std::string color);
+        void paintBackSegment(std::string color);
 
     protected:
         bool canSendToken(TokenType type, int dir) const;
@@ -84,9 +87,9 @@ private:
     };
 
 public:
-    LeaderElectionAgentCycles(const State _state);
-    LeaderElectionAgentCycles(const LeaderElectionAgentCycles& other);
-    virtual ~LeaderElectionAgentCycles();
+    LeaderElection(const State _state);
+    LeaderElection(const LeaderElection& other);
+    virtual ~LeaderElection();
 
     static std::shared_ptr<System> instance(const unsigned int size);
     virtual Movement execute();
@@ -94,19 +97,22 @@ public:
     virtual bool isDeterministic() const;
 
     const std::map<std::string, int> colors = {
-        {"null", -1}, // no color
+        {"no color", -1}, // no color
         {"black", 0},
         {"dark grey", 0x999999},
         {"grey", 0x666666},
         {"red", 0xff0000},
         {"gold", 0xff9900},
+        {"yellow", 0xffff00},
+        {"dark blue", 0x0000ff},
+        {"blue", 0x0099cc},
+        {"light blue", 0x66ccff},
         {"green", 0x00ff00}
     };
 
 protected:
     void setState(const State _state);
     void updateParticleState();
-    void updateBorderColors();
     bool hasAgentInState(State state) const;
     int getNextAgentDir(const int agentDir) const;
     int getPrevAgentDir(const int agentDir) const;
@@ -118,4 +124,4 @@ protected:
 
 }
 
-#endif // LEADERELECTION_AGENTCYCLES_H
+#endif // LEADERELECTION_H

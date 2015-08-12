@@ -1,14 +1,14 @@
 #include <set>
 #include <QDebug>
 
-#include "leaderelection_agentcycles.h"
+#include "leaderelection.h"
 #include "sim/particle.h"
 #include "sim/system.h"
 
-namespace LeaderElectionAgentCycles
+namespace LeaderElection
 {
 
-LeaderElectionAgentCyclesFlag::LeaderElectionAgentCyclesFlag()
+LeaderElectionFlag::LeaderElectionFlag()
 {
     int typenum = 0;
     for(auto token = tokens.begin(); token != tokens.end(); ++token) {
@@ -19,13 +19,13 @@ LeaderElectionAgentCyclesFlag::LeaderElectionAgentCyclesFlag()
     }
 }
 
-LeaderElectionAgentCyclesFlag::LeaderElectionAgentCyclesFlag(const LeaderElectionAgentCyclesFlag& other) :
+LeaderElectionFlag::LeaderElectionFlag(const LeaderElectionFlag& other) :
     Flag(other),
     state(other.state),
     tokens(other.tokens)
 {}
 
-LeaderElectionAgentCycles::LeaderElectionAgent::LeaderElectionAgent() :
+LeaderElection::LeaderElectionAgent::LeaderElectionAgent() :
     alg(nullptr),
     state(State::Idle),
     waitingForTransferAck(false), gotAnnounceBeforeAck(false),
@@ -33,27 +33,35 @@ LeaderElectionAgentCycles::LeaderElectionAgent::LeaderElectionAgent() :
     testingBorder(false)
 {}
 
-void LeaderElectionAgentCycles::LeaderElectionAgent::setState(const State _state)
+void LeaderElection::LeaderElectionAgent::setState(const State _state)
 {
     state = _state;
-    if(state == State::Idle) {
-        alg->borderPointColors.at(agentDir) = -1; // no color
+    if(state == State::Idle || state == State::Demoted || state == State::Leader || state == State::Finished) {
+        alg->borderPointColors.at(agentDir) = alg->colors.at("no color");
     } else if(state == State::Candidate) {
-        alg->borderPointColors.at(agentDir) = alg->colors.at("red"); // Red
+        setSubphase(subphase); // set color dependent on the candidate subphase
     } else if(state == State::SoleCandidate) {
-        alg->borderPointColors.at(agentDir) = alg->colors.at("gold"); // Gold
-    } else if(state == State::Demoted) {
-        alg->borderPointColors.at(agentDir) = alg->colors.at("dark grey"); // Grey
-    } else if(state == State::Leader) {
-        alg->borderPointColors.at(agentDir) = alg->colors.at("green"); // Green
+        alg->borderPointColors.at(agentDir) = alg->colors.at("green");
     } else {
         Q_ASSERT(false); // an agent shouldn't be any other state
     }
 }
 
-void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgentCycles* _alg)
+void LeaderElection::LeaderElectionAgent::setSubphase(const Subphase _subphase)
 {
-    if(state != State::Idle) {
+    subphase = _subphase;
+    if(subphase == Subphase::SegmentComparison) {
+        // TODO: eventually needs a color
+    } else if(subphase == Subphase::CoinFlip) {
+        alg->borderPointColors.at(agentDir) = alg->colors.at("red");
+    } else if (subphase == Subphase::SolitudeVerification) {
+        alg->borderPointColors.at(agentDir) = alg->colors.at("dark blue");
+    }
+}
+
+void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
+{
+    if(state != State::Idle && state != State::Finished) {
         alg = _alg; // simulator stuff, this is necessary for any of the token functions to work
         tokenCleanup(); // clean token remnants before doing new actions
 
@@ -63,6 +71,7 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
             if(peekAtToken(TokenType::CandidacyAnnounce, prevAgentDir) != -1 && canSendToken(TokenType::CandidacyAck, prevAgentDir)) {
                 receiveToken(TokenType::CandidacyAnnounce, prevAgentDir);
                 sendToken(TokenType::CandidacyAck, prevAgentDir, 1);
+                paintBackSegment("grey");
                 if(waitingForTransferAck) {
                    gotAnnounceBeforeAck = true;
                 }
@@ -71,10 +80,12 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
             if(peekAtToken(TokenType::SolitudeLeadL1, prevAgentDir) != -1 && canSendToken(TokenType::SolitudeLeadL2, prevAgentDir) &&
                     canSendToken(TokenType::SolitudeVectorL2, prevAgentDir)) {
                 int leadValue = receiveToken(TokenType::SolitudeLeadL1, prevAgentDir).value;
-                if(leadValue / 100 == 1) { // if the lead is on lap 1, just pass on the value
-                    sendToken(TokenType::SolitudeLeadL2, prevAgentDir, (1000 * local_id) +leadValue);
-                } else { // if the lead is on lap 2, append this candidate's local id
+                if(leadValue / 100 == 1) { // if the lead is on lap 1, append this candidate's local id
+                    sendToken(TokenType::SolitudeLeadL2, prevAgentDir, (1000 * local_id) + leadValue);
+                    paintBackSegment("blue");
+                } else { // if the lead is on lap 2, just pass on the value
                     sendToken(TokenType::SolitudeLeadL2, prevAgentDir, leadValue);
+                    paintBackSegment("grey");
                 }
             }
             // if there is a vector waiting to be put into lane 2, put it there
@@ -87,7 +98,8 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
                 if(peekAtToken(TokenType::CandidacyAck, nextAgentDir) != -1) {
                     // if there is an acknowledgement waiting, consume the acknowledgement and proceed to the next subphase
                     receiveToken(TokenType::CandidacyAck, nextAgentDir);
-                    subphase = Subphase::SolitudeVerification;
+                    paintFrontSegment("grey");
+                    setSubphase(Subphase::SolitudeVerification);
                     if(!gotAnnounceBeforeAck) {
                         setState(State::Demoted);
                     }
@@ -98,6 +110,7 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
                     // if I am not waiting for an acknowlegdement of my previous announcement and I win the coin flip, announce a transfer of candidacy
                     Q_ASSERT(canSendToken(TokenType::CandidacyAnnounce, nextAgentDir)); // there shouldn't be a call to make two announcements
                     sendToken(TokenType::CandidacyAnnounce, nextAgentDir, 1);
+                    paintFrontSegment("red");
                     waitingForTransferAck = true;
                 }
             } else if(subphase == Subphase::SolitudeVerification) {
@@ -118,13 +131,15 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
                         if(canSendToken(TokenType::SolitudeLeadL1, nextAgentDir) && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir)) {
                             int leadValue = receiveToken(TokenType::SolitudeLeadL2, nextAgentDir).value;
                             sendToken(TokenType::SolitudeLeadL1, nextAgentDir, (leadValue / 1000) * 1000 + 200); // lap 2, orientation no longer matters => 200
+                            paintFrontSegment("light blue");
                         }
                     } else if((peekAtToken(TokenType::SolitudeLeadL2, nextAgentDir) % 1000) / 100 == 2) { // lead has just completed lap 2
                         int leadValue = receiveToken(TokenType::SolitudeLeadL2, nextAgentDir).value;
+                        paintFrontSegment("grey");
                         if(!sawUnmatchedToken && (leadValue / 1000) == local_id) { // if it did not consume an unmatched token and it assures it's matching with itself, go to inner/outer test
                             setState(State::SoleCandidate);
                         } else { // if solitude verification failed, then do another coin flip compeititon
-                            subphase = Subphase::CoinFlip;
+                            setSubphase(Subphase::CoinFlip);
                         }
                         createdLead = false;
                         sawUnmatchedToken = false;
@@ -134,6 +149,7 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
                     // to begin the solitude verification, create a lead token with an orientation to communicate to its segment
                     Q_ASSERT(canSendToken(TokenType::SolitudeLeadL1, nextAgentDir) && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir)); // there shouldn't be a call to make two leads
                     sendToken(TokenType::SolitudeLeadL1, nextAgentDir, 100 + encodeVector(std::make_pair(1,0))); // lap 1 in direction (1,0)
+                    paintFrontSegment("dark blue");
                     createdLead = true;
                     generateVectorDir = encodeVector(std::make_pair(1,0));
                 }
@@ -142,13 +158,15 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
             if(!testingBorder) { // begin the inner/outer border test
                 Q_ASSERT(canSendToken(TokenType::BorderTest, nextAgentDir));
                 sendToken(TokenType::BorderTest, nextAgentDir, addNextBorder(0));
+                paintFrontSegment("no color");
                 testingBorder = true;
             } else if(peekAtToken(TokenType::BorderTest, prevAgentDir) != -1) { // test is complete
                 int borderSum = receiveToken(TokenType::BorderTest, prevAgentDir).value;
+                paintBackSegment("no color");
                 if(borderSum == 1) { // outer border, agent becomes the leader
                     setState(State::Leader);
-                } else if(borderSum == 4) { // inner border, demote agent
-                    setState(State::Demoted);
+                } else if(borderSum == 4) { // inner border, demote agent and set to finished
+                    setState(State::Finished);
                 }
                 testingBorder = false;
                 return; // completed subphase and thus shouldn't perform any more operations in this round
@@ -158,14 +176,16 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
             // pass announcements forward
             if(peekAtToken(TokenType::CandidacyAnnounce, prevAgentDir) != -1 && canSendToken(TokenType::CandidacyAnnounce, nextAgentDir)) {
                 sendToken(TokenType::CandidacyAnnounce, nextAgentDir, receiveToken(TokenType::CandidacyAnnounce, prevAgentDir).value);
+                paintFrontSegment("red"); paintBackSegment("red");
             }
             // pass acknowledgements backward
             if(peekAtToken(TokenType::CandidacyAck, nextAgentDir) != -1 && canSendToken(TokenType::CandidacyAck, prevAgentDir)) {
                 sendToken(TokenType::CandidacyAck, prevAgentDir, receiveToken(TokenType::CandidacyAck, nextAgentDir).value);
+                paintFrontSegment("grey"); paintBackSegment("grey");
             }
 
             // SUBPHASE: Solitude Verification
-            // pass lane 1 solitude lead token forward, and update its relative direction
+            // pass lane 1 solitude lead token forward
             if(peekAtToken(TokenType::SolitudeLeadL1, prevAgentDir) != -1 && canSendToken(TokenType::SolitudeLeadL1, nextAgentDir) &&
                     canSendToken(TokenType::SolitudeVectorL1, nextAgentDir)) {
                 int code = receiveToken(TokenType::SolitudeLeadL1, prevAgentDir).value;
@@ -174,14 +194,22 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
                     int offset = (nextAgentDir - ((prevAgentDir + 3) % 6) + 6) % 6;
                     generateVectorDir = encodeVector(augmentDirVector(leadVector, offset));
                     sendToken(TokenType::SolitudeLeadL1, nextAgentDir, 100 + generateVectorDir); // lap 1 + new encoded direction vector
+                    paintFrontSegment("dark blue"); paintBackSegment("dark blue");
                 } else { // lead token is on its second pass, just send it forward
                     sendToken(TokenType::SolitudeLeadL1, nextAgentDir, code);
+                    paintFrontSegment("light blue"); paintBackSegment("light blue");
                 }
             }
             // pass lane 2 solitude lead token backward, if doing so does not pass a lane 2 vector token
             if(peekAtToken(TokenType::SolitudeLeadL2, nextAgentDir) != -1 && canSendToken(TokenType::SolitudeLeadL2, prevAgentDir) &&
                     canSendToken(TokenType::SolitudeVectorL2, prevAgentDir)) {
-                sendToken(TokenType::SolitudeLeadL2, prevAgentDir, receiveToken(TokenType::SolitudeLeadL2, nextAgentDir).value);
+                int leadValue = receiveToken(TokenType::SolitudeLeadL2, nextAgentDir).value;
+                sendToken(TokenType::SolitudeLeadL2, prevAgentDir, leadValue);
+                if((leadValue % 1000) / 100 == 1) { // first lap
+                    paintFrontSegment("blue"); paintBackSegment("blue");
+                } else { // second lap
+                    paintFrontSegment("grey"); paintBackSegment("grey");
+                }
             }
             // if the agent needs to, generate a lane 1 vector token
             if(generateVectorDir != -1 && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir)) {
@@ -224,23 +252,43 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::execute(LeaderElectionAgent
             if(peekAtToken(TokenType::BorderTest, prevAgentDir) != -1 && canSendToken(TokenType::BorderTest, nextAgentDir)) {
                 int borderSum = addNextBorder(receiveToken(TokenType::BorderTest, prevAgentDir).value);
                 sendToken(TokenType::BorderTest, nextAgentDir, borderSum);
+                paintFrontSegment("no color"); paintBackSegment("no color");
+                setState(State::Finished);
             }
         }
     }
 }
 
-bool LeaderElectionAgentCycles::LeaderElectionAgent::canSendToken(TokenType type, int dir) const
+void LeaderElection::LeaderElectionAgent::paintFrontSegment(std::string color)
+{
+    Q_ASSERT(alg->colors.find(color) != alg->colors.end());
+    int tempDir = agentDir;
+    while(tempDir != (nextAgentDir + 1) % 6) {
+        if((tempDir - 1 + 6) % 6 != nextAgentDir) {
+            alg->borderColors.at((3 * tempDir - 1 + 18) % 18) = alg->colors.at(color);
+        }
+        tempDir = (tempDir - 1 + 6) % 6;
+    }
+}
+
+void LeaderElection::LeaderElectionAgent::paintBackSegment(std::string color)
+{
+    Q_ASSERT(alg->colors.find(color) != alg->colors.end());
+    alg->borderColors.at(3 * agentDir + 1) = alg->colors.at(color);
+}
+
+bool LeaderElection::LeaderElectionAgent::canSendToken(TokenType type, int dir) const
 {
     return (alg->outFlags[dir].tokens.at((int) type).value == -1 && !alg->inFlags[dir]->tokens.at((int) type).receivedToken);
 }
 
-void LeaderElectionAgentCycles::LeaderElectionAgent::sendToken(TokenType type, int dir, int value)
+void LeaderElection::LeaderElectionAgent::sendToken(TokenType type, int dir, int value)
 {
     Q_ASSERT(canSendToken(type, dir));
     alg->outFlags[dir].tokens.at((int) type).value = value;
 }
 
-int LeaderElectionAgentCycles::LeaderElectionAgent::peekAtToken(TokenType type, int dir) const
+int LeaderElection::LeaderElectionAgent::peekAtToken(TokenType type, int dir) const
 {
     if(alg->outFlags[dir].tokens.at((int) type).receivedToken) {
         // if this agent has already read this token, don't peek the same value again
@@ -250,14 +298,14 @@ int LeaderElectionAgentCycles::LeaderElectionAgent::peekAtToken(TokenType type, 
     }
 }
 
-Token LeaderElectionAgentCycles::LeaderElectionAgent::receiveToken(TokenType type, int dir)
+Token LeaderElection::LeaderElectionAgent::receiveToken(TokenType type, int dir)
 {
     Q_ASSERT(peekAtToken(type, dir) != -1);
     alg->outFlags[dir].tokens.at((int) type).receivedToken = true;
     return alg->inFlags[dir]->tokens.at((int) type);
 }
 
-void LeaderElectionAgentCycles::LeaderElectionAgent::tokenCleanup()
+void LeaderElection::LeaderElectionAgent::tokenCleanup()
 {
     // destroy copies of tokens if they've already been read
     if(alg->inFlags[nextAgentDir]->tokens.at((int) TokenType::CandidacyAnnounce).receivedToken) {
@@ -305,7 +353,7 @@ void LeaderElectionAgentCycles::LeaderElectionAgent::tokenCleanup()
     }
 }
 
-int LeaderElectionAgentCycles::LeaderElectionAgent::encodeVector(std::pair<int, int> vector) const
+int LeaderElection::LeaderElectionAgent::encodeVector(std::pair<int, int> vector) const
 {
     int x = (vector.first == -1) ? 2 : vector.first;
     int y = (vector.second == -1) ? 2 : vector.second;
@@ -313,7 +361,7 @@ int LeaderElectionAgentCycles::LeaderElectionAgent::encodeVector(std::pair<int, 
     return (10 * x) + y;
 }
 
-std::pair<int, int> LeaderElectionAgentCycles::LeaderElectionAgent::decodeVector(int code)
+std::pair<int, int> LeaderElection::LeaderElectionAgent::decodeVector(int code)
 {
     code = code % 100; // throw out the extra information for lap number
     int x = (code / 10 == 2) ? -1 : code / 10;
@@ -322,7 +370,7 @@ std::pair<int, int> LeaderElectionAgentCycles::LeaderElectionAgent::decodeVector
     return std::make_pair(x, y);
 }
 
-std::pair<int, int> LeaderElectionAgentCycles::LeaderElectionAgent::augmentDirVector(std::pair<int, int> vector, const int offset)
+std::pair<int, int> LeaderElection::LeaderElectionAgent::augmentDirVector(std::pair<int, int> vector, const int offset)
 {
     static const std::array<std::pair<int, int>, 6> vectors = {std::make_pair(1,0), std::make_pair(0,1), std::make_pair(-1,1),
                                                                std::make_pair(-1,0), std::make_pair(0,-1), std::make_pair(1,-1)};
@@ -336,7 +384,7 @@ std::pair<int, int> LeaderElectionAgentCycles::LeaderElectionAgent::augmentDirVe
     return std::make_pair(0,0);
 }
 
-int LeaderElectionAgentCycles::LeaderElectionAgent::addNextBorder(int currentSum)
+int LeaderElection::LeaderElectionAgent::addNextBorder(int currentSum)
 {
     // adjust offset in modulo 6 to be compatible with modulo 5 computations
     int offsetMod6 = (prevAgentDir + 3) % 6 - nextAgentDir;
@@ -349,22 +397,22 @@ int LeaderElectionAgentCycles::LeaderElectionAgent::addNextBorder(int currentSum
     return (currentSum + offsetMod6 + 5) % 5;
 }
 
-LeaderElectionAgentCycles::LeaderElectionAgentCycles(const State _state) :
+LeaderElection::LeaderElection(const State _state) :
     state(_state)
 {
     setState(_state);
 }
 
-LeaderElectionAgentCycles::LeaderElectionAgentCycles(const LeaderElectionAgentCycles &other) :
+LeaderElection::LeaderElection(const LeaderElection& other) :
     AlgorithmWithFlags(other),
     state(other.state),
     agents(other.agents)
 {}
 
-LeaderElectionAgentCycles::~LeaderElectionAgentCycles()
+LeaderElection::~LeaderElection()
 {}
 
-std::shared_ptr<System> LeaderElectionAgentCycles::instance(const unsigned int size)
+std::shared_ptr<System> LeaderElection::instance(const unsigned int size)
 {
     std::shared_ptr<System> system = std::make_shared<System>();
     std::set<Node> occupied, baseComponent;
@@ -414,13 +462,13 @@ std::shared_ptr<System> LeaderElectionAgentCycles::instance(const unsigned int s
     while(!baseComponent.empty()) {
         auto node = *baseComponent.begin();
         baseComponent.erase(baseComponent.begin());
-        system->insert(Particle(std::make_shared<LeaderElectionAgentCycles>(State::Idle), randDir(), node, -1));
+        system->insert(Particle(std::make_shared<LeaderElection>(State::Idle), randDir(), node, -1));
     }
 
     return system;
 }
 
-Movement LeaderElectionAgentCycles::execute()
+Movement LeaderElection::execute()
 {
     if(state == State::Finished || state == State::Leader) {
         return Movement(MovementType::Empty);
@@ -428,32 +476,25 @@ Movement LeaderElectionAgentCycles::execute()
         if(numNeighbors() == 0) { // a particle with no neighbors is the only one in the system and is thus the leader
             setState(State::Leader);
         } else if(numNeighbors() == 6) { // a surrounded particle is not on a border and will not compete
-            setState(State::Demoted);
+            setState(State::Finished);
         } else { // create agents and borders in unoccupied components
             int agentNum = 0;
             for(int dir = 0; dir < 6; ++dir) {
                 if(inFlags[dir] == nullptr && inFlags[(dir + 1) % 6] != nullptr) {
                     Q_ASSERT(agentNum < 3);
 
-                    // record agent information
-                    agents.at(agentNum).alg = this; // simulator stuffs
-                    agents.at(agentNum).local_id = agentNum + 1;
-                    agents.at(agentNum).agentDir = dir;
-                    agents.at(agentNum).nextAgentDir = getNextAgentDir(dir);
-                    agents.at(agentNum).prevAgentDir = getPrevAgentDir(dir);
-                    agents.at(agentNum).setState(State::Candidate);
-                    agents.at(agentNum).subphase = Subphase::CoinFlip; // TODO: eventually this needs to be Subphase::SegementComparison
+                    // record agent information and paint agent borders
+                    LeaderElectionAgent *agent = &agents.at(agentNum);
+                    agent->alg = this; // simulator stuff
+                    agent->local_id = agentNum + 1;
+                    agent->agentDir = dir;
+                    agent->nextAgentDir = getNextAgentDir(dir);
+                    agent->prevAgentDir = getPrevAgentDir(dir);
+                    agent->setState(State::Candidate);
+                    agent->setSubphase(Subphase::CoinFlip); // TODO: eventually this needs to be Subphase::SegementComparison
+                    agent->paintFrontSegment("grey");
+                    agent->paintBackSegment("grey");
 
-                    // make agent borders
-                    int tempDir = (agents.at(agentNum).nextAgentDir + 1) % 6;
-                    while(tempDir != agents.at(agentNum).prevAgentDir) {
-                        if((tempDir + 1) % 6 == agents.at(agentNum).prevAgentDir) {
-                            borderColors.at(3 * tempDir + 1) = colors.at("grey");
-                        } else {
-                            borderColors.at(3 * tempDir + 2) = colors.at("grey");
-                        }
-                        tempDir = (tempDir + 1) % 6;
-                    }
                     agentNum++;
                 }
             }
@@ -464,38 +505,29 @@ Movement LeaderElectionAgentCycles::execute()
             agent->execute(this);
         }
         updateParticleState();
-        updateBorderColors();
     }
 
     // regardless of what happens, particles shouldn't move
     return Movement(MovementType::Idle);
 }
 
-std::shared_ptr<Algorithm> LeaderElectionAgentCycles::clone()
+std::shared_ptr<Algorithm> LeaderElection::clone()
 {
-    return std::make_shared<LeaderElectionAgentCycles>(*this);
+    return std::make_shared<LeaderElection>(*this);
 }
 
-bool LeaderElectionAgentCycles::isDeterministic() const
+bool LeaderElection::isDeterministic() const
 {
     return true;
 }
 
-void LeaderElectionAgentCycles::setState(const State _state)
+void LeaderElection::setState(const State _state)
 {
     state = _state;
-    if(state == State::Idle) {
-        headMarkColor = -1; tailMarkColor = -1; // No color
-    } else if(state == State::Candidate) {
-        headMarkColor = -1; tailMarkColor = -1; // Red
-    } else if(state == State::Demoted) {
-        headMarkColor = -1; tailMarkColor = -1; // Grey
-    } else if(state == State::Leader) {
-        headMarkColor = colors.at("green"); tailMarkColor = colors.at("green"); // Green
-    } else if(state == State::Finished) {
-        headMarkColor = colors.at("black"); tailMarkColor = colors.at("black"); // Black
+    if(state == State::Leader) {
+        headMarkColor = colors.at("green"); tailMarkColor = colors.at("green");
     } else {
-        Q_ASSERT(false); // a particle shouldn't be any other state
+        headMarkColor = colors.at("no color"); tailMarkColor = colors.at("no color");
     }
 
     for(int i = 0; i < 10; i++) {
@@ -503,43 +535,20 @@ void LeaderElectionAgentCycles::setState(const State _state)
     }
 }
 
-void LeaderElectionAgentCycles::updateParticleState()
+void LeaderElection::updateParticleState()
 {
     if(hasAgentInState(State::Leader)) {
         setState(State::Leader);
     } else if(hasAgentInState(State::Candidate) || hasAgentInState(State::SoleCandidate)) {
         setState(State::Candidate);
-    } else { // agents all have either state == State::Idle or state == State::Demoted
+    } else if(hasAgentInState(State::Demoted)) {
         setState(State::Demoted);
+    } else { // all agents are either idle or finished
+        setState(State::Finished);
     }
 }
 
-void LeaderElectionAgentCycles::updateBorderColors()
-{
-    for(auto it = agents.begin(); it != agents.end(); ++it) {
-        if(it->state != State::Idle) {
-            // color acknowledgement tokens
-            int paintColor;
-            if(outFlags[it->prevAgentDir].tokens.at((int) TokenType::CandidacyAck).value != -1) {
-                paintColor = colors.at("red");
-            } else {
-                paintColor = colors.at("grey");
-            }
-
-            int dir = it->agentDir;
-            while(dir != it->prevAgentDir) {
-                if(dir == (it->prevAgentDir - 1 + 6) % 6) {
-                    borderColors.at(3 * dir + 1) = paintColor;
-                } else {
-                    borderColors.at(3 * dir + 2) = paintColor;
-                }
-                dir = (dir + 1) % 6;
-            }
-        }
-    }
-}
-
-bool LeaderElectionAgentCycles::hasAgentInState(const State state) const
+bool LeaderElection::hasAgentInState(const State state) const
 {
     for(auto it = agents.begin(); it != agents.end(); ++it) {
         if(it->state == state) {
@@ -549,7 +558,7 @@ bool LeaderElectionAgentCycles::hasAgentInState(const State state) const
     return false;
 }
 
-int LeaderElectionAgentCycles::getNextAgentDir(const int agentDir) const
+int LeaderElection::getNextAgentDir(const int agentDir) const
 {
     Q_ASSERT(inFlags[agentDir] == nullptr); // the agent direction should be an empty space
 
@@ -564,7 +573,7 @@ int LeaderElectionAgentCycles::getNextAgentDir(const int agentDir) const
     return -1;
 }
 
-int LeaderElectionAgentCycles::getPrevAgentDir(const int agentDir) const
+int LeaderElection::getPrevAgentDir(const int agentDir) const
 {
     Q_ASSERT(inFlags[agentDir] == nullptr); // the agent direction should be an empty space
 
@@ -579,7 +588,7 @@ int LeaderElectionAgentCycles::getPrevAgentDir(const int agentDir) const
     return -1;
 }
 
-int LeaderElectionAgentCycles::numNeighbors() const
+int LeaderElection::numNeighbors() const
 {
     int count = 0;
     for(int dir = 0; dir < 6; ++dir) {

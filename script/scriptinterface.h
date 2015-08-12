@@ -19,7 +19,7 @@
 #include "alg/compaction.h"
 #include "alg/holeelimstandard.h"
 #include "alg/holeelimcompaction.h"
-#include "alg/leaderelection_agentcycles.h"
+#include "alg/leaderelection.h"
 #include "alg/universalcoating.h"
 #include "alg/leaderelectiondemo.h"
 /*
@@ -65,7 +65,7 @@ public slots:
     void compaction(const unsigned int numParticles = 100);
     void holeelimstandard(const unsigned int numParticles = 100);
     void holeelimcompaction(const unsigned int numParticles = 100);
-    void leaderelectionagentcycles(const unsigned int numParticles = 100);
+    void leaderelection(const unsigned int numParticles = 100);
     void universalcoating(const int numStaticParticles=50, const int numParticles=50, const float holeProb = 0.2, const bool leftB=false, const bool rightB=false);
     void leaderelectiondemo();
 private:
@@ -284,9 +284,9 @@ inline void ScriptInterface::holeelimcompaction(const unsigned int numParticles)
 {
     sim.setSystem(HoleElimCompaction::HoleElimCompaction::instance(numParticles));
 }
-inline void ScriptInterface::leaderelectionagentcycles(const unsigned int numParticles)
+inline void ScriptInterface::leaderelection(const unsigned int numParticles)
 {
-    sim.setSystem(LeaderElectionAgentCycles::LeaderElectionAgentCycles::instance(numParticles));
+    sim.setSystem(LeaderElection::LeaderElection::instance(numParticles));
 }
 inline void ScriptInterface::leaderelectiondemo()
 {
