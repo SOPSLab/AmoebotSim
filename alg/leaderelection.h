@@ -107,9 +107,6 @@ public:
     virtual std::shared_ptr<Algorithm> clone() override;
     virtual bool isDeterministic() const;
 
-    //DEBUG
-    static int passiveCounter;
-
 protected:
     void setState(const State _state);
     void updateParticleState();

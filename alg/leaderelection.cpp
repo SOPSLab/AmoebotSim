@@ -1,5 +1,4 @@
 #include <set>
-#include <QDebug>
 
 #include "leaderelection.h"
 #include "sim/particle.h"
@@ -7,7 +6,6 @@
 
 namespace LeaderElection
 {
-int LeaderElection::passiveCounter = 0;
 
 LeaderElectionFlag::LeaderElectionFlag()
 {
@@ -53,9 +51,9 @@ void LeaderElection::LeaderElectionAgent::setSubphase(const Subphase _subphase)
 {
     subphase = _subphase;
     if(subphase == Subphase::SegmentComparison) {
-        alg->borderPointColors.at(agentDir) = QColor("tomato").rgb();
+        alg->borderPointColors.at(agentDir) = QColor("red").rgb();
     } else if(subphase == Subphase::CoinFlip) {
-        alg->borderPointColors.at(agentDir) = QColor("gold").rgb();
+        alg->borderPointColors.at(agentDir) = QColor("orange").rgb();
     } else if (subphase == Subphase::SolitudeVerification) {
         alg->borderPointColors.at(agentDir) = QColor("deepskyblue").darker().rgb();
     }
@@ -78,40 +76,33 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
             if(peekAtToken(TokenType::PassiveSegmentClean, prevAgentDir) != -1) {
                 performPassiveClean(1); // clean the back side only
                 receiveToken(TokenType::PassiveSegmentClean, prevAgentDir);
-                paintBackSegment(QColor("tomato").lighter().rgb());
-                passiveCounter--;
-                qDebug() << passiveCounter;
+                paintBackSegment(QColor("dimgrey").rgb());
             }
             // if there is an incoming segment lead token, consume it and generate the final passive token
             if(peekAtToken(TokenType::SegmentLead, prevAgentDir) != -1 && canSendToken(TokenType::PassiveSegment, prevAgentDir)) {
                 receiveToken(TokenType::SegmentLead, prevAgentDir);
                 sendToken(TokenType::PassiveSegment, prevAgentDir, 2); // 2 => last passive/active token
+                paintBackSegment(QColor("dimgrey").rgb());
             }
             // if there is an incoming active segment token, either absorb it and acknowledge covering or pass it backward
             if(peekAtToken(TokenType::ActiveSegment, nextAgentDir) != -1) {
                 if(!absorbedActiveToken) {
                     if(receiveToken(TokenType::ActiveSegment, nextAgentDir).value == 2) { // absorbing the last active token
                         sendToken(TokenType::FinalSegmentClean, nextAgentDir, 2);
-                        paintFrontSegment(QColor("dimgrey").rgb());
                     } else { // this candidate is now covered
                         Q_ASSERT(canSendToken(TokenType::ActiveSegmentClean, prevAgentDir) && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir));
                         sendToken(TokenType::PassiveSegmentClean, nextAgentDir, 1);
-                        passiveCounter++;
-                        qDebug() << passiveCounter;
                         performPassiveClean(2); // clean the front side only
-                        paintFrontSegment(QColor("tomato").lighter().rgb());
+                        paintFrontSegment(QColor("dimgrey").rgb());
                         sendToken(TokenType::ActiveSegmentClean, prevAgentDir, 1);
                         performActiveClean(1); // clean the back side only
                         absorbedActiveToken = true;
                         isCoveredCandidate = true;
                         setState(State::Demoted);
+                        return; // completed subphase and thus shouldn't perform any more operations in this round
                     }
                 } else if(canSendToken(TokenType::ActiveSegment, prevAgentDir) && canSendToken(TokenType::ActiveSegmentClean, prevAgentDir)) {
-                    int debugval = receiveToken(TokenType::ActiveSegment, nextAgentDir).value;
-                    sendToken(TokenType::ActiveSegment, prevAgentDir, debugval);
-                    if(debugval == 2) {
-                        paintFrontSegment(QColor("magenta").rgb()); paintBackSegment(QColor("magenta").rgb());
-                    }
+                    sendToken(TokenType::ActiveSegment, prevAgentDir, receiveToken(TokenType::ActiveSegment, nextAgentDir).value);
                 }
             }
 
@@ -148,15 +139,14 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
             if(subphase == Subphase::SegmentComparison) {
                 if(peekAtToken(TokenType::PassiveSegment, nextAgentDir) != -1 && canSendToken(TokenType::ActiveSegment, prevAgentDir)) {
                     // if there is an incoming passive token, pass it on as an active token
-                    int debugval = receiveToken(TokenType::PassiveSegment, nextAgentDir).value;
-                    sendToken(TokenType::ActiveSegment, prevAgentDir, debugval);
-                    if(debugval == 2) {
-                        paintBackSegment(QColor("magenta").rgb());
+                    int passiveValue = receiveToken(TokenType::PassiveSegment, nextAgentDir).value;
+                    sendToken(TokenType::ActiveSegment, prevAgentDir, passiveValue);
+                    if(passiveValue == 2) {
+                        paintFrontSegment(QColor("dimgrey").rgb());
                     }
                 } else if(peekAtToken(TokenType::FinalSegmentClean, prevAgentDir) != -1) {
                     // if there is an incoming final cleaning token, consume it and proceed according to its value
                     int finalCleanValue = receiveToken(TokenType::FinalSegmentClean, prevAgentDir).value;
-                    paintBackSegment(QColor("dimgrey").rgb());
                     if(finalCleanValue == 0 && !gotAnnounceInCompare) { // if this candidate did not cover any tokens and was not transferred candidacy, demote
                         setState(State::Demoted);
                     } else {
@@ -169,6 +159,7 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
                     // begin segment comparison by generating a segment lead token
                     Q_ASSERT(canSendToken(TokenType::SegmentLead, nextAgentDir) && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir));
                     sendToken(TokenType::SegmentLead, nextAgentDir, 1);
+                    paintFrontSegment(QColor("red").rgb());
                     comparingSegment = true;
                 }
             } else if(subphase == Subphase::CoinFlip) {
@@ -187,7 +178,7 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
                     // if I am not waiting for an acknowlegdement of my previous announcement and I win the coin flip, announce a transfer of candidacy
                     Q_ASSERT(canSendToken(TokenType::CandidacyAnnounce, nextAgentDir) && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir)); // there shouldn't be a call to make two announcements
                     sendToken(TokenType::CandidacyAnnounce, nextAgentDir, 1);
-                    paintFrontSegment(QColor("gold").rgb());
+                    paintFrontSegment(QColor("orange").rgb());
                     waitingForTransferAck = true;
                 }
             } else if(subphase == Subphase::SolitudeVerification) {
@@ -256,7 +247,7 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
             if(peekAtToken(TokenType::PassiveSegmentClean, prevAgentDir) != -1 && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir)) {
                 performPassiveClean(3); // clean the full segment
                 sendToken(TokenType::PassiveSegmentClean, nextAgentDir, receiveToken(TokenType::PassiveSegmentClean, prevAgentDir).value);
-                paintFrontSegment(QColor("tomato").lighter().rgb()); paintBackSegment(QColor("tomato").lighter().rgb());
+                paintFrontSegment(QColor("dimgrey").rgb()); paintBackSegment(QColor("dimgrey").rgb());
             }
             // pass active segment cleaning tokens backward, and perform cleaning
             if(peekAtToken(TokenType::ActiveSegmentClean, nextAgentDir) != -1 && canSendToken(TokenType::ActiveSegmentClean, prevAgentDir)) {
@@ -268,10 +259,15 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
                     canSendToken(TokenType::PassiveSegment, prevAgentDir) && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir)) {
                 sendToken(TokenType::SegmentLead, nextAgentDir, receiveToken(TokenType::SegmentLead, prevAgentDir).value);
                 sendToken(TokenType::PassiveSegment, prevAgentDir, 1); // 1 => usual passive/active token
+                paintFrontSegment(QColor("red").rgb()); paintBackSegment(QColor("red").rgb());
             }
             // pass passive tokens backward
             if(peekAtToken(TokenType::PassiveSegment, nextAgentDir) != -1 && canSendToken(TokenType::PassiveSegment, prevAgentDir)) {
-                sendToken(TokenType::PassiveSegment, prevAgentDir, receiveToken(TokenType::PassiveSegment, nextAgentDir).value);
+                int passiveValue = receiveToken(TokenType::PassiveSegment, nextAgentDir).value;
+                sendToken(TokenType::PassiveSegment, prevAgentDir, passiveValue);
+                if(passiveValue == 2) {
+                    paintFrontSegment(QColor("dimgrey").rgb()); paintBackSegment(QColor("dimgrey").rgb());
+                }
             }
             // either absorb active tokens or pass them backward (but don't pass an active cleaning token)
             if(peekAtToken(TokenType::ActiveSegment, nextAgentDir) != -1) {
@@ -279,15 +275,12 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
                 if(!absorbedActiveToken) {
                     if(receiveToken(TokenType::ActiveSegment, nextAgentDir).value == 2) { // if absorbing the final active token, generate the final cleaning token
                         sendToken(TokenType::FinalSegmentClean, nextAgentDir, 0); // the final segment cleaning token begins as having not seen covered candidates
-                        qDebug() << "created final token";
-                        paintFrontSegment(QColor("dimgrey").rgb());
                     } else {
                         absorbedActiveToken = true;
                     }
                 } else if(canSendToken(TokenType::ActiveSegment, prevAgentDir) && canSendToken(TokenType::ActiveSegmentClean, prevAgentDir)) {
                     // pass active token backward if doing so does not pass the active cleaning token
                     sendToken(TokenType::ActiveSegment, prevAgentDir, receiveToken(TokenType::ActiveSegment, nextAgentDir).value);
-                    paintFrontSegment(QColor("magenta").rgb()); paintBackSegment(QColor("magenta").rgb());
                 }
             }
             // pass final cleaning token forward, perform cleaning, and check for covered candidates
@@ -299,7 +292,6 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
                 absorbedActiveToken = false;
                 isCoveredCandidate = false;
                 sendToken(TokenType::FinalSegmentClean, nextAgentDir, finalCleanValue);
-                paintFrontSegment(QColor("dimgrey").rgb()); paintBackSegment(QColor("dimgrey").rgb());
             }
 
             // SUBPHASE: Coin Flipping
@@ -307,7 +299,7 @@ void LeaderElection::LeaderElectionAgent::execute(LeaderElection *_alg)
             if(peekAtToken(TokenType::CandidacyAnnounce, prevAgentDir) != -1 && canSendToken(TokenType::CandidacyAnnounce, nextAgentDir) &&
                     canSendToken(TokenType::PassiveSegmentClean, nextAgentDir)) {
                 sendToken(TokenType::CandidacyAnnounce, nextAgentDir, receiveToken(TokenType::CandidacyAnnounce, prevAgentDir).value);
-                paintFrontSegment(QColor("gold").rgb()); paintBackSegment(QColor("gold").rgb());
+                paintFrontSegment(QColor("orange").rgb()); paintBackSegment(QColor("orange").rgb());
             }
             // pass acknowledgements backward
             if(peekAtToken(TokenType::CandidacyAck, nextAgentDir) != -1 && canSendToken(TokenType::CandidacyAck, prevAgentDir)) {
@@ -438,7 +430,7 @@ Token LeaderElection::LeaderElectionAgent::receiveToken(TokenType type, int dir)
 
 void LeaderElection::LeaderElectionAgent::tokenCleanup()
 {
-    for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegment, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
+    for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
         TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest}) {
         if(alg->inFlags[nextAgentDir]->tokens.at((int) tokenType).receivedToken) {
             alg->outFlags[nextAgentDir].tokens.at((int) tokenType).value = -1;
@@ -447,8 +439,8 @@ void LeaderElection::LeaderElectionAgent::tokenCleanup()
             alg->outFlags[prevAgentDir].tokens.at((int) tokenType).receivedToken = false;
         }
     }
-    for(auto tokenType : {TokenType::ActiveSegment, TokenType::ActiveSegmentClean, TokenType::CandidacyAck, TokenType::SolitudeLeadL2,
-        TokenType::SolitudeVectorL2}) {
+    for(auto tokenType : {TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean, TokenType::CandidacyAck,
+        TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
         if(alg->inFlags[prevAgentDir]->tokens.at((int) tokenType).receivedToken) {
             alg->outFlags[prevAgentDir].tokens.at((int) tokenType).value = -1;
         }
@@ -601,14 +593,6 @@ std::shared_ptr<System> LeaderElection::instance(const unsigned int size)
         system->insert(Particle(std::make_shared<LeaderElection>(State::Idle), randDir(), node, -1));
     }
 
-//    for(int y = 0; y <= 10; y++) {
-//    for(int x = 5; x < 15; x++) {
-//    if(x * y > 30 && x * y < 60) {
-//    system->insert(Particle(std::make_shared<LeaderElection>(State::Idle), randDir(), Node(x, y), -1));
-//    }
-//    }
-//    }
-
     return system;
 }
 
@@ -635,7 +619,7 @@ Movement LeaderElection::execute()
                     agent->nextAgentDir = getNextAgentDir(dir);
                     agent->prevAgentDir = getPrevAgentDir(dir);
                     agent->setState(State::Candidate);
-                    agent->setSubphase(Subphase::CoinFlip);
+                    agent->setSubphase(Subphase::SegmentComparison);
                     agent->paintFrontSegment(QColor("dimgrey").rgb());
                     agent->paintBackSegment(QColor("dimgrey").rgb());
 
