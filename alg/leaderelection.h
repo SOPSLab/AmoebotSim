@@ -25,7 +25,13 @@ enum class Subphase {
 };
 
 enum class TokenType {
-    CandidacyAnnounce = 0,
+    SegmentLead = 0,
+    PassiveSegment,
+    ActiveSegment,
+    PassiveSegmentClean,
+    ActiveSegmentClean,
+    FinalSegmentClean,
+    CandidacyAnnounce,
     CandidacyAck,
     SolitudeLeadL1,
     SolitudeLeadL2,
@@ -47,7 +53,7 @@ public:
     LeaderElectionFlag(const LeaderElectionFlag& other);
 
     State state;
-    std::array<Token, 7> tokens;
+    std::array<Token, 13> tokens;
 };
 
 class LeaderElection : public AlgorithmWithFlags<LeaderElectionFlag>
@@ -63,6 +69,7 @@ private:
         Subphase subphase;
         int local_id; // 1, 2, or 3
         int agentDir, nextAgentDir, prevAgentDir;
+        bool comparingSegment, absorbedActiveToken, isCoveredCandidate, gotAnnounceInCompare; // segment comparison information
         bool waitingForTransferAck, gotAnnounceBeforeAck; // coin flipping information
         bool createdLead, sawUnmatchedToken; // solitude verification information
         int generateVectorDir;
@@ -81,6 +88,9 @@ private:
         Token receiveToken(TokenType type, int dir);
         void tokenCleanup();
 
+        void performPassiveClean(const int region);
+        void performActiveClean(const int region1);
+
         int encodeVector(std::pair<int, int> vector) const;
         std::pair<int, int> decodeVector(int code);
         std::pair<int, int> augmentDirVector(std::pair<int, int> vector, const int offset);
@@ -96,6 +106,9 @@ public:
     virtual Movement execute();
     virtual std::shared_ptr<Algorithm> clone() override;
     virtual bool isDeterministic() const;
+
+    //DEBUG
+    static int passiveCounter;
 
 protected:
     void setState(const State _state);
