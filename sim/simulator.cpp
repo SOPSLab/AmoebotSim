@@ -35,6 +35,7 @@ void Simulator::init()
     if(roundTimer == nullptr) {
         roundTimer = std::make_shared<QTimer>(this);
         roundTimer->setInterval(100);
+        emit roundDurationChanged(100);
         connect(roundTimer.get(), &QTimer::timeout, this, &Simulator::round);
 
         updateTimer = std::make_shared<QTimer>(this);
