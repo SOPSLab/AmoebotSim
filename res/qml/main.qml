@@ -148,7 +148,7 @@ ApplicationWindow {
         objectName: "roundDurationSlider"
         maximumValue: 100.0
         minimumValue: 1.0
-        stepSize: 1.0
+        stepSize: 0.0
         updateValueWhileDragging: true
         value: 100.0
 
@@ -160,21 +160,62 @@ ApplicationWindow {
         anchors.bottomMargin: 10
 
         signal roundDurationChanged(int value)
-        property bool reactOnSet: false;
+        property bool setterDisabled: false;
+        property bool callbackDisabled: false;
 
         onValueChanged: {
-            roundDurationChanged(value)
-            roundDurationText.text = value + " ms"
+            if(!callbackDisabled){
+                roundDurationChanged(transferFunc(value))
+                roundDurationText.text = transferFunc(value) + " ms"
+            }
         }
 
         onPressedChanged: {
-            reactOnSet = !reactOnSet
+            /**When changing the value via slider disable the "setRoundDuration" function
+            because it is always called when "value" changes. This is because
+            "onValueChanged" calls "roundDurationChanged" which results in a "setRoundDuration"
+            call. Therefore we break the cycle by disabling the latter.
+            **/
+            setterDisabled = !setterDisabled
         }
 
-        function setRoundDuration(val){
-            if(!reactOnSet){
-                value = val
+        function setRoundDuration(ms){
+            if(!setterDisabled){
+                /**When setting the ms value via console this setter is called. This setter
+                  changes the value of the slider which results in a call of "onValueChanged".
+                  As explained above, that function results in a call of this setter again.
+                  Therefore we break the cycle by disabling the callback "onValueChanged" for
+                  this value change.
+                **/
+                callbackDisabled = true
+                value = invTransferFunc(ms)
+                callbackDisabled = false
+                roundDurationText.text = ms + " ms"
             }
+        }
+
+        function transferFunc(val){
+            var ms;
+            var b = Math.pow(0.2, 1/49)
+            var a = 100 * Math.pow(5, 1/49)
+            if( val >= 50){
+                ms = -0.4*val + 40
+            } else {
+                ms = a*Math.pow(b, val)
+            }
+            return Math.round(ms)
+        }
+
+        function invTransferFunc(ms){
+            var val;
+            var a = 100 * Math.pow(5, 1/49)
+            if( ms <= 20 ){
+                val = -2.5*ms + 100
+            } else {
+                val = (49/Math.log(5))*Math.log(a/ms)
+            }
+
+            return val
         }
 
         Text{
