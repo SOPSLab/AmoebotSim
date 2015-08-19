@@ -131,6 +131,72 @@ System::SystemState System::round()
     return systemState;
 }
 
+System::SystemState System::roundPermutation()
+{
+    if(systemState != SystemState::Valid) {
+        return systemState;
+    }
+
+    if(particles.size() == 0) {
+        systemState = SystemState::Terminated;
+        return systemState;
+    }
+
+    std::deque<Particle*> shuffledParticles;
+    for(auto it = particles.begin(); it != particles.end(); ++it) {
+        shuffledParticles.push_back(&(*it));
+    }
+    std::shuffle(shuffledParticles.begin(), shuffledParticles.end(), rng);
+
+    bool hasBlockedParticles = false;
+    bool somethingActed = false;
+    while(shuffledParticles.size() > 0) {
+        Particle* p = shuffledParticles.front();
+        auto inFlags = assembleFlags(*p);
+        Movement m = p->executeAlgorithm(inFlags);
+
+        if(m.type == MovementType::Empty) {
+            p->discard();
+            shuffledParticles.pop_front();
+            continue;
+        } else if(m.type == MovementType::Idle) {
+            p->apply();
+            numActivations++;
+            somethingActed = true;
+            shuffledParticles.pop_front();
+            continue;
+        } else if(m.type == MovementType::Expand) {
+            if(handleExpansion(*p, m.label)) {
+                numActivations++;
+                somethingActed = true;
+            }
+            shuffledParticles.pop_front();
+            continue;
+        } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
+            if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
+                numActivations++;
+                somethingActed = true;
+            }
+            shuffledParticles.pop_front();
+            continue;
+        }
+
+        // particle is blocked, it can not exceute its action
+        hasBlockedParticles = true;
+        shuffledParticles.pop_front();
+    }
+
+    if(somethingActed) {
+        return SystemState::Valid;
+    } else {
+        if(hasBlockedParticles) {
+            return SystemState::Deadlocked;
+        } else {
+            return SystemState::Terminated;
+        }
+    }
+}
+
 System::SystemState System::roundForParticle(const Node node)
 {
     if(systemState != SystemState::Valid) {
