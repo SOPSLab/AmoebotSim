@@ -339,10 +339,7 @@ bool System::handleContraction(Particle& p, int label, bool isHandoverContractio
     Particle* handoverParticle = nullptr;
     int handoverExpandDir = -1;
 
-    // decide whether a handover should be attempted
-    auto dist = std::uniform_int_distribution<int>(0, 1);
-    bool attemptHandover = isHandoverContraction || dist(rng);
-    if(attemptHandover) {
+    if(isHandoverContraction) {
         // look for a particle that wants to join in the action to do a handover
         std::deque<int> neighborDirs = {0, 1, 2, 3, 4, 5};;
         while(neighborDirs.size() > 0) {
