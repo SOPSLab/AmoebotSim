@@ -152,8 +152,6 @@ System::SystemState System::roundForParticle(const Node node)
     Movement m = p->executeAlgorithm(inFlags);
 
     if(m.type == MovementType::Empty) {
-        // particle becomes inactive voluntarily
-        // it will be activated once its neighborhood changes
         p->discard();
     } else if(m.type == MovementType::Idle) {
         p->apply();
