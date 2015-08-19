@@ -221,17 +221,44 @@ bool System::handleExpansion(Particle& p, int label)
     label = Particle::posMod<6>(p.orientation + label);
     Node newHead = p.head.nodeInDir(label);
 
-    if(particleMap.find(newHead) != particleMap.end()) {
-        p.discard(); // collision
-        return false;
-    }
+    auto otherParticleIt = particleMap.find(newHead);
+    if(otherParticleIt == particleMap.end()) {
+        particleMap.insert(std::pair<Node, Particle*>(newHead, &p));
+        p.head = newHead;
+        p.tailDir = Particle::posMod<6>(label + 3);
+        p.apply();
+        numMovements++;
+        return true;
+    } else {
+        Particle* otherParticle = otherParticleIt->second;
+        if(otherParticle->tailDir == -1 || otherParticle->tail() != newHead) {
+            // collision
+            p.discard();
+            return false;
+        } else {
+            // attempt push
+            auto inFlags = assembleFlags(*otherParticle);
+            Movement m = otherParticle->executeAlgorithm(inFlags);
+            if(m.type == MovementType::HandoverContract || m.type == MovementType::Contract) {
+                // push succeeded
+                particleMap.erase(newHead);
+                otherParticle->tailDir = -1;
+                otherParticle->apply();
 
-    particleMap.insert(std::pair<Node, Particle*>(newHead, &p));
-    p.head = newHead;
-    p.tailDir = Particle::posMod<6>(label + 3);
-    p.apply();
-    numMovements++;
-    return true;
+                particleMap.insert(std::pair<Node, Particle*>(newHead, &p));
+                p.head = newHead;
+                p.tailDir = Particle::posMod<6>(label + 3);
+                p.apply();
+
+                numMovements += 2;
+                return true;
+            } else {
+                // push failed
+                p.discard();
+                return false;
+            }
+        }
+    }
 }
 
 bool System::handleContraction(Particle& p, int label, bool isHandoverContraction)
