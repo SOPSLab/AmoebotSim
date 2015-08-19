@@ -289,6 +289,7 @@ bool System::handleExpansion(Particle& p, int label)
 
     auto otherParticleIt = particleMap.find(newHead);
     if(otherParticleIt == particleMap.end()) {
+        // expansion into empty node
         particleMap.insert(std::pair<Node, Particle*>(newHead, &p));
         p.head = newHead;
         p.tailDir = Particle::posMod<6>(label + 3);
