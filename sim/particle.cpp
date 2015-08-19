@@ -71,7 +71,6 @@ void Particle::discard()
 {
     Q_ASSERT(newAlgorithm != nullptr);
     newAlgorithm.reset();
-    //newAlgorithm = nullptr;
 }
 
 const Flag* Particle::getFlagForNodeInDir(const Node node, const int dir)

@@ -10,7 +10,7 @@
 System::System()
     : systemState(SystemState::Valid),
       numMovements(0),
-      rounds(0)
+      numActivations(0)
 {
     uint32_t seed;
     std::random_device device;
@@ -95,23 +95,21 @@ System::SystemState System::round()
         Movement m = p->executeAlgorithm(inFlags);
 
         if(m.type == MovementType::Empty) {
-            // particle becomes inactive voluntarily
-            // it will be activated once its neighborhood changes
             p->discard();
             shuffledParticles.pop_front();
             continue;
         } else if(m.type == MovementType::Idle) {
             p->apply();
-            rounds++;
+            numActivations++;
             return systemState;
         } else if(m.type == MovementType::Expand) {
             if(handleExpansion(*p, m.label)) {
-                rounds++;
+                numActivations++;
                 return systemState;
             }
         } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
             if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
-                rounds++;
+                numActivations++;
                 return systemState;
             }
         }
@@ -182,9 +180,9 @@ int System::getNumMovements() const
     return numMovements;
 }
 
-int System::getRounds() const
+int System::getNumActivations() const
 {
-    return rounds;
+    return numActivations;
 }
 
 std::array<const Flag*, 10> System::assembleFlags(Particle& p)

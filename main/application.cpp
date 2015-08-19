@@ -43,9 +43,9 @@ Application::Application(int argc, char *argv[]) :
             }
     );
 
-    connect(sim.get(),  &Simulator::roundsChanged,
+    connect(sim.get(),  &Simulator::numActivationsChanged,
             [qmlRoot](const int& rounds){
-                QMetaObject::invokeMethod(qmlRoot, "setRounds", Q_ARG(QVariant, rounds));
+                QMetaObject::invokeMethod(qmlRoot, "setNumActivations", Q_ARG(QVariant, rounds));
             }
     );
     connect(sim.get(),  &Simulator::numMovementsChanged,
