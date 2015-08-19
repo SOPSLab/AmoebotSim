@@ -61,6 +61,11 @@ ApplicationWindow {
         numMovementsText.text = num
     }
 
+    function setNumActivations(num)
+    {
+        numActivationsText.text = num
+    }
+
     function setResolution(_width, _height){
         if(_width >= appWindow.minimumWidth){
             appWindow.width = _width
@@ -87,6 +92,30 @@ ApplicationWindow {
 
     VisItem {
         id: vis
+    }
+
+    RowLayout{
+        id: roundsRow
+        anchors.right: vis.right
+        anchors.top: vis.top
+        anchors.rightMargin: 30
+        anchors.topMargin: 10
+
+        Rectangle{
+            Layout.preferredWidth: 60
+            Text{
+                anchors.right: parent.right
+                text: "Activations: "
+            }
+        }
+        Rectangle{
+            Layout.preferredWidth: 20
+            Text{
+                id: numActivationsText
+                anchors.left: parent.left
+                text: "0"
+            }
+        }
     }
 
     RowLayout{

@@ -9,7 +9,8 @@
 
 System::System()
     : systemState(SystemState::Valid),
-      numMovements(0)
+      numMovements(0),
+      numActivations(0)
 {
     uint32_t seed;
     std::random_device device;
@@ -99,13 +100,16 @@ System::SystemState System::round()
             continue;
         } else if(m.type == MovementType::Idle) {
             p->apply();
+            numActivations++;
             return systemState;
         } else if(m.type == MovementType::Expand) {
             if(handleExpansion(*p, m.label)) {
+                numActivations++;
                 return systemState;
             }
         } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
             if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
+                numActivations++;
                 return systemState;
             }
         }
@@ -157,17 +161,20 @@ System::SystemState System::roundPermutation()
             continue;
         } else if(m.type == MovementType::Idle) {
             p->apply();
+            numActivations++;
             somethingActed = true;
             shuffledParticles.pop_front();
             continue;
         } else if(m.type == MovementType::Expand) {
             if(handleExpansion(*p, m.label)) {
+                numActivations++;
                 somethingActed = true;
             }
             shuffledParticles.pop_front();
             continue;
         } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
             if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
+                numActivations++;
                 somethingActed = true;
             }
             shuffledParticles.pop_front();
@@ -235,6 +242,11 @@ Node System::getDisconnectionNode() const
 int System::getNumMovements() const
 {
     return numMovements;
+}
+
+int System::getNumActivations() const
+{
+    return numActivations;
 }
 
 std::array<const Flag*, 10> System::assembleFlags(Particle& p)
