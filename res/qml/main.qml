@@ -61,9 +61,9 @@ ApplicationWindow {
         numMovementsText.text = num
     }
 
-    function setNumActivations(num)
+    function setNumRounds(num)
     {
-        numActivationsText.text = num
+        numRoundsText.text = num
     }
 
     function setResolution(_width, _height){
@@ -105,13 +105,13 @@ ApplicationWindow {
             Layout.preferredWidth: 60
             Text{
                 anchors.right: parent.right
-                text: "Activations: "
+                text: "Rounds: "
             }
         }
         Rectangle{
             Layout.preferredWidth: 20
             Text{
-                id: numActivationsText
+                id: numRoundsText
                 anchors.left: parent.left
                 text: "0"
             }

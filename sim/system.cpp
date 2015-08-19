@@ -10,7 +10,7 @@
 System::System()
     : systemState(SystemState::Valid),
       numMovements(0),
-      numActivations(0)
+      numRounds(0)
 {
     uint32_t seed;
     std::random_device device;
@@ -29,7 +29,8 @@ System::System(const System& other)
     : rng(other.rng),
       systemState(other.systemState),
       disconnectionNode(other.disconnectionNode),
-      numMovements(other.numMovements)
+      numMovements(other.numMovements),
+      numRounds(other.numRounds)
 {
     for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
         insert(*it);
@@ -42,6 +43,7 @@ System& System::operator=(const System& other)
     systemState = other.systemState;
     disconnectionNode = other.disconnectionNode;
     numMovements = other.numMovements;
+    numRounds = other.numRounds;
     for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
         insert(*it);
     }
@@ -91,6 +93,8 @@ System::SystemState System::round()
     bool hasBlockedParticles = false;
     while(shuffledParticles.size() > 0) {
         Particle* p = shuffledParticles.front();
+        updateNumRounds(p);
+
         auto inFlags = assembleFlags(*p);
         Movement m = p->executeAlgorithm(inFlags);
 
@@ -100,16 +104,13 @@ System::SystemState System::round()
             continue;
         } else if(m.type == MovementType::Idle) {
             p->apply();
-            numActivations++;
             return systemState;
         } else if(m.type == MovementType::Expand) {
             if(handleExpansion(*p, m.label)) {
-                numActivations++;
                 return systemState;
             }
         } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
             if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
-                numActivations++;
                 return systemState;
             }
         }
@@ -152,6 +153,8 @@ System::SystemState System::roundPermutation()
     bool somethingActed = false;
     while(shuffledParticles.size() > 0) {
         Particle* p = shuffledParticles.front();
+        updateNumRounds(p);
+
         auto inFlags = assembleFlags(*p);
         Movement m = p->executeAlgorithm(inFlags);
 
@@ -161,20 +164,17 @@ System::SystemState System::roundPermutation()
             continue;
         } else if(m.type == MovementType::Idle) {
             p->apply();
-            numActivations++;
             somethingActed = true;
             shuffledParticles.pop_front();
             continue;
         } else if(m.type == MovementType::Expand) {
             if(handleExpansion(*p, m.label)) {
-                numActivations++;
                 somethingActed = true;
             }
             shuffledParticles.pop_front();
             continue;
         } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
             if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
-                numActivations++;
                 somethingActed = true;
             }
             shuffledParticles.pop_front();
@@ -187,14 +187,15 @@ System::SystemState System::roundPermutation()
     }
 
     if(somethingActed) {
-        return SystemState::Valid;
+        systemState = SystemState::Valid;
     } else {
         if(hasBlockedParticles) {
-            return SystemState::Deadlocked;
+            systemState = SystemState::Deadlocked;
         } else {
-            return SystemState::Terminated;
+            systemState = SystemState::Terminated;
         }
     }
+    return systemState;
 }
 
 System::SystemState System::roundForParticle(const Node node)
@@ -214,6 +215,8 @@ System::SystemState System::roundForParticle(const Node node)
     }
 
     Particle* p = it->second;
+    updateNumRounds(p);
+
     auto inFlags = assembleFlags(*p);
     Movement m = p->executeAlgorithm(inFlags);
 
@@ -244,9 +247,9 @@ int System::getNumMovements() const
     return numMovements;
 }
 
-int System::getNumActivations() const
+int System::getNumRounds() const
 {
-    return numActivations;
+    return numRounds;
 }
 
 std::array<const Flag*, 10> System::assembleFlags(Particle& p)
@@ -480,4 +483,13 @@ bool System::isConnected() const
     }
 
     return occupiedNodes.empty();
+}
+
+void System::updateNumRounds(Particle *p)
+{
+    activatedParticles.insert(p);
+    if(activatedParticles.size() == particles.size()) {
+        numRounds++;
+        activatedParticles.clear();
+    }
 }

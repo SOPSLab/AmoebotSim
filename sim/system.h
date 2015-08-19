@@ -5,6 +5,7 @@
 #include <deque>
 #include <map>
 #include <random>
+#include <set>
 
 #include "alg/algorithm.h"
 #include "sim/node.h"
@@ -36,25 +37,27 @@ public:
     SystemState getSystemState() const;
     Node getDisconnectionNode() const;
     int getNumMovements() const;
-    int getNumActivations() const;
+    int getNumRounds() const;
 
 protected:
     std::array<const Flag*, 10> assembleFlags(Particle& p);
     bool handleExpansion(Particle& p, int label);
     bool handleContraction(Particle& p, int label, bool isHandoverContraction);
     bool isConnected() const;
+    void updateNumRounds(Particle* p);
 
 protected:
     std::mt19937 rng;
 
     std::deque<Particle> particles;
     std::map<Node, Particle*> particleMap;
+    std::set<Particle*> activatedParticles;
 
     SystemState systemState;
     Node disconnectionNode;
 
     int numMovements;
-    int numActivations;
+    int numRounds;
 };
 
 #endif // SYSTEM_H

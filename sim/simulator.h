@@ -23,7 +23,7 @@ signals:
     void updateSystem(std::shared_ptr<System> _system);
     void roundDurationChanged(int ms);
     void numMovementsChanged(int num);
-    void numActivationsChanged(int num);
+    void numRoundsChanged(int num);
     void moveCameraTo(float worldX, float wordlY);
     void setZoom(float factor);
     void setResolution(const int width, const int height);
