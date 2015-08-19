@@ -309,6 +309,10 @@ bool System::handleExpansion(Particle& p, int label)
             // attempt push
             auto inFlags = assembleFlags(*otherParticle);
             Movement m = otherParticle->executeAlgorithm(inFlags);
+
+            // NOTE: Do we want this?
+            updateNumRounds(otherParticle);
+
             if(m.type == MovementType::HandoverContract || m.type == MovementType::Contract) {
                 // push succeeded
                 particleMap.erase(newHead);
@@ -394,6 +398,10 @@ bool System::handleContraction(Particle& p, int label, bool isHandoverContractio
             }    
             auto inFlags = assembleFlags(p2);
             Movement m = p2.executeAlgorithm(inFlags);
+
+            // NOTE: Do we want this?
+            updateNumRounds(&p2);
+
             if(m.type != MovementType::Expand) {
                 p2.discard();
                 continue; // we are only interested in expanding particles
