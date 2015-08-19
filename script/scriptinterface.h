@@ -45,6 +45,7 @@ public slots:
 
     int getNumParticles();
     int getNumMovements();
+    int getNumRounds();
 
     void setRoundDuration(int ms);
     void moveCameraTo(float worldX, float worldY);
@@ -149,6 +150,11 @@ inline int ScriptInterface::getNumParticles()
 inline int ScriptInterface::getNumMovements()
 {
     return sim.getNumMovements();
+}
+
+inline int ScriptInterface::getNumRounds()
+{
+    return sim.getNumRounds();
 }
 
 inline void ScriptInterface::setRoundDuration(int ms)

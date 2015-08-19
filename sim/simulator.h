@@ -57,6 +57,7 @@ public slots:
 
     int getNumParticles() const;
     int getNumMovements() const;
+    int getNumRounds() const;
 
     void setRoundDuration(int ms);
     void saveScreenshotSlot(const QString filePath);
