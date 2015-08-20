@@ -1,9 +1,6 @@
 #include <algorithm>
 #include <chrono>
-#include <set>
 #include <utility>
-
-#include <QDebug>
 
 #include "sim/system.h"
 
