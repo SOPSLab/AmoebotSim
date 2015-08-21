@@ -2,6 +2,8 @@
 #define UNIVERSALCOATING
 
 #include "alg/algorithmwithflags.h"
+#include <QColor>
+
 class System;
 
 namespace UniversalCoating
@@ -9,6 +11,7 @@ namespace UniversalCoating
 enum class Phase {
     Static,
     Border,
+    StaticBorder,
     Inactive,
     retiredLeader,
     Follow,
@@ -18,14 +21,50 @@ enum class Phase {
     Send,
     Wait,
     Normal,
+    Leader,
+    Candidate,
+    SoleCandidate,
+    Demoted,
+    Finished
+
 };
+
+enum class Subphase {
+    SegmentComparison = 0,
+    CoinFlip,
+    SolitudeVerification
+};
+
+enum class TokenType {
+    SegmentLead = 0,
+    PassiveSegment,
+    ActiveSegment,
+    PassiveSegmentClean,
+    ActiveSegmentClean,
+    FinalSegmentClean,
+    CandidacyAnnounce,
+    CandidacyAck,
+    SolitudeLeadL1,
+    SolitudeLeadL2,
+    SolitudeVectorL1,
+    SolitudeVectorL2,
+    BorderTest,
+    PosCandidate,
+    PosCandidateClean
+};
+
+typedef struct {
+    TokenType type;
+    int value;
+    bool receivedToken;
+} Token;
 
 class UniversalCoatingFlag : public Flag
 {
 public:
     UniversalCoatingFlag();
     UniversalCoatingFlag(const UniversalCoatingFlag& other);
-
+     std::array<Token, 15> tokens;
 public:
     Phase phase;
     int contractDir;
@@ -43,10 +82,12 @@ public:
     bool isSendingToken;
     int ownTokenValue;
     bool buildBorder;
+    int id;
 };
 
 class UniversalCoating : public AlgorithmWithFlags<UniversalCoatingFlag>
 {
+
 public:
     UniversalCoating(const Phase _phase);
     UniversalCoating(const UniversalCoating& other);
@@ -99,16 +140,14 @@ protected:
     void updateChildStage();
     void updateNeighborStages();
 
-    void handleElectionTokens();
-    void clearHeldToken();
+    void handlePositionElection();
     void updateTokenDirs(int recDir);
     void setSendingToken(bool value);
     void sendOwnToken();
     void newOwnToken();
+    void setToken(TokenType type);
 
 
-
-protected:
     Phase phase;
     int followDir;
     int Lnumber;
@@ -127,7 +166,8 @@ protected:
     bool hasLost;
     bool superLeader;
     int borderPasses;
-
+    bool madeAgent;
+    int id;
 
 };
 }
