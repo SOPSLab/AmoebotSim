@@ -21,18 +21,22 @@ enum class Phase {
     Send,
     Wait,
     Normal,
-    Leader,
-    Candidate,
-    SoleCandidate,
-    Demoted,
-    Finished
+    Leader
+
 
 };
 
-enum class Subphase {
-    SegmentComparison = 0,
+enum class ElectionSubphase {
+    Wait = 0,
+    SegmentComparison,
     CoinFlip,
     SolitudeVerification
+};
+enum class ElectionRole{
+    Pipeline,
+    Candidate,
+    Demoted,
+    Leader
 };
 
 enum class TokenType {
@@ -84,6 +88,9 @@ public:
     int id;
     bool acceptPositionTokens;
     std::array<Token, 15> tokens;
+    ElectionRole electionRole;
+    ElectionSubphase electionSubphase;
+
 
 
 
@@ -152,6 +159,8 @@ protected:
     void sendOwnToken();
     void newOwnToken();
     void setToken(TokenType type);
+    void setElectionRole(ElectionRole role);
+    void setElectionSubphase(ElectionSubphase electionSubphase);
 
     Phase phase;
     int followDir;
@@ -171,7 +180,9 @@ protected:
     bool hasLost;
     bool superLeader;
     int borderPasses;
-    bool madeAgent;
+    ElectionRole electionRole;
+    ElectionSubphase electionSubphase;
+
     int id;
 
 };

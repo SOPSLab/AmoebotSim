@@ -28,7 +28,10 @@ UniversalCoatingFlag::UniversalCoatingFlag()
       isSendingToken(false),
       ownTokenValue(-1),
       buildBorder(false),
-      acceptPositionTokens(false)
+      acceptPositionTokens(false),
+      electionRole(ElectionRole::Pipeline),
+      electionSubphase(ElectionSubphase::Wait)
+
 
 {
     int typenum = 0;
@@ -61,7 +64,9 @@ UniversalCoatingFlag::UniversalCoatingFlag(const UniversalCoatingFlag& other)
       ownTokenValue(other.ownTokenValue),
       buildBorder(other.buildBorder),
       tokens(other.tokens),
-      acceptPositionTokens(other.acceptPositionTokens)
+      acceptPositionTokens(other.acceptPositionTokens),
+      electionRole(other.electionRole),
+      electionSubphase(other.electionSubphase)
 {
 }
 
@@ -84,8 +89,9 @@ UniversalCoating::UniversalCoating(const Phase _phase)
     hasLost = false;
     superLeader= false;
     borderPasses = 0;
-    madeAgent = false;
     id = -1;
+    electionRole = ElectionRole::Pipeline;
+    electionSubphase = ElectionSubphase::Wait;
 }
 
 UniversalCoating::UniversalCoating(const UniversalCoating& other)
@@ -107,8 +113,9 @@ UniversalCoating::UniversalCoating(const UniversalCoating& other)
       ownTokenValue(other.ownTokenValue),
       hasLost(other.hasLost),
       borderPasses(other.borderPasses),
-      madeAgent(other.madeAgent),
-      id(other.id)
+      id(other.id),
+      electionRole(other.electionRole),
+      electionSubphase(other.electionSubphase)
 {
 }
 
@@ -444,7 +451,7 @@ Movement UniversalCoating::execute()
                 Lnumber = getLnumber();
                 setLayerNumber(Lnumber);
 
-               // setToken(TokenType::PosCandidate);
+              setElectionRole(ElectionRole::Candidate);
 
 
                 return Movement(MovementType::Idle);
@@ -1370,11 +1377,10 @@ bool UniversalCoating::parentActivated()
 
 void UniversalCoating::handlePositionElection()
 {
-   /* qDebug()<<"id: "<<id;
-    qDebug()<<"pos candidate?" <<outFlags[0].headPosTokens.at((int) TokenType::PosCandidate).value<<" "<<
-              outFlags[0].tailPosTokens.at((int) TokenType::PosCandidate).value;
+    qDebug()<<"id: "<<id;
+    qDebug()<<"role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
 
-    for(int i =0; i<10;i++)
+   for(int i =0; i<10;i++)
         outFlags[i].id = id;
     //step 0: setup
     auto surfaceFollower = firstNeighborInPhase(Phase::Static);
@@ -1391,18 +1397,41 @@ void UniversalCoating::handlePositionElection()
         return;
     }
     qDebug()<<"parent: "<<inFlags[surfaceParent]->id<<" follow: "<<inFlags[surfaceFollower]->id;
-    if(isExpanded())
-    {
 
-    }
-    else if(isContracted() )
-    {
 
+    if(isExpanded() || inFlags[surfaceFollower]->isExpanded() || inFlags[surfaceParent]->isExpanded())
+    {
+        qDebug()<<"waiting for contracted positioning";
+        return;
     }
     else
     {
+        if(electionRole==ElectionRole::Pipeline)
+        {
+            //pass along subphase info too
+            if(electionSubphase == ElectionSubphase::Wait && inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SegmentComparison)
+            {
+              setElectionSubphase(ElectionSubphase::SegmentComparison);
+            }
+        }
+        else if(electionRole == ElectionRole::Candidate)
+        {
+              if(electionSubphase == ElectionSubphase::Wait)
+              {
+                setElectionSubphase(ElectionSubphase::SegmentComparison);
+              }
+        }
+        else if(electionRole == ElectionRole::Demoted)
+        {
+            //if follower has switched to segment comparison, switch and send token
+            if(electionSubphase == ElectionSubphase::Wait && inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SegmentComparison)
+            {
+              setElectionSubphase(ElectionSubphase::SegmentComparison);
+              //TODO: send token
+            }
+        }
+    }
 
-    }*/
 }
 void UniversalCoating::setToken(TokenType type)
 {
@@ -1412,6 +1441,24 @@ void UniversalCoating::setToken(TokenType type)
         //   qDebug()<<(int)TokenType::PosCandidate<<"value set "<<outFlags[dir].tokens.at((int) TokenType::PosCandidate).value<<" for "<<id;
     }
 }
+void UniversalCoating::setElectionRole(ElectionRole role)
+{
+    electionRole = role;
+    for(int dir = 0; dir<10;dir++)
+    {
+        outFlags[dir].electionRole = role;
+    }
+}
+
+void UniversalCoating::setElectionSubphase(ElectionSubphase subphase)
+{
+    electionSubphase = subphase;
+    for(int dir = 0; dir<10;dir++)
+    {
+        outFlags[dir].electionSubphase = subphase;
+    }
+}
+
 
 void UniversalCoating::updateTokenDirs(int recDir)
 {
