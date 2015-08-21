@@ -12,6 +12,7 @@
 
 namespace UniversalCoating
 {
+
 UniversalCoatingFlag::UniversalCoatingFlag()
     : followIndicator(false),
       Lnumber(-1),
@@ -26,9 +27,36 @@ UniversalCoatingFlag::UniversalCoatingFlag()
       tokenCurrentDir(-1),
       isSendingToken(false),
       ownTokenValue(-1),
-      buildBorder(false)
+      buildBorder(false),
+      acceptPositionTokens(false)
 
 {
+    int typenum = 0;
+    for(auto token = tokens.begin(); token != tokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        qDebug()<<(int)token->type<<" value "<<token->value;
+        ++typenum;
+    }
+    typenum = 0;
+    for(auto token = headPosTokens.begin(); token != headPosTokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        qDebug()<<(int)token->type<<" value "<<token->value;
+        ++typenum;
+    }
+
+    typenum = 0;
+    for(auto token = tailPosTokens.begin(); token != tailPosTokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        qDebug()<<(int)token->type<<" value "<<token->value;
+        ++typenum;
+    }
+
 }
 
 UniversalCoatingFlag::UniversalCoatingFlag(const UniversalCoatingFlag& other)
@@ -48,7 +76,11 @@ UniversalCoatingFlag::UniversalCoatingFlag(const UniversalCoatingFlag& other)
       tokenCurrentDir(other.tokenCurrentDir),
       isSendingToken(other.isSendingToken),
       ownTokenValue(other.ownTokenValue),
-      buildBorder(other.buildBorder)
+      buildBorder(other.buildBorder),
+      tokens(other.tokens),
+      headPosTokens(other.headPosTokens),
+      tailPosTokens(other.tailPosTokens),
+      acceptPositionTokens(other.acceptPositionTokens)
 {
 }
 
@@ -214,7 +246,7 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
                 std::shared_ptr<UniversalCoating> newParticle= std::make_shared<UniversalCoating>(Phase::Inactive);
                 newParticle->id = idCounter;
                 system->insert(Particle(newParticle, randDir(), *it));
-               // system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Inactive), randDir(), *it));
+                // system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Inactive), randDir(), *it));
                 numNonStaticParticles++;
 
                 for(int dir = 1; dir <= 2; dir++) {
@@ -238,21 +270,45 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     return system;
 }
 
-
 Movement UniversalCoating::execute()
 {
+    Movement movement = subExecute();
+    if(movement.type == MovementType::Expand)
+    {
+        movePositionTokens(true);
+    }
+    else if(movement.type == MovementType::Contract)
+    {
+    }
+    else  if(movement.type == MovementType::HandoverContract)
+    {
+
+
+    }
+    else  if(movement.type == MovementType::Idle)
+    {
+
+    }
+    return movement;
+}
+
+Movement UniversalCoating::subExecute()
+{
+
+
+
+
     updateNeighborStages();
 
     if(phase == Phase::Lead || phase == Phase::retiredLeader)
         unsetFollowIndicator();
 
-if(hasNeighborInPhase(Phase::Static))
-{
-    if(phase!=Phase::Inactive )
-        handlePositionElection();
-   else
-        setToken(TokenType::PosCandidate);
-}
+    if(hasNeighborInPhase(Phase::Static))
+    {
+        if(phase!=Phase::Inactive )
+            handlePositionElection();
+
+    }
 
     if(isExpanded()) {
         if(phase == Phase::Lead)
@@ -384,6 +440,9 @@ if(hasNeighborInPhase(Phase::Static))
 
                 Lnumber = getLnumber();
                 setLayerNumber(Lnumber);
+
+                setToken(TokenType::PosCandidate);
+
 
                 return Movement(MovementType::Idle);
             }
@@ -1309,6 +1368,9 @@ bool UniversalCoating::parentActivated()
 void UniversalCoating::handlePositionElection()
 {
     qDebug()<<"id: "<<id;
+    qDebug()<<"pos candidate?" <<outFlags[0].headPosTokens.at((int) TokenType::PosCandidate).value<<" "<<
+              outFlags[0].tailPosTokens.at((int) TokenType::PosCandidate).value;
+
     for(int i =0; i<10;i++)
         outFlags[i].id = id;
     //step 0: setup
@@ -1326,9 +1388,9 @@ void UniversalCoating::handlePositionElection()
         return;
     }
     qDebug()<<"parent: "<<inFlags[surfaceParent]->id<<" follow: "<<inFlags[surfaceFollower]->id;
-
     if(isExpanded())
     {
+
     }
     else if(isContracted() )
     {
@@ -1342,9 +1404,79 @@ void UniversalCoating::handlePositionElection()
 void UniversalCoating::setToken(TokenType type)
 {
     for(int dir = 0; dir<10;dir++)
-    outFlags[dir].tokens.at((int) type).receivedToken = true;
+    {
+        outFlags[dir].headPosTokens.at((int) TokenType::PosCandidate).value  =1;
+        //   qDebug()<<(int)TokenType::PosCandidate<<"value set "<<outFlags[dir].tokens.at((int) TokenType::PosCandidate).value<<" for "<<id;
+    }
+}
+void UniversalCoating::copyParentPositionTokens(int surfaceParent)
+{
+    //copies parent's tail to my head
+    for(int i =0; i<10;i++)
+    {
+        for(int tokenIndex = 0; tokenIndex<outFlags[i].tailPosTokens.size();tokenIndex++)
+        {
+            auto parentTailToken= inFlags[surfaceParent]->tailPosTokens.at(tokenIndex);
+            auto headToken =outFlags[i].headPosTokens.at(tokenIndex);
+            headToken.type = parentTailToken.type;
+            headToken.value = parentTailToken.value;
+            headToken.receivedToken = parentTailToken.receivedToken;
+        }
+    }
 }
 
+void UniversalCoating::movePositionTokens(bool toTail)
+{
+    qDebug()<<"move to tail "<<id;
+    //move all head values to tail values
+    for(int i =0; i<10;i++)
+    {
+        if(toTail)
+        {
+            outFlags[i].tailPosTokens = outFlags[i].headPosTokens;
+            /*for(int tokenIndex = 0; tokenIndex<outFlags[i].tailPosTokens.size();tokenIndex++)
+            {
+                auto tailToken= outFlags[i].tailPosTokens.at(tokenIndex);
+                auto headToken =outFlags[i].headPosTokens.at(tokenIndex);
+                tailToken.type = headToken.type;
+                 tailToken.value = headToken.value;
+                 qDebug()<<"moving: "<<(int)tailToken.value<<" from "<<(int)headToken.value;
+
+                tailToken.receivedToken = headToken.receivedToken;
+            }*/
+        }
+    }
+    clearPositionTokens(true);//clear out head
+}
+void UniversalCoating::clearPositionTokens(bool inHead)
+{
+    int typenum = 0;
+    for(int i =0; i<10;i++)
+    {
+        typenum = 0;
+        if(inHead)
+        {
+
+            for(auto token = outFlags[i].headPosTokens.begin(); token != outFlags[i].headPosTokens.end(); ++token) {
+                token->type = (TokenType) typenum;
+                token->value = -1;
+                token->receivedToken = false;
+                ++typenum;
+            }
+
+        }
+        else
+        {
+            for(auto token = outFlags[i].tailPosTokens.begin(); token != outFlags[i].tailPosTokens.end(); ++token) {
+                token->type = (TokenType) typenum;
+                token->value = -1;
+                token->receivedToken = false;
+                qDebug()<<(int)token->type<<" value "<<token->value;
+                ++typenum;
+            }
+        }
+    }
+}
 
 
 void UniversalCoating::updateTokenDirs(int recDir)

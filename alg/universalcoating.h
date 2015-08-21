@@ -64,8 +64,7 @@ class UniversalCoatingFlag : public Flag
 public:
     UniversalCoatingFlag();
     UniversalCoatingFlag(const UniversalCoatingFlag& other);
-     std::array<Token, 15> tokens;
-public:
+
     Phase phase;
     int contractDir;
     bool followIndicator;
@@ -83,6 +82,13 @@ public:
     int ownTokenValue;
     bool buildBorder;
     int id;
+    bool acceptPositionTokens;
+    std::array<Token, 15> tokens;
+    std::array<Token, 15> headPosTokens;
+    std::array<Token, 15> tailPosTokens;
+
+
+
 };
 
 class UniversalCoating : public AlgorithmWithFlags<UniversalCoatingFlag>
@@ -97,6 +103,7 @@ public:
 
 
     virtual Movement execute();
+    virtual Movement subExecute();
     virtual std::shared_ptr<Algorithm> clone();
     virtual bool isDeterministic() const;
 
@@ -146,8 +153,9 @@ protected:
     void sendOwnToken();
     void newOwnToken();
     void setToken(TokenType type);
-
-
+    void copyParentPositionTokens(int surfaceParent);
+    void movePositionTokens(bool toTail);
+    void clearPositionTokens(bool inHead);
     Phase phase;
     int followDir;
     int Lnumber;
