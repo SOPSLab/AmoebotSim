@@ -84,8 +84,7 @@ public:
     int id;
     bool acceptPositionTokens;
     std::array<Token, 15> tokens;
-    std::array<Token, 15> headPosTokens;
-    std::array<Token, 15> tailPosTokens;
+
 
 
 
@@ -153,9 +152,7 @@ protected:
     void sendOwnToken();
     void newOwnToken();
     void setToken(TokenType type);
-    void copyParentPositionTokens(int surfaceParent);
-    void movePositionTokens(bool toTail);
-    void clearPositionTokens(bool inHead);
+
     Phase phase;
     int followDir;
     int Lnumber;
