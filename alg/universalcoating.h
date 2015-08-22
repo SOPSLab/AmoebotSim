@@ -158,10 +158,15 @@ protected:
     void setSendingToken(bool value);
     void sendOwnToken();
     void newOwnToken();
-    void setToken(TokenType type);
+    void sendToken(TokenType type, int dir, int valueIn);
+    void clearToken(TokenType type, int dir);
+    int peekAtToken(TokenType type, int dir) const;
+    Token receiveToken(TokenType type, int dir);
+    void tokenCleanup(int surfaceParent, int surfaceFollower);
+    bool canSendToken(TokenType type, int dir) const;
     void setElectionRole(ElectionRole role);
     void setElectionSubphase(ElectionSubphase electionSubphase);
-
+    void pipelinePassTokens(int surfaceParent, int surfaceFollower);
     Phase phase;
     int followDir;
     int Lnumber;
@@ -182,7 +187,8 @@ protected:
     int borderPasses;
     ElectionRole electionRole;
     ElectionSubphase electionSubphase;
-
+    bool waitingForTransferAck;
+   bool gotAnnounceBeforeAck;
     int id;
 
 };

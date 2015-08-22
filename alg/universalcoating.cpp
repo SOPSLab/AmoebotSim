@@ -92,6 +92,8 @@ UniversalCoating::UniversalCoating(const Phase _phase)
     id = -1;
     electionRole = ElectionRole::Pipeline;
     electionSubphase = ElectionSubphase::Wait;
+    waitingForTransferAck = false;
+    gotAnnounceBeforeAck = false;
 }
 
 UniversalCoating::UniversalCoating(const UniversalCoating& other)
@@ -115,7 +117,10 @@ UniversalCoating::UniversalCoating(const UniversalCoating& other)
       borderPasses(other.borderPasses),
       id(other.id),
       electionRole(other.electionRole),
-      electionSubphase(other.electionSubphase)
+      electionSubphase(other.electionSubphase),
+      waitingForTransferAck(other.waitingForTransferAck),
+      gotAnnounceBeforeAck(other.gotAnnounceBeforeAck)
+
 {
 }
 
@@ -260,6 +265,7 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
 
 Movement UniversalCoating::subExecute()
 {
+
     auto surfaceFollower = firstNeighborInPhase(Phase::Static);
     int   surfaceParent = headMarkDir;
     if(surfaceFollower!=-1)
@@ -269,7 +275,7 @@ Movement UniversalCoating::subExecute()
     }
     Movement movement = subExecute();
 
-  /*      if(movement.type == MovementType::Expand)//whether expanding as a handover or into empty space, tail stays where head currently is
+    /*      if(movement.type == MovementType::Expand)//whether expanding as a handover or into empty space, tail stays where head currently is
         {
             qDebug()<<"expand";
             movePositionTokens(true);
@@ -307,6 +313,8 @@ Movement UniversalCoating::execute()
 
 
 
+    for(int i =0; i<10;i++)
+        outFlags[i].id = id;
 
     updateNeighborStages();
 
@@ -315,7 +323,7 @@ Movement UniversalCoating::execute()
 
     if(hasNeighborInPhase(Phase::Static))
     {
-        if(phase!=Phase::Inactive )
+        if(phase!=Phase::Inactive  && isContracted())
             handlePositionElection();
 
     }
@@ -451,7 +459,7 @@ Movement UniversalCoating::execute()
                 Lnumber = getLnumber();
                 setLayerNumber(Lnumber);
 
-              setElectionRole(ElectionRole::Candidate);
+                setElectionRole(ElectionRole::Candidate);
 
 
                 return Movement(MovementType::Idle);
@@ -1377,18 +1385,20 @@ bool UniversalCoating::parentActivated()
 
 void UniversalCoating::handlePositionElection()
 {
-    qDebug()<<"id: "<<id;
-    qDebug()<<"role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
+   qDebug()<<"id: "<<id;
+   qDebug()<<"role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
 
-   for(int i =0; i<10;i++)
-        outFlags[i].id = id;
+
     //step 0: setup
     auto surfaceFollower = firstNeighborInPhase(Phase::Static);
     int   surfaceParent = headMarkDir;
     if(surfaceFollower!=-1)
     {
         while(neighborIsInPhase(surfaceFollower,Phase::Static))
+        {
             surfaceFollower = (surfaceFollower+1)%6;
+        }
+
     }
     if( surfaceFollower<0 || surfaceParent<0 ||
             neighborIsInPhase(surfaceParent,Phase::Inactive) || neighborIsInPhase(surfaceFollower,Phase::Inactive ) ||
@@ -1397,7 +1407,7 @@ void UniversalCoating::handlePositionElection()
         return;
     }
     qDebug()<<"parent: "<<inFlags[surfaceParent]->id<<" follow: "<<inFlags[surfaceFollower]->id;
-
+    qDebug()<<"Ann: "<<outFlags[surfaceParent].tokens.at((int)TokenType::CandidacyAnnounce).value<<" Ack: "<<outFlags[surfaceFollower].tokens.at((int)TokenType::CandidacyAck).value;
 
     if(isExpanded() || inFlags[surfaceFollower]->isExpanded() || inFlags[surfaceParent]->isExpanded())
     {
@@ -1406,41 +1416,192 @@ void UniversalCoating::handlePositionElection()
     }
     else
     {
+        tokenCleanup(surfaceParent,surfaceFollower);
+        qDebug()<<"Cleaned: Ann: "<<outFlags[surfaceParent].tokens.at((int)TokenType::CandidacyAnnounce).value<<" Ack: "<<outFlags[surfaceFollower].tokens.at((int)TokenType::CandidacyAck).value;
+
         if(electionRole==ElectionRole::Pipeline)
         {
             //pass along subphase info too
-            if(electionSubphase == ElectionSubphase::Wait && inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SegmentComparison)
+          /*  if(electionSubphase == ElectionSubphase::Wait && inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SegmentComparison)
             {
-              setElectionSubphase(ElectionSubphase::SegmentComparison);
+                setElectionSubphase(ElectionSubphase::SegmentComparison);
+            }*/
+             if(inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::CoinFlip)
+            {
+                setElectionSubphase(ElectionSubphase::CoinFlip);
             }
+             if(inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SolitudeVerification)
+            {
+                setElectionSubphase(ElectionSubphase::SolitudeVerification);
+            }
+
+            pipelinePassTokens(surfaceParent,surfaceFollower);
         }
         else if(electionRole == ElectionRole::Candidate)
         {
-              if(electionSubphase == ElectionSubphase::Wait)
-              {
-                setElectionSubphase(ElectionSubphase::SegmentComparison);
-              }
+            if(electionSubphase == ElectionSubphase::Wait)
+            {
+                setElectionSubphase(ElectionSubphase::CoinFlip);
+            }
+            else if(electionSubphase == ElectionSubphase::CoinFlip)
+            {
+                if(peekAtToken(TokenType::CandidacyAck, surfaceParent) != -1 && waitingForTransferAck) {
+                    // if there is an acknowledgement waiting, consume the acknowledgement and proceed to the next subphase
+                    receiveToken(TokenType::CandidacyAck, surfaceParent);
+                    if(!gotAnnounceBeforeAck) {
+                       setElectionRole(ElectionRole::Demoted);
+                       qDebug()<<"demote, announce";
+                    }
+                    else
+                    {
+                        qDebug()<<"no demote, announcebefore ack";
+                    }
+                    waitingForTransferAck = false;
+                    gotAnnounceBeforeAck = false;
+                   clearToken(TokenType::CandidacyAck,-1);//-1 clears all dirs
+                   clearToken(TokenType::CandidacyAnnounce,-1);//-1 clears all dirs
+                   setElectionSubphase(ElectionSubphase::SolitudeVerification);
+                } else if(peekAtToken(TokenType::CandidacyAnnounce, surfaceFollower) != -1 &&
+                          canSendToken(TokenType::CandidacyAck, surfaceFollower))
+
+                {
+                           qDebug()<<"announce before ack";
+                          gotAnnounceBeforeAck = true;
+                          sendToken(TokenType::CandidacyAck, surfaceFollower, 1);
+                          clearToken(TokenType::CandidacyAnnounce,-1);//-1 clears all dirs
+                          waitingForTransferAck = false;
+                          gotAnnounceBeforeAck = false;
+                          setElectionSubphase(ElectionSubphase::SolitudeVerification);
+
+                }
+                else if(!waitingForTransferAck && randBool()) {
+                    // if I am not waiting for an acknowlegdement of my previous announcement and I win the coin flip, announce a transfer of candidacy
+                    sendToken(TokenType::CandidacyAnnounce, surfaceParent, 1);
+                    waitingForTransferAck = true;
+                }
+            }
+            //TODO: pass tokens
         }
         else if(electionRole == ElectionRole::Demoted)
         {
             //if follower has switched to segment comparison, switch and send token
             if(electionSubphase == ElectionSubphase::Wait && inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SegmentComparison)
             {
-              setElectionSubphase(ElectionSubphase::SegmentComparison);
-              //TODO: send token
+                setElectionSubphase(ElectionSubphase::SegmentComparison);
+                //  setToken(TokenType::PassiveSegment,surfaceFollower,1);
+            }
+            else if(inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::CoinFlip)
+            {
+                setElectionSubphase(ElectionSubphase::CoinFlip);
+            }
+            else if(inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SolitudeVerification)
+            {
+                setElectionSubphase(ElectionSubphase::SolitudeVerification);
             }
         }
+
     }
 
+
 }
-void UniversalCoating::setToken(TokenType type)
+void UniversalCoating::sendToken(TokenType type, int dir, int valueIn)
 {
-    for(int dir = 0; dir<10;dir++)
+    if(dir == -1)
+        for(int i = 0; i<10;i++)
+        {
+            outFlags[i].tokens.at((int) type).value  =valueIn;
+        }
+    else
     {
-        outFlags[dir].tokens.at((int) TokenType::PosCandidate).value  =1;
-        //   qDebug()<<(int)TokenType::PosCandidate<<"value set "<<outFlags[dir].tokens.at((int) TokenType::PosCandidate).value<<" for "<<id;
+        outFlags[dir].tokens.at((int) type).value  =valueIn;
+
     }
 }
+void UniversalCoating::clearToken(TokenType type, int dir)
+{
+    if(dir == -1)
+        for(int i = 0; i<10;i++)
+        {
+            outFlags[i].tokens.at((int) type).value  =-1;
+            outFlags[i].tokens.at((int)type).receivedToken = false;
+        }
+    else
+    {
+        outFlags[dir].tokens.at((int) type).value  =-1;
+        outFlags[dir].tokens.at((int)type).receivedToken = false;
+
+    }
+}
+int UniversalCoating::peekAtToken(TokenType type, int dir) const
+{
+    if(outFlags[dir].tokens.at((int) type).receivedToken) {
+        // if this agent has already read this token, don't peek the same value again
+        return -1;
+    } else {
+        return inFlags[dir]->tokens.at((int) type).value;
+    }
+}
+
+Token UniversalCoating::receiveToken(TokenType type, int dir)
+{
+    Q_ASSERT(peekAtToken(type, dir) != -1);
+    outFlags[dir].tokens.at((int)type).value = peekAtToken(type, dir);
+    outFlags[dir].tokens.at((int) type).receivedToken = true;
+    qDebug()<<"recdir "<<(int)type<<" set: "<<outFlags[dir].tokens.at((int)type).value;
+    return inFlags[dir]->tokens.at((int) type);
+}
+//receive all possible tokens in either direction
+void UniversalCoating::pipelinePassTokens(int surfaceParent,int surfaceFollower)
+{
+    qDebug()<<"pipelining from "<<inFlags[surfaceFollower]->id;
+    for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
+        TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest}) {
+        if(peekAtToken(tokenType,surfaceFollower)!=-1) {
+           receiveToken(tokenType,surfaceFollower);
+           qDebug()<<"  type: "<<(int)tokenType<<" received";
+        }
+
+    }
+    for(auto tokenType : {TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean, TokenType::CandidacyAck,
+        TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
+        if(peekAtToken(tokenType,surfaceParent)!=-1) {
+            receiveToken(tokenType,surfaceParent);
+            qDebug()<<"  type: "<<(int)tokenType;
+        }
+
+    }
+}
+void UniversalCoating::tokenCleanup(int surfaceParent,int surfaceFollower)
+{
+    for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
+        TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest}) {
+        if(inFlags[surfaceParent]->tokens.at((int) tokenType).receivedToken) {
+            outFlags[surfaceParent].tokens.at((int) tokenType).value = -1;
+        }
+        if(inFlags[surfaceFollower]->tokens.at((int) tokenType).value == -1 && outFlags[surfaceFollower].tokens.at((int) tokenType).receivedToken== true) {
+            outFlags[surfaceFollower].tokens.at((int) tokenType).receivedToken = false;
+            outFlags[surfaceParent].tokens.at((int) tokenType).value = outFlags[surfaceFollower].tokens.at((int) tokenType).value;
+              outFlags[surfaceFollower].tokens.at((int) tokenType).value = -1;
+        }
+    }
+    for(auto tokenType : {TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean, TokenType::CandidacyAck,
+        TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
+        if(inFlags[surfaceFollower]->tokens.at((int) tokenType).receivedToken) {
+            outFlags[surfaceFollower].tokens.at((int) tokenType).value = -1;
+        }
+        if(inFlags[surfaceParent]->tokens.at((int) tokenType).value == -1 &&  outFlags[surfaceParent].tokens.at((int) tokenType).receivedToken==true) {
+            outFlags[surfaceParent].tokens.at((int) tokenType).receivedToken = false;
+            outFlags[surfaceFollower].tokens.at((int) tokenType).value = outFlags[surfaceParent].tokens.at((int) tokenType).value;
+              outFlags[surfaceParent].tokens.at((int) tokenType).value = -1;
+        }
+    }
+}
+
+bool UniversalCoating::canSendToken(TokenType type, int dir) const
+{
+    return (outFlags[dir].tokens.at((int) type).value == -1 && !inFlags[dir]->tokens.at((int) type).receivedToken);
+}
+
 void UniversalCoating::setElectionRole(ElectionRole role)
 {
     electionRole = role;
