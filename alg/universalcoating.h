@@ -36,7 +36,8 @@ enum class ElectionRole{
     Pipeline,
     Candidate,
     Demoted,
-    Leader
+    Leader,
+    SoleCandidate
 };
 
 enum class TokenType {
@@ -167,6 +168,13 @@ protected:
     void setElectionRole(ElectionRole role);
     void setElectionSubphase(ElectionSubphase electionSubphase);
     void pipelinePassTokens(int surfaceParent, int surfaceFollower);
+
+    int encodeVector(std::pair<int, int> vector) const;
+    std::pair<int, int> decodeVector(int code);
+    std::pair<int, int> augmentDirVector(std::pair<int, int> vector, const int offset);
+    void nonCandidateSolitudeHandling(int surfaceParent,int surfaceFollower);
+    void nonCandidateCoinFlipping(int surfaceParent, int surfaceFollower);
+
     Phase phase;
     int followDir;
     int Lnumber;
@@ -187,9 +195,13 @@ protected:
     int borderPasses;
     ElectionRole electionRole;
     ElectionSubphase electionSubphase;
+    bool comparingSegment, absorbedActiveToken, isCoveredCandidate, gotAnnounceInCompare; // segment comparison information
     bool waitingForTransferAck;
    bool gotAnnounceBeforeAck;
     int id;
+    int generateVectorDir;
+    bool createdLead, sawUnmatchedToken; // solitude verification information
+
 
 };
 }

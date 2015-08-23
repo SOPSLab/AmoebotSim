@@ -67,6 +67,7 @@ UniversalCoatingFlag::UniversalCoatingFlag(const UniversalCoatingFlag& other)
       acceptPositionTokens(other.acceptPositionTokens),
       electionRole(other.electionRole),
       electionSubphase(other.electionSubphase)
+
 {
 }
 
@@ -94,6 +95,15 @@ UniversalCoating::UniversalCoating(const Phase _phase)
     electionSubphase = ElectionSubphase::Wait;
     waitingForTransferAck = false;
     gotAnnounceBeforeAck = false;
+    generateVectorDir = -1;
+    createdLead = false;
+    sawUnmatchedToken = false;
+    comparingSegment= false;
+    absorbedActiveToken = false;
+    isCoveredCandidate = false;
+    gotAnnounceInCompare= false;
+
+
 }
 
 UniversalCoating::UniversalCoating(const UniversalCoating& other)
@@ -119,7 +129,14 @@ UniversalCoating::UniversalCoating(const UniversalCoating& other)
       electionRole(other.electionRole),
       electionSubphase(other.electionSubphase),
       waitingForTransferAck(other.waitingForTransferAck),
-      gotAnnounceBeforeAck(other.gotAnnounceBeforeAck)
+      gotAnnounceBeforeAck(other.gotAnnounceBeforeAck),
+      generateVectorDir(other.generateVectorDir),
+      createdLead(other.createdLead),
+      sawUnmatchedToken(other.sawUnmatchedToken),
+      comparingSegment(other.comparingSegment),
+      absorbedActiveToken(other.absorbedActiveToken),
+      isCoveredCandidate(other.isCoveredCandidate),
+      gotAnnounceInCompare(other.gotAnnounceInCompare)
 
 {
 }
@@ -1385,8 +1402,8 @@ bool UniversalCoating::parentActivated()
 
 void UniversalCoating::handlePositionElection()
 {
-   qDebug()<<"id: "<<id;
-   qDebug()<<"role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
+    qDebug()<<"id: "<<id;
+    qDebug()<<"role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
 
 
     //step 0: setup
@@ -1407,7 +1424,6 @@ void UniversalCoating::handlePositionElection()
         return;
     }
     qDebug()<<"parent: "<<inFlags[surfaceParent]->id<<" follow: "<<inFlags[surfaceFollower]->id;
-    qDebug()<<"Ann: "<<outFlags[surfaceParent].tokens.at((int)TokenType::CandidacyAnnounce).value<<" Ack: "<<outFlags[surfaceFollower].tokens.at((int)TokenType::CandidacyAck).value;
 
     if(isExpanded() || inFlags[surfaceFollower]->isExpanded() || inFlags[surfaceParent]->isExpanded())
     {
@@ -1417,73 +1433,148 @@ void UniversalCoating::handlePositionElection()
     else
     {
         tokenCleanup(surfaceParent,surfaceFollower);
-        qDebug()<<"Cleaned: Ann: "<<outFlags[surfaceParent].tokens.at((int)TokenType::CandidacyAnnounce).value<<" Ack: "<<outFlags[surfaceFollower].tokens.at((int)TokenType::CandidacyAck).value;
 
         if(electionRole==ElectionRole::Pipeline)
         {
             //pass along subphase info too
-          /*  if(electionSubphase == ElectionSubphase::Wait && inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SegmentComparison)
+            /*  if(electionSubphase == ElectionSubphase::Wait && inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SegmentComparison)
             {
                 setElectionSubphase(ElectionSubphase::SegmentComparison);
             }*/
-             if(inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::CoinFlip)
+            if(inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::CoinFlip)
             {
                 setElectionSubphase(ElectionSubphase::CoinFlip);
             }
-             if(inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SolitudeVerification)
+            else if(inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SolitudeVerification)
             {
+                //ensure clean up of coin flipping
+                clearToken(TokenType::CandidacyAck,-1);//-1 clears all dirs
+                clearToken(TokenType::CandidacyAnnounce,-1);//-1 clears all dirs
                 setElectionSubphase(ElectionSubphase::SolitudeVerification);
             }
+            if(electionSubphase==ElectionSubphase::CoinFlip)
+            {
+                nonCandidateCoinFlipping(surfaceParent,surfaceFollower);
+            }
+           else  if (electionSubphase == ElectionSubphase::SolitudeVerification)
+            {
+                nonCandidateSolitudeHandling(surfaceParent,surfaceFollower);
 
-            pipelinePassTokens(surfaceParent,surfaceFollower);
+            }
+
         }
         else if(electionRole == ElectionRole::Candidate)
         {
+            //for any subphase...
+
+            // if there is an announcement waiting to be received by me and it is safe to create an acknowledgement, consume the announcement
+            if(peekAtToken(TokenType::CandidacyAnnounce, surfaceFollower) != -1 && canSendToken(TokenType::CandidacyAck, surfaceFollower)) {
+                receiveToken(TokenType::CandidacyAnnounce, surfaceFollower);
+                sendToken(TokenType::CandidacyAck, surfaceFollower, 1);
+                if(waitingForTransferAck) {
+                    gotAnnounceBeforeAck = true;
+                } else if(comparingSegment) {
+                    gotAnnounceInCompare = true;
+                }
+            }
+
+            // if there is a solitude lead token waiting to be put into lane 2, put it there if it doesn't pass a vector token
+            if(peekAtToken(TokenType::SolitudeLeadL1, surfaceFollower) != -1 && canSendToken(TokenType::SolitudeLeadL2, surfaceFollower) &&
+                    canSendToken(TokenType::SolitudeVectorL2, surfaceFollower)) {
+                int leadValue = receiveToken(TokenType::SolitudeLeadL1, surfaceFollower).value;
+                if(leadValue / 100 == 1) { // if the lead is on lap 1, append this candidate's local id
+                    sendToken(TokenType::SolitudeLeadL2, surfaceFollower, (1000 * 1) + leadValue);
+                } else { // if the lead is on lap 2, just pass on the value
+                    sendToken(TokenType::SolitudeLeadL2, surfaceFollower, leadValue);
+                }
+            }
+            // if there is a vector waiting to be put into lane 2, put it there
+            if(peekAtToken(TokenType::SolitudeVectorL1, surfaceFollower) != -1 && canSendToken(TokenType::SolitudeVectorL2, surfaceFollower)) {
+                sendToken(TokenType::SolitudeVectorL2, surfaceFollower, receiveToken(TokenType::SolitudeVectorL1, surfaceFollower).value);
+            }
+
             if(electionSubphase == ElectionSubphase::Wait)
             {
                 setElectionSubphase(ElectionSubphase::CoinFlip);
             }
             else if(electionSubphase == ElectionSubphase::CoinFlip)
             {
-                if(peekAtToken(TokenType::CandidacyAck, surfaceParent) != -1 && waitingForTransferAck) {
+                if(peekAtToken(TokenType::CandidacyAck, surfaceParent) != -1) {
                     // if there is an acknowledgement waiting, consume the acknowledgement and proceed to the next subphase
                     receiveToken(TokenType::CandidacyAck, surfaceParent);
+                    setElectionSubphase(ElectionSubphase::SolitudeVerification);
                     if(!gotAnnounceBeforeAck) {
-                       setElectionRole(ElectionRole::Demoted);
-                       qDebug()<<"demote, announce";
-                    }
-                    else
-                    {
-                        qDebug()<<"no demote, announcebefore ack";
+                        setElectionRole(ElectionRole::Demoted);
                     }
                     waitingForTransferAck = false;
                     gotAnnounceBeforeAck = false;
-                   clearToken(TokenType::CandidacyAck,-1);//-1 clears all dirs
-                   clearToken(TokenType::CandidacyAnnounce,-1);//-1 clears all dirs
-                   setElectionSubphase(ElectionSubphase::SolitudeVerification);
-                } else if(peekAtToken(TokenType::CandidacyAnnounce, surfaceFollower) != -1 &&
-                          canSendToken(TokenType::CandidacyAck, surfaceFollower))
-
-                {
-                           qDebug()<<"announce before ack";
-                          gotAnnounceBeforeAck = true;
-                          sendToken(TokenType::CandidacyAck, surfaceFollower, 1);
-                          clearToken(TokenType::CandidacyAnnounce,-1);//-1 clears all dirs
-                          waitingForTransferAck = false;
-                          gotAnnounceBeforeAck = false;
-                          setElectionSubphase(ElectionSubphase::SolitudeVerification);
-
-                }
-                else if(!waitingForTransferAck && randBool()) {
+                    return; // completed subphase and thus shouldn't perform any more operations in this round
+                } else if(!waitingForTransferAck && randBool()) {
                     // if I am not waiting for an acknowlegdement of my previous announcement and I win the coin flip, announce a transfer of candidacy
+                    Q_ASSERT(canSendToken(TokenType::CandidacyAnnounce, surfaceParent) && canSendToken(TokenType::PassiveSegmentClean, surfaceParent)); // there shouldn't be a call to make two announcements
                     sendToken(TokenType::CandidacyAnnounce, surfaceParent, 1);
                     waitingForTransferAck = true;
                 }
             }
-            //TODO: pass tokens
+            else if (electionSubphase == ElectionSubphase::SolitudeVerification)
+            {
+                //ensure clean up of coin flipping
+                clearToken(TokenType::CandidacyAck,-1);//-1 clears all dirs
+                clearToken(TokenType::CandidacyAnnounce,-1);//-1 clears all dirs
+                // if the agent needs to, generate a lane 1 vector token
+                if(generateVectorDir != -1 && canSendToken(TokenType::SolitudeVectorL1, surfaceParent) && canSendToken(TokenType::PassiveSegmentClean, surfaceParent)) {
+                    sendToken(TokenType::SolitudeVectorL1, surfaceParent, generateVectorDir);
+                    generateVectorDir = -1;
+                }
+
+                if(peekAtToken(TokenType::SolitudeVectorL2, surfaceParent) != -1) {
+                    // consume all vector tokens that have not been matched, decide that solitude has failed
+                    Q_ASSERT(peekAtToken(TokenType::SolitudeVectorL2, surfaceParent) != 0); // matched tokens should have dropped
+                    receiveToken(TokenType::SolitudeVectorL2, surfaceParent);
+                    sawUnmatchedToken = true;
+                    qDebug()<<"saw unmatched";
+                } else if(peekAtToken(TokenType::SolitudeLeadL2, surfaceParent) != -1) {
+                    qDebug()<<"lead returned";
+                    // if the lead token has returned, either put it back in lane 1 (lap 1) or consume it and decide solitude (lap 2)
+                    if((peekAtToken(TokenType::SolitudeLeadL2, surfaceParent) % 1000) / 100 == 1) { // lead has just completed lap 1
+                        qDebug()<<"lap 1 complete: "<<peekAtToken(TokenType::SolitudeLeadL2, surfaceParent);
+                        qDebug()<<"can sends? "<<canSendToken(TokenType::SolitudeLeadL1, surfaceParent)<<" "<<canSendToken(TokenType::SolitudeVectorL1, surfaceParent);
+                        if(canSendToken(TokenType::SolitudeLeadL1, surfaceParent) && canSendToken(TokenType::SolitudeVectorL1, surfaceParent))// && canSendToken(TokenType::PassiveSegmentClean, surfaceParent))
+                        {
+                            int leadValue = receiveToken(TokenType::SolitudeLeadL2, surfaceParent).value;
+                            sendToken(TokenType::SolitudeLeadL1, surfaceParent, (leadValue / 1000) * 1000 + 200); // lap 2, orientation no longer matters => 200
+                            qDebug()<<"started lap 2";
+                        }
+                    } else if((peekAtToken(TokenType::SolitudeLeadL2, surfaceParent) % 1000) / 100 == 2) { // lead has just completed lap 2
+                        int leadValue = receiveToken(TokenType::SolitudeLeadL2, surfaceParent).value;
+                        if(!sawUnmatchedToken && (leadValue / 1000) == 1) { // if it did not consume an unmatched token and it assures it's matching with itself, go to inner/outer test
+                            setElectionRole(ElectionRole::SoleCandidate);
+                            qDebug()<<"set sole candidate";
+                        } else { // if solitude verification failed, then do another coin flip compeititon
+                            setElectionSubphase(ElectionSubphase::CoinFlip);
+                            qDebug()<<"failed solitude verification";
+                        }
+                        createdLead = false;
+                        sawUnmatchedToken = false;
+                        return; // completed subphase and thus shouldn't perform any more operations in this round
+                    }
+                } else if(!createdLead) {
+                    qDebug()<<"begin solitude verification?";
+                    // to begin the solitude verification, create a lead token with an orientation to communicate to its segment
+                    Q_ASSERT(canSendToken(TokenType::SolitudeLeadL1, surfaceParent) && canSendToken(TokenType::SolitudeVectorL1, surfaceParent) &&
+                             canSendToken(TokenType::PassiveSegmentClean, surfaceParent)); // there shouldn't be a call to make two leads
+                    sendToken(TokenType::SolitudeLeadL1, surfaceParent, 100 + encodeVector(std::make_pair(1,0))); // lap 1 in direction (1,0)
+                    createdLead = true;
+                    generateVectorDir = encodeVector(std::make_pair(1,0));
+                }
+            }
+
+
         }
         else if(electionRole == ElectionRole::Demoted)
         {
+            //switching subphases:
+
             //if follower has switched to segment comparison, switch and send token
             if(electionSubphase == ElectionSubphase::Wait && inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SegmentComparison)
             {
@@ -1496,14 +1587,140 @@ void UniversalCoating::handlePositionElection()
             }
             else if(inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SolitudeVerification)
             {
+                //ensure clean up of coin flipping
+                clearToken(TokenType::CandidacyAck,-1);//-1 clears all dirs
+                clearToken(TokenType::CandidacyAnnounce,-1);//-1 clears all dirs
                 setElectionSubphase(ElectionSubphase::SolitudeVerification);
             }
+
+            //subphase-specific action:
+            if(electionSubphase == ElectionSubphase::CoinFlip)
+            {
+                nonCandidateCoinFlipping(surfaceParent,surfaceFollower);
+
+            }
+            if (electionSubphase == ElectionSubphase::SolitudeVerification)
+            {
+                nonCandidateSolitudeHandling(surfaceParent,surfaceFollower);
+
+            }
+
         }
 
     }
 
 
 }
+void UniversalCoating::nonCandidateSolitudeHandling(int surfaceParent,int surfaceFollower)
+{
+    //ensure clean up of coin flipping
+    clearToken(TokenType::CandidacyAck,-1);//-1 clears all dirs
+    clearToken(TokenType::CandidacyAnnounce,-1);//-1 clears all dirs
+    // pass lane 1 solitude lead token forward
+    if(peekAtToken(TokenType::SolitudeLeadL1, surfaceFollower) != -1 && canSendToken(TokenType::SolitudeLeadL1, surfaceParent) &&
+            canSendToken(TokenType::SolitudeVectorL1, surfaceParent) && canSendToken(TokenType::PassiveSegmentClean, surfaceParent)) {
+        int code = receiveToken(TokenType::SolitudeLeadL1, surfaceFollower).value;
+        if(code / 100 == 1) { // lead token is on its first lap, so update the lead direction as it's passed
+            std::pair<int, int> leadVector = decodeVector(code);
+            int offset = (surfaceParent - ((surfaceFollower + 3) % 6) + 6) % 6;
+            generateVectorDir = encodeVector(augmentDirVector(leadVector, offset));
+            sendToken(TokenType::SolitudeLeadL1, surfaceParent, 100 + generateVectorDir); // lap 1 + new encoded direction vector
+        } else { // lead token is on its second pass, just send it forward
+            sendToken(TokenType::SolitudeLeadL1, surfaceParent, code);
+        }
+    }
+    // pass lane 2 solitude lead token backward, if doing so does not pass a lane 2 vector token
+    if(peekAtToken(TokenType::SolitudeLeadL2, surfaceParent) != -1 && canSendToken(TokenType::SolitudeLeadL2, surfaceFollower) &&
+            canSendToken(TokenType::SolitudeVectorL2, surfaceFollower)) {
+        int leadValue = receiveToken(TokenType::SolitudeLeadL2, surfaceParent).value;
+        sendToken(TokenType::SolitudeLeadL2, surfaceFollower, leadValue);
+        if((leadValue % 1000) / 100 == 1) { // first lap
+        } else { // second lap
+        }
+    }
+    // if the agent needs to, generate a lane 1 vector token
+    if(generateVectorDir != -1 && canSendToken(TokenType::SolitudeVectorL1, surfaceParent) && canSendToken(TokenType::PassiveSegmentClean, surfaceParent)) {
+        sendToken(TokenType::SolitudeVectorL1, surfaceParent, generateVectorDir);
+        generateVectorDir = -1;
+    }
+    // perform token matching if there are incoming lane 1 and lane 2 vectors and the various passings are safe
+    if(peekAtToken(TokenType::SolitudeVectorL1, surfaceFollower) != -1 && peekAtToken(TokenType::SolitudeVectorL2, surfaceParent) != -1) {
+        if(canSendToken(TokenType::SolitudeVectorL1, surfaceParent) && canSendToken(TokenType::SolitudeVectorL2, surfaceFollower) &&
+                canSendToken(TokenType::PassiveSegmentClean, surfaceParent)) {
+            // decode vectors to do matching on
+            std::pair<int, int> vector1 = decodeVector(receiveToken(TokenType::SolitudeVectorL1, surfaceFollower).value);
+            std::pair<int, int> vector2 = decodeVector(receiveToken(TokenType::SolitudeVectorL2, surfaceParent).value);
+            // do vector token matching; if the components cancel out, then update both sides
+            if(vector1.first + vector2.first == 0) {
+                vector1.first = 0; vector2.first = 0;
+            }
+            if(vector1.second + vector2.second == 0) {
+                vector1.second = 0; vector2.second = 0;
+            }
+            // only send the tokens if they are non-(0,0)
+            if(vector1 != std::make_pair(0,0)) {
+                sendToken(TokenType::SolitudeVectorL1, surfaceParent, encodeVector(vector1));
+            }
+            if(vector2 != std::make_pair(0,0)) {
+                sendToken(TokenType::SolitudeVectorL2, surfaceFollower, encodeVector(vector2));
+            }
+        }
+    } else {
+        // if there aren't both lanes of vectors, then pass lane 1 vectors forward...
+        if(peekAtToken(TokenType::SolitudeVectorL1, surfaceFollower) != -1 && canSendToken(TokenType::SolitudeVectorL1, surfaceParent) &&
+                canSendToken(TokenType::PassiveSegmentClean, surfaceParent)) {
+            sendToken(TokenType::SolitudeVectorL1, surfaceParent, receiveToken(TokenType::SolitudeVectorL1, surfaceFollower).value);
+        }
+        // ...and pass lane 2 vectors backward
+        if(peekAtToken(TokenType::SolitudeVectorL2, surfaceParent) != -1 && canSendToken(TokenType::SolitudeVectorL2, surfaceFollower)) {
+            sendToken(TokenType::SolitudeVectorL2, surfaceFollower, receiveToken(TokenType::SolitudeVectorL2, surfaceParent).value);
+        }
+    }
+}
+void UniversalCoating::nonCandidateCoinFlipping(int surfaceParent, int surfaceFollower)
+{
+    if(peekAtToken(TokenType::CandidacyAnnounce, surfaceFollower) != -1 && canSendToken(TokenType::CandidacyAnnounce, surfaceParent) &&
+            canSendToken(TokenType::PassiveSegmentClean, surfaceParent)) {
+        sendToken(TokenType::CandidacyAnnounce, surfaceParent, receiveToken(TokenType::CandidacyAnnounce, surfaceFollower).value);
+    }
+    // pass acknowledgements backward
+    if(peekAtToken(TokenType::CandidacyAck, surfaceParent) != -1 && canSendToken(TokenType::CandidacyAck, surfaceFollower)) {
+        sendToken(TokenType::CandidacyAck, surfaceFollower, receiveToken(TokenType::CandidacyAck, surfaceParent).value);
+    }
+}
+
+int UniversalCoating::encodeVector(std::pair<int, int> vector) const
+{
+    int x = (vector.first == -1) ? 2 : vector.first;
+    int y = (vector.second == -1) ? 2 : vector.second;
+
+    return (10 * x) + y;
+}
+
+std::pair<int, int> UniversalCoating::decodeVector(int code)
+{
+    code = code % 100; // throw out the extra information for lap number
+    int x = (code / 10 == 2) ? -1 : code / 10;
+    int y = (code % 10 == 2) ? -1 : code % 10;
+
+    return std::make_pair(x, y);
+}
+
+std::pair<int, int> UniversalCoating::augmentDirVector(std::pair<int, int> vector, const int offset)
+{
+    static const std::array<std::pair<int, int>, 6> vectors = {std::make_pair(1,0), std::make_pair(0,1), std::make_pair(-1,1),
+                                                               std::make_pair(-1,0), std::make_pair(0,-1), std::make_pair(1,-1)};
+    for(auto i = 0; i < vectors.size(); ++i) {
+        if(vector == vectors.at(i)) {
+            return vectors.at((i + offset) % 6);
+        }
+    }
+
+    Q_ASSERT(false); // the desired vector should be one of the unit directions
+    return std::make_pair(0,0);
+}
+
+
 void UniversalCoating::sendToken(TokenType type, int dir, int valueIn)
 {
     if(dir == -1)
@@ -1557,8 +1774,8 @@ void UniversalCoating::pipelinePassTokens(int surfaceParent,int surfaceFollower)
     for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
         TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest}) {
         if(peekAtToken(tokenType,surfaceFollower)!=-1) {
-           receiveToken(tokenType,surfaceFollower);
-           qDebug()<<"  type: "<<(int)tokenType<<" received";
+            receiveToken(tokenType,surfaceFollower);
+            qDebug()<<"  type: "<<(int)tokenType<<" received";
         }
 
     }
@@ -1573,26 +1790,43 @@ void UniversalCoating::pipelinePassTokens(int surfaceParent,int surfaceFollower)
 }
 void UniversalCoating::tokenCleanup(int surfaceParent,int surfaceFollower)
 {
-    for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
-        TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest}) {
+    for(auto tokenType : {TokenType::CandidacyAnnounce}) {
         if(inFlags[surfaceParent]->tokens.at((int) tokenType).receivedToken) {
             outFlags[surfaceParent].tokens.at((int) tokenType).value = -1;
         }
         if(inFlags[surfaceFollower]->tokens.at((int) tokenType).value == -1 && outFlags[surfaceFollower].tokens.at((int) tokenType).receivedToken== true) {
             outFlags[surfaceFollower].tokens.at((int) tokenType).receivedToken = false;
             outFlags[surfaceParent].tokens.at((int) tokenType).value = outFlags[surfaceFollower].tokens.at((int) tokenType).value;
-              outFlags[surfaceFollower].tokens.at((int) tokenType).value = -1;
+            outFlags[surfaceFollower].tokens.at((int) tokenType).value = -1;
         }
     }
-    for(auto tokenType : {TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean, TokenType::CandidacyAck,
-        TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
+    for(auto tokenType : {TokenType::CandidacyAck}) {
         if(inFlags[surfaceFollower]->tokens.at((int) tokenType).receivedToken) {
             outFlags[surfaceFollower].tokens.at((int) tokenType).value = -1;
         }
         if(inFlags[surfaceParent]->tokens.at((int) tokenType).value == -1 &&  outFlags[surfaceParent].tokens.at((int) tokenType).receivedToken==true) {
             outFlags[surfaceParent].tokens.at((int) tokenType).receivedToken = false;
             outFlags[surfaceFollower].tokens.at((int) tokenType).value = outFlags[surfaceParent].tokens.at((int) tokenType).value;
-              outFlags[surfaceParent].tokens.at((int) tokenType).value = -1;
+            outFlags[surfaceParent].tokens.at((int) tokenType).value = -1;
+        }
+    }
+
+    for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
+        TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest}) {
+        if(inFlags[surfaceParent]->tokens.at((int) tokenType).receivedToken) {
+            outFlags[surfaceParent].tokens.at((int) tokenType).value = -1;
+        }
+        if(inFlags[surfaceFollower]->tokens.at((int) tokenType).value == -1) {
+            outFlags[surfaceFollower].tokens.at((int) tokenType).receivedToken = false;
+        }
+    }
+    for(auto tokenType : {TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean,
+        TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
+        if(inFlags[surfaceFollower]->tokens.at((int) tokenType).receivedToken) {
+            outFlags[surfaceFollower].tokens.at((int) tokenType).value = -1;
+        }
+        if(inFlags[surfaceParent]->tokens.at((int) tokenType).value == -1) {
+            outFlags[surfaceParent].tokens.at((int) tokenType).receivedToken = false;
         }
     }
 }
