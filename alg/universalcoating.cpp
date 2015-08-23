@@ -12,6 +12,7 @@
 
 namespace UniversalCoating
 {
+
 UniversalCoatingFlag::UniversalCoatingFlag()
     : followIndicator(false),
       Lnumber(-1),
@@ -26,9 +27,22 @@ UniversalCoatingFlag::UniversalCoatingFlag()
       tokenCurrentDir(-1),
       isSendingToken(false),
       ownTokenValue(-1),
-      buildBorder(false)
+      buildBorder(false),
+      acceptPositionTokens(false),
+      electionRole(ElectionRole::Pipeline),
+      electionSubphase(ElectionSubphase::Wait)
+
 
 {
+    int typenum = 0;
+    for(auto token = tokens.begin(); token != tokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        qDebug()<<(int)token->type<<" value "<<token->value;
+        ++typenum;
+    }
+
 }
 
 UniversalCoatingFlag::UniversalCoatingFlag(const UniversalCoatingFlag& other)
@@ -48,7 +62,12 @@ UniversalCoatingFlag::UniversalCoatingFlag(const UniversalCoatingFlag& other)
       tokenCurrentDir(other.tokenCurrentDir),
       isSendingToken(other.isSendingToken),
       ownTokenValue(other.ownTokenValue),
-      buildBorder(other.buildBorder)
+      buildBorder(other.buildBorder),
+      tokens(other.tokens),
+      acceptPositionTokens(other.acceptPositionTokens),
+      electionRole(other.electionRole),
+      electionSubphase(other.electionSubphase)
+
 {
 }
 
@@ -71,6 +90,20 @@ UniversalCoating::UniversalCoating(const Phase _phase)
     hasLost = false;
     superLeader= false;
     borderPasses = 0;
+    id = -1;
+    electionRole = ElectionRole::Pipeline;
+    electionSubphase = ElectionSubphase::Wait;
+    waitingForTransferAck = false;
+    gotAnnounceBeforeAck = false;
+    generateVectorDir = -1;
+    createdLead = false;
+    sawUnmatchedToken = false;
+    comparingSegment= false;
+    absorbedActiveToken = false;
+    isCoveredCandidate = false;
+    gotAnnounceInCompare= false;
+
+
 }
 
 UniversalCoating::UniversalCoating(const UniversalCoating& other)
@@ -91,7 +124,20 @@ UniversalCoating::UniversalCoating(const UniversalCoating& other)
       childStage(other.childStage),
       ownTokenValue(other.ownTokenValue),
       hasLost(other.hasLost),
-      borderPasses(other.borderPasses)
+      borderPasses(other.borderPasses),
+      id(other.id),
+      electionRole(other.electionRole),
+      electionSubphase(other.electionSubphase),
+      waitingForTransferAck(other.waitingForTransferAck),
+      gotAnnounceBeforeAck(other.gotAnnounceBeforeAck),
+      generateVectorDir(other.generateVectorDir),
+      createdLead(other.createdLead),
+      sawUnmatchedToken(other.sawUnmatchedToken),
+      comparingSegment(other.comparingSegment),
+      absorbedActiveToken(other.absorbedActiveToken),
+      isCoveredCandidate(other.isCoveredCandidate),
+      gotAnnounceInCompare(other.gotAnnounceInCompare)
+
 {
 }
 
@@ -141,38 +187,39 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     Node pos2= Node((End.x)-1 ,End.y);//start of the right border
     if(leftBorder)
     {
-        while(counter < yMax) {
-            system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Border), randDir(), pos1));
-            occupied.insert(pos1);
-            orderedSurface.push_back(pos1);
-            int offset;
-            if(lastOffset == 3) {
-                offset = randInt(1, 4);
-            } else {
-                offset = randInt(1, 3);
-            }
-            lastOffset = offset;
-            pos1 = pos1.nodeInDir(offset);
-            counter++;
+        //while(counter < yMax) {
+        system->insert( Particle(std::make_shared<UniversalCoating>(Phase::StaticBorder), randDir(), pos1));
+
+        occupied.insert(pos1);
+        orderedSurface.push_back(pos1);
+        int offset;
+        if(lastOffset == 3) {
+            offset = randInt(1, 4);
+        } else {
+            offset = randInt(1, 3);
         }
+        lastOffset = offset;
+        pos1 = pos1.nodeInDir(offset);
+        counter++;
+        // }
     }
     if(rightBorder)
     {
         counter =0;
-        while(counter < yMax) {
-            system->insert( Particle(std::make_shared<UniversalCoating>(Phase::Border), randDir(), pos2));
-            occupied.insert(pos2);
-            orderedSurface.push_back(pos2);
-            int offset;
-            if(lastOffset == 2) {
-                offset = randInt(1, 3);
-            } else {
-                offset = randInt(1, 4);
-            }
-            lastOffset = offset;
-            pos2 = pos2.nodeInDir(offset);
-            counter++;
+        //  while(counter < yMax) {
+        system->insert( Particle(std::make_shared<UniversalCoating>(Phase::StaticBorder), randDir(), pos2));
+        occupied.insert(pos2);
+        orderedSurface.push_back(pos2);
+        int offset;
+        if(lastOffset == 2) {
+            offset = randInt(1, 3);
+        } else {
+            offset = randInt(1, 4);
         }
+        lastOffset = offset;
+        pos2 = pos2.nodeInDir(offset);
+        counter++;
+        //   }
 
     }
     //arbitrary borders
@@ -196,6 +243,8 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
 
     yMax=0;
     int numNonStaticParticles = 0;
+    int idCounter = 0;
+
     while(numNonStaticParticles < numParticles) {
         if(candidates.empty()) {
             return system;
@@ -204,7 +253,10 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
         std::set<Node> nextCandidates;
         for(auto it = candidates.begin(); it != candidates.end() && numNonStaticParticles < numParticles; ++it) {
             if(randBool(1.0f - holeProb)) {
-                system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Inactive), randDir(), *it));
+                std::shared_ptr<UniversalCoating> newParticle= std::make_shared<UniversalCoating>(Phase::Inactive);
+                newParticle->id = idCounter;
+                system->insert(Particle(newParticle, randDir(), *it));
+                // system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Inactive), randDir(), *it));
                 numNonStaticParticles++;
 
                 for(int dir = 1; dir <= 2; dir++) {
@@ -219,6 +271,8 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
                     }
                 }
             }
+            idCounter++;
+
         }
         nextCandidates.swap(candidates);
     }
@@ -226,16 +280,72 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     return system;
 }
 
+Movement UniversalCoating::subExecute()
+{
+
+    auto surfaceFollower = firstNeighborInPhase(Phase::Static);
+    int   surfaceParent = headMarkDir;
+    if(surfaceFollower!=-1)
+    {
+        while(neighborIsInPhase(surfaceFollower,Phase::Static))
+            surfaceFollower = (surfaceFollower+1)%6;
+    }
+    Movement movement = subExecute();
+
+    /*      if(movement.type == MovementType::Expand)//whether expanding as a handover or into empty space, tail stays where head currently is
+        {
+            qDebug()<<"expand";
+            movePositionTokens(true);
+            copyParentPositionTokens(headMarkDir);//head points at parent
+          outFlags[headMarkDir].acceptPositionTokens = true;
+        }
+        else if(movement.type == MovementType::Contract)
+        {
+            qDebug()<<"contract";
+            outFlags[headMarkDir].acceptPositionTokens = false;
+
+          //maybe keep both??
+        }
+        else  if(movement.type == MovementType::HandoverContract)
+        {
+            qDebug()<<"handover";
+            outFlags[headMarkDir].acceptPositionTokens = false;
+
+            if(surfaceFollower > -1 && inFlags[surfaceFollower]!=nullptr && inFlags[surfaceFollower]->acceptPositionTokens)
+                clearPositionTokens(false);//clear tail
+            else
+                return Movement(MovementType::Empty);
+
+        }
+        else  if(movement.type == MovementType::Idle)
+        {
+
+        }
+*/
+    return movement;
+}
 
 Movement UniversalCoating::execute()
 {
- updateNeighborStages();
+
+
+
+    for(int i =0; i<10;i++)
+        outFlags[i].id = id;
+
+    updateNeighborStages();
 
     if(phase == Phase::Lead || phase == Phase::retiredLeader)
         unsetFollowIndicator();
 
+    if(hasNeighborInPhase(Phase::Static))
+    {
+        if(phase!=Phase::Inactive  && isContracted())
+            handlePositionElection();
+
+    }
+
     if(isExpanded()) {
-        clearHeldToken();
         if(phase == Phase::Lead)
         {
             if(phase == Phase::Lead && hasNeighborInPhase(Phase::Border))
@@ -253,12 +363,13 @@ Movement UniversalCoating::execute()
         if(phase==Phase::Follow)
         {
             setFollowIndicatorLabel(followDir);
+
         }
 
         int activeFollowers = 0;
         for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
             auto label = *it;
-            if(inFlags[label] != nullptr && !neighborIsInPhase(label,Phase::Static)) {
+            if(inFlags[label] != nullptr && !neighborIsInPhase(label,Phase::Static) && !neighborIsInPhase(label,Phase::StaticBorder)) {
                 if(inFlags[label]->followIndicator) {
                     activeFollowers++;
                 }
@@ -290,14 +401,49 @@ Movement UniversalCoating::execute()
             }
             return Movement(MovementType::Contract, tailContractionLabel());
         }
-    } else {
-        //particle is contracted
-        if(phase!=Phase::Inactive && phase!=Phase::Static && phase!=Phase::Border)
+    } else
+        //contracted
+    {
+
+        if(phase!=Phase::Inactive && phase!=Phase::Static && phase!=Phase::Border && phase!=Phase::StaticBorder)
         {
-            setBlock();
-            if(hasNeighborInPhase(Phase::Static))
+            //check if on static border
+            if(hasNeighborInPhase(Phase::StaticBorder) && !hasNeighborInPhase(Phase::Static))
             {
-                handleElectionTokens();
+                headMarkDir = firstNeighborInPhase(Phase::StaticBorder);
+                setPhase(Phase::Border);
+                int borderBuildDir = (headMarkDir+3)%6;
+                while(neighborIsInPhase(borderBuildDir,Phase::Static) || neighborIsInPhase(borderBuildDir,Phase::StaticBorder))
+                    borderBuildDir = (borderBuildDir+1)%6;
+                outFlags[borderBuildDir].buildBorder= true;
+                return Movement(MovementType::Idle);
+            }
+            else if(phase==Phase::retiredLeader || phase == Phase::Lead)
+                // || phase == Phase::Follow || phase == Phase::Wait
+                //||phase == Phase::Hold || phase == Phase::Send) //check if on regular border
+            {
+                for(int label= 0; label<10;label++)
+                {
+                    if(inFlags[label]!=nullptr && inFlags[label]->buildBorder)
+                    {
+
+                        headMarkDir = label;
+                        setPhase(Phase::Border);
+                        int borderBuildDir = (headMarkDir+3)%6;
+                        while(neighborIsInPhase(borderBuildDir,Phase::Static) || neighborIsInPhase(borderBuildDir,Phase::StaticBorder))
+                            borderBuildDir = (borderBuildDir+1)%6;
+                        outFlags[borderBuildDir].buildBorder= true;
+                        qDebug()<<"trying to border?";
+                        setPhase(Phase::Border);
+                        return Movement(MovementType::Idle);
+                    }
+                }
+            }
+            setBlock();
+            if(hasNeighborInPhase(Phase::Static) || hasNeighborInPhase(Phase::StaticBorder) )
+            {
+                //
+                //handleElectionTokens();
                 if(phase == Phase::Border)
                     return Movement(MovementType::Idle);
             }
@@ -318,7 +464,7 @@ Movement UniversalCoating::execute()
             }
         }
         if(phase == Phase::Inactive) {
-            if(hasNeighborInPhase(Phase::Static)) {
+            if(hasNeighborInPhase(Phase::Static) || hasNeighborInPhase(Phase::StaticBorder)) {
                 setPhase(Phase::Normal);
                 startedOffSurface = false;
 
@@ -329,6 +475,9 @@ Movement UniversalCoating::execute()
 
                 Lnumber = getLnumber();
                 setLayerNumber(Lnumber);
+
+                setElectionRole(ElectionRole::Candidate);
+
 
                 return Movement(MovementType::Idle);
             }
@@ -352,10 +501,10 @@ Movement UniversalCoating::execute()
 
         }
 
-        else if(phase!=Phase::Static && phase!=Phase::Border)
+        else if(phase!=Phase::Static && phase!=Phase::Border && phase!=Phase::StaticBorder)
         {
             //layering block
-            if(hasNeighborInPhase(Phase::Static))
+            if(hasNeighborInPhase(Phase::Static) || hasNeighborInPhase(Phase::StaticBorder) )
             {
                 downDir= getDownDir();
 
@@ -403,7 +552,7 @@ Movement UniversalCoating::execute()
             //phase changing block
             if(phase == Phase::Normal)
             {
-                if(hasNeighborInPhase(Phase::Static))
+                if(hasNeighborInPhase(Phase::Static) || hasNeighborInPhase(Phase::StaticBorder))
                 {
                     auto label = getMoveDir();
                     if(label != -1) {
@@ -444,7 +593,7 @@ Movement UniversalCoating::execute()
                     hasComplained = true;
                 }
 
-                else if(hasNeighborInPhase(Phase::Static))
+                else if(hasNeighborInPhase(Phase::Static)|| hasNeighborInPhase(Phase::StaticBorder))
                 {
                     setPhase(Phase::Normal);
                 }
@@ -452,7 +601,8 @@ Movement UniversalCoating::execute()
             }
             else if(phase == Phase:: Hold)
             {
-                if(hasNeighborInPhase(Phase::Static)&&!(parentActivated()||neighborIsInPhase(headMarkDir,Phase::Inactive)))
+                if((hasNeighborInPhase(Phase::Static)|| hasNeighborInPhase(Phase::StaticBorder))
+                        &&!(parentActivated()||neighborIsInPhase(headMarkDir,Phase::Inactive)))
                 {
                     int moveDir = getMoveDir();
                     setContractDir(moveDir);
@@ -463,7 +613,6 @@ Movement UniversalCoating::execute()
 
                     if(!(inFlags[moveDir]!=nullptr && (inFlags[moveDir]->isContracted())) )
                     {
-                        clearHeldToken();
                         return Movement(MovementType::Expand, moveDir);
                     }
                 }
@@ -533,14 +682,20 @@ Movement UniversalCoating::execute()
                 setContractDir(moveDir);
                 headMarkDir = downDir;
                 setPhase(Phase::Lead);
-                clearHeldToken();
 
                 return Movement(MovementType::Expand, moveDir);
 
             }
             else if(phase == Phase::Follow) {
-                Q_ASSERT(inFlags[followDir] != nullptr);
-                if(hasNeighborInPhase(Phase::Static)) {
+                if(inFlags[followDir]==nullptr)//with bordering, this loss of leader can happen
+                {
+                    setPhase(Phase::Normal);
+                    qDebug()<<"used leads2";
+
+                    return Movement(MovementType::Idle);
+                }
+                //Q_ASSERT(inFlags[followDir] != nullptr);
+                if(hasNeighborInPhase(Phase::Static) || hasNeighborInPhase(Phase::StaticBorder)) {
                     setPhase(Phase::Lead);
                     downDir= getDownDir();
 
@@ -589,41 +744,41 @@ Movement UniversalCoating::execute()
 
             else if(phase == Phase::retiredLeader )
             {
-                //if(hasNeighborInPhase(Phase::Border))
-               //  qDebug()<<"retired leader by border";
-
-                for(int label= 0; label<10;label++)
+                /* for(int label= 0; label<10;label++)
                 {
                     if(inFlags[label]!=nullptr && inFlags[label]->buildBorder)
                     {
+                        qDebug()<<"retiredLeader gets border";
+                        headMarkDir = label;
                         setPhase(Phase::Border);
                         int borderBuildDir = (headMarkDir+3)%6;
-                        while(neighborIsInPhase(borderBuildDir,Phase::Static))
+                        while(neighborIsInPhase(borderBuildDir,Phase::Static) || neighborIsInPhase(borderBuildDir,Phase::StaticBorder))
                             borderBuildDir = (borderBuildDir+1)%6;
                         outFlags[borderBuildDir].buildBorder= true;
                         qDebug()<<"trying to border?";
                         return Movement(MovementType::Idle);
                     }
-                }
+                }*/
                 getLeftDir();
                 Q_ASSERT(leftDir >=0 && leftDir<=5);
                 NumFinishedNeighbors = CountFinishedSides(leftDir, rightDir);
                 setNumFinishedNeighbors(NumFinishedNeighbors);
                 Q_ASSERT(NumFinishedNeighbors>=0 && NumFinishedNeighbors<=2);
-                if(NumFinishedNeighbors==2)
+                /* if(NumFinishedNeighbors==2)
                 {
                     if(reachedSeedBound)
                     {
                         int seedBoundFlagDir= (downDir+3)%6;
                         int tries = 0;
-                        while(neighborIsInPhase(seedBoundFlagDir,Phase::Static) || ( neighborIsInPhase(seedBoundFlagDir,Phase::retiredLeader) && tries<10 ) )
+                        while(neighborIsInPhase(seedBoundFlagDir,Phase::Static) || neighborIsInPhase(seedBoundFlagDir,Phase::StaticBorder)
+                              || ( neighborIsInPhase(seedBoundFlagDir,Phase::retiredLeader) && tries<10 ) )
                         {
                             seedBoundFlagDir = (seedBoundFlagDir+1)%6;
                             tries++;
                         }
                         outFlags[seedBoundFlagDir].seedBound = true;
                     }
-                }
+                }*/
                 setPhase(Phase::retiredLeader);
                 for(int label =0; label<10;label++)
                 {
@@ -651,7 +806,6 @@ Movement UniversalCoating::execute()
                         auto temp = dirToHeadLabelAfterExpansion(followDir, expansionDir);
                         Q_ASSERT(labelToDirAfterExpansion(temp, expansionDir) == followDir);
                         setFollowIndicatorLabel(temp);
-                        clearHeldToken();
                         return Movement(MovementType::Expand, expansionDir);
                     }
                 }
@@ -702,10 +856,10 @@ void UniversalCoating::setPhase(const Phase _phase)
     }
 
     else if(phase == Phase::retiredLeader){
-      //  if(NumFinishedNeighbors ==2)
-       // {
-            headMarkColor = 0x00ff00;
-            tailMarkColor = 0x00ff00;
+        //  if(NumFinishedNeighbors ==2)
+        // {
+        headMarkColor = 0x00ff00;
+        tailMarkColor = 0x00ff00;
         //}
     }
     else if(phase == Phase::Seed)
@@ -717,7 +871,7 @@ void UniversalCoating::setPhase(const Phase _phase)
     else if(phase == Phase::Inactive) {
         headMarkColor = -1;
         tailMarkColor = -1;
-    } else  if(phase == Phase::Border)
+    } else  if(phase == Phase::Border || phase == Phase::StaticBorder)
     {
         headMarkColor = 0xd3d3d3;
         tailMarkColor = 0xd3d3d3;
@@ -857,10 +1011,12 @@ int UniversalCoating::getMoveDir() const
     if(Lnumber %2 == 0)
     {
         label = firstNeighborInPhase(Phase::Static);
+        if(label==-1)
+            label = firstNeighborInPhase(Phase::StaticBorder);
         if(label != -1)
         {
             label = (label+5)%6;
-            while (neighborIsInPhase(label, Phase::Static)){
+            while (neighborIsInPhase(label, Phase::Static) || neighborIsInPhase(label,Phase::StaticBorder)){
                 label = (label+5)%6;
             }
         }
@@ -877,10 +1033,13 @@ int UniversalCoating::getMoveDir() const
     else
     {
         label = firstNeighborInPhase(Phase::Static);
+        if(label==-1)
+            label = firstNeighborInPhase(Phase::StaticBorder);
+
         if(label != -1)
         {
             label = (label+1)%6;
-            while (neighborIsInPhase(label, Phase::Static)){
+            while (neighborIsInPhase(label, Phase::Static)  || neighborIsInPhase(label,Phase::StaticBorder)){
                 label = (label+1)%6;
             }
         }
@@ -906,6 +1065,10 @@ int UniversalCoating::getDownDir() const
     if(hasNeighborInPhase(Phase::Static)) {
         label = firstNeighborInPhase(Phase::Static);
 
+    }
+    else if(hasNeighborInPhase(Phase::StaticBorder))
+    {
+        label = firstNeighborInPhase(Phase::StaticBorder);
     }
     else
     {
@@ -950,7 +1113,7 @@ int UniversalCoating::getLnumber() const
     Q_ASSERT(inFlags[downDir] != nullptr);
     if(inFlags[downDir] != nullptr)
     {
-        if(inFlags[downDir]->phase == Phase::Static)
+        if(inFlags[downDir]->phase == Phase::Static || inFlags[downDir]->phase == Phase::StaticBorder)
             return 0;
         else
             return (inFlags[downDir]->Lnumber +1)%2;
@@ -967,10 +1130,10 @@ void UniversalCoating::getLeftDir()
 
     int label= downDir;
     int leftside= -1, rightside= -1;
-    if(neighborIsInPhase(label, Phase::Static))
+    if(neighborIsInPhase(label, Phase::Static) || neighborIsInPhase(label, Phase::StaticBorder))
     {
         label = (label+5)%6;
-        while (neighborIsInPhase(label, Phase::Static)){
+        while (neighborIsInPhase(label, Phase::Static)|| neighborIsInPhase(label, Phase::StaticBorder)){
             label = (label+5)%6;
         }
         leftside= label;
@@ -989,10 +1152,10 @@ void UniversalCoating::getLeftDir()
     }
 
     label= downDir;
-    if(neighborIsInPhase(label, Phase::Static))
+    if(neighborIsInPhase(label, Phase::Static)|| neighborIsInPhase(label, Phase::StaticBorder))
     {
         label = (label+1)%6;
-        while (neighborIsInPhase(label, Phase::Static)){
+        while (neighborIsInPhase(label, Phase::Static) || neighborIsInPhase(label, Phase::StaticBorder)){
             label = (label+1)%6;
         }
         rightside= label;
@@ -1088,7 +1251,7 @@ void UniversalCoating::setBlock()
 
     bool block = false;
 
-    if(hasNeighborInPhase(Phase::Static))
+    if(hasNeighborInPhase(Phase::Static)|| hasNeighborInPhase(Phase::StaticBorder))
     {
         /* for(int label = 0; label<10; label++)
         {
@@ -1099,9 +1262,11 @@ void UniversalCoating::setBlock()
             }
         }*/
         auto label = firstNeighborInPhase(Phase::Static);
+        if(label==-1)
+            label = firstNeighborInPhase(Phase::StaticBorder);
         int behindLabel = (label+1)%6;
         int frontLabel = label;
-        while(neighborIsInPhase(frontLabel,Phase::Static))
+        while(neighborIsInPhase(frontLabel,Phase::Static)|| neighborIsInPhase(frontLabel,Phase::StaticBorder))
         {
             frontLabel = (frontLabel+5)%6;
         }
@@ -1136,16 +1301,25 @@ bool UniversalCoating::isSuperLeader()
     int headNeighbors = 0;
     int tailNeighbors = 0;
     auto label = firstNeighborInPhase(Phase::Static);
+    if(label==-1)
+    {
+        label = firstNeighborInPhase(Phase::StaticBorder);
+    }
     if(label != -1)
     {
         label = (label+9)%10;
-        while (neighborIsInPhase(label, Phase::Static)){
+        while (neighborIsInPhase(label, Phase::Static) || neighborIsInPhase(label, Phase::StaticBorder) ){
             label = (label+9)%10;
         }
         if(inFlags[label]!=nullptr)
             headNeighbors++;
     }
     label = firstNeighborInPhase(Phase::Static);
+    if(label==-1)
+    {
+        label = firstNeighborInPhase(Phase::StaticBorder);
+
+    }
     if(label != -1)
     {
         label = (label+1)%10;
@@ -1153,7 +1327,7 @@ bool UniversalCoating::isSuperLeader()
             tailNeighbors++;
 
     }
-    if(hasNeighborInPhase(Phase::Static) && headNeighbors==0)// && tailNeighbors == 1)
+    if((hasNeighborInPhase(Phase::Static)|| (hasNeighborInPhase(Phase::StaticBorder))) && headNeighbors==0)// && tailNeighbors == 1)
         return true;
     return false;
 }
@@ -1226,172 +1400,460 @@ bool UniversalCoating::parentActivated()
     return false;
 }
 
-
-void UniversalCoating::handleElectionTokens()
+void UniversalCoating::handlePositionElection()
 {
+    qDebug()<<"id: "<<id;
+    qDebug()<<"role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
 
-    //step 1: set up token values to random numbers
-    if(ownTokenValue== -1)
-    {
-        ownTokenValue = 1;//rand() % 10;
-        for(int label=0;label<10;label++)
-        {
-            outFlags[label].ownTokenValue = ownTokenValue;
-        }
-        qDebug()<<"init: "<<ownTokenValue;
-        //initializing some tokens- those who have an already active parent to send to
-        if(headMarkDir>-1 && parentActivated())
-        {
-            sendOwnToken();
-        }
-    }
 
-    //step 2: if sending a token and its either received or beat by the one in front, remove
-    if(outFlags[0].tokenValue!=-1)
-    {
-
-        //if matches or loses to that in front, clear it.
-        int   surfaceParent = headMarkDir;
-
-        if(surfaceParent!=-1)
-        {
-            //   if(inFlags[surfaceParent]!=nullptr) qDebug()<<"parent: "<<inFlags[surfaceParent]->ownTokenValue;
-            if(inFlags[surfaceParent]!=nullptr && inFlags[surfaceParent]->tokenValue >= outFlags[0].tokenValue)
-            {
-                clearHeldToken();
-            }
-        }
-    }
-    //step 3: receive tokens if beat own/currently held token; update distance counts
+    //step 0: setup
     auto surfaceFollower = firstNeighborInPhase(Phase::Static);
+    int   surfaceParent = headMarkDir;
     if(surfaceFollower!=-1)
     {
         while(neighborIsInPhase(surfaceFollower,Phase::Static))
+        {
             surfaceFollower = (surfaceFollower+1)%6;
+        }
+
+    }
+    if( surfaceFollower<0 || surfaceParent<0 ||
+            neighborIsInPhase(surfaceParent,Phase::Inactive) || neighborIsInPhase(surfaceFollower,Phase::Inactive ) ||
+            inFlags[surfaceFollower] ==nullptr || inFlags[surfaceParent]==nullptr)
+    {
+        return;
+    }
+    qDebug()<<"parent: "<<inFlags[surfaceParent]->id<<" follow: "<<inFlags[surfaceFollower]->id;
+
+    if(isExpanded() || inFlags[surfaceFollower]->isExpanded() || inFlags[surfaceParent]->isExpanded())
+    {
+        qDebug()<<"waiting for contracted positioning";
+        return;
+    }
+    else
+    {
+        tokenCleanup(surfaceParent,surfaceFollower);
+
+        if(electionRole==ElectionRole::Pipeline)
+        {
+            //pass along subphase info too
+            /*  if(electionSubphase == ElectionSubphase::Wait && inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SegmentComparison)
+            {
+                setElectionSubphase(ElectionSubphase::SegmentComparison);
+            }*/
+            if(inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::CoinFlip)
+            {
+                setElectionSubphase(ElectionSubphase::CoinFlip);
+            }
+            else if(inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SolitudeVerification)
+            {
+                //ensure clean up of coin flipping
+                clearToken(TokenType::CandidacyAck,-1);//-1 clears all dirs
+                clearToken(TokenType::CandidacyAnnounce,-1);//-1 clears all dirs
+                setElectionSubphase(ElectionSubphase::SolitudeVerification);
+            }
+            if(electionSubphase==ElectionSubphase::CoinFlip)
+            {
+                nonCandidateCoinFlipping(surfaceParent,surfaceFollower);
+            }
+           else  if (electionSubphase == ElectionSubphase::SolitudeVerification)
+            {
+                nonCandidateSolitudeHandling(surfaceParent,surfaceFollower);
+
+            }
+
+        }
+        else if(electionRole == ElectionRole::Candidate)
+        {
+            //for any subphase...
+
+            // if there is an announcement waiting to be received by me and it is safe to create an acknowledgement, consume the announcement
+            if(peekAtToken(TokenType::CandidacyAnnounce, surfaceFollower) != -1 && canSendToken(TokenType::CandidacyAck, surfaceFollower)) {
+                receiveToken(TokenType::CandidacyAnnounce, surfaceFollower);
+                sendToken(TokenType::CandidacyAck, surfaceFollower, 1);
+                if(waitingForTransferAck) {
+                    gotAnnounceBeforeAck = true;
+                } else if(comparingSegment) {
+                    gotAnnounceInCompare = true;
+                }
+            }
+
+            // if there is a solitude lead token waiting to be put into lane 2, put it there if it doesn't pass a vector token
+            if(peekAtToken(TokenType::SolitudeLeadL1, surfaceFollower) != -1 && canSendToken(TokenType::SolitudeLeadL2, surfaceFollower) &&
+                    canSendToken(TokenType::SolitudeVectorL2, surfaceFollower)) {
+                int leadValue = receiveToken(TokenType::SolitudeLeadL1, surfaceFollower).value;
+                if(leadValue / 100 == 1) { // if the lead is on lap 1, append this candidate's local id
+                    sendToken(TokenType::SolitudeLeadL2, surfaceFollower, (1000 * 1) + leadValue);
+                } else { // if the lead is on lap 2, just pass on the value
+                    sendToken(TokenType::SolitudeLeadL2, surfaceFollower, leadValue);
+                }
+            }
+            // if there is a vector waiting to be put into lane 2, put it there
+            if(peekAtToken(TokenType::SolitudeVectorL1, surfaceFollower) != -1 && canSendToken(TokenType::SolitudeVectorL2, surfaceFollower)) {
+                sendToken(TokenType::SolitudeVectorL2, surfaceFollower, receiveToken(TokenType::SolitudeVectorL1, surfaceFollower).value);
+            }
+
+            if(electionSubphase == ElectionSubphase::Wait)
+            {
+                setElectionSubphase(ElectionSubphase::CoinFlip);
+            }
+            else if(electionSubphase == ElectionSubphase::CoinFlip)
+            {
+                if(peekAtToken(TokenType::CandidacyAck, surfaceParent) != -1) {
+                    // if there is an acknowledgement waiting, consume the acknowledgement and proceed to the next subphase
+                    receiveToken(TokenType::CandidacyAck, surfaceParent);
+                    setElectionSubphase(ElectionSubphase::SolitudeVerification);
+                    if(!gotAnnounceBeforeAck) {
+                        setElectionRole(ElectionRole::Demoted);
+                    }
+                    waitingForTransferAck = false;
+                    gotAnnounceBeforeAck = false;
+                    return; // completed subphase and thus shouldn't perform any more operations in this round
+                } else if(!waitingForTransferAck && randBool()) {
+                    // if I am not waiting for an acknowlegdement of my previous announcement and I win the coin flip, announce a transfer of candidacy
+                    Q_ASSERT(canSendToken(TokenType::CandidacyAnnounce, surfaceParent) && canSendToken(TokenType::PassiveSegmentClean, surfaceParent)); // there shouldn't be a call to make two announcements
+                    sendToken(TokenType::CandidacyAnnounce, surfaceParent, 1);
+                    waitingForTransferAck = true;
+                }
+            }
+            else if (electionSubphase == ElectionSubphase::SolitudeVerification)
+            {
+                //ensure clean up of coin flipping
+                clearToken(TokenType::CandidacyAck,-1);//-1 clears all dirs
+                clearToken(TokenType::CandidacyAnnounce,-1);//-1 clears all dirs
+                // if the agent needs to, generate a lane 1 vector token
+                if(generateVectorDir != -1 && canSendToken(TokenType::SolitudeVectorL1, surfaceParent) && canSendToken(TokenType::PassiveSegmentClean, surfaceParent)) {
+                    sendToken(TokenType::SolitudeVectorL1, surfaceParent, generateVectorDir);
+                    generateVectorDir = -1;
+                }
+
+                if(peekAtToken(TokenType::SolitudeVectorL2, surfaceParent) != -1) {
+                    // consume all vector tokens that have not been matched, decide that solitude has failed
+                    Q_ASSERT(peekAtToken(TokenType::SolitudeVectorL2, surfaceParent) != 0); // matched tokens should have dropped
+                    receiveToken(TokenType::SolitudeVectorL2, surfaceParent);
+                    sawUnmatchedToken = true;
+                    qDebug()<<"saw unmatched";
+                } else if(peekAtToken(TokenType::SolitudeLeadL2, surfaceParent) != -1) {
+                    qDebug()<<"lead returned";
+                    // if the lead token has returned, either put it back in lane 1 (lap 1) or consume it and decide solitude (lap 2)
+                    if((peekAtToken(TokenType::SolitudeLeadL2, surfaceParent) % 1000) / 100 == 1) { // lead has just completed lap 1
+                        qDebug()<<"lap 1 complete: "<<peekAtToken(TokenType::SolitudeLeadL2, surfaceParent);
+                        qDebug()<<"can sends? "<<canSendToken(TokenType::SolitudeLeadL1, surfaceParent)<<" "<<canSendToken(TokenType::SolitudeVectorL1, surfaceParent);
+                        if(canSendToken(TokenType::SolitudeLeadL1, surfaceParent) && canSendToken(TokenType::SolitudeVectorL1, surfaceParent))// && canSendToken(TokenType::PassiveSegmentClean, surfaceParent))
+                        {
+                            int leadValue = receiveToken(TokenType::SolitudeLeadL2, surfaceParent).value;
+                            sendToken(TokenType::SolitudeLeadL1, surfaceParent, (leadValue / 1000) * 1000 + 200); // lap 2, orientation no longer matters => 200
+                            qDebug()<<"started lap 2";
+                        }
+                    } else if((peekAtToken(TokenType::SolitudeLeadL2, surfaceParent) % 1000) / 100 == 2) { // lead has just completed lap 2
+                        int leadValue = receiveToken(TokenType::SolitudeLeadL2, surfaceParent).value;
+                        if(!sawUnmatchedToken && (leadValue / 1000) == 1) { // if it did not consume an unmatched token and it assures it's matching with itself, go to inner/outer test
+                            setElectionRole(ElectionRole::SoleCandidate);
+                            qDebug()<<"set sole candidate";
+                        } else { // if solitude verification failed, then do another coin flip compeititon
+                            setElectionSubphase(ElectionSubphase::CoinFlip);
+                            qDebug()<<"failed solitude verification";
+                        }
+                        createdLead = false;
+                        sawUnmatchedToken = false;
+                        return; // completed subphase and thus shouldn't perform any more operations in this round
+                    }
+                } else if(!createdLead) {
+                    qDebug()<<"begin solitude verification?";
+                    // to begin the solitude verification, create a lead token with an orientation to communicate to its segment
+                    Q_ASSERT(canSendToken(TokenType::SolitudeLeadL1, surfaceParent) && canSendToken(TokenType::SolitudeVectorL1, surfaceParent) &&
+                             canSendToken(TokenType::PassiveSegmentClean, surfaceParent)); // there shouldn't be a call to make two leads
+                    sendToken(TokenType::SolitudeLeadL1, surfaceParent, 100 + encodeVector(std::make_pair(1,0))); // lap 1 in direction (1,0)
+                    createdLead = true;
+                    generateVectorDir = encodeVector(std::make_pair(1,0));
+                }
+            }
+
+
+        }
+        else if(electionRole == ElectionRole::Demoted)
+        {
+            //switching subphases:
+
+            //if follower has switched to segment comparison, switch and send token
+            if(electionSubphase == ElectionSubphase::Wait && inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SegmentComparison)
+            {
+                setElectionSubphase(ElectionSubphase::SegmentComparison);
+                //  setToken(TokenType::PassiveSegment,surfaceFollower,1);
+            }
+            else if(inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::CoinFlip)
+            {
+                setElectionSubphase(ElectionSubphase::CoinFlip);
+            }
+            else if(inFlags[surfaceFollower]->electionSubphase==ElectionSubphase::SolitudeVerification)
+            {
+                //ensure clean up of coin flipping
+                clearToken(TokenType::CandidacyAck,-1);//-1 clears all dirs
+                clearToken(TokenType::CandidacyAnnounce,-1);//-1 clears all dirs
+                setElectionSubphase(ElectionSubphase::SolitudeVerification);
+            }
+
+            //subphase-specific action:
+            if(electionSubphase == ElectionSubphase::CoinFlip)
+            {
+                nonCandidateCoinFlipping(surfaceParent,surfaceFollower);
+
+            }
+            if (electionSubphase == ElectionSubphase::SolitudeVerification)
+            {
+                nonCandidateSolitudeHandling(surfaceParent,surfaceFollower);
+
+            }
+
+        }
+
     }
 
-    if(surfaceFollower != -1)
-    {
-        if(inFlags[surfaceFollower]!=nullptr  && inFlags[surfaceFollower]->tokenValue!=-1)
-        {
-            int d1 = inFlags[surfaceFollower]->tokenD1;
-            int d2 = inFlags[surfaceFollower]->tokenD2;
-            if(inFlags[surfaceFollower]->tokenValue == ownTokenValue  )
-            {
-                clearHeldToken();
 
-                qDebug()<<"received own1: "<<ownTokenValue<<" from "<<inFlags[surfaceFollower]->ownTokenValue<<" "<< d1<<" "<<d2;
-                qDebug()<<"tokenCDir: "<<inFlags[surfaceFollower]->tokenCurrentDir;
-                for(int label = 0; label<10;label++)
-                {
-                    outFlags[label].tokenValue = inFlags[surfaceFollower]->tokenValue;
-                    outFlags[label].tokenCurrentDir = inFlags[surfaceFollower]->tokenCurrentDir;
-                    outFlags[label].tokenD1 = d1;
-                    outFlags[label].tokenD2 = d2;
-                }
-                updateTokenDirs(surfaceFollower);
-                qDebug()<<"new cDir"<<outFlags[0].tokenCurrentDir;
-
-                qDebug()<<"received own2: "<<ownTokenValue<<" from "<<inFlags[surfaceFollower]->ownTokenValue<<" "<< outFlags[0].tokenD1<<" "<< outFlags[0].tokenD2<<" "<< outFlags[0].tokenD3;
-
-                if(outFlags[0].tokenD1==0 &&  outFlags[0].tokenD2 ==0 )
-                {
-                    clearHeldToken();
-                    setPhase(Phase::retiredLeader);
-                    downDir=labelToDir(downDir);
-                    Lnumber = getLnumber();
-                    setLayerNumber(Lnumber);
-
-                    setPhase(Phase::retiredLeader);
-                    getLeftDir();
-                    Q_ASSERT(leftDir>=0 && leftDir<=5);
-                    NumFinishedNeighbors = CountFinishedSides(leftDir, rightDir);
-                    setNumFinishedNeighbors(NumFinishedNeighbors);
-                    headMarkDir = downDir;//-1;
-
-                    int borderBuildDir = (headMarkDir+3)%6;
-                    qDebug()<<"init border build dir: "<<borderBuildDir;
-                    while(neighborIsInPhase(borderBuildDir,Phase::Static))
-                    {
-                        borderBuildDir = (borderBuildDir+1)%6;
-                        qDebug()<<"tried: "<<borderBuildDir;
-                     }
-                    qDebug()<<"border set: "<<borderBuildDir<<"head: "<<headMarkDir;
-                    outFlags[borderBuildDir].buildBorder = true;
-                    setPhase(Phase::Border);
-                }
-                else
-                {
-                    newOwnToken();
-                    return;
-                }
-
-            }
-            //follower's token beats both held token and own token
-            else if(inFlags[surfaceFollower]->tokenValue > outFlags[0].tokenValue && inFlags[surfaceFollower]->tokenValue>ownTokenValue )
-            {
-                //  qDebug()<<"received other: "<< inFlags[surfaceFollower]->tokenD1<<" "<< inFlags[surfaceFollower]->tokenD2<<" "<< inFlags[surfaceFollower]->tokenD3;
-
-                for(int label = 0; label<10;label++)
-                {
-                    outFlags[label].tokenValue = inFlags[surfaceFollower]->tokenValue;
-                    outFlags[label].tokenCurrentDir = inFlags[surfaceFollower]->tokenCurrentDir;
-                    outFlags[label].tokenD1 =d1;
-                    outFlags[label].tokenD2 =d2;
-
-
-                    if(outFlags[label].tokenValue<10)
-                    {
-                    headMarkColor = 0x0000ff;
-                    tailMarkColor = 0x0000ff;
-                    }
-                    else if(outFlags[label].tokenValue<20)
-                    {
-                        headMarkColor = 0x00ff00;
-                        tailMarkColor = 0x0000ff;
-
-                    }
-                    else if(outFlags[label].tokenValue<30)
-                    {
-                        headMarkColor = 0xff0000;
-                        tailMarkColor = 0x0000ff;
-
-                    }
-                    else if(outFlags[label].tokenValue<40)
-                    {
-                        headMarkColor = 0x0ff000;
-                        tailMarkColor = 0x0000ff;
-
-                    }
-                }
-                updateTokenDirs(surfaceFollower);
-            }
-            else if(outFlags[0].tokenValue> ownTokenValue)
-            {
-            }
-            else
-            {
-                sendOwnToken();
-            }
+}
+void UniversalCoating::nonCandidateSolitudeHandling(int surfaceParent,int surfaceFollower)
+{
+    //ensure clean up of coin flipping
+    clearToken(TokenType::CandidacyAck,-1);//-1 clears all dirs
+    clearToken(TokenType::CandidacyAnnounce,-1);//-1 clears all dirs
+    // pass lane 1 solitude lead token forward
+    if(peekAtToken(TokenType::SolitudeLeadL1, surfaceFollower) != -1 && canSendToken(TokenType::SolitudeLeadL1, surfaceParent) &&
+            canSendToken(TokenType::SolitudeVectorL1, surfaceParent) && canSendToken(TokenType::PassiveSegmentClean, surfaceParent)) {
+        int code = receiveToken(TokenType::SolitudeLeadL1, surfaceFollower).value;
+        if(code / 100 == 1) { // lead token is on its first lap, so update the lead direction as it's passed
+            std::pair<int, int> leadVector = decodeVector(code);
+            int offset = (surfaceParent - ((surfaceFollower + 3) % 6) + 6) % 6;
+            generateVectorDir = encodeVector(augmentDirVector(leadVector, offset));
+            sendToken(TokenType::SolitudeLeadL1, surfaceParent, 100 + generateVectorDir); // lap 1 + new encoded direction vector
+        } else { // lead token is on its second pass, just send it forward
+            sendToken(TokenType::SolitudeLeadL1, surfaceParent, code);
         }
     }
-    if(phase ==Phase::retiredLeader) clearHeldToken();
-
-
-}
-
-void UniversalCoating::clearHeldToken()
-{
-    for(int label = 0; label<10; label++)
-    {
-        outFlags[label].tokenValue = -1;
-        outFlags[label].tokenD1 = 0;
-        outFlags[label].tokenD2 = 0;
-        outFlags[label].tokenD3 = 0;
-        outFlags[label].tokenCurrentDir = -1;
-        outFlags[label].isSendingToken = false;
+    // pass lane 2 solitude lead token backward, if doing so does not pass a lane 2 vector token
+    if(peekAtToken(TokenType::SolitudeLeadL2, surfaceParent) != -1 && canSendToken(TokenType::SolitudeLeadL2, surfaceFollower) &&
+            canSendToken(TokenType::SolitudeVectorL2, surfaceFollower)) {
+        int leadValue = receiveToken(TokenType::SolitudeLeadL2, surfaceParent).value;
+        sendToken(TokenType::SolitudeLeadL2, surfaceFollower, leadValue);
+        if((leadValue % 1000) / 100 == 1) { // first lap
+        } else { // second lap
+        }
+    }
+    // if the agent needs to, generate a lane 1 vector token
+    if(generateVectorDir != -1 && canSendToken(TokenType::SolitudeVectorL1, surfaceParent) && canSendToken(TokenType::PassiveSegmentClean, surfaceParent)) {
+        sendToken(TokenType::SolitudeVectorL1, surfaceParent, generateVectorDir);
+        generateVectorDir = -1;
+    }
+    // perform token matching if there are incoming lane 1 and lane 2 vectors and the various passings are safe
+    if(peekAtToken(TokenType::SolitudeVectorL1, surfaceFollower) != -1 && peekAtToken(TokenType::SolitudeVectorL2, surfaceParent) != -1) {
+        if(canSendToken(TokenType::SolitudeVectorL1, surfaceParent) && canSendToken(TokenType::SolitudeVectorL2, surfaceFollower) &&
+                canSendToken(TokenType::PassiveSegmentClean, surfaceParent)) {
+            // decode vectors to do matching on
+            std::pair<int, int> vector1 = decodeVector(receiveToken(TokenType::SolitudeVectorL1, surfaceFollower).value);
+            std::pair<int, int> vector2 = decodeVector(receiveToken(TokenType::SolitudeVectorL2, surfaceParent).value);
+            // do vector token matching; if the components cancel out, then update both sides
+            if(vector1.first + vector2.first == 0) {
+                vector1.first = 0; vector2.first = 0;
+            }
+            if(vector1.second + vector2.second == 0) {
+                vector1.second = 0; vector2.second = 0;
+            }
+            // only send the tokens if they are non-(0,0)
+            if(vector1 != std::make_pair(0,0)) {
+                sendToken(TokenType::SolitudeVectorL1, surfaceParent, encodeVector(vector1));
+            }
+            if(vector2 != std::make_pair(0,0)) {
+                sendToken(TokenType::SolitudeVectorL2, surfaceFollower, encodeVector(vector2));
+            }
+        }
+    } else {
+        // if there aren't both lanes of vectors, then pass lane 1 vectors forward...
+        if(peekAtToken(TokenType::SolitudeVectorL1, surfaceFollower) != -1 && canSendToken(TokenType::SolitudeVectorL1, surfaceParent) &&
+                canSendToken(TokenType::PassiveSegmentClean, surfaceParent)) {
+            sendToken(TokenType::SolitudeVectorL1, surfaceParent, receiveToken(TokenType::SolitudeVectorL1, surfaceFollower).value);
+        }
+        // ...and pass lane 2 vectors backward
+        if(peekAtToken(TokenType::SolitudeVectorL2, surfaceParent) != -1 && canSendToken(TokenType::SolitudeVectorL2, surfaceFollower)) {
+            sendToken(TokenType::SolitudeVectorL2, surfaceFollower, receiveToken(TokenType::SolitudeVectorL2, surfaceParent).value);
+        }
     }
 }
+void UniversalCoating::nonCandidateCoinFlipping(int surfaceParent, int surfaceFollower)
+{
+    if(peekAtToken(TokenType::CandidacyAnnounce, surfaceFollower) != -1 && canSendToken(TokenType::CandidacyAnnounce, surfaceParent) &&
+            canSendToken(TokenType::PassiveSegmentClean, surfaceParent)) {
+        sendToken(TokenType::CandidacyAnnounce, surfaceParent, receiveToken(TokenType::CandidacyAnnounce, surfaceFollower).value);
+    }
+    // pass acknowledgements backward
+    if(peekAtToken(TokenType::CandidacyAck, surfaceParent) != -1 && canSendToken(TokenType::CandidacyAck, surfaceFollower)) {
+        sendToken(TokenType::CandidacyAck, surfaceFollower, receiveToken(TokenType::CandidacyAck, surfaceParent).value);
+    }
+}
+
+int UniversalCoating::encodeVector(std::pair<int, int> vector) const
+{
+    int x = (vector.first == -1) ? 2 : vector.first;
+    int y = (vector.second == -1) ? 2 : vector.second;
+
+    return (10 * x) + y;
+}
+
+std::pair<int, int> UniversalCoating::decodeVector(int code)
+{
+    code = code % 100; // throw out the extra information for lap number
+    int x = (code / 10 == 2) ? -1 : code / 10;
+    int y = (code % 10 == 2) ? -1 : code % 10;
+
+    return std::make_pair(x, y);
+}
+
+std::pair<int, int> UniversalCoating::augmentDirVector(std::pair<int, int> vector, const int offset)
+{
+    static const std::array<std::pair<int, int>, 6> vectors = {std::make_pair(1,0), std::make_pair(0,1), std::make_pair(-1,1),
+                                                               std::make_pair(-1,0), std::make_pair(0,-1), std::make_pair(1,-1)};
+    for(auto i = 0; i < vectors.size(); ++i) {
+        if(vector == vectors.at(i)) {
+            return vectors.at((i + offset) % 6);
+        }
+    }
+
+    Q_ASSERT(false); // the desired vector should be one of the unit directions
+    return std::make_pair(0,0);
+}
+
+
+void UniversalCoating::sendToken(TokenType type, int dir, int valueIn)
+{
+    if(dir == -1)
+        for(int i = 0; i<10;i++)
+        {
+            outFlags[i].tokens.at((int) type).value  =valueIn;
+        }
+    else
+    {
+        outFlags[dir].tokens.at((int) type).value  =valueIn;
+
+    }
+}
+void UniversalCoating::clearToken(TokenType type, int dir)
+{
+    if(dir == -1)
+        for(int i = 0; i<10;i++)
+        {
+            outFlags[i].tokens.at((int) type).value  =-1;
+            outFlags[i].tokens.at((int)type).receivedToken = false;
+        }
+    else
+    {
+        outFlags[dir].tokens.at((int) type).value  =-1;
+        outFlags[dir].tokens.at((int)type).receivedToken = false;
+
+    }
+}
+int UniversalCoating::peekAtToken(TokenType type, int dir) const
+{
+    if(outFlags[dir].tokens.at((int) type).receivedToken) {
+        // if this agent has already read this token, don't peek the same value again
+        return -1;
+    } else {
+        return inFlags[dir]->tokens.at((int) type).value;
+    }
+}
+
+Token UniversalCoating::receiveToken(TokenType type, int dir)
+{
+    Q_ASSERT(peekAtToken(type, dir) != -1);
+    outFlags[dir].tokens.at((int)type).value = peekAtToken(type, dir);
+    outFlags[dir].tokens.at((int) type).receivedToken = true;
+    qDebug()<<"recdir "<<(int)type<<" set: "<<outFlags[dir].tokens.at((int)type).value;
+    return inFlags[dir]->tokens.at((int) type);
+}
+//receive all possible tokens in either direction
+void UniversalCoating::pipelinePassTokens(int surfaceParent,int surfaceFollower)
+{
+    qDebug()<<"pipelining from "<<inFlags[surfaceFollower]->id;
+    for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
+        TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest}) {
+        if(peekAtToken(tokenType,surfaceFollower)!=-1) {
+            receiveToken(tokenType,surfaceFollower);
+            qDebug()<<"  type: "<<(int)tokenType<<" received";
+        }
+
+    }
+    for(auto tokenType : {TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean, TokenType::CandidacyAck,
+        TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
+        if(peekAtToken(tokenType,surfaceParent)!=-1) {
+            receiveToken(tokenType,surfaceParent);
+            qDebug()<<"  type: "<<(int)tokenType;
+        }
+
+    }
+}
+void UniversalCoating::tokenCleanup(int surfaceParent,int surfaceFollower)
+{
+    for(auto tokenType : {TokenType::CandidacyAnnounce}) {
+        if(inFlags[surfaceParent]->tokens.at((int) tokenType).receivedToken) {
+            outFlags[surfaceParent].tokens.at((int) tokenType).value = -1;
+        }
+        if(inFlags[surfaceFollower]->tokens.at((int) tokenType).value == -1 && outFlags[surfaceFollower].tokens.at((int) tokenType).receivedToken== true) {
+            outFlags[surfaceFollower].tokens.at((int) tokenType).receivedToken = false;
+            outFlags[surfaceParent].tokens.at((int) tokenType).value = outFlags[surfaceFollower].tokens.at((int) tokenType).value;
+            outFlags[surfaceFollower].tokens.at((int) tokenType).value = -1;
+        }
+    }
+    for(auto tokenType : {TokenType::CandidacyAck}) {
+        if(inFlags[surfaceFollower]->tokens.at((int) tokenType).receivedToken) {
+            outFlags[surfaceFollower].tokens.at((int) tokenType).value = -1;
+        }
+        if(inFlags[surfaceParent]->tokens.at((int) tokenType).value == -1 &&  outFlags[surfaceParent].tokens.at((int) tokenType).receivedToken==true) {
+            outFlags[surfaceParent].tokens.at((int) tokenType).receivedToken = false;
+            outFlags[surfaceFollower].tokens.at((int) tokenType).value = outFlags[surfaceParent].tokens.at((int) tokenType).value;
+            outFlags[surfaceParent].tokens.at((int) tokenType).value = -1;
+        }
+    }
+
+    for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
+        TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest}) {
+        if(inFlags[surfaceParent]->tokens.at((int) tokenType).receivedToken) {
+            outFlags[surfaceParent].tokens.at((int) tokenType).value = -1;
+        }
+        if(inFlags[surfaceFollower]->tokens.at((int) tokenType).value == -1) {
+            outFlags[surfaceFollower].tokens.at((int) tokenType).receivedToken = false;
+        }
+    }
+    for(auto tokenType : {TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean,
+        TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
+        if(inFlags[surfaceFollower]->tokens.at((int) tokenType).receivedToken) {
+            outFlags[surfaceFollower].tokens.at((int) tokenType).value = -1;
+        }
+        if(inFlags[surfaceParent]->tokens.at((int) tokenType).value == -1) {
+            outFlags[surfaceParent].tokens.at((int) tokenType).receivedToken = false;
+        }
+    }
+}
+
+bool UniversalCoating::canSendToken(TokenType type, int dir) const
+{
+    return (outFlags[dir].tokens.at((int) type).value == -1 && !inFlags[dir]->tokens.at((int) type).receivedToken);
+}
+
+void UniversalCoating::setElectionRole(ElectionRole role)
+{
+    electionRole = role;
+    for(int dir = 0; dir<10;dir++)
+    {
+        outFlags[dir].electionRole = role;
+    }
+}
+
+void UniversalCoating::setElectionSubphase(ElectionSubphase subphase)
+{
+    electionSubphase = subphase;
+    for(int dir = 0; dir<10;dir++)
+    {
+        outFlags[dir].electionSubphase = subphase;
+    }
+}
+
 
 void UniversalCoating::updateTokenDirs(int recDir)
 {
@@ -1463,25 +1925,7 @@ void UniversalCoating::setSendingToken(bool value)
     for(int label=0; label<10; label++)
         outFlags[label].isSendingToken = value;
 }
-void UniversalCoating::sendOwnToken()
-{
-    clearHeldToken();
 
-    for(int label=0;label<10;label++)
-    {
-        outFlags[label].tokenValue = ownTokenValue;
-        outFlags[label].tokenD1 = 0;
-        outFlags[label].tokenD2 = 0;
-        outFlags[label].tokenD3 = 0;
-    }
-}
-void UniversalCoating::newOwnToken()
-{
-    clearHeldToken();
-    qDebug()<<"change : "<<ownTokenValue;
-    ownTokenValue = rand() % 40;
-    qDebug()<<"to: "<<ownTokenValue;
-    sendOwnToken();
-}
+
 
 }

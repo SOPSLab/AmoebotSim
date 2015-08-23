@@ -2,6 +2,8 @@
 #define UNIVERSALCOATING
 
 #include "alg/algorithmwithflags.h"
+#include <QColor>
+
 class System;
 
 namespace UniversalCoating
@@ -9,6 +11,7 @@ namespace UniversalCoating
 enum class Phase {
     Static,
     Border,
+    StaticBorder,
     Inactive,
     retiredLeader,
     Follow,
@@ -18,7 +21,48 @@ enum class Phase {
     Send,
     Wait,
     Normal,
+    Leader
+
+
 };
+
+enum class ElectionSubphase {
+    Wait = 0,
+    SegmentComparison,
+    CoinFlip,
+    SolitudeVerification
+};
+enum class ElectionRole{
+    Pipeline,
+    Candidate,
+    Demoted,
+    Leader,
+    SoleCandidate
+};
+
+enum class TokenType {
+    SegmentLead = 0,
+    PassiveSegment,
+    ActiveSegment,
+    PassiveSegmentClean,
+    ActiveSegmentClean,
+    FinalSegmentClean,
+    CandidacyAnnounce,
+    CandidacyAck,
+    SolitudeLeadL1,
+    SolitudeLeadL2,
+    SolitudeVectorL1,
+    SolitudeVectorL2,
+    BorderTest,
+    PosCandidate,
+    PosCandidateClean
+};
+
+typedef struct {
+    TokenType type;
+    int value;
+    bool receivedToken;
+} Token;
 
 class UniversalCoatingFlag : public Flag
 {
@@ -26,7 +70,6 @@ public:
     UniversalCoatingFlag();
     UniversalCoatingFlag(const UniversalCoatingFlag& other);
 
-public:
     Phase phase;
     int contractDir;
     bool followIndicator;
@@ -43,10 +86,21 @@ public:
     bool isSendingToken;
     int ownTokenValue;
     bool buildBorder;
+    int id;
+    bool acceptPositionTokens;
+    std::array<Token, 15> tokens;
+    ElectionRole electionRole;
+    ElectionSubphase electionSubphase;
+
+
+
+
+
 };
 
 class UniversalCoating : public AlgorithmWithFlags<UniversalCoatingFlag>
 {
+
 public:
     UniversalCoating(const Phase _phase);
     UniversalCoating(const UniversalCoating& other);
@@ -56,6 +110,7 @@ public:
 
 
     virtual Movement execute();
+    virtual Movement subExecute();
     virtual std::shared_ptr<Algorithm> clone();
     virtual bool isDeterministic() const;
 
@@ -99,16 +154,27 @@ protected:
     void updateChildStage();
     void updateNeighborStages();
 
-    void handleElectionTokens();
-    void clearHeldToken();
+    void handlePositionElection();
     void updateTokenDirs(int recDir);
     void setSendingToken(bool value);
     void sendOwnToken();
     void newOwnToken();
+    void sendToken(TokenType type, int dir, int valueIn);
+    void clearToken(TokenType type, int dir);
+    int peekAtToken(TokenType type, int dir) const;
+    Token receiveToken(TokenType type, int dir);
+    void tokenCleanup(int surfaceParent, int surfaceFollower);
+    bool canSendToken(TokenType type, int dir) const;
+    void setElectionRole(ElectionRole role);
+    void setElectionSubphase(ElectionSubphase electionSubphase);
+    void pipelinePassTokens(int surfaceParent, int surfaceFollower);
 
+    int encodeVector(std::pair<int, int> vector) const;
+    std::pair<int, int> decodeVector(int code);
+    std::pair<int, int> augmentDirVector(std::pair<int, int> vector, const int offset);
+    void nonCandidateSolitudeHandling(int surfaceParent,int surfaceFollower);
+    void nonCandidateCoinFlipping(int surfaceParent, int surfaceFollower);
 
-
-protected:
     Phase phase;
     int followDir;
     int Lnumber;
@@ -127,6 +193,14 @@ protected:
     bool hasLost;
     bool superLeader;
     int borderPasses;
+    ElectionRole electionRole;
+    ElectionSubphase electionSubphase;
+    bool comparingSegment, absorbedActiveToken, isCoveredCandidate, gotAnnounceInCompare; // segment comparison information
+    bool waitingForTransferAck;
+   bool gotAnnounceBeforeAck;
+    int id;
+    int generateVectorDir;
+    bool createdLead, sawUnmatchedToken; // solitude verification information
 
 
 };
