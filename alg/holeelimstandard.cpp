@@ -186,6 +186,11 @@ Movement HoleElimStandard::execute()
     return Movement(MovementType::Idle);
 }
 
+std::shared_ptr<Algorithm> HoleElimStandard::blank()
+{
+    return std::make_shared<HoleElimStandard>(State::Idle);
+}
+
 std::shared_ptr<Algorithm> HoleElimStandard::clone()
 {
     return std::make_shared<HoleElimStandard>(*this);

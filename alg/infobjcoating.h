@@ -37,6 +37,7 @@ public:
     static std::shared_ptr<System> instance(const int numParticles, const float holeProb);
 
     virtual Movement execute();
+    virtual std::shared_ptr<Algorithm> blank() override;
     virtual std::shared_ptr<Algorithm> clone() override;
     virtual bool isDeterministic() const;
 

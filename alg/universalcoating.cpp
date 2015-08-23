@@ -820,6 +820,11 @@ Movement UniversalCoating::execute()
     return Movement(MovementType::Empty);
 }
 
+std::shared_ptr<Algorithm> UniversalCoating::blank()
+{
+    return std::make_shared<UniversalCoating>(Phase::Inactive);
+}
+
 std::shared_ptr<Algorithm> UniversalCoating::clone()
 {
     return std::make_shared<UniversalCoating>(*this);

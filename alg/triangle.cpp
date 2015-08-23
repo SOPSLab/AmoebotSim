@@ -168,6 +168,11 @@ Movement Triangle::execute()
     }
 }
 
+std::shared_ptr<Algorithm> Triangle::blank()
+{
+    return std::make_shared<Triangle>(State::Idle);
+}
+
 std::shared_ptr<Algorithm> Triangle::clone()
 {
     return std::make_shared<Triangle>(*this);

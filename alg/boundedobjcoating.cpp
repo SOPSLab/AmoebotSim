@@ -321,6 +321,11 @@ Movement BoundedObjCoating::execute()
     }
 }
 
+std::shared_ptr<Algorithm> BoundedObjCoating::blank()
+{
+    return std::make_shared<BoundedObjCoating>(Phase::Inactive);
+}
+
 std::shared_ptr<Algorithm> BoundedObjCoating::clone()
 {
     return std::make_shared<BoundedObjCoating>(*this);

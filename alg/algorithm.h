@@ -21,6 +21,7 @@ public:
     virtual ~Algorithm();
 
     virtual Movement execute(std::array<const Flag*, 10>& flags) = 0;
+    virtual std::shared_ptr<Algorithm> blank() = 0;
     virtual std::shared_ptr<Algorithm> clone() = 0;
     virtual bool isDeterministic() const = 0;
 

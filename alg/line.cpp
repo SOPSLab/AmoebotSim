@@ -166,6 +166,11 @@ Movement Line::execute()
     }
 }
 
+std::shared_ptr<Algorithm> Line::blank()
+{
+    return std::make_shared<Line>(State::Idle);
+}
+
 std::shared_ptr<Algorithm> Line::clone()
 {
     return std::make_shared<Line>(*this);

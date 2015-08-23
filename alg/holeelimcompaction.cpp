@@ -228,6 +228,11 @@ Movement HoleElimCompaction::execute()
     return Movement(MovementType::Idle);
 }
 
+std::shared_ptr<Algorithm> HoleElimCompaction::blank()
+{
+    return std::make_shared<HoleElimCompaction>(State::Idle);
+}
+
 std::shared_ptr<Algorithm> HoleElimCompaction::clone()
 {
     return std::make_shared<HoleElimCompaction>(*this);

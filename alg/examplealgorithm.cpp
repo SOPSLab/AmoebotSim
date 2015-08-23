@@ -94,6 +94,11 @@ Movement ExampleAlgorithm::execute()
     }
 }
 
+std::shared_ptr<Algorithm> ExampleAlgorithm::blank()
+{
+    return std::make_shared<ExampleAlgorithm>(Phase::Idle);
+}
+
 std::shared_ptr<Algorithm> ExampleAlgorithm::clone()
 {
     // Use (correctly implemented) copy constructor to do the cloning.

@@ -103,6 +103,11 @@ public:
     virtual Movement execute();
 
     /*
+     * This method has to be implemented and has to correctly initialise a blank copy of this algorithm.
+     * */
+    virtual std::shared_ptr<Algorithm> blank() override;
+
+    /*
      * This method has to be implemented and has to correctly copy all member variables of an algorithm. The easiest way
      * to achieve this is to implement a correct copy constructor and use it to implement cloning, as is done in this
      * example algorithm.

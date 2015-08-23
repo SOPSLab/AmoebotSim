@@ -91,6 +91,11 @@ std::shared_ptr<System> Ring::instance(const unsigned int size, const double hol
     return system;
 }
 
+std::shared_ptr<Algorithm> Ring::blank()
+{
+    return std::make_shared<Ring>(State::Idle);
+}
+
 std::shared_ptr<Algorithm> Ring::clone()
 {
     return std::make_shared<Ring>(*this);

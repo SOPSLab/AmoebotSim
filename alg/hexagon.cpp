@@ -156,6 +156,11 @@ Movement Hexagon::execute()
     }
 }
 
+std::shared_ptr<Algorithm> Hexagon::blank()
+{
+    return std::make_shared<Hexagon>(State::Idle);
+}
+
 std::shared_ptr<Algorithm> Hexagon::clone()
 {
     return std::make_shared<Hexagon>(*this);

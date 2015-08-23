@@ -178,6 +178,10 @@ headMarkColor = 0x000000; //dark green
 		
 	}
 
+    std::shared_ptr<Algorithm> Square::blank() {
+        return std::make_shared<Square>(State::Idle);
+    }
+
 	std::shared_ptr<Algorithm> Square::clone() {
 		return std::make_shared<Square>(*this);
 	}

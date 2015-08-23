@@ -170,6 +170,11 @@ Movement InfObjCoating::execute()
     }
 }
 
+std::shared_ptr<Algorithm> InfObjCoating::blank()
+{
+    return std::make_shared<InfObjCoating>(Phase::Inactive);
+}
+
 std::shared_ptr<Algorithm> InfObjCoating::clone()
 {
     return std::make_shared<InfObjCoating>(*this);
