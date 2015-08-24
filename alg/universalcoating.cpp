@@ -341,7 +341,32 @@ Movement UniversalCoating::execute()
     if(hasNeighborInPhase(Phase::Static))
     {
         if(phase!=Phase::Inactive  && isContracted())
+        {
             handlePositionElection();
+            if(electionRole == ElectionRole::SoleCandidate)
+                           {
+                               auto surfaceFollower = firstNeighborInPhase(Phase::Static);
+                               int   surfaceParent = headMarkDir;
+                               if(surfaceFollower!=-1)
+                               {
+                                   while(neighborIsInPhase(surfaceFollower,Phase::Static))
+                                   {
+                                       surfaceFollower = (surfaceFollower+1)%6;
+                                   }
+
+                               }
+
+                               int borderBuildDir = (headMarkDir+1)%6;
+                               while(neighborIsInPhase(borderBuildDir,Phase::Static) || neighborIsInPhase(borderBuildDir,Phase::StaticBorder))
+                                   borderBuildDir = (borderBuildDir+5)%6;
+                               outFlags[borderBuildDir].buildBorder= true;
+                               qDebug()<<"trying to border?"<<borderBuildDir<<" "<<surfaceParent<<" "<<surfaceFollower;
+                               setPhase(Phase::Border);
+                               return Movement(MovementType::Idle);
+
+                           }
+
+        }
 
     }
 
