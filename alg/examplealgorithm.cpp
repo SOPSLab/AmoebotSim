@@ -34,7 +34,7 @@ std::shared_ptr<System> ExampleAlgorithm::instance(const int numParticles)
         int orientation = randDir();
         Node position = Node(x - numParticles / 2, 0);
         int tailDir = -1;
-        system->insert(Particle(std::make_shared<ExampleAlgorithm>(phase), orientation, position, tailDir));
+        system->insertParticle(Particle(std::make_shared<ExampleAlgorithm>(phase), orientation, position, tailDir));
     }
     return system; // Note that the ownership goes to the caller!
 }

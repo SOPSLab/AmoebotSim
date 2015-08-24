@@ -590,7 +590,7 @@ std::shared_ptr<System> LeaderElection::instance(const unsigned int size)
     while(!baseComponent.empty()) {
         auto node = *baseComponent.begin();
         baseComponent.erase(baseComponent.begin());
-        system->insert(Particle(std::make_shared<LeaderElection>(State::Idle), randDir(), node, -1));
+        system->insertParticle(Particle(std::make_shared<LeaderElection>(State::Idle), randDir(), node, -1));
     }
 
     return system;

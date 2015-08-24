@@ -85,11 +85,11 @@ std::shared_ptr<System> HoleElimStandard::instance(const unsigned int size)
     }
 
     // insert the seed and all particles from its component into the system
-    system->insert(Particle(std::make_shared<HoleElimStandard>(State::Seed), randDir(), seed, -1));
+    system->insertParticle(Particle(std::make_shared<HoleElimStandard>(State::Seed), randDir(), seed, -1));
     while(!seedComponent.empty()) {
         auto node = *seedComponent.begin();
         seedComponent.erase(seedComponent.begin());
-        system->insert(Particle(std::make_shared<HoleElimStandard>(State::Idle), randDir(), node, -1));
+        system->insertParticle(Particle(std::make_shared<HoleElimStandard>(State::Idle), randDir(), node, -1));
     }
 
     return system;

@@ -111,6 +111,13 @@ void Simulator::roundForParticleAt(const int x, const int y)
     }
 }
 
+void Simulator::insertParticleAt(const int x, const int y){
+  if(!roundTimer->isActive()) {
+    const Node node(x, y);
+    system->insertParticleAt(node);
+  }
+}
+
 void Simulator::executeCommand(const QString cmd)
 {
     auto result = engine.evaluate(cmd);

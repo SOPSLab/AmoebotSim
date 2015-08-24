@@ -34,6 +34,7 @@ public:
 
 signals:
     void roundForParticleAt(const int x, const int y);
+    void insertParticleAt(const int x, const int y);
 
 public slots:
     void updateSystem(std::shared_ptr<System> _system);

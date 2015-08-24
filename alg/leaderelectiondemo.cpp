@@ -146,7 +146,7 @@ std::shared_ptr<System> LeaderElectionDemo::instance()
     int structSideLength=  2;
     int numStructParticles = 6*structSideLength;
     while(system->size() < numStructParticles) {
-        system->insert(Particle(std::make_shared<LeaderElectionDemo>(Phase::Static), randDir(), pos));
+        system->insertParticle(Particle(std::make_shared<LeaderElectionDemo>(Phase::Static), randDir(), pos));
         occupied.insert(pos);
 
         orderedSurface.push_back(pos);
@@ -196,7 +196,7 @@ std::shared_ptr<System> LeaderElectionDemo::instance()
             newParticle->id = idCounter;
             // if(idCounter!=0 && idCounter!=9)
             // newParticle->ownTokenValue =0;
-            system->insert(Particle(newParticle, randDir(), *it));
+            system->insertParticle(Particle(newParticle, randDir(), *it));
             numNonStaticParticles++;
             //           qDebug()<<"init? "<<initSide<<"iter: "<<itercount;
             if(!initSide && (itercount-1)%3 ==0)

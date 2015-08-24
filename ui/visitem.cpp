@@ -383,14 +383,21 @@ const QPointF VisItem::indexToParticleTexPos(const int index) const
 
     return QPointF(column / texSize, row / texSize);
 }
-
+#include <iostream>
 void VisItem::mousePressEvent(QMouseEvent* e)
 {
     if(e->buttons() & Qt::LeftButton) {
         if(e->modifiers() & Qt::ControlModifier) {
+            //Executing round for particle
             tranlatingGui = false;
-            Node node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
+            std::cout << "STRG + CLICK" << std::endl;
+            auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
             emit roundForParticleAt(node.x, node.y);
+        } else if(e->modifiers() & Qt::ShiftModifier) {
+            tranlatingGui = false;
+            std::cout << "SHIFT + CLICK" << std::endl;
+            auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
+            emit insertParticleAt(node.x, node.y);
         } else {
             tranlatingGui = true;
             lastMousePosGui = e->localPos();

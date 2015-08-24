@@ -50,7 +50,7 @@ std::shared_ptr<System> Line::instance(const unsigned int size, const double hol
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(std::make_shared<Line>(State::Seed), randDir(), Node(0,0), -1));
+    system->insertParticle(Particle(std::make_shared<Line>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -80,7 +80,7 @@ std::shared_ptr<System> Line::instance(const unsigned int size, const double hol
             }
         }
         // Insert new idle particle
-        system->insert(Particle(std::make_shared<Line>(State::Idle), randDir(), head, -1));
+        system->insertParticle(Particle(std::make_shared<Line>(State::Idle), randDir(), head, -1));
     }
     return system;
 }

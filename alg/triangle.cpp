@@ -52,7 +52,7 @@ std::shared_ptr<System> Triangle::instance(const unsigned int size, const double
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(std::make_shared<Triangle>(State::Seed), randDir(), Node(0,0), -1));
+    system->insertParticle(Particle(std::make_shared<Triangle>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -82,7 +82,7 @@ std::shared_ptr<System> Triangle::instance(const unsigned int size, const double
             }
         }
         // Insert new idle particle
-        system->insert(Particle(std::make_shared<Triangle>(State::Idle), randDir(), head, -1));
+        system->insertParticle(Particle(std::make_shared<Triangle>(State::Idle), randDir(), head, -1));
     }
     return system;
 }

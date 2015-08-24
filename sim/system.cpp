@@ -30,7 +30,7 @@ System::System(const System& other)
       numRounds(other.numRounds)
 {
     for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
-        insert(*it);
+        insertParticle(*it);
     }
 }
 
@@ -42,12 +42,12 @@ System& System::operator=(const System& other)
     numMovements = other.numMovements;
     numRounds = other.numRounds;
     for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
-        insert(*it);
+        insertParticle(*it);
     }
     return (*this);
 }
 
-System::SystemState System::insert(const Particle& p)
+System::SystemState System::insertParticle(const Particle& p)
 {
     Q_ASSERT(particleMap.find(p.head) == particleMap.end());
     Q_ASSERT(p.tailDir == -1 || particleMap.find(p.tail()) == particleMap.end());
@@ -58,6 +58,10 @@ System::SystemState System::insert(const Particle& p)
         particleMap.insert(std::pair<Node, Particle*>(p.tail(), &particles.back()));
     }
     return SystemState::Valid;
+}
+#include <iostream>
+System::SystemState System::insertParticleAt(const Node &n){
+  std::cout << "INSERT Particle at: "<<n.x<<" "<<n.y <<std::endl;
 }
 
 const Particle& System::at(int index) const

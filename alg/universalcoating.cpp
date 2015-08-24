@@ -159,12 +159,12 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     while(system->size() < numStaticParticles) {
         if(first)
         {
-            system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));
+            system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));
             first = false;
         }
         else
         {
-            system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));
+            system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));
         }
         occupied.insert(pos);
         orderedSurface.push_back(pos);
@@ -188,7 +188,7 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     if(leftBorder)
     {
         //while(counter < yMax) {
-        system->insert( Particle(std::make_shared<UniversalCoating>(Phase::StaticBorder), randDir(), pos1));
+        system->insertParticle( Particle(std::make_shared<UniversalCoating>(Phase::StaticBorder), randDir(), pos1));
 
         occupied.insert(pos1);
         orderedSurface.push_back(pos1);
@@ -207,7 +207,7 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     {
         counter =0;
         //  while(counter < yMax) {
-        system->insert( Particle(std::make_shared<UniversalCoating>(Phase::StaticBorder), randDir(), pos2));
+        system->insertParticle( Particle(std::make_shared<UniversalCoating>(Phase::StaticBorder), randDir(), pos2));
         occupied.insert(pos2);
         orderedSurface.push_back(pos2);
         int offset;
@@ -255,8 +255,8 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
             if(randBool(1.0f - holeProb)) {
                 std::shared_ptr<UniversalCoating> newParticle= std::make_shared<UniversalCoating>(Phase::Inactive);
                 newParticle->id = idCounter;
-                system->insert(Particle(newParticle, randDir(), *it));
-                // system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Inactive), randDir(), *it));
+                system->insertParticle(Particle(newParticle, randDir(), *it));
+                // system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Inactive), randDir(), *it));
                 numNonStaticParticles++;
 
                 for(int dir = 1; dir <= 2; dir++) {

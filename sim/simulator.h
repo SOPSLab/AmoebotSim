@@ -45,6 +45,7 @@ public slots:
     void finished();
 
     void roundForParticleAt(const int x, const int y);
+    void insertParticleAt(const int x, const int y);
 
     void executeCommand(const QString cmd);
     void runScript(const QString script);

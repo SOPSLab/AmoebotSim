@@ -64,7 +64,7 @@ std::shared_ptr<System> BoundedObjCoating::instance(const int numStaticParticles
     Node End;
     int lastOffset = 0;
     while(system->size() < numStaticParticles) {
-        system->insert(Particle(std::make_shared<BoundedObjCoating>(Phase::Static), randDir(), pos));
+        system->insertParticle(Particle(std::make_shared<BoundedObjCoating>(Phase::Static), randDir(), pos));
         occupied.insert(pos);
         orderedSurface.push_back(pos);
         int offset;
@@ -86,7 +86,7 @@ std::shared_ptr<System> BoundedObjCoating::instance(const int numStaticParticles
     Node pos2= Node((End.x)-1 ,End.y);//start of the right border
 
     while(counter < yMax) {
-        system->insert(Particle(std::make_shared<BoundedObjCoating>(Phase::Border), randDir(), pos1));
+        system->insertParticle(Particle(std::make_shared<BoundedObjCoating>(Phase::Border), randDir(), pos1));
         occupied.insert(pos1);
         orderedSurface.push_back(pos1);
         int offset;
@@ -102,7 +102,7 @@ std::shared_ptr<System> BoundedObjCoating::instance(const int numStaticParticles
 
     counter =0;
     while(counter < yMax) {
-        system->insert(Particle(std::make_shared<BoundedObjCoating>(Phase::Border), randDir(), pos2));
+        system->insertParticle(Particle(std::make_shared<BoundedObjCoating>(Phase::Border), randDir(), pos2));
         occupied.insert(pos2);
         orderedSurface.push_back(pos2);
         int offset;
@@ -146,7 +146,7 @@ std::shared_ptr<System> BoundedObjCoating::instance(const int numStaticParticles
         std::set<Node> nextCandidates;
         for(auto it = candidates.begin(); it != candidates.end() && numNonStaticParticles < numParticles; ++it) {
             if(randBool(1.0f - holeProb)) {
-                system->insert(Particle(std::make_shared<BoundedObjCoating>(Phase::Inactive), randDir(), *it));
+                system->insertParticle(Particle(std::make_shared<BoundedObjCoating>(Phase::Inactive), randDir(), *it));
                 numNonStaticParticles++;
 
                 for(int dir = 1; dir <= 2; dir++) {

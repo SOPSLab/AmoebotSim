@@ -48,7 +48,7 @@ std::shared_ptr<System> InfObjCoating::instance(const int numParticles, const fl
     Node pos;
     int lastOffset = 0;
     while(system->size() < 2 * numParticles) {
-        system->insert(Particle(std::make_shared<InfObjCoating>(Phase::Static), randDir(), pos));
+        system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Static), randDir(), pos));
         occupied.insert(pos);
         orderedSurface.push_back(pos);
         int offset;
@@ -87,7 +87,7 @@ std::shared_ptr<System> InfObjCoating::instance(const int numParticles, const fl
         std::set<Node> nextCandidates;
         for(auto it = candidates.begin(); it != candidates.end() && numNonStaticParticles < numParticles; ++it) {
             if(randBool(1.0f - holeProb)) {
-                system->insert(Particle(std::make_shared<InfObjCoating>(Phase::Inactive), randDir(), *it));
+                system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Inactive), randDir(), *it));
                 numNonStaticParticles++;
 
                 for(int dir = 1; dir <= 2; dir++) {
