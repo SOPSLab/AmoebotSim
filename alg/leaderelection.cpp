@@ -639,7 +639,7 @@ Movement LeaderElection::execute()
     return Movement(MovementType::Idle);
 }
 
-std::shared_ptr<Algorithm> LeaderElection::blank()
+std::shared_ptr<Algorithm> LeaderElection::blank() const
 {
     return std::make_shared<LeaderElection>(State::Idle);
 }

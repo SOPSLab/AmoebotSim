@@ -33,6 +33,7 @@ The following instructions should get you started working with AmoebotSim; pleas
     - __Ctrl + D__: Execute a single round of the simulation.
     - __Ctrl + F__: Focus on center of mass.
 - Clicking on a particle while holding Ctrl (Cmd) results in that particle executing a single turn, if possible.
+- Clicking on an unoccupied place while holding Shift results in adding a new particle on this place.
 
 [1] http://qt-project.org/downloads
 

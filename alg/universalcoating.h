@@ -111,7 +111,7 @@ public:
 
     virtual Movement execute();
     virtual Movement subExecute();
-    virtual std::shared_ptr<Algorithm> blank();
+    virtual std::shared_ptr<Algorithm> blank() const override;
     virtual std::shared_ptr<Algorithm> clone();
     virtual bool isDeterministic() const;
 

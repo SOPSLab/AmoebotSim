@@ -89,6 +89,7 @@ protected:
     std::shared_ptr<QOpenGLTexture> particleTex;
 
     bool tranlatingGui;
+    bool addingParticles;
     // these variables are used by two threads
     // variables with suffix Gui are used by the gui thread
     // and the remaining variables are used by the render thread

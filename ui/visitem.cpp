@@ -389,17 +389,17 @@ void VisItem::mousePressEvent(QMouseEvent* e)
     if(e->buttons() & Qt::LeftButton) {
         if(e->modifiers() & Qt::ControlModifier) {
             //Executing round for particle
-            tranlatingGui = false;
-            std::cout << "STRG + CLICK" << std::endl;
+            tranlatingGui = addingParticles = false;
             auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
             emit roundForParticleAt(node.x, node.y);
         } else if(e->modifiers() & Qt::ShiftModifier) {
             tranlatingGui = false;
-            std::cout << "SHIFT + CLICK" << std::endl;
+            addingParticles = true;
             auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
             emit insertParticleAt(node.x, node.y);
         } else {
             tranlatingGui = true;
+            addingParticles = false;
             lastMousePosGui = e->localPos();
         }
         e->accept();
@@ -408,12 +408,17 @@ void VisItem::mousePressEvent(QMouseEvent* e)
 
 void VisItem::mouseMoveEvent(QMouseEvent* e)
 {
-    if(e->buttons() & Qt::LeftButton && tranlatingGui) {
+    if(e->buttons() & Qt::LeftButton) {
+      if(tranlatingGui){
         QPointF offset = lastMousePosGui - e->localPos();
         QPointF scaledOffset = offset / zoomGui;
         focusPosGui += QPointF(scaledOffset.x(), -scaledOffset.y());
         lastMousePosGui = e->localPos();
-        e->accept();
+      } else if(addingParticles){
+        auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
+        emit insertParticleAt(node.x, node.y);
+      }
+      e->accept();
     }
 }
 

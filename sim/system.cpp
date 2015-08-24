@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <chrono>
 #include <utility>
-
+#include <iostream>
 #include "sim/system.h"
 
 System::System()
@@ -34,8 +34,7 @@ System::System(const System& other)
     }
 }
 
-System& System::operator=(const System& other)
-{
+System& System::operator=(const System& other){
     rng = other.rng;
     systemState = other.systemState;
     disconnectionNode = other.disconnectionNode;
@@ -47,8 +46,7 @@ System& System::operator=(const System& other)
     return (*this);
 }
 
-System::SystemState System::insertParticle(const Particle& p)
-{
+System::SystemState System::insertParticle(const Particle& p){
     Q_ASSERT(particleMap.find(p.head) == particleMap.end());
     Q_ASSERT(p.tailDir == -1 || particleMap.find(p.tail()) == particleMap.end());
 
@@ -59,23 +57,55 @@ System::SystemState System::insertParticle(const Particle& p)
     }
     return SystemState::Valid;
 }
-#include <iostream>
+
 System::SystemState System::insertParticleAt(const Node &n){
-  std::cout << "INSERT Particle at: "<<n.x<<" "<<n.y <<std::endl;
+  auto it = particleMap.find(n);
+  if(it == particleMap.end()){
+    //std::cout << "INSERT Particle at: "<<n.x<<" "<<n.y <<std::endl;
+
+    auto firstParticle = (*particleMap.begin()).second;
+    auto algorithm = firstParticle->getAlgorithm()->blank();
+
+    std::mt19937 rng;
+    std::uniform_int_distribution<int> dist(0, 5);
+
+    Particle newParticle(algorithm, dist(rng), n, -1);
+
+    particles.push_back(newParticle);
+    particleMap.insert(std::pair<Node, Particle*>(n, &particles.back()));
+  } else {
+    /* Deleting doesn't work yet
+    std::cout << "DELETE Particle at: "<<n.x<<" "<<n.y <<std::endl;
+    std::cout << particles.size() <<" "<<particleMap.size() <<" "<<activatedParticles.size() <<std::endl;
+
+    auto aIt = std::find_if(activatedParticles.begin(), activatedParticles.end(),[&it](Particle* p){
+         return p->head == it->first;
+     });
+    if(aIt != activatedParticles.end()){
+      activatedParticles.erase(aIt);
+    }
+
+    auto pIt = std::find_if(particles.begin(), particles.end(), [&it](Particle p){return p.head == it->first;});
+    if(pIt != particles.end()){
+      particles.erase(pIt);
+    }
+
+    particleMap.erase(it);
+    std::cout << particles.size() <<" "<<particleMap.size() <<" "<<activatedParticles.size() <<std::endl;
+    */
+  }
+  return SystemState::Valid;
 }
 
-const Particle& System::at(int index) const
-{
+const Particle& System::at(int index) const{
     return particles.at(index);
 }
 
-int System::size() const
-{
+int System::size() const{
     return particles.size();
 }
 
-System::SystemState System::round()
-{
+System::SystemState System::round(){
     if(systemState != SystemState::Valid) {
         return systemState;
     }
@@ -130,11 +160,11 @@ System::SystemState System::round()
     } else {
         systemState = SystemState::Terminated;
     }
+
     return systemState;
 }
 
-System::SystemState System::roundPermutation()
-{
+System::SystemState System::roundPermutation(){
     if(systemState != SystemState::Valid) {
         return systemState;
     }
@@ -199,8 +229,7 @@ System::SystemState System::roundPermutation()
     return systemState;
 }
 
-System::SystemState System::roundForParticle(const Node node)
-{
+System::SystemState System::roundForParticle(const Node node){
     if(systemState != SystemState::Valid) {
         return systemState;
     }
@@ -233,28 +262,23 @@ System::SystemState System::roundForParticle(const Node node)
     return systemState;
 }
 
-System::SystemState System::getSystemState() const
-{
+System::SystemState System::getSystemState() const{
     return systemState;
 }
 
-Node System::getDisconnectionNode() const
-{
+Node System::getDisconnectionNode() const{
     return disconnectionNode;
 }
 
-int System::getNumMovements() const
-{
+int System::getNumMovements() const{
     return numMovements;
 }
 
-int System::getNumRounds() const
-{
+int System::getNumRounds() const{
     return numRounds;
 }
 
-std::array<const Flag*, 10> System::assembleFlags(Particle& p)
-{
+std::array<const Flag*, 10> System::assembleFlags(Particle& p){
     std::array<const Flag*, 10> flags;    
 
     int labelLimit = p.tailDir == -1 ? 6 : 10;
@@ -276,8 +300,7 @@ std::array<const Flag*, 10> System::assembleFlags(Particle& p)
     return flags;
 }
 
-bool System::handleExpansion(Particle& p, int label)
-{
+bool System::handleExpansion(Particle& p, int label){
     if(p.tailDir != -1) {
         p.discard(); // already expanded particle cannot expand
         return false;
@@ -336,8 +359,7 @@ bool System::handleExpansion(Particle& p, int label)
     }
 }
 
-bool System::handleContraction(Particle& p, int label, bool isHandoverContraction)
-{
+bool System::handleContraction(Particle& p, int label, bool isHandoverContraction){
     if(p.tailDir == -1) {
         p.discard(); // already contracted particle cannot contract
         return false;
@@ -464,8 +486,7 @@ bool System::handleContraction(Particle& p, int label, bool isHandoverContractio
     return true;
 }
 
-bool System::isConnected() const
-{
+bool System::isConnected() const{
     if(particleMap.empty()) {
         return true;
     }
@@ -494,8 +515,7 @@ bool System::isConnected() const
     return occupiedNodes.empty();
 }
 
-void System::updateNumRounds(Particle *p)
-{
+void System::updateNumRounds(Particle *p){
     activatedParticles.insert(p);
     if(activatedParticles.size() == particles.size()) {
         numRounds++;

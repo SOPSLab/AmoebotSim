@@ -105,7 +105,7 @@ public:
     /*
      * This method has to be implemented and has to correctly initialise a blank copy of this algorithm.
      * */
-    virtual std::shared_ptr<Algorithm> blank() override;
+    virtual std::shared_ptr<Algorithm> blank() const override;
 
     /*
      * This method has to be implemented and has to correctly copy all member variables of an algorithm. The easiest way

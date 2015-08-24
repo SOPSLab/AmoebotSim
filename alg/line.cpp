@@ -166,7 +166,7 @@ Movement Line::execute()
     }
 }
 
-std::shared_ptr<Algorithm> Line::blank()
+std::shared_ptr<Algorithm> Line::blank() const
 {
     return std::make_shared<Line>(State::Idle);
 }

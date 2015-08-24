@@ -94,7 +94,7 @@ Movement ExampleAlgorithm::execute()
     }
 }
 
-std::shared_ptr<Algorithm> ExampleAlgorithm::blank()
+std::shared_ptr<Algorithm> ExampleAlgorithm::blank() const
 {
     return std::make_shared<ExampleAlgorithm>(Phase::Idle);
 }

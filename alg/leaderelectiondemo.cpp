@@ -715,7 +715,7 @@ Movement LeaderElectionDemo::execute()
     return Movement(MovementType::Empty);
 }
 
-std::shared_ptr<Algorithm> LeaderElectionDemo::blank()
+std::shared_ptr<Algorithm> LeaderElectionDemo::blank() const
 {
     return std::make_shared<LeaderElectionDemo>(Phase::Inactive);
 }

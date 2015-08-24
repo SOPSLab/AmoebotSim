@@ -23,6 +23,7 @@ public:
     void discard();
 
     const Flag* getFlagForNodeInDir(const Node node, const int dir);
+    std::shared_ptr<const Algorithm> getAlgorithm() const;
 
     Node tail() const;
 

@@ -78,6 +78,10 @@ const Flag* Particle::getFlagForNodeInDir(const Node node, const int dir)
     return algorithm->flagAt(labelOfNeighboringNodeInDir(node, dir));
 }
 
+std::shared_ptr<const Algorithm> Particle::getAlgorithm() const{
+  return std::const_pointer_cast<const Algorithm>(algorithm);
+}
+
 Node Particle::tail() const
 {
     return head.nodeInDir(tailDir);

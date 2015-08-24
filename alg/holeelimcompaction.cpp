@@ -228,7 +228,7 @@ Movement HoleElimCompaction::execute()
     return Movement(MovementType::Idle);
 }
 
-std::shared_ptr<Algorithm> HoleElimCompaction::blank()
+std::shared_ptr<Algorithm> HoleElimCompaction::blank() const
 {
     return std::make_shared<HoleElimCompaction>(State::Idle);
 }

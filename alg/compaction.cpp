@@ -179,7 +179,7 @@ Movement Compaction::execute()
     return Movement(MovementType::Idle);
 }
 
-std::shared_ptr<Algorithm> Compaction::blank()
+std::shared_ptr<Algorithm> Compaction::blank() const
 {
     return std::make_shared<Compaction>(State::Idle);
 }

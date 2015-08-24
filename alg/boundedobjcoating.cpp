@@ -321,7 +321,7 @@ Movement BoundedObjCoating::execute()
     }
 }
 
-std::shared_ptr<Algorithm> BoundedObjCoating::blank()
+std::shared_ptr<Algorithm> BoundedObjCoating::blank() const
 {
     return std::make_shared<BoundedObjCoating>(Phase::Inactive);
 }
