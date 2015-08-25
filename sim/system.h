@@ -26,8 +26,8 @@ public:
     System(const System& other);
     System& operator=(const System& other);
 
-    SystemState insertParticle(const Particle &p);
-    SystemState insertParticleAt(const Node &n);
+    void insertParticle(const Particle &p);
+    void insertParticleAt(const Node &n);
     const Particle& at(int index) const;
     int getNumParticles() const;
     int getNumNonStaticParticles() const;
@@ -58,7 +58,7 @@ protected:
     SystemState systemState;
     Node disconnectionNode;
 
-    int numNonStaticParticles;
+    unsigned int numNonStaticParticles;
     int numMovements;
     int numRounds;
 };

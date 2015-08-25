@@ -49,7 +49,8 @@ System& System::operator=(const System& other){
     return (*this);
 }
 
-System::SystemState System::insertParticle(const Particle& p){
+void System::insertParticle(const Particle& p)
+{
     Q_ASSERT(particleMap.find(p.head) == particleMap.end());
     Q_ASSERT(p.tailDir == -1 || particleMap.find(p.tail()) == particleMap.end());
 
@@ -62,51 +63,32 @@ System::SystemState System::insertParticle(const Particle& p){
     if(!p.isStatic()) {
         numNonStaticParticles++;
     }
-
-    return SystemState::Valid;
 }
 
-System::SystemState System::insertParticleAt(const Node &n){
-  auto it = particleMap.find(n);
-  if(it == particleMap.end()){
-    //std::cout << "INSERT Particle at: "<<n.x<<" "<<n.y <<std::endl;
-
-    auto firstParticle = (*particleMap.begin()).second;
-    auto algorithm = firstParticle->getAlgorithm()->blank();
-
-    std::mt19937 rng;
-    std::uniform_int_distribution<int> dist(0, 5);
-
-    Particle newParticle(algorithm, dist(rng), n, -1);
-
-    particles.push_back(newParticle);
-    particleMap.insert(std::pair<Node, Particle*>(n, &particles.back()));
-
-    if(!newParticle.isStatic()) {
-        numNonStaticParticles++;
-    }
-  } else {
-    /* Deleting doesn't work yet
-    std::cout << "DELETE Particle at: "<<n.x<<" "<<n.y <<std::endl;
-    std::cout << particles.size() <<" "<<particleMap.size() <<" "<<activatedParticles.size() <<std::endl;
-
-    auto aIt = std::find_if(activatedParticles.begin(), activatedParticles.end(),[&it](Particle* p){
-         return p->head == it->first;
-     });
-    if(aIt != activatedParticles.end()){
-      activatedParticles.erase(aIt);
+void System::insertParticleAt(const Node &n)
+{
+    if(particles.size() == 0 || systemState != SystemState::Valid) {
+        return;
     }
 
-    auto pIt = std::find_if(particles.begin(), particles.end(), [&it](Particle p){return p.head == it->first;});
-    if(pIt != particles.end()){
-      particles.erase(pIt);
-    }
+    auto it = particleMap.find(n);
+    if(it == particleMap.end()) {
+        auto algorithm = particles[0].getAlgorithm()->blank();
+        std::uniform_int_distribution<int> dist(0, 5);
+        Particle newParticle(algorithm, dist(rng), n, -1);
 
-    particleMap.erase(it);
-    std::cout << particles.size() <<" "<<particleMap.size() <<" "<<activatedParticles.size() <<std::endl;
-    */
-  }
-  return SystemState::Valid;
+        particles.push_back(newParticle);
+        auto pair = particleMap.insert(std::pair<Node, Particle*>(n, &particles.back()));
+        if(!isConnected()) {
+            particles.pop_back();
+            auto it = pair.first;
+            particleMap.erase(it);
+        } else {
+            if(!newParticle.isStatic()) {
+                numNonStaticParticles++;
+            }
+        }
+    }
 }
 
 const Particle& System::at(int index) const{
