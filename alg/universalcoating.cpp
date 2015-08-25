@@ -318,7 +318,7 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     }
 
     return system;
-<<<<<<< HEAD
+//<<<<<<< HEAD
   /*  std::shared_ptr<System> system = std::make_shared<System>();
     std::deque<Node> orderedSurface;
     std::set<Node> occupied;
