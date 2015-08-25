@@ -42,7 +42,7 @@ void Simulator::init()
         updateTimer->setInterval(30);
         connect(updateTimer.get(), &QTimer::timeout, [&](){emit updateSystem(std::make_shared<System>(*system));});
         connect(updateTimer.get(), &QTimer::timeout, [&](){emit numMovementsChanged(system->getNumMovements());});
-        connect(updateTimer.get(), &QTimer::timeout, [&](){emit updateSystem(std::make_shared<System>(*system));});
+        connect(updateTimer.get(), &QTimer::timeout, [&](){emit numRoundsChanged(system->getNumRounds());});
         updateTimer->start();
     }
 }
