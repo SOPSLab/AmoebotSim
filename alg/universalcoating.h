@@ -89,9 +89,17 @@ public:
     int id;
     bool acceptPositionTokens;
     std::array<Token, 15> tokens;
+    std::array<Token, 15> forwardTokens;
+    std::array<Token, 15> backTokens;
+
     ElectionRole electionRole;
     ElectionSubphase electionSubphase;
-
+    bool comparingSegment, absorbedActiveToken, isCoveredCandidate, gotAnnounceInCompare; // segment comparison information
+    bool waitingForTransferAck;
+    bool gotAnnounceBeforeAck;
+    int generateVectorDir;
+    bool createdLead, sawUnmatchedToken; // solitude verification information
+    bool testingBorder;
 
 
 
@@ -110,9 +118,10 @@ public:
 
 
     virtual Movement execute();
-    virtual Movement subExecute();
     virtual std::shared_ptr<Algorithm> clone();
     virtual bool isDeterministic() const;
+    void paintFrontSegment(const int color);
+    void paintBackSegment(const int color);
 
 protected:
     void setPhase(const Phase _phase);
@@ -155,26 +164,26 @@ protected:
     void updateNeighborStages();
 
     void handlePositionElection();
-    void updateTokenDirs(int recDir);
-    void setSendingToken(bool value);
-    void sendOwnToken();
-    void newOwnToken();
-    void sendToken(TokenType type, int dir, int valueIn);
-    void clearToken(TokenType type, int dir);
-    int peekAtToken(TokenType type, int dir) const;
-    Token receiveToken(TokenType type, int dir);
-    void tokenCleanup(int surfaceParent, int surfaceFollower);
-    bool canSendToken(TokenType type, int dir) const;
+    void ExecuteLeaderElection(int prevAgentDir, int nextAgentDir);
+
     void setElectionRole(ElectionRole role);
     void setElectionSubphase(ElectionSubphase electionSubphase);
-    void pipelinePassTokens(int surfaceParent, int surfaceFollower);
+
+    bool canSendToken(TokenType type, int dir) const;
+    void sendToken(TokenType type, int dir, int value);
+    int peekAtToken(TokenType type, int dir) const;
+    Token receiveToken(TokenType type, int dir);
+    void tokenCleanup(int prevAgentDir, int nextAgentDir);
+
+    void performPassiveClean(const int region, int prevAgentDir, int nextAgentDir);
+    void performActiveClean(const int region1, int prevAgentDir, int nextAgentDir);
 
     int encodeVector(std::pair<int, int> vector) const;
     std::pair<int, int> decodeVector(int code);
     std::pair<int, int> augmentDirVector(std::pair<int, int> vector, const int offset);
-    void nonCandidateSolitudeHandling(int surfaceParent,int surfaceFollower);
-    void nonCandidateCoinFlipping(int surfaceParent, int surfaceFollower);
+    int addNextBorder(int currentSum, int prevAgentDir, int nextAgentDir);
 
+    void printTokens(int prevAgentDir, int nextAgentDir);
     Phase phase;
     int followDir;
     int Lnumber;
@@ -193,15 +202,16 @@ protected:
     bool hasLost;
     bool superLeader;
     int borderPasses;
+    //leader election
     ElectionRole electionRole;
     ElectionSubphase electionSubphase;
     bool comparingSegment, absorbedActiveToken, isCoveredCandidate, gotAnnounceInCompare; // segment comparison information
     bool waitingForTransferAck;
-   bool gotAnnounceBeforeAck;
+    bool gotAnnounceBeforeAck;
     int id;
     int generateVectorDir;
     bool createdLead, sawUnmatchedToken; // solitude verification information
-
+    bool testingBorder;
 
 };
 }
