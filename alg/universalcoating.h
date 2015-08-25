@@ -37,7 +37,8 @@ enum class ElectionRole{
     Candidate,
     Demoted,
     Leader,
-    SoleCandidate
+    SoleCandidate,
+    None
 };
 
 enum class TokenType {
