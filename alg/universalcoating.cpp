@@ -708,7 +708,7 @@ Movement UniversalCoating::execute()
                 if(hasNeighborInPhase(Phase::Static))
                 {
                     setElectionRole(ElectionRole::Candidate);
-                    inFlags[firstNeighborInPhase(Phase::Static)]->electionRole = ElectionRole::Candidate;
+                    //inFlags[firstNeighborInPhase(Phase::Static)]->electionRole = ElectionRole::Candidate;
                 }
 
 
@@ -1706,7 +1706,7 @@ void UniversalCoating::handlePositionElection()
                   ExecuteLeaderElection(surfaceFollower,surfaceParent);
         printTokens(surfaceFollower,surfaceParent);
         //copy down
-        inFlags[staticRecDir]->forwardTokens =  outFlags[surfaceParent].tokens;
+      /*  inFlags[staticRecDir]->forwardTokens =  outFlags[surfaceParent].tokens;
         inFlags[staticRecDir]->backTokens =  outFlags[surfaceFollower].tokens ;
         inFlags[staticRecDir]->electionSubphase = electionSubphase;
         inFlags[staticRecDir]->electionRole = electionRole;
@@ -1720,7 +1720,7 @@ void UniversalCoating::handlePositionElection()
         inFlags[staticRecDir]-> absorbedActiveToken =absorbedActiveToken;
         inFlags[staticRecDir]->isCoveredCandidate = isCoveredCandidate;
         inFlags[staticRecDir]->gotAnnounceInCompare= gotAnnounceInCompare;
-        inFlags[staticRecDir]->testingBorder = testingBorder;
+        inFlags[staticRecDir]->testingBorder = testingBorder;*/
         qDebug()<<"wrote role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
     }
 }
