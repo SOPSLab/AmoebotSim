@@ -278,6 +278,84 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     }
 
     return system;
+
+//    const int hexRadius = 5;
+//    const int numParticles = 100;
+//    const float holeProb = 0.5;
+
+//    std::shared_ptr<System> system = std::make_shared<System>();
+
+//    std::set<Node> occupied;
+
+//    // grow hexagon of given radius
+//    system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Static), randDir(), Node(0, 0)));
+//    occupied.insert(Node(0, 0));
+//    std::set<Node> layer1, layer2;
+//    layer1.insert(Node(0, 0));
+//    for(int i = 1; i < hexRadius; i++) {
+//        for(auto n : layer1) {
+//            for(int dir = 0; dir < 6; dir++) {
+//                auto neighbor = n.nodeInDir(dir);
+//                if(occupied.find(neighbor) == occupied.end() && layer1.find(neighbor) == layer1.end()) {
+//                    layer2.insert(neighbor);
+//                }
+//            }
+//        }
+
+//        for(auto n : layer2) {
+//            system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Static), randDir(), n));
+//            occupied.insert(n);
+//        }
+
+//        layer1 = layer2;
+//        layer2.clear();
+//    }
+
+//    // determine candidate set by "growing an additional layer"
+//    std::set<Node> candidates;
+//    for(auto n : layer1) {
+//        for(int dir = 0; dir < 6; dir++) {
+//            auto neighbor = n.nodeInDir(dir);
+//            if(occupied.find(neighbor) == occupied.end() && layer1.find(neighbor) == layer1.end()) {
+//                candidates.insert(neighbor);
+//            }
+//        }
+//    }
+
+//    // add inactive particles
+//    int numNonStaticParticles = 0;
+//    while(numNonStaticParticles < numParticles && !candidates.empty()) {
+//        // pick random candidate
+//        int randIndex = randInt(0, candidates.size());
+//        Node randomCandidate;
+//        for(auto it = candidates.begin(); it != candidates.end(); ++it) {
+//            if(randIndex == 0) {
+//                randomCandidate = *it;
+//                candidates.erase(it);
+//                break;
+//            } else {
+//                randIndex--;
+//            }
+//        }
+
+//        occupied.insert(randomCandidate);
+
+//        if(randBool(1.0f - holeProb)) {
+//            // only add particle if not a hole
+//            system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Inactive), randDir(), randomCandidate));
+//            numNonStaticParticles++;
+
+//            // add new candidates
+//            for(int i = 0; i < 6; i++) {
+//                auto neighbor = randomCandidate.nodeInDir(i);
+//                if(occupied.find(neighbor) == occupied.end()) {
+//                    candidates.insert(neighbor);
+//                }
+//            }
+//        }
+//    }
+
+//    return system;
 }
 
 Movement UniversalCoating::subExecute()
