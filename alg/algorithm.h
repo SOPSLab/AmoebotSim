@@ -106,8 +106,8 @@ inline Algorithm::Algorithm()
       headMarkDir(-1),
       tailMarkColor(-1),
       tailMarkDir(-1),
-      borderColors({-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}),
-      borderPointColors({-1,-1,-1,-1,-1,-1}),
+      borderColors({{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}}),
+      borderPointColors({{-1,-1,-1,-1,-1,-1}}),
       _tailDir(-1)
 {
     static bool rngInitialized = false;
