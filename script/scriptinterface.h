@@ -77,7 +77,6 @@ inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
     sim.setSystem(InfObjCoating::InfObjCoating::instance(100, 0.2));
-    sim.setSystem(InfObjCoating::InfObjCoating::instance(500, 0.2));
 }
 
 inline void ScriptInterface::round()
