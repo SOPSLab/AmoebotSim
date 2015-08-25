@@ -730,6 +730,11 @@ bool LeaderElectionDemo::isDeterministic() const
     return true;
 }
 
+bool LeaderElectionDemo::isStatic() const
+{
+    return false;
+}
+
 void LeaderElectionDemo::setPhase(const Phase _phase)
 {
     phase = _phase;

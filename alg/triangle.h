@@ -42,6 +42,7 @@ public:
     virtual std::shared_ptr<Algorithm> blank() const override;
     virtual std::shared_ptr<Algorithm> clone() override;
     virtual bool isDeterministic() const;
+    virtual bool isStatic() const;
 
 protected:
     int isPointedAt();

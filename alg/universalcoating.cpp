@@ -835,6 +835,12 @@ bool UniversalCoating::isDeterministic() const
     return true;
 }
 
+bool UniversalCoating::isStatic() const
+{
+    // NOTE: Alex, I'm not sure what to put here since you have two different kinds of static.
+    return false;
+}
+
 void UniversalCoating::setPhase(const Phase _phase)
 {
     phase = _phase;

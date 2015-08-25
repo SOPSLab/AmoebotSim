@@ -201,6 +201,11 @@ bool HoleElimStandard::isDeterministic() const
     return true;
 }
 
+bool HoleElimStandard::isStatic() const
+{
+    return false;
+}
+
 void HoleElimStandard::setState(const State _state)
 {
     state = _state;

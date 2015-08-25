@@ -336,6 +336,11 @@ bool BoundedObjCoating::isDeterministic() const
     return true;
 }
 
+bool BoundedObjCoating::isStatic() const
+{
+    return phase == Phase::Static;
+}
+
 void BoundedObjCoating::setPhase(const Phase _phase)
 {
     phase = _phase;

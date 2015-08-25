@@ -194,6 +194,11 @@ bool Compaction::isDeterministic() const
     return false; // uses randomization in leaf switch
 }
 
+bool Compaction::isStatic() const
+{
+    return false;
+}
+
 void Compaction::setState(const State _state)
 {
     state = _state;

@@ -185,6 +185,11 @@ bool InfObjCoating::isDeterministic() const
     return true;
 }
 
+bool InfObjCoating::isStatic() const
+{
+    return phase == Phase::Static;
+}
+
 void InfObjCoating::setPhase(const Phase _phase)
 {
     phase = _phase;

@@ -183,6 +183,11 @@ bool Triangle::isDeterministic() const
     return true;
 }
 
+bool Triangle::isStatic() const
+{
+    return false;
+}
+
 int Triangle::isPointedAt(){
     for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr) {

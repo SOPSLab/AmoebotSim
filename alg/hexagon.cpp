@@ -171,6 +171,11 @@ bool Hexagon::isDeterministic() const
     return true;
 }
 
+bool Hexagon::isStatic() const
+{
+    return false;
+}
+
 int Hexagon::isPointedAt(){
     for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr) {

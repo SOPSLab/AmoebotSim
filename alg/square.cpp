@@ -190,6 +190,11 @@ headMarkColor = 0x000000; //dark green
 		return true; //not sure ifthis is true, haven't written alg yet
 	}
 
+    bool Square::isStatic() const
+    {
+        return false;
+    }
+
 	int Square::isPointedAt() {
 	    for(int label = 0; label < 10; label++) {
 	        if(inFlags[label] != nullptr) {

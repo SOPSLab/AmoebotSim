@@ -106,6 +106,11 @@ bool Ring::isDeterministic() const
     return true;
 }
 
+bool Ring::isStatic() const
+{
+    return false;
+}
+
 Movement Ring::execute()
 {
     if(isExpanded()){

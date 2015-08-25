@@ -45,6 +45,7 @@ public:
     virtual std::shared_ptr<Algorithm> clone() override;
 
     virtual bool isDeterministic() const;
+    virtual bool isStatic() const;
 
 protected:
     void setState(const State _state);

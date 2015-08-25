@@ -56,6 +56,7 @@ Particle& Particle::operator=(const Particle& other)
 Movement Particle::executeAlgorithm(std::array<const Flag*, 10>& inFlag)
 {
     Q_ASSERT(newAlgorithm == nullptr);
+    Q_ASSERT(!algorithm->isStatic());
     newAlgorithm = algorithm->clone();
     return newAlgorithm->execute(inFlag);
 }
@@ -260,4 +261,9 @@ int Particle::borderPointDir(const int dir) const
 bool Particle::algorithmIsDeterministic() const
 {
     return algorithm->isDeterministic();
+}
+
+bool Particle::isStatic() const
+{
+    return algorithm->isStatic();
 }

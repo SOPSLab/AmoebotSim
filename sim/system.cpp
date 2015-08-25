@@ -6,6 +6,7 @@
 
 System::System()
     : systemState(SystemState::Valid),
+      numNonStaticParticles(0),
       numMovements(0),
       numRounds(0)
 {
@@ -26,6 +27,7 @@ System::System(const System& other)
     : rng(other.rng),
       systemState(other.systemState),
       disconnectionNode(other.disconnectionNode),
+      numNonStaticParticles(other.numNonStaticParticles),
       numMovements(other.numMovements),
       numRounds(other.numRounds)
 {
@@ -38,6 +40,7 @@ System& System::operator=(const System& other){
     rng = other.rng;
     systemState = other.systemState;
     disconnectionNode = other.disconnectionNode;
+    numNonStaticParticles = other.numNonStaticParticles;
     numMovements = other.numMovements;
     numRounds = other.numRounds;
     for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
@@ -55,6 +58,11 @@ System::SystemState System::insertParticle(const Particle& p){
     if(p.tailDir != -1) {
         particleMap.insert(std::pair<Node, Particle*>(p.tail(), &particles.back()));
     }
+
+    if(!p.isStatic()) {
+        numNonStaticParticles++;
+    }
+
     return SystemState::Valid;
 }
 
@@ -73,6 +81,10 @@ System::SystemState System::insertParticleAt(const Node &n){
 
     particles.push_back(newParticle);
     particleMap.insert(std::pair<Node, Particle*>(n, &particles.back()));
+
+    if(!newParticle.isStatic()) {
+        numNonStaticParticles++;
+    }
   } else {
     /* Deleting doesn't work yet
     std::cout << "DELETE Particle at: "<<n.x<<" "<<n.y <<std::endl;
@@ -110,7 +122,7 @@ System::SystemState System::round(){
         return systemState;
     }
 
-    if(particles.size() == 0) {
+    if(numNonStaticParticles == 0) {
         systemState = SystemState::Terminated;
         return systemState;
     }
@@ -124,6 +136,12 @@ System::SystemState System::round(){
     bool hasBlockedParticles = false;
     while(shuffledParticles.size() > 0) {
         Particle* p = shuffledParticles.front();
+
+        if(p->isStatic()) {
+            shuffledParticles.pop_front();
+            continue;
+        }
+
         updateNumRounds(p);
 
         auto inFlags = assembleFlags(*p);
@@ -169,7 +187,7 @@ System::SystemState System::roundPermutation(){
         return systemState;
     }
 
-    if(particles.size() == 0) {
+    if(numNonStaticParticles == 0) {
         systemState = SystemState::Terminated;
         return systemState;
     }
@@ -184,6 +202,12 @@ System::SystemState System::roundPermutation(){
     bool somethingActed = false;
     while(shuffledParticles.size() > 0) {
         Particle* p = shuffledParticles.front();
+
+        if(p->isStatic()) {
+            shuffledParticles.pop_front();
+            continue;
+        }
+
         updateNumRounds(p);
 
         auto inFlags = assembleFlags(*p);
@@ -234,13 +258,13 @@ System::SystemState System::roundForParticle(const Node node){
         return systemState;
     }
 
-    if(particles.size() == 0) {
+    if(numNonStaticParticles == 0) {
         systemState = SystemState::Terminated;
         return systemState;
     }
 
     auto it = particleMap.find(node);
-    if(it == particleMap.end()) {
+    if(it == particleMap.end() || it->second->isStatic()) {
         return systemState;
     }
 
@@ -315,7 +339,7 @@ bool System::handleExpansion(Particle& p, int label){
     Node newHead = p.head.nodeInDir(label);
 
     auto otherParticleIt = particleMap.find(newHead);
-    if(otherParticleIt == particleMap.end()) {
+    if(otherParticleIt == particleMap.end() || otherParticleIt->second->isStatic()) {
         // expansion into empty node
         particleMap.insert(std::pair<Node, Particle*>(newHead, &p));
         p.head = newHead;
@@ -414,6 +438,10 @@ bool System::handleContraction(Particle& p, int label, bool isHandoverContractio
                 continue;
             }
             Particle& p2 = *mapIt->second;
+
+            if(p2.isStatic()) {
+                continue;
+            }
 
             // check whether p2 wants to expand and into which node
             if(p2.tailDir != -1) {
@@ -518,7 +546,7 @@ bool System::isConnected() const{
 
 void System::updateNumRounds(Particle *p){
     activatedParticles.insert(p);
-    if(activatedParticles.size() == particles.size()) {
+    if(activatedParticles.size() == numNonStaticParticles) {
         numRounds++;
         activatedParticles.clear();
     }

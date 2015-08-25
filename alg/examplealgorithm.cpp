@@ -111,6 +111,11 @@ bool ExampleAlgorithm::isDeterministic() const
     return true;
 }
 
+bool ExampleAlgorithm::isStatic() const
+{
+    return false;
+}
+
 void ExampleAlgorithm::setPhase(Phase _phase)
 {
     phase = _phase;

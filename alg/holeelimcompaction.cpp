@@ -243,6 +243,11 @@ bool HoleElimCompaction::isDeterministic() const
     return false; // uses randomization in leaf switch
 }
 
+bool HoleElimCompaction::isStatic() const
+{
+    return false;
+}
+
 void HoleElimCompaction::setState(const State _state)
 {
     state = _state;

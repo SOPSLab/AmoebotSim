@@ -57,6 +57,7 @@ protected:
     SystemState systemState;
     Node disconnectionNode;
 
+    int numNonStaticParticles;
     int numMovements;
     int numRounds;
 };

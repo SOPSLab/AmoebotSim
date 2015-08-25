@@ -654,6 +654,11 @@ bool LeaderElection::isDeterministic() const
     return true;
 }
 
+bool LeaderElection::isStatic() const
+{
+    return false;
+}
+
 void LeaderElection::setState(const State _state)
 {
     state = _state;
