@@ -47,7 +47,7 @@ std::shared_ptr<System> InfObjCoating::instance(const int numParticles, const fl
 
     Node pos;
     int lastOffset = 0;
-    while(system->size() < 2 * numParticles) {
+    while(system->getNumParticles() < 2 * numParticles) {
         system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Static), randDir(), pos));
         occupied.insert(pos);
         orderedSurface.push_back(pos);

@@ -29,7 +29,8 @@ public:
     SystemState insertParticle(const Particle &p);
     SystemState insertParticleAt(const Node &n);
     const Particle& at(int index) const;
-    int size() const;
+    int getNumParticles() const;
+    int getNumNonStaticParticles() const;
 
     SystemState round();
     SystemState roundPermutation();

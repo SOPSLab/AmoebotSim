@@ -55,14 +55,14 @@ void VisItem::moveCameraTo(float worldX, float worldY){
 
 void VisItem::focusOnCenterOfMass()
 {
-    if(system == nullptr || system->size() == 0) {
+    if(system == nullptr || system->getNumParticles() == 0) {
         return;
     }
 
     QPointF sum(0, 0);
     int numNodes = 0;
 
-    for(int i = 0; i < system->size(); i++) {
+    for(int i = 0; i < system->getNumParticles(); i++) {
         const Particle& p = system->at(i);
         sum = sum + nodeToWorldCoord(p.head);
         numNodes++;
@@ -199,25 +199,25 @@ void VisItem::drawParticles(const Quad& view)
 {
     particleTex->bind();
     glfn->glBegin(GL_QUADS);
-    for(int i = 0; i < system->size(); ++i) {
+    for(int i = 0; i < system->getNumParticles(); ++i) {
         const Particle& p = system->at(i);
         if(inView(nodeToWorldCoord(p.head), view)) {
             drawMarks(p);
         }
     }
-    for(int i = 0; i < system->size(); ++i) {
+    for(int i = 0; i < system->getNumParticles(); ++i) {
         const Particle& p = system->at(i);
         if(inView(nodeToWorldCoord(p.head), view)) {
             drawParticle(p);
         }
     }
-    for(int i = 0; i < system->size(); ++i) {
+    for(int i = 0; i < system->getNumParticles(); ++i) {
         const Particle& p = system->at(i);
         if(inView(nodeToWorldCoord(p.head), view)) {
             drawBorders(p);
         }
     }
-    for(int i = 0; i < system->size(); ++i) {
+    for(int i = 0; i < system->getNumParticles(); ++i) {
         const Particle& p = system->at(i);
         if(inView(nodeToWorldCoord(p.head), view)) {
             drawBorderPoints(p);

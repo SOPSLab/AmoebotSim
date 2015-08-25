@@ -57,6 +57,7 @@ public slots:
     bool getSystemDeadlocked();
 
     int getNumParticles() const;
+    int getNumNonStaticParticles() const;
     int getNumMovements() const;
     int getNumRounds() const;
 

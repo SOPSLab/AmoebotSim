@@ -145,7 +145,7 @@ std::shared_ptr<System> LeaderElectionDemo::instance()
     int itercount =0;
     int structSideLength=  2;
     int numStructParticles = 6*structSideLength;
-    while(system->size() < numStructParticles) {
+    while(system->getNumParticles() < numStructParticles) {
         system->insertParticle(Particle(std::make_shared<LeaderElectionDemo>(Phase::Static), randDir(), pos));
         occupied.insert(pos);
 

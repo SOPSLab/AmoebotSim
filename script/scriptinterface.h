@@ -43,6 +43,7 @@ public slots:
     bool isDeadlocked();
 
     int getNumParticles();
+    int getNumNonStaticParticles();
     int getNumMovements();
     int getNumRounds();
 
@@ -143,6 +144,11 @@ inline bool ScriptInterface::isDeadlocked()
 inline int ScriptInterface::getNumParticles()
 {
     return sim.getNumParticles();
+}
+
+inline int ScriptInterface::getNumNonStaticParticles()
+{
+    return sim.getNumNonStaticParticles();
 }
 
 inline int ScriptInterface::getNumMovements()

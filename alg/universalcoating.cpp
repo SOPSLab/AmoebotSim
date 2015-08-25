@@ -156,7 +156,7 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     int lastOffset = 0;
 
     bool first = !leftBorder && !rightBorder;
-    while(system->size() < numStaticParticles) {
+    while(system->getNumParticles() < numStaticParticles) {
         if(first)
         {
             system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));

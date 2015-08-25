@@ -63,7 +63,7 @@ std::shared_ptr<System> BoundedObjCoating::instance(const int numStaticParticles
     Node Start;
     Node End;
     int lastOffset = 0;
-    while(system->size() < numStaticParticles) {
+    while(system->getNumParticles() < numStaticParticles) {
         system->insertParticle(Particle(std::make_shared<BoundedObjCoating>(Phase::Static), randDir(), pos));
         occupied.insert(pos);
         orderedSurface.push_back(pos);

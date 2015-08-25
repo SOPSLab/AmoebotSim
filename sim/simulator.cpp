@@ -156,7 +156,12 @@ bool Simulator::getSystemDeadlocked()
 
 int Simulator::getNumParticles() const
 {
-    return system->size();
+    return system->getNumParticles();
+}
+
+int Simulator::getNumNonStaticParticles() const
+{
+    return system->getNumNonStaticParticles();
 }
 
 int Simulator::getNumMovements() const

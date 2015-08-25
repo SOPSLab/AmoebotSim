@@ -113,8 +113,14 @@ const Particle& System::at(int index) const{
     return particles.at(index);
 }
 
-int System::size() const{
+int System::getNumParticles() const
+{
     return particles.size();
+}
+
+int System::getNumNonStaticParticles() const
+{
+    return numNonStaticParticles;
 }
 
 System::SystemState System::round(){
