@@ -117,46 +117,51 @@ System::SystemState System::round(){
         return systemState;
     }
 
-    std::deque<Particle*> shuffledParticles;
-    for(auto it = particles.begin(); it != particles.end(); ++it) {
-        shuffledParticles.push_back(&(*it));
-    }
-    std::shuffle(shuffledParticles.begin(), shuffledParticles.end(), rng);
-
+    bool attemptedActivatingEveryParticles = false;
     bool hasBlockedParticles = false;
-    while(shuffledParticles.size() > 0) {
-        Particle* p = shuffledParticles.front();
 
-        if(p->isStatic()) {
-            shuffledParticles.pop_front();
-            continue;
+    while(!attemptedActivatingEveryParticles) {
+        if(shuffledParticles.size() == 0) {
+            attemptedActivatingEveryParticles = true;
+
+            for(auto it = particles.begin(); it != particles.end(); ++it) {
+                shuffledParticles.push_back(&(*it));
+            }
+            std::shuffle(shuffledParticles.begin(), shuffledParticles.end(), rng);
         }
 
-        updateNumRounds(p);
-
-        auto inFlags = assembleFlags(*p);
-        Movement m = p->executeAlgorithm(inFlags);
-
-        if(m.type == MovementType::Empty) {
-            p->discard();
+        while(shuffledParticles.size() > 0) {
+            Particle* p = shuffledParticles.front();
             shuffledParticles.pop_front();
-            continue;
-        } else if(m.type == MovementType::Idle) {
-            p->apply();
-            return systemState;
-        } else if(m.type == MovementType::Expand) {
-            if(handleExpansion(*p, m.label)) {
-                return systemState;
-            }
-        } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
-            if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
-                return systemState;
-            }
-        }
 
-        // particle is blocked, it can not exceute its action
-        hasBlockedParticles = true;
-        shuffledParticles.pop_front();
+            if(p->isStatic()) {
+                continue;
+            }
+
+            updateNumRounds(p);
+
+            auto inFlags = assembleFlags(*p);
+            Movement m = p->executeAlgorithm(inFlags);
+
+            if(m.type == MovementType::Empty) {
+                p->discard();
+                continue;
+            } else if(m.type == MovementType::Idle) {
+                p->apply();
+                return systemState;
+            } else if(m.type == MovementType::Expand) {
+                if(handleExpansion(*p, m.label)) {
+                    return systemState;
+                }
+            } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
+                if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
+                    return systemState;
+                }
+            }
+
+            // particle is blocked, it can not exceute its action
+            hasBlockedParticles = true;
+        }
     }
 
     if(hasBlockedParticles) {

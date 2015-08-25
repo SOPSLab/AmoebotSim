@@ -59,6 +59,7 @@ protected:
     std::deque<Particle> particles;
     std::map<Node, Particle*> particleMap;
     std::set<Particle*> activatedParticles;
+    std::deque<Particle*> shuffledParticles;
 
     SystemState systemState;
     Node disconnectionNode;
