@@ -26,9 +26,11 @@ public:
     System(const System& other);
     System& operator=(const System& other);
 
-    SystemState insert(const Particle &p);
+    void insertParticle(const Particle &p);
+    void insertParticleAt(const Node &n);
     const Particle& at(int index) const;
-    int size() const;
+    int getNumParticles() const;
+    int getNumNonStaticParticles() const;
 
     SystemState round();
     SystemState roundPermutation();
@@ -46,16 +48,23 @@ protected:
     bool isConnected() const;
     void updateNumRounds(Particle* p);
 
+public:
+    // FIXME: Not the nice way of doing it.
+    // But until we actually appraoch algorithms for disconnected systems it should do just fine.
+    static bool checkConnectivity;
+
 protected:
     std::mt19937 rng;
 
     std::deque<Particle> particles;
     std::map<Node, Particle*> particleMap;
     std::set<Particle*> activatedParticles;
+    std::deque<Particle*> shuffledParticles;
 
     SystemState systemState;
     Node disconnectionNode;
 
+    unsigned int numNonStaticParticles;
     int numMovements;
     int numRounds;
 };

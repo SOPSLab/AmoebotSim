@@ -21,8 +21,10 @@ public:
     virtual ~Algorithm();
 
     virtual Movement execute(std::array<const Flag*, 10>& flags) = 0;
+    virtual std::shared_ptr<Algorithm> blank() const = 0;
     virtual std::shared_ptr<Algorithm> clone() = 0;
     virtual bool isDeterministic() const = 0;
+    virtual bool isStatic() const = 0;
 
     virtual const Flag* flagAt(const int i) const = 0;
 
@@ -105,8 +107,8 @@ inline Algorithm::Algorithm()
       headMarkDir(-1),
       tailMarkColor(-1),
       tailMarkDir(-1),
-      borderColors({-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}),
-      borderPointColors({-1,-1,-1,-1,-1,-1}),
+      borderColors({{-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}}),
+      borderPointColors({{-1,-1,-1,-1,-1,-1}}),
       _tailDir(-1)
 {
     static bool rngInitialized = false;

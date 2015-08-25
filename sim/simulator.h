@@ -45,6 +45,7 @@ public slots:
     void finished();
 
     void roundForParticleAt(const int x, const int y);
+    void insertParticleAt(const int x, const int y);
 
     void executeCommand(const QString cmd);
     void runScript(const QString script);
@@ -56,9 +57,11 @@ public slots:
     bool getSystemDeadlocked();
 
     int getNumParticles() const;
+    int getNumNonStaticParticles() const;
     int getNumMovements() const;
     int getNumRounds() const;
 
+    void setCheckConnectivity(bool b);
     void setRoundDuration(int ms);
     void saveScreenshotSlot(const QString filePath);
 

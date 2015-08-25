@@ -196,15 +196,15 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     int lastOffset = 0;
 
     bool first = !leftBorder && !rightBorder;
-    while(system->size() < numStaticParticles) {
+    while(system->getNumParticles() < numStaticParticles) {
         if(first)
         {
-            system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));
+            system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));
             first = false;
         }
         else
         {
-            system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));
+            system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));
         }
         occupied.insert(pos);
         orderedSurface.push_back(pos);
@@ -228,7 +228,7 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     if(leftBorder)
     {
         //while(counter < yMax) {
-        system->insert( Particle(std::make_shared<UniversalCoating>(Phase::StaticBorder), randDir(), pos1));
+        system->insertParticle( Particle(std::make_shared<UniversalCoating>(Phase::StaticBorder), randDir(), pos1));
 
         occupied.insert(pos1);
         orderedSurface.push_back(pos1);
@@ -247,7 +247,7 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     {
         counter =0;
         //  while(counter < yMax) {
-        system->insert( Particle(std::make_shared<UniversalCoating>(Phase::StaticBorder), randDir(), pos2));
+        system->insertParticle( Particle(std::make_shared<UniversalCoating>(Phase::StaticBorder), randDir(), pos2));
         occupied.insert(pos2);
         orderedSurface.push_back(pos2);
         int offset;
@@ -295,8 +295,8 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
             if(randBool(1.0f - holeProb)) {
                 std::shared_ptr<UniversalCoating> newParticle= std::make_shared<UniversalCoating>(Phase::Inactive);
                 newParticle->id = idCounter;
-                system->insert(Particle(newParticle, randDir(), *it));
-                // system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Inactive), randDir(), *it));
+                system->insertParticle(Particle(newParticle, randDir(), *it));
+                // system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Inactive), randDir(), *it));
                 numNonStaticParticles++;
 
                 for(int dir = 1; dir <= 2; dir++) {
@@ -318,11 +318,93 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     }
 
     return system;
+<<<<<<< HEAD
   /*  std::shared_ptr<System> system = std::make_shared<System>();
     std::deque<Node> orderedSurface;
     std::set<Node> occupied;
     Node pos;
     int lastOffset = 0;
+=======
+
+//    const int hexRadius = 5;
+//    const int numParticles = 100;
+//    const float holeProb = 0.5;
+
+//    std::shared_ptr<System> system = std::make_shared<System>();
+
+//    std::set<Node> occupied;
+
+//    // grow hexagon of given radius
+//    system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Static), randDir(), Node(0, 0)));
+//    occupied.insert(Node(0, 0));
+//    std::set<Node> layer1, layer2;
+//    layer1.insert(Node(0, 0));
+//    for(int i = 1; i < hexRadius; i++) {
+//        for(auto n : layer1) {
+//            for(int dir = 0; dir < 6; dir++) {
+//                auto neighbor = n.nodeInDir(dir);
+//                if(occupied.find(neighbor) == occupied.end() && layer1.find(neighbor) == layer1.end()) {
+//                    layer2.insert(neighbor);
+//                }
+//            }
+//        }
+
+//        for(auto n : layer2) {
+//            system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Static), randDir(), n));
+//            occupied.insert(n);
+//        }
+
+//        layer1 = layer2;
+//        layer2.clear();
+//    }
+
+//    // determine candidate set by "growing an additional layer"
+//    std::set<Node> candidates;
+//    for(auto n : layer1) {
+//        for(int dir = 0; dir < 6; dir++) {
+//            auto neighbor = n.nodeInDir(dir);
+//            if(occupied.find(neighbor) == occupied.end() && layer1.find(neighbor) == layer1.end()) {
+//                candidates.insert(neighbor);
+//            }
+//        }
+//    }
+
+//    // add inactive particles
+//    int numNonStaticParticles = 0;
+//    while(numNonStaticParticles < numParticles && !candidates.empty()) {
+//        // pick random candidate
+//        int randIndex = randInt(0, candidates.size());
+//        Node randomCandidate;
+//        for(auto it = candidates.begin(); it != candidates.end(); ++it) {
+//            if(randIndex == 0) {
+//                randomCandidate = *it;
+//                candidates.erase(it);
+//                break;
+//            } else {
+//                randIndex--;
+//            }
+//        }
+
+//        occupied.insert(randomCandidate);
+
+//        if(randBool(1.0f - holeProb)) {
+//            // only add particle if not a hole
+//            system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Inactive), randDir(), randomCandidate));
+//            numNonStaticParticles++;
+
+//            // add new candidates
+//            for(int i = 0; i < 6; i++) {
+//                auto neighbor = randomCandidate.nodeInDir(i);
+//                if(occupied.find(neighbor) == occupied.end()) {
+//                    candidates.insert(neighbor);
+//                }
+//            }
+//        }
+//    }
+
+//    return system;
+}
+>>>>>>> 33bc9603045fa48632c128a0046aac4ccd51cf6c
 
     // begin hexagon structure
     int offset =0;
@@ -972,6 +1054,11 @@ Movement UniversalCoating::execute()
     return Movement(MovementType::Empty);
 }
 
+std::shared_ptr<Algorithm> UniversalCoating::blank() const
+{
+    return std::make_shared<UniversalCoating>(Phase::Inactive);
+}
+
 std::shared_ptr<Algorithm> UniversalCoating::clone()
 {
     return std::make_shared<UniversalCoating>(*this);
@@ -980,6 +1067,12 @@ std::shared_ptr<Algorithm> UniversalCoating::clone()
 bool UniversalCoating::isDeterministic() const
 {
     return true;
+}
+
+bool UniversalCoating::isStatic() const
+{
+    // NOTE: Alex, I'm not sure what to put here since you have two different kinds of static.
+    return false;
 }
 
 void UniversalCoating::setPhase(const Phase _phase)

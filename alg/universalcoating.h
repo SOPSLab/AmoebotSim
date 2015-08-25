@@ -119,10 +119,18 @@ public:
 
 
     virtual Movement execute();
+<<<<<<< HEAD
     virtual std::shared_ptr<Algorithm> clone();
     virtual bool isDeterministic() const;
     void paintFrontSegment(const int color);
     void paintBackSegment(const int color);
+=======
+    virtual Movement subExecute();
+    virtual std::shared_ptr<Algorithm> blank() const override;
+    virtual std::shared_ptr<Algorithm> clone();
+    virtual bool isDeterministic() const;
+    virtual bool isStatic() const;
+>>>>>>> 33bc9603045fa48632c128a0046aac4ccd51cf6c
 
 protected:
     void setPhase(const Phase _phase);

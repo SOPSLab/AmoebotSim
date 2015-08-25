@@ -34,7 +34,7 @@ std::shared_ptr<System> ExampleAlgorithm::instance(const int numParticles)
         int orientation = randDir();
         Node position = Node(x - numParticles / 2, 0);
         int tailDir = -1;
-        system->insert(Particle(std::make_shared<ExampleAlgorithm>(phase), orientation, position, tailDir));
+        system->insertParticle(Particle(std::make_shared<ExampleAlgorithm>(phase), orientation, position, tailDir));
     }
     return system; // Note that the ownership goes to the caller!
 }
@@ -94,6 +94,11 @@ Movement ExampleAlgorithm::execute()
     }
 }
 
+std::shared_ptr<Algorithm> ExampleAlgorithm::blank() const
+{
+    return std::make_shared<ExampleAlgorithm>(Phase::Idle);
+}
+
 std::shared_ptr<Algorithm> ExampleAlgorithm::clone()
 {
     // Use (correctly implemented) copy constructor to do the cloning.
@@ -104,6 +109,11 @@ bool ExampleAlgorithm::isDeterministic() const
 {
     // Our algorithm works completely deterministically. Specifying this here allows the simulator to detect deadlocks.
     return true;
+}
+
+bool ExampleAlgorithm::isStatic() const
+{
+    return false;
 }
 
 void ExampleAlgorithm::setPhase(Phase _phase)

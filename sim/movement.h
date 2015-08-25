@@ -13,7 +13,7 @@ enum class MovementType
 class Movement
 {
 public:
-    Movement(MovementType _type, int _label = 0);
+    Movement(MovementType _type = MovementType::Empty, int _label = 0);
 
 public:
     MovementType type;

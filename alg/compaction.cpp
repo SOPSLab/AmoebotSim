@@ -85,11 +85,11 @@ std::shared_ptr<System> Compaction::instance(const unsigned int size)
     }
 
     // insert the seed and all particles from its component into the system
-    system->insert(Particle(std::make_shared<Compaction>(State::Seed), randDir(), seed, -1));
+    system->insertParticle(Particle(std::make_shared<Compaction>(State::Seed), randDir(), seed, -1));
     while(!seedComponent.empty()) {
         auto node = *seedComponent.begin();
         seedComponent.erase(seedComponent.begin());
-        system->insert(Particle(std::make_shared<Compaction>(State::Idle), randDir(), node, -1));
+        system->insertParticle(Particle(std::make_shared<Compaction>(State::Idle), randDir(), node, -1));
     }
 
     return system;
@@ -179,6 +179,11 @@ Movement Compaction::execute()
     return Movement(MovementType::Idle);
 }
 
+std::shared_ptr<Algorithm> Compaction::blank() const
+{
+    return std::make_shared<Compaction>(State::Idle);
+}
+
 std::shared_ptr<Algorithm> Compaction::clone()
 {
     return std::make_shared<Compaction>(*this);
@@ -187,6 +192,11 @@ std::shared_ptr<Algorithm> Compaction::clone()
 bool Compaction::isDeterministic() const
 {
     return false; // uses randomization in leaf switch
+}
+
+bool Compaction::isStatic() const
+{
+    return false;
 }
 
 void Compaction::setState(const State _state)

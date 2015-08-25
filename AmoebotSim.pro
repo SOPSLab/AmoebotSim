@@ -28,7 +28,6 @@ HEADERS += \
     ui/visitem.h \
     alg/ring.h \
     alg/line.h \
-    alg/rhomboid.h \
     alg/square.h \
     alg/boundedobjcoating.h \
     alg/compaction.h \
@@ -55,7 +54,6 @@ SOURCES += \
     ui/visitem.cpp \
     alg/ring.cpp \
     alg/line.cpp \
-    alg/rhomboid.cpp \
     alg/square.cpp \
     alg/boundedobjcoating.cpp \
     alg/compaction.cpp \

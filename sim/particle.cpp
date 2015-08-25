@@ -56,6 +56,7 @@ Particle& Particle::operator=(const Particle& other)
 Movement Particle::executeAlgorithm(std::array<const Flag*, 10>& inFlag)
 {
     Q_ASSERT(newAlgorithm == nullptr);
+    Q_ASSERT(!algorithm->isStatic());
     newAlgorithm = algorithm->clone();
     return newAlgorithm->execute(inFlag);
 }
@@ -76,6 +77,10 @@ void Particle::discard()
 const Flag* Particle::getFlagForNodeInDir(const Node node, const int dir)
 {
     return algorithm->flagAt(labelOfNeighboringNodeInDir(node, dir));
+}
+
+std::shared_ptr<const Algorithm> Particle::getAlgorithm() const{
+  return std::const_pointer_cast<const Algorithm>(algorithm);
 }
 
 Node Particle::tail() const
@@ -256,4 +261,9 @@ int Particle::borderPointDir(const int dir) const
 bool Particle::algorithmIsDeterministic() const
 {
     return algorithm->isDeterministic();
+}
+
+bool Particle::isStatic() const
+{
+    return algorithm->isStatic();
 }

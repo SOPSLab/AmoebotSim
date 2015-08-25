@@ -49,7 +49,7 @@ namespace Square {
 	    std::set<Node> occupied, candidates;
 
 	    // Create Seed Particle
-	    system->insert(Particle(std::make_shared<Square>(State::Seed), randDir(), Node(0,0), -1));
+	    system->insertParticle(Particle(std::make_shared<Square>(State::Seed), randDir(), Node(0,0), -1));
 	    occupied.insert(Node(0,0));
 
 	    for(int dir = 0; dir<6;dir++){
@@ -79,7 +79,7 @@ namespace Square {
 	            }
 	        }
 	        // Insert new idle particle
-		system->insert(Particle(std::make_shared<Square>(State::Idle), randDir(), head, -1));
+		system->insertParticle(Particle(std::make_shared<Square>(State::Idle), randDir(), head, -1));
 	    }
     return system;
 	} 
@@ -178,6 +178,10 @@ headMarkColor = 0x000000; //dark green
 		
 	}
 
+    std::shared_ptr<Algorithm> Square::blank() const{
+        return std::make_shared<Square>(State::Idle);
+    }
+
 	std::shared_ptr<Algorithm> Square::clone() {
 		return std::make_shared<Square>(*this);
 	}
@@ -185,6 +189,11 @@ headMarkColor = 0x000000; //dark green
 	bool Square::isDeterministic() const {
 		return true; //not sure ifthis is true, haven't written alg yet
 	}
+
+    bool Square::isStatic() const
+    {
+        return false;
+    }
 
 	int Square::isPointedAt() {
 	    for(int label = 0; label < 10; label++) {

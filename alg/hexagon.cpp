@@ -49,7 +49,7 @@ std::shared_ptr<System> Hexagon::instance(const unsigned int size, const double 
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insert(Particle(std::make_shared<Hexagon>(State::Seed), randDir(), Node(0,0), -1));
+    system->insertParticle(Particle(std::make_shared<Hexagon>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -79,7 +79,7 @@ std::shared_ptr<System> Hexagon::instance(const unsigned int size, const double 
             }
         }
         // Insert new idle particle
-        system->insert(Particle(std::make_shared<Hexagon>(State::Idle), randDir(), head, -1));
+        system->insertParticle(Particle(std::make_shared<Hexagon>(State::Idle), randDir(), head, -1));
     }
     return system;
 }
@@ -156,6 +156,11 @@ Movement Hexagon::execute()
     }
 }
 
+std::shared_ptr<Algorithm> Hexagon::blank() const
+{
+    return std::make_shared<Hexagon>(State::Idle);
+}
+
 std::shared_ptr<Algorithm> Hexagon::clone()
 {
     return std::make_shared<Hexagon>(*this);
@@ -164,6 +169,11 @@ std::shared_ptr<Algorithm> Hexagon::clone()
 bool Hexagon::isDeterministic() const
 {
     return true;
+}
+
+bool Hexagon::isStatic() const
+{
+    return false;
 }
 
 int Hexagon::isPointedAt(){

@@ -23,6 +23,7 @@ public:
     void discard();
 
     const Flag* getFlagForNodeInDir(const Node node, const int dir);
+    std::shared_ptr<const Algorithm> getAlgorithm() const;
 
     Node tail() const;
 
@@ -47,6 +48,7 @@ public:
     std::array<int, 6> borderPointColors() const;
     int borderPointDir(const int dir) const;
     bool algorithmIsDeterministic() const;
+    bool isStatic() const;
 
     template<int n> static int posMod(const int a);
 

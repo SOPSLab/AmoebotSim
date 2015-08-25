@@ -145,8 +145,8 @@ std::shared_ptr<System> LeaderElectionDemo::instance()
     int itercount =0;
     int structSideLength=  2;
     int numStructParticles = 6*structSideLength;
-    while(system->size() < numStructParticles) {
-        system->insert(Particle(std::make_shared<LeaderElectionDemo>(Phase::Static), randDir(), pos));
+    while(system->getNumParticles() < numStructParticles) {
+        system->insertParticle(Particle(std::make_shared<LeaderElectionDemo>(Phase::Static), randDir(), pos));
         occupied.insert(pos);
 
         orderedSurface.push_back(pos);
@@ -196,7 +196,7 @@ std::shared_ptr<System> LeaderElectionDemo::instance()
             newParticle->id = idCounter;
             // if(idCounter!=0 && idCounter!=9)
             // newParticle->ownTokenValue =0;
-            system->insert(Particle(newParticle, randDir(), *it));
+            system->insertParticle(Particle(newParticle, randDir(), *it));
             numNonStaticParticles++;
             //           qDebug()<<"init? "<<initSide<<"iter: "<<itercount;
             if(!initSide && (itercount-1)%3 ==0)
@@ -715,6 +715,11 @@ Movement LeaderElectionDemo::execute()
     return Movement(MovementType::Empty);
 }
 
+std::shared_ptr<Algorithm> LeaderElectionDemo::blank() const
+{
+    return std::make_shared<LeaderElectionDemo>(Phase::Inactive);
+}
+
 std::shared_ptr<Algorithm> LeaderElectionDemo::clone()
 {
     return std::make_shared<LeaderElectionDemo>(*this);
@@ -723,6 +728,11 @@ std::shared_ptr<Algorithm> LeaderElectionDemo::clone()
 bool LeaderElectionDemo::isDeterministic() const
 {
     return true;
+}
+
+bool LeaderElectionDemo::isStatic() const
+{
+    return false;
 }
 
 void LeaderElectionDemo::setPhase(const Phase _phase)

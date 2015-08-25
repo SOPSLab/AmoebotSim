@@ -1,11 +1,14 @@
 #include <algorithm>
 #include <chrono>
 #include <utility>
-
+#include <iostream>
 #include "sim/system.h"
+
+bool System::checkConnectivity = true;
 
 System::System()
     : systemState(SystemState::Valid),
+      numNonStaticParticles(0),
       numMovements(0),
       numRounds(0)
 {
@@ -26,28 +29,29 @@ System::System(const System& other)
     : rng(other.rng),
       systemState(other.systemState),
       disconnectionNode(other.disconnectionNode),
+      numNonStaticParticles(other.numNonStaticParticles),
       numMovements(other.numMovements),
       numRounds(other.numRounds)
 {
     for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
-        insert(*it);
+        insertParticle(*it);
     }
 }
 
-System& System::operator=(const System& other)
-{
+System& System::operator=(const System& other){
     rng = other.rng;
     systemState = other.systemState;
     disconnectionNode = other.disconnectionNode;
+    numNonStaticParticles = other.numNonStaticParticles;
     numMovements = other.numMovements;
     numRounds = other.numRounds;
     for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
-        insert(*it);
+        insertParticle(*it);
     }
     return (*this);
 }
 
-System::SystemState System::insert(const Particle& p)
+void System::insertParticle(const Particle& p)
 {
     Q_ASSERT(particleMap.find(p.head) == particleMap.end());
     Q_ASSERT(p.tailDir == -1 || particleMap.find(p.tail()) == particleMap.end());
@@ -57,64 +61,107 @@ System::SystemState System::insert(const Particle& p)
     if(p.tailDir != -1) {
         particleMap.insert(std::pair<Node, Particle*>(p.tail(), &particles.back()));
     }
-    return SystemState::Valid;
+
+    if(!p.isStatic()) {
+        numNonStaticParticles++;
+    }
 }
 
-const Particle& System::at(int index) const
+void System::insertParticleAt(const Node &n)
 {
+    if(particles.size() == 0 || systemState != SystemState::Valid) {
+        return;
+    }
+
+    auto it = particleMap.find(n);
+    if(it == particleMap.end()) {
+        auto algorithm = particles[0].getAlgorithm()->blank();
+        std::uniform_int_distribution<int> dist(0, 5);
+        Particle newParticle(algorithm, dist(rng), n, -1);
+
+        particles.push_back(newParticle);
+        auto pair = particleMap.insert(std::pair<Node, Particle*>(n, &particles.back()));
+        if(checkConnectivity && !isConnected()) {
+            particles.pop_back();
+            auto it = pair.first;
+            particleMap.erase(it);
+        } else {
+            if(!newParticle.isStatic()) {
+                numNonStaticParticles++;
+            }
+        }
+    }
+}
+
+const Particle& System::at(int index) const{
     return particles.at(index);
 }
 
-int System::size() const
+int System::getNumParticles() const
 {
     return particles.size();
 }
 
-System::SystemState System::round()
+int System::getNumNonStaticParticles() const
 {
+    return numNonStaticParticles;
+}
+
+System::SystemState System::round(){
     if(systemState != SystemState::Valid) {
         return systemState;
     }
 
-    if(particles.size() == 0) {
+    if(numNonStaticParticles == 0) {
         systemState = SystemState::Terminated;
         return systemState;
     }
 
-    std::deque<Particle*> shuffledParticles;
-    for(auto it = particles.begin(); it != particles.end(); ++it) {
-        shuffledParticles.push_back(&(*it));
-    }
-    std::shuffle(shuffledParticles.begin(), shuffledParticles.end(), rng);
-
+    bool attemptedActivatingEveryParticles = false;
     bool hasBlockedParticles = false;
-    while(shuffledParticles.size() > 0) {
-        Particle* p = shuffledParticles.front();
-        updateNumRounds(p);
 
-        auto inFlags = assembleFlags(*p);
-        Movement m = p->executeAlgorithm(inFlags);
+    while(!attemptedActivatingEveryParticles) {
+        if(shuffledParticles.size() == 0) {
+            attemptedActivatingEveryParticles = true;
 
-        if(m.type == MovementType::Empty) {
-            p->discard();
-            shuffledParticles.pop_front();
-            continue;
-        } else if(m.type == MovementType::Idle) {
-            p->apply();
-            return systemState;
-        } else if(m.type == MovementType::Expand) {
-            if(handleExpansion(*p, m.label)) {
-                return systemState;
+            for(auto it = particles.begin(); it != particles.end(); ++it) {
+                shuffledParticles.push_back(&(*it));
             }
-        } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
-            if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
-                return systemState;
-            }
+            std::shuffle(shuffledParticles.begin(), shuffledParticles.end(), rng);
         }
 
-        // particle is blocked, it can not exceute its action
-        hasBlockedParticles = true;
-        shuffledParticles.pop_front();
+        while(shuffledParticles.size() > 0) {
+            Particle* p = shuffledParticles.front();
+            shuffledParticles.pop_front();
+
+            if(p->isStatic()) {
+                continue;
+            }
+
+            updateNumRounds(p);
+
+            auto inFlags = assembleFlags(*p);
+            Movement m = p->executeAlgorithm(inFlags);
+
+            if(m.type == MovementType::Empty) {
+                p->discard();
+                continue;
+            } else if(m.type == MovementType::Idle) {
+                p->apply();
+                return systemState;
+            } else if(m.type == MovementType::Expand) {
+                if(handleExpansion(*p, m.label)) {
+                    return systemState;
+                }
+            } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
+                if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
+                    return systemState;
+                }
+            }
+
+            // particle is blocked, it can not exceute its action
+            hasBlockedParticles = true;
+        }
     }
 
     if(hasBlockedParticles) {
@@ -126,16 +173,16 @@ System::SystemState System::round()
     } else {
         systemState = SystemState::Terminated;
     }
+
     return systemState;
 }
 
-System::SystemState System::roundPermutation()
-{
+System::SystemState System::roundPermutation(){
     if(systemState != SystemState::Valid) {
         return systemState;
     }
 
-    if(particles.size() == 0) {
+    if(numNonStaticParticles == 0) {
         systemState = SystemState::Terminated;
         return systemState;
     }
@@ -150,6 +197,12 @@ System::SystemState System::roundPermutation()
     bool somethingActed = false;
     while(shuffledParticles.size() > 0) {
         Particle* p = shuffledParticles.front();
+
+        if(p->isStatic()) {
+            shuffledParticles.pop_front();
+            continue;
+        }
+
         updateNumRounds(p);
 
         auto inFlags = assembleFlags(*p);
@@ -195,19 +248,18 @@ System::SystemState System::roundPermutation()
     return systemState;
 }
 
-System::SystemState System::roundForParticle(const Node node)
-{
+System::SystemState System::roundForParticle(const Node node){
     if(systemState != SystemState::Valid) {
         return systemState;
     }
 
-    if(particles.size() == 0) {
+    if(numNonStaticParticles == 0) {
         systemState = SystemState::Terminated;
         return systemState;
     }
 
     auto it = particleMap.find(node);
-    if(it == particleMap.end()) {
+    if(it == particleMap.end() || it->second->isStatic()) {
         return systemState;
     }
 
@@ -229,28 +281,23 @@ System::SystemState System::roundForParticle(const Node node)
     return systemState;
 }
 
-System::SystemState System::getSystemState() const
-{
+System::SystemState System::getSystemState() const{
     return systemState;
 }
 
-Node System::getDisconnectionNode() const
-{
+Node System::getDisconnectionNode() const{
     return disconnectionNode;
 }
 
-int System::getNumMovements() const
-{
+int System::getNumMovements() const{
     return numMovements;
 }
 
-int System::getNumRounds() const
-{
+int System::getNumRounds() const{
     return numRounds;
 }
 
-std::array<const Flag*, 10> System::assembleFlags(Particle& p)
-{
+std::array<const Flag*, 10> System::assembleFlags(Particle& p){
     std::array<const Flag*, 10> flags;    
 
     int labelLimit = p.tailDir == -1 ? 6 : 10;
@@ -272,8 +319,7 @@ std::array<const Flag*, 10> System::assembleFlags(Particle& p)
     return flags;
 }
 
-bool System::handleExpansion(Particle& p, int label)
-{
+bool System::handleExpansion(Particle& p, int label){
     if(p.tailDir != -1) {
         p.discard(); // already expanded particle cannot expand
         return false;
@@ -288,7 +334,7 @@ bool System::handleExpansion(Particle& p, int label)
     Node newHead = p.head.nodeInDir(label);
 
     auto otherParticleIt = particleMap.find(newHead);
-    if(otherParticleIt == particleMap.end()) {
+    if(otherParticleIt == particleMap.end() || otherParticleIt->second->isStatic()) {
         // expansion into empty node
         particleMap.insert(std::pair<Node, Particle*>(newHead, &p));
         p.head = newHead;
@@ -307,7 +353,7 @@ bool System::handleExpansion(Particle& p, int label)
             auto inFlags = assembleFlags(*otherParticle);
             Movement m = otherParticle->executeAlgorithm(inFlags);
 
-            // NOTE: Do we want this?
+            // An attempt towards a pull or push also counts as an activation.
             updateNumRounds(otherParticle);
 
             if(m.type == MovementType::HandoverContract || m.type == MovementType::Contract) {
@@ -332,8 +378,7 @@ bool System::handleExpansion(Particle& p, int label)
     }
 }
 
-bool System::handleContraction(Particle& p, int label, bool isHandoverContraction)
-{
+bool System::handleContraction(Particle& p, int label, bool isHandoverContraction){
     if(p.tailDir == -1) {
         p.discard(); // already contracted particle cannot contract
         return false;
@@ -389,6 +434,10 @@ bool System::handleContraction(Particle& p, int label, bool isHandoverContractio
             }
             Particle& p2 = *mapIt->second;
 
+            if(p2.isStatic()) {
+                continue;
+            }
+
             // check whether p2 wants to expand and into which node
             if(p2.tailDir != -1) {
                 continue; // already expanded particle cannot expand
@@ -396,7 +445,8 @@ bool System::handleContraction(Particle& p, int label, bool isHandoverContractio
             auto inFlags = assembleFlags(p2);
             Movement m = p2.executeAlgorithm(inFlags);
 
-            // NOTE: Do we want this?
+            // An attempt towards a pull or push also counts as an activation.
+            // NOTE: This is a little bit unfair. Should failed attempts really count as an activation?
             updateNumRounds(&p2);
 
             if(m.type != MovementType::Expand) {
@@ -452,7 +502,7 @@ bool System::handleContraction(Particle& p, int label, bool isHandoverContractio
         particleMap.insert(std::pair<Node, Particle*>(handoverNode, handoverParticle));
     } else {
         // an isolated contraction is the only action that can disconnect the system
-        if(!isConnected()) {
+        if(checkConnectivity && !isConnected()) {
             systemState = SystemState::Disconnected;
             disconnectionNode = handoverNode;
         }
@@ -460,8 +510,7 @@ bool System::handleContraction(Particle& p, int label, bool isHandoverContractio
     return true;
 }
 
-bool System::isConnected() const
-{
+bool System::isConnected() const{
     if(particleMap.empty()) {
         return true;
     }
@@ -490,10 +539,9 @@ bool System::isConnected() const
     return occupiedNodes.empty();
 }
 
-void System::updateNumRounds(Particle *p)
-{
+void System::updateNumRounds(Particle *p){
     activatedParticles.insert(p);
-    if(activatedParticles.size() == particles.size()) {
+    if(activatedParticles.size() == numNonStaticParticles) {
         numRounds++;
         activatedParticles.clear();
     }

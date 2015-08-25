@@ -103,6 +103,11 @@ public:
     virtual Movement execute();
 
     /*
+     * This method has to be implemented and has to correctly initialise a blank copy of this algorithm.
+     * */
+    virtual std::shared_ptr<Algorithm> blank() const override;
+
+    /*
      * This method has to be implemented and has to correctly copy all member variables of an algorithm. The easiest way
      * to achieve this is to implement a correct copy constructor and use it to implement cloning, as is done in this
      * example algorithm.
@@ -116,6 +121,19 @@ public:
      * seems to be a deadlock at one point in time might act differently later on, so that the "deadlock" resolves.
      * */
     virtual bool isDeterministic() const;
+
+    /*
+     * This function should return true if the particle is part of a static structure (e.g., a particle that belongs
+     * the object to be coated in a coating-problem). If this function returns true, the particle will never get to
+     * execute any action. In fact, it's execute-function is never called. Such particle will also not be considered in
+     * counting rounds.
+     * IMPORTANT: This function should NOT return true for "finished particle", i.e., particles that were acting in the
+     * past but are now done. Only return true if the corresponding particle isn't a real particle (in the sense of an
+     * acting entity) in the first place.
+     * ALSO IMPORTANT: This function must return the correct result immediately after initialisation. Also the return
+     * value may not change!
+     * */
+    virtual bool isStatic() const;
 
 protected:
     /* What the following methods do should be quite self-explanatory. However, their implementation contains some

@@ -13,7 +13,6 @@
 #include "alg/hexagon.h"
 #include "alg/triangle.h"
 #include "alg/ring.h"
-#include "alg/rhomboid.h"
 #include "sim/simulator.h"
 #include "alg/square.h"
 #include "alg/compaction.h"
@@ -44,9 +43,11 @@ public slots:
     bool isDeadlocked();
 
     int getNumParticles();
+    int getNumNonStaticParticles();
     int getNumMovements();
     int getNumRounds();
 
+    void setCheckConnectivity(bool b);
     void setRoundDuration(int ms);
     void moveCameraTo(float worldX, float worldY);
     void setZoom(float factor);
@@ -61,7 +62,6 @@ public slots:
     void hexagon(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void triangle(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void ring(const unsigned int numParticles = 100, const float holeProb = 0.0);
-    void rhomboid(const unsigned int numParticles = 100, const float holeProb = 0.0, const int sideLength = 10);
     void square(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void compaction(const unsigned int numParticles = 100);
     void holeelimstandard(const unsigned int numParticles = 100);
@@ -147,6 +147,11 @@ inline int ScriptInterface::getNumParticles()
     return sim.getNumParticles();
 }
 
+inline int ScriptInterface::getNumNonStaticParticles()
+{
+    return sim.getNumNonStaticParticles();
+}
+
 inline int ScriptInterface::getNumMovements()
 {
     return sim.getNumMovements();
@@ -155,6 +160,11 @@ inline int ScriptInterface::getNumMovements()
 inline int ScriptInterface::getNumRounds()
 {
     return sim.getNumRounds();
+}
+
+inline void ScriptInterface::setCheckConnectivity(bool b)
+{
+    sim.setCheckConnectivity(b);
 }
 
 inline void ScriptInterface::setRoundDuration(int ms)
@@ -251,6 +261,7 @@ inline void ScriptInterface::triangle(const unsigned int numParticles, const flo
 
     sim.setSystem(Triangle::Triangle::instance(numParticles, holeProb));
 }
+
 inline void ScriptInterface::ring(const unsigned int numParticles, const float holeProb)
 {
     if(holeProb < 0.0f || holeProb > 1.0f) {
@@ -260,15 +271,7 @@ inline void ScriptInterface::ring(const unsigned int numParticles, const float h
 
     sim.setSystem(Ring::Ring::instance(numParticles, holeProb));
 }
-inline void ScriptInterface::rhomboid(const unsigned int numParticles, const float holeProb, const int sideLength)
-{
-    if(holeProb < 0.0f || holeProb > 1.0f) {
-        sim.log("holeProb in [0.0, 1.0] required", true);
-        return;
-    }
 
-    sim.setSystem(Rhomboid::Rhomboid::instance(numParticles, holeProb, sideLength));
-}
 inline void ScriptInterface::square(const unsigned int numParticles, const float holeProb)
 {
     if(holeProb < 0.0f || holeProb > 1.0f) {
@@ -278,26 +281,32 @@ inline void ScriptInterface::square(const unsigned int numParticles, const float
 
     sim.setSystem(Square::Square::instance(numParticles, holeProb));
 }
+
 inline void ScriptInterface::compaction(const unsigned int numParticles)
 {
     sim.setSystem(Compaction::Compaction::instance(numParticles));
 }
+
 inline void ScriptInterface::holeelimstandard(const unsigned int numParticles)
 {
     sim.setSystem(HoleElimStandard::HoleElimStandard::instance(numParticles));
 }
+
 inline void ScriptInterface::holeelimcompaction(const unsigned int numParticles)
 {
     sim.setSystem(HoleElimCompaction::HoleElimCompaction::instance(numParticles));
 }
+
 inline void ScriptInterface::leaderelection(const unsigned int numParticles)
 {
     sim.setSystem(LeaderElection::LeaderElection::instance(numParticles));
 }
+
 inline void ScriptInterface::leaderelectiondemo()
 {
    sim.setSystem(LeaderElectionDemo::LeaderElectionDemo::instance());
 }
+
 inline void ScriptInterface::universalcoating(const  int numStaticParticles, const int numParticles, const float holeProb, const bool leftBorder , const bool rightBorder)
 {
     if(holeProb < 0.0f || holeProb > 1.0f) {
@@ -307,4 +316,5 @@ inline void ScriptInterface::universalcoating(const  int numStaticParticles, con
    sim.setSystem(UniversalCoating::UniversalCoating::instance(numStaticParticles ,numParticles,holeProb, leftBorder, rightBorder));
 
 }
+
 #endif // SCRIPTINTERFACE_H

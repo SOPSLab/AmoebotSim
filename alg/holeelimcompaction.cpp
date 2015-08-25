@@ -87,11 +87,11 @@ std::shared_ptr<System> HoleElimCompaction::instance(const unsigned int size)
     }
 
     // insert the seed and all particles from its component into the system
-    system->insert(Particle(std::make_shared<HoleElimCompaction>(State::Seed), randDir(), seed, -1));
+    system->insertParticle(Particle(std::make_shared<HoleElimCompaction>(State::Seed), randDir(), seed, -1));
     while(!seedComponent.empty()) {
         auto node = *seedComponent.begin();
         seedComponent.erase(seedComponent.begin());
-        system->insert(Particle(std::make_shared<HoleElimCompaction>(State::Idle), randDir(), node, -1));
+        system->insertParticle(Particle(std::make_shared<HoleElimCompaction>(State::Idle), randDir(), node, -1));
     }
 
     return system;
@@ -228,6 +228,11 @@ Movement HoleElimCompaction::execute()
     return Movement(MovementType::Idle);
 }
 
+std::shared_ptr<Algorithm> HoleElimCompaction::blank() const
+{
+    return std::make_shared<HoleElimCompaction>(State::Idle);
+}
+
 std::shared_ptr<Algorithm> HoleElimCompaction::clone()
 {
     return std::make_shared<HoleElimCompaction>(*this);
@@ -236,6 +241,11 @@ std::shared_ptr<Algorithm> HoleElimCompaction::clone()
 bool HoleElimCompaction::isDeterministic() const
 {
     return false; // uses randomization in leaf switch
+}
+
+bool HoleElimCompaction::isStatic() const
+{
+    return false;
 }
 
 void HoleElimCompaction::setState(const State _state)

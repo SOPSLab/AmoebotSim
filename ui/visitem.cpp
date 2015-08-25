@@ -25,7 +25,7 @@ VisItem::VisItem(QQuickItem* parent) :
     setAcceptedMouseButtons(Qt::LeftButton);
 
     renderTimer = std::make_shared<QTimer>(this);
-    renderTimer->start(15);
+    renderTimer->start(30);
 
     blinkTimer = std::make_shared<QTimer>(this);
     connect(blinkTimer.get(), &QTimer::timeout, [&](){blinkValue += 0.1; if(blinkValue >= 1.0) blinkValue = -1.0;});
@@ -55,14 +55,14 @@ void VisItem::moveCameraTo(float worldX, float worldY){
 
 void VisItem::focusOnCenterOfMass()
 {
-    if(system == nullptr || system->size() == 0) {
+    if(system == nullptr || system->getNumParticles() == 0) {
         return;
     }
 
     QPointF sum(0, 0);
     int numNodes = 0;
 
-    for(int i = 0; i < system->size(); i++) {
+    for(int i = 0; i < system->getNumParticles(); i++) {
         const Particle& p = system->at(i);
         sum = sum + nodeToWorldCoord(p.head);
         numNodes++;
@@ -199,25 +199,25 @@ void VisItem::drawParticles(const Quad& view)
 {
     particleTex->bind();
     glfn->glBegin(GL_QUADS);
-    for(int i = 0; i < system->size(); ++i) {
+    for(int i = 0; i < system->getNumParticles(); ++i) {
         const Particle& p = system->at(i);
         if(inView(nodeToWorldCoord(p.head), view)) {
             drawMarks(p);
         }
     }
-    for(int i = 0; i < system->size(); ++i) {
+    for(int i = 0; i < system->getNumParticles(); ++i) {
         const Particle& p = system->at(i);
         if(inView(nodeToWorldCoord(p.head), view)) {
             drawParticle(p);
         }
     }
-    for(int i = 0; i < system->size(); ++i) {
+    for(int i = 0; i < system->getNumParticles(); ++i) {
         const Particle& p = system->at(i);
         if(inView(nodeToWorldCoord(p.head), view)) {
             drawBorders(p);
         }
     }
-    for(int i = 0; i < system->size(); ++i) {
+    for(int i = 0; i < system->getNumParticles(); ++i) {
         const Particle& p = system->at(i);
         if(inView(nodeToWorldCoord(p.head), view)) {
             drawBorderPoints(p);
@@ -383,16 +383,23 @@ const QPointF VisItem::indexToParticleTexPos(const int index) const
 
     return QPointF(column / texSize, row / texSize);
 }
-
+#include <iostream>
 void VisItem::mousePressEvent(QMouseEvent* e)
 {
     if(e->buttons() & Qt::LeftButton) {
         if(e->modifiers() & Qt::ControlModifier) {
-            tranlatingGui = false;
-            Node node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
+            //Executing round for particle
+            tranlatingGui = addingParticles = false;
+            auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
             emit roundForParticleAt(node.x, node.y);
+        } else if(e->modifiers() & Qt::ShiftModifier) {
+            tranlatingGui = false;
+            addingParticles = true;
+            auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
+            emit insertParticleAt(node.x, node.y);
         } else {
             tranlatingGui = true;
+            addingParticles = false;
             lastMousePosGui = e->localPos();
         }
         e->accept();
@@ -401,12 +408,17 @@ void VisItem::mousePressEvent(QMouseEvent* e)
 
 void VisItem::mouseMoveEvent(QMouseEvent* e)
 {
-    if(e->buttons() & Qt::LeftButton && tranlatingGui) {
+    if(e->buttons() & Qt::LeftButton) {
+      if(tranlatingGui){
         QPointF offset = lastMousePosGui - e->localPos();
         QPointF scaledOffset = offset / zoomGui;
         focusPosGui += QPointF(scaledOffset.x(), -scaledOffset.y());
         lastMousePosGui = e->localPos();
-        e->accept();
+      } else if(addingParticles){
+        auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
+        emit insertParticleAt(node.x, node.y);
+      }
+      e->accept();
     }
 }
 

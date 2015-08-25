@@ -39,8 +39,10 @@ void Simulator::init()
         connect(roundTimer.get(), &QTimer::timeout, this, &Simulator::round);
 
         updateTimer = std::make_shared<QTimer>(this);
-        updateTimer->setInterval(33);
+        updateTimer->setInterval(30);
         connect(updateTimer.get(), &QTimer::timeout, [&](){emit updateSystem(std::make_shared<System>(*system));});
+        connect(updateTimer.get(), &QTimer::timeout, [&](){emit numMovementsChanged(system->getNumMovements());});
+        connect(updateTimer.get(), &QTimer::timeout, [&](){emit numRoundsChanged(system->getNumRounds());});
         updateTimer->start();
     }
 }
@@ -68,14 +70,6 @@ void Simulator::round()
         roundTimer->stop();
         emit stopped();
     }
-
-    emit numMovementsChanged(system->getNumMovements());
-    emit numRoundsChanged(system->getNumRounds());
-
-#ifdef QT_DEBUG
-    // increases the chance that when the debugger stops the visualization shows the actual configuration of the system
-    emit updateSystem(std::make_shared<System>(*system));
-#endif
 }
 
 void Simulator::start()
@@ -109,6 +103,11 @@ void Simulator::roundForParticleAt(const int x, const int y)
         emit updateSystem(std::make_shared<System>(*system));
     #endif
     }
+}
+
+void Simulator::insertParticleAt(const int x, const int y){
+  const Node node(x, y);
+  system->insertParticleAt(node);
 }
 
 void Simulator::executeCommand(const QString cmd)
@@ -151,7 +150,12 @@ bool Simulator::getSystemDeadlocked()
 
 int Simulator::getNumParticles() const
 {
-    return system->size();
+    return system->getNumParticles();
+}
+
+int Simulator::getNumNonStaticParticles() const
+{
+    return system->getNumNonStaticParticles();
 }
 
 int Simulator::getNumMovements() const
@@ -162,6 +166,11 @@ int Simulator::getNumMovements() const
 int Simulator::getNumRounds() const
 {
     return system->getNumRounds();
+}
+
+void Simulator::setCheckConnectivity(bool b)
+{
+    System::checkConnectivity = b;
 }
 
 void Simulator::setRoundDuration(int ms)
