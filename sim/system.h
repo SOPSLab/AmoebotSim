@@ -48,6 +48,11 @@ protected:
     bool isConnected() const;
     void updateNumRounds(Particle* p);
 
+public:
+    // FIXME: Not the nice way of doing it.
+    // But until we actually appraoch algorithms for disconnected systems it should do just fine.
+    static bool checkConnectivity;
+
 protected:
     std::mt19937 rng;
 

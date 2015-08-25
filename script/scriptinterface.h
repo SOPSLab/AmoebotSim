@@ -47,6 +47,7 @@ public slots:
     int getNumMovements();
     int getNumRounds();
 
+    void setCheckConnectivity(bool b);
     void setRoundDuration(int ms);
     void moveCameraTo(float worldX, float worldY);
     void setZoom(float factor);
@@ -75,7 +76,7 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    sim.setSystem(InfObjCoating::InfObjCoating::instance(100, 0.2));
+    sim.setSystem(InfObjCoating::InfObjCoating::instance(500, 0.2));
 }
 
 inline void ScriptInterface::round()
@@ -159,6 +160,11 @@ inline int ScriptInterface::getNumMovements()
 inline int ScriptInterface::getNumRounds()
 {
     return sim.getNumRounds();
+}
+
+inline void ScriptInterface::setCheckConnectivity(bool b)
+{
+    sim.setCheckConnectivity(b);
 }
 
 inline void ScriptInterface::setRoundDuration(int ms)

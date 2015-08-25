@@ -61,6 +61,7 @@ public slots:
     int getNumMovements() const;
     int getNumRounds() const;
 
+    void setCheckConnectivity(bool b);
     void setRoundDuration(int ms);
     void saveScreenshotSlot(const QString filePath);
 

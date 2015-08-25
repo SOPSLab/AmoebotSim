@@ -4,6 +4,8 @@
 #include <iostream>
 #include "sim/system.h"
 
+bool System::checkConnectivity = true;
+
 System::System()
     : systemState(SystemState::Valid),
       numNonStaticParticles(0),
@@ -79,7 +81,7 @@ void System::insertParticleAt(const Node &n)
 
         particles.push_back(newParticle);
         auto pair = particleMap.insert(std::pair<Node, Particle*>(n, &particles.back()));
-        if(!isConnected()) {
+        if(checkConnectivity && !isConnected()) {
             particles.pop_back();
             auto it = pair.first;
             particleMap.erase(it);
@@ -495,7 +497,7 @@ bool System::handleContraction(Particle& p, int label, bool isHandoverContractio
         particleMap.insert(std::pair<Node, Particle*>(handoverNode, handoverParticle));
     } else {
         // an isolated contraction is the only action that can disconnect the system
-        if(!isConnected()) {
+        if(checkConnectivity && !isConnected()) {
             systemState = SystemState::Disconnected;
             disconnectionNode = handoverNode;
         }

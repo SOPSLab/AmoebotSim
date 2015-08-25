@@ -168,6 +168,11 @@ int Simulator::getNumRounds() const
     return system->getNumRounds();
 }
 
+void Simulator::setCheckConnectivity(bool b)
+{
+    System::checkConnectivity = b;
+}
+
 void Simulator::setRoundDuration(int ms)
 {
     roundTimer->setInterval(ms);
