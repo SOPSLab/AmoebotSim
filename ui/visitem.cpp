@@ -25,7 +25,7 @@ VisItem::VisItem(QQuickItem* parent) :
     setAcceptedMouseButtons(Qt::LeftButton);
 
     renderTimer = std::make_shared<QTimer>(this);
-    renderTimer->start(15);
+    renderTimer->start(30);
 
     blinkTimer = std::make_shared<QTimer>(this);
     connect(blinkTimer.get(), &QTimer::timeout, [&](){blinkValue += 0.1; if(blinkValue >= 1.0) blinkValue = -1.0;});

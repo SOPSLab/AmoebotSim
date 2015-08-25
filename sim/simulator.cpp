@@ -39,7 +39,9 @@ void Simulator::init()
         connect(roundTimer.get(), &QTimer::timeout, this, &Simulator::round);
 
         updateTimer = std::make_shared<QTimer>(this);
-        updateTimer->setInterval(33);
+        updateTimer->setInterval(30);
+        connect(updateTimer.get(), &QTimer::timeout, [&](){emit updateSystem(std::make_shared<System>(*system));});
+        connect(updateTimer.get(), &QTimer::timeout, [&](){emit numMovementsChanged(system->getNumMovements());});
         connect(updateTimer.get(), &QTimer::timeout, [&](){emit updateSystem(std::make_shared<System>(*system));});
         updateTimer->start();
     }
@@ -68,14 +70,6 @@ void Simulator::round()
         roundTimer->stop();
         emit stopped();
     }
-
-    emit numMovementsChanged(system->getNumMovements());
-    emit numRoundsChanged(system->getNumRounds());
-
-#ifdef QT_DEBUG
-    // increases the chance that when the debugger stops the visualization shows the actual configuration of the system
-    emit updateSystem(std::make_shared<System>(*system));
-#endif
 }
 
 void Simulator::start()
