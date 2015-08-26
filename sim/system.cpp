@@ -159,7 +159,7 @@ System::SystemState System::round(){
                 }
             }
 
-            // particle is blocked, it can not exceute its action
+            // particle is blocked, it cannot execute its action
             hasBlockedParticles = true;
         }
     }
@@ -371,6 +371,7 @@ bool System::handleExpansion(Particle& p, int label){
                 return true;
             } else {
                 // push failed
+                otherParticle->discard();
                 p.discard();
                 return false;
             }
