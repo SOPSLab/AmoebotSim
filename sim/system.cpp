@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <chrono>
 #include <utility>
-#include <iostream>
 #include "sim/system.h"
 
 bool System::checkConnectivity = true;

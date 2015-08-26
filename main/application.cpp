@@ -4,7 +4,6 @@
 #include "main/application.h"
 #include "sim/simulator.h"
 #include "ui/visitem.h"
-#include <iostream>
 
 Q_DECLARE_METATYPE(std::shared_ptr<System>)
 

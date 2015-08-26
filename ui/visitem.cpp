@@ -1,6 +1,5 @@
 #include <array>
 #include <cmath>
-#include <iostream>
 
 #include <QColor>
 #include <QImage>
@@ -39,7 +38,6 @@ void VisItem::updateSystem(std::shared_ptr<System> _system)
 }
 
 void VisItem::setZoom(float factor){
-  //std::cout << "setZoomTo: " << factor <<std::endl;
   zoomGui = factor;
   if(zoomGui < zoomMin) {
       zoomGui = zoomMin;
@@ -49,8 +47,9 @@ void VisItem::setZoom(float factor){
 }
 
 void VisItem::moveCameraTo(float worldX, float worldY){
-  //std::cout << "moveCameraTo: " << worldX <<" "<<worldY <<std::endl;
-  focusPosGui = QPointF(worldX, worldY);
+  const float y = worldY*triangleHeight;
+  const float x = worldX + 0.5 * worldY;
+  focusPosGui = QPointF(x, y);
 }
 
 void VisItem::focusOnCenterOfMass()
@@ -383,7 +382,7 @@ const QPointF VisItem::indexToParticleTexPos(const int index) const
 
     return QPointF(column / texSize, row / texSize);
 }
-#include <iostream>
+
 void VisItem::mousePressEvent(QMouseEvent* e)
 {
     if(e->buttons() & Qt::LeftButton) {
