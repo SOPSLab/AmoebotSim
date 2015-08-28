@@ -37,16 +37,16 @@ The following instructions should get you started working with AmoebotSim; pleas
 - A command-line can be opened by pressing the return-key. The available commands are the methods of the _ScriptInterface_ class in _script/scriptinterface.h_.
     - __round()__: Executes one round in the simulation
     - __runScript(path)__: Executes the scriptfile found in __path__. It must be written in Javascript.
-    - __writeToFile(path, text)__: Writes the given __text__ to the file stated in __path__
-    - __saveScreenshot(filepath="")__: Saves a screenshot of the current window in __filepath__. If __filepath__ is not provided a screenshot will be generated in the build folder.
-    - __isValid()__: Returns true when the algorithm is valid, otherwise false
-    - __isDisconnected()__: Returns true when the algorithm is disconnected, otherwise false
-    - __isTerminated()__: Returns true when the algorithm is terminated, otherwise false
-    - __isDeadlocked()__: Returns true when the algorithm is deadlocked, otherwise false
-    - __getNumParticles()__: Returns the amount of particles in the simulation
-    - __getNumNonStaticParticles()__: Returns the amount of non static particles in the simulation
-    - __getNumMovements()__: Returns the amount of already made movements by the particles in the simulation
-    - __getNumRounds()__: Returns the amount of finished rounds in the simulation
+    - __writeToFile(path, text)__: Writes the given __text__ to the file stated in __path__.
+    - __saveScreenshot(filepath)__: Saves a screenshot of the current window in __filepath__. If __filepath__ is not provided a screenshot will be generated in the build folder.
+    - __isValid()__: Returns true when the algorithm is valid, otherwise false.
+    - __isDisconnected()__: Returns true when the algorithm is disconnected, otherwise false.
+    - __isTerminated()__: Returns true when the algorithm is terminated, otherwise false.
+    - __isDeadlocked()__: Returns true when the algorithm is deadlocked, otherwise false.
+    - __getNumParticles()__: Returns the amount of particles in the simulation.
+    - __getNumNonStaticParticles()__: Returns the amount of non static particles in the simulation.
+    - __getNumMovements()__: Returns the amount of already made movements by the particles in the simulation.
+    - __getNumRounds()__: Returns the amount of finished rounds in the simulation.
     - __setCheckConnectivity(check)__: When __check__ is true newly created particles must be connected, otherwise they don't need to. Default value is true.
     - __setRoundDuration(ms)__: Sets the duration for a round to __ms__ milliseconds.
     - __moveCameraTo(nodeX, nodeY)__: Moves center of the camera to the __(nodeX, nodeY)__ coordinate in the node coordinate system.
