@@ -26,14 +26,34 @@ The following instructions should get you started working with AmoebotSim; pleas
 
 - Move the visualization by holding the left mouse button and moving the mouse, zoom by using the scroll-wheel.
 - Use the buttons in the bottom-right corner to control the simulation.
-- A command-line can be opened by pressing the return-key. The available commands are the methods of the _ScriptInterface_ class in _script/scriptinterface.h_.
 - The following keyboard shortcuts are available (the shortcuts are given for Windows; on OS X replace _Ctrl_ with _Cmd_):
     - __Ctrl + B__: Hide / Show buttons in the bottom-right corner (nice for presentations).
     - __Ctrl + E__: Start / Stop the simulation.
     - __Ctrl + D__: Execute a single round of the simulation.
     - __Ctrl + F__: Focus on center of mass.
 - Clicking on a particle while holding Ctrl (Cmd) results in that particle executing a single turn, if possible.
-- Clicking on an unoccupied place while holding Shift results in adding a new particle on this place.
+- Clicking on an unoccupied place while holding Shift results in adding a new particle on this place. You can also hold the left mousebutton and "draw" particles along the moved cursor.
+  When setting the connectivity check via __setCheckConnectivity(true)__ you can decide whether the new particle must be connected or not. By default the check is activated and new particles must be connected.
+- A command-line can be opened by pressing the return-key. The available commands are the methods of the _ScriptInterface_ class in _script/scriptinterface.h_.
+    - __round()__: Executes one round in the simulation
+    - __runScript(path)__: Executes the scriptfile found in __path__. It must be written in Javascript.
+    - __writeToFile(path, text)__: Writes the given __text__ to the file stated in __path__
+    - __saveScreenshot(filepath="")__: Saves a screenshot of the current window in __filepath__. If __filepath__ is not provided a screenshot will be generated in the build folder.
+    - __isValid()__: Returns true when the algorithm is valid, otherwise false
+    - __isDisconnected()__: Returns true when the algorithm is disconnected, otherwise false
+    - __isTerminated()__: Returns true when the algorithm is terminated, otherwise false
+    - __isDeadlocked()__: Returns true when the algorithm is deadlocked, otherwise false
+    - __getNumParticles()__: Returns the amount of particles in the simulation
+    - __getNumNonStaticParticles()__: Returns the amount of non static particles in the simulation
+    - __getNumMovements()__: Returns the amount of already made movements by the particles in the simulation
+    - __getNumRounds()__: Returns the amount of finished rounds in the simulation
+    - __setCheckConnectivity(check)__: When __check__ is true newly created particles must be connected, otherwise they don't need to. Default value is true.
+    - __setRoundDuration(ms)__: Sets the duration for a round to __ms__ milliseconds.
+    - __moveCameraTo(nodeX, nodeY)__: Moves center of the camera to the __(nodeX, nodeY)__ coordinate in the node coordinate system.
+    - __setZoom(factor)__: Sets the zoomfactor. The value ranges between 4 and 128.
+    - __setResolution(width, height)__: Sets the resolution of the simulator. 
+    - __setFullscreen()__: Runs the simulator in fullscreen mode.
+    - __setWindowed()__: Runs the simulator in windowed mode. 
 
 [1] http://qt-project.org/downloads
 
