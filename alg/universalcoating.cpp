@@ -483,9 +483,9 @@ Movement UniversalCoating::execute()
     auto surfaceFollower = -1;
     if(hasNeighborInPhase(Phase::Static) && phase != Phase::Inactive)
     {
-       if(isContracted() && tailLocData.switches.at((int)SwitchVariable::invalidTail) == 1)
+        if(isContracted() && tailLocData.switches.at((int)SwitchVariable::invalidTail) == 1)
         {
-           qDebug()<<"invalid tail fixed";
+            qDebug()<<"invalid tail fixed";
             tailLocData = headLocData;
             cleanHeadLocData();
         }
@@ -493,7 +493,6 @@ Movement UniversalCoating::execute()
         //get people on surface if possible
         surfaceFollower = firstNeighborInPhase(Phase::Static);
         surfaceParent = firstNeighborInPhase(Phase::Static);
-        qDebug()<<"start surface follow: "<<surfaceFollower;
         if(surfaceFollower!=-1)
         {
             if(isExpanded())
@@ -508,13 +507,11 @@ Movement UniversalCoating::execute()
                 while(neighborIsInPhase(surfaceFollower,Phase::Static))
                 {
                     surfaceFollower = (surfaceFollower+1)%6;
-                    qDebug()<<"? "<<surfaceFollower;
                 }
 
             }
 
         }
-        qDebug()<<"start surface parent";
         if(surfaceParent!=-1)
         {
             if(isExpanded())
@@ -529,7 +526,6 @@ Movement UniversalCoating::execute()
                 while(neighborIsInPhase(surfaceParent,Phase::Static))
                 {
                     surfaceParent = (surfaceParent+5)%6;
-                    qDebug()<<" ? "<<surfaceParent;
 
                 }
             }
@@ -546,7 +542,7 @@ Movement UniversalCoating::execute()
                 }
             }
         }
-       else if(inFlags[surfaceFollower] == nullptr)
+        else if(inFlags[surfaceFollower] == nullptr)
         {
             for(int i =0; i<6; i++)
             {
@@ -582,7 +578,7 @@ Movement UniversalCoating::execute()
         {
             if(expandedOnSurface())
             {
-                   qDebug()<<"expanded on surface";
+                qDebug()<<"expanded on surface";
                 //head
                 if(surfaceParent> -1 && inFlags[surfaceParent]!=nullptr )//need parent to process head
                 {
@@ -653,7 +649,7 @@ Movement UniversalCoating::execute()
             }*/
 
     }
-      int prevHead = headMarkDir;
+    int prevHead = headMarkDir;
     Movement movement= subExecute();
     if(hasNeighborInPhase(Phase::Static) && phase != Phase::Inactive)
     {
@@ -1912,222 +1908,209 @@ void UniversalCoating::ExecuteLeaderElection(LocData myData,std::array<Token, 15
                                              std::array<Token, 15>parentTokens,ElectionRole parentRole,ElectionSubphase parentSubphase)
 
 {
+    self = myData;
+    this->followTokens = followTokens;
+    this->parentTokens = parentTokens;
     qDebug()<<"   execute: me: "<<(int)myData.electionRole<<" parent: "<<(int)parentRole<<" follow: "<<(int)followRole;
-    /* tokenCleanup(prevAgentDir, nextAgentDir); // clean token remnants before doing new actions
-
-    if(electionRole == ElectionRole::Candidate) {
-
+    tokenCleanup(); // clean token remnants before doing new actions
+    bool nextAgentDir = false;
+    bool prevAgentDir = true;
+    if(self.electionRole == ElectionRole::Candidate) {
         // if there is an incoming active segment cleaning token, consume it
-        if(peekAtToken(TokenType::ActiveSegmentClean, nextAgentDir) != -1) {
-            performActiveClean(2,prevAgentDir,nextAgentDir); // clean the front side only
-            receiveToken(TokenType::ActiveSegmentClean, nextAgentDir);
+        if(peekAtToken(TokenType::ActiveSegmentClean, false) != -1) {
+            performActiveClean(2); // clean the front side only
+            receiveToken(TokenType::ActiveSegmentClean, false);
         }
         // if there is an incoming passive segment cleaning token, consume it
-        if(peekAtToken(TokenType::PassiveSegmentClean, prevAgentDir) != -1) {
-            performPassiveClean(1,prevAgentDir,nextAgentDir); // clean the back side only
-            receiveToken(TokenType::PassiveSegmentClean, prevAgentDir);
-            paintBackSegment(QColor("dimgrey").rgb());
+        if(peekAtToken(TokenType::PassiveSegmentClean, true) != -1) {
+            performPassiveClean(1); // clean the back side only
+            receiveToken(TokenType::PassiveSegmentClean, true);
         }
         // if there is an incoming segment lead token, consume it and generate the final passive token
-        if(peekAtToken(TokenType::SegmentLead, prevAgentDir) != -1 && canSendToken(TokenType::PassiveSegment, prevAgentDir)) {
-            receiveToken(TokenType::SegmentLead, prevAgentDir);
-            sendToken(TokenType::PassiveSegment, prevAgentDir, 2); // 2 => last passive/active token
-            paintBackSegment(QColor("dimgrey").rgb());
+        if(peekAtToken(TokenType::SegmentLead, true) != -1 && canSendToken(TokenType::PassiveSegment, true)) {
+            receiveToken(TokenType::SegmentLead, true);
+            sendToken(TokenType::PassiveSegment, true, 2); // 2 => last passive/active token
         }
         // if there is an incoming active segment token, either absorb it and acknowledge covering or pass it backward
-        if(peekAtToken(TokenType::ActiveSegment, nextAgentDir) != -1) {
-            if(!absorbedActiveToken) {
-                if(receiveToken(TokenType::ActiveSegment, nextAgentDir).value == 2) { // absorbing the last active token
-                    sendToken(TokenType::FinalSegmentClean, nextAgentDir, 2);
+        if(peekAtToken(TokenType::ActiveSegment, false) != -1) {
+            if(self.switches.at((int)SwitchVariable::absorbedActiveToken)==0) {
+                if(receiveToken(TokenType::ActiveSegment, false).value == 2) { // absorbing the last active token
+                    sendToken(TokenType::FinalSegmentClean, false, 2);
                 } else { // this candidate is now covered
-                    Q_ASSERT(canSendToken(TokenType::ActiveSegmentClean, prevAgentDir) && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir));
-                    sendToken(TokenType::PassiveSegmentClean, nextAgentDir, 1);
-                    performPassiveClean(2,prevAgentDir,nextAgentDir); // clean the front side only
-                    paintFrontSegment(QColor("dimgrey").rgb());
-                    sendToken(TokenType::ActiveSegmentClean, prevAgentDir, 1);
-                    performActiveClean(1,prevAgentDir,nextAgentDir); // clean the back side only
-                    absorbedActiveToken = true;
-                    isCoveredCandidate = true;
+                    Q_ASSERT(canSendToken(TokenType::ActiveSegmentClean, true) && canSendToken(TokenType::PassiveSegmentClean, false));
+                    sendToken(TokenType::PassiveSegmentClean, false, 1);
+                    performPassiveClean(2); // clean the front side only
+                    sendToken(TokenType::ActiveSegmentClean, true, 1);
+                    performActiveClean(1); // clean the back side only
+                    self.switches.at((int)SwitchVariable::absorbedActiveToken) = true;
+                   self.switches.at((int)SwitchVariable::isCoveredCandidate) = true;
                     setElectionRole(ElectionRole::Demoted);
                     return; // completed subphase and thus shouldn't perform any more operations in this round
                 }
-            } else if(canSendToken(TokenType::ActiveSegment, prevAgentDir) && canSendToken(TokenType::ActiveSegmentClean, prevAgentDir)) {
-                sendToken(TokenType::ActiveSegment, prevAgentDir, receiveToken(TokenType::ActiveSegment, nextAgentDir).value);
+            } else if(canSendToken(TokenType::ActiveSegment, true) && canSendToken(TokenType::ActiveSegmentClean, true)) {
+                sendToken(TokenType::ActiveSegment, true, receiveToken(TokenType::ActiveSegment, false).value);
             }
         }
 
         // if there is an announcement waiting to be received by me and it is safe to create an acknowledgement, consume the announcement
-        if(peekAtToken(TokenType::CandidacyAnnounce, prevAgentDir) != -1 && canSendToken(TokenType::CandidacyAck, prevAgentDir)) {
-            receiveToken(TokenType::CandidacyAnnounce, prevAgentDir);
-            sendToken(TokenType::CandidacyAck, prevAgentDir, 1);
-            paintBackSegment(QColor("dimgrey").rgb());
-            if(waitingForTransferAck) {
-                gotAnnounceBeforeAck = true;
-            } else if(comparingSegment) {
-                gotAnnounceInCompare = true;
+        if(peekAtToken(TokenType::CandidacyAnnounce, true) != -1 && canSendToken(TokenType::CandidacyAck, true)) {
+            receiveToken(TokenType::CandidacyAnnounce, true);
+            sendToken(TokenType::CandidacyAck, true, 1);
+            if(self.switches.at((int)SwitchVariable::waitingForTransferAck)==1) {
+               self.switches.at((int)SwitchVariable::gotAnnounceBeforeAck) = true;
+            } else if(self.switches.at((int)SwitchVariable::comparingSegment)==1) {
+               self.switches.at((int)SwitchVariable::gotAnnounceInCompare) = true;
             }
         }
 
         // if there is a solitude lead token waiting to be put into lane 2, put it there if it doesn't pass a vector token
-        if(peekAtToken(TokenType::SolitudeLeadL1, prevAgentDir) != -1 && canSendToken(TokenType::SolitudeLeadL2, prevAgentDir) &&
-                canSendToken(TokenType::SolitudeVectorL2, prevAgentDir)) {
-            int leadValue = receiveToken(TokenType::SolitudeLeadL1, prevAgentDir).value;
+        if(peekAtToken(TokenType::SolitudeLeadL1, true) != -1 && canSendToken(TokenType::SolitudeLeadL2, true) &&
+                canSendToken(TokenType::SolitudeVectorL2, true)) {
+            int leadValue = receiveToken(TokenType::SolitudeLeadL1, true).value;
             if(leadValue / 100 == 1) { // if the lead is on lap 1, append this candidate's local id
-                sendToken(TokenType::SolitudeLeadL2, prevAgentDir, (1000 * 1) + leadValue);
-                paintBackSegment(QColor("deepskyblue").rgb());
+                sendToken(TokenType::SolitudeLeadL2, true, (1000 * 1) + leadValue);
             } else { // if the lead is on lap 2, just pass on the value
-                sendToken(TokenType::SolitudeLeadL2, prevAgentDir, leadValue);
-                paintBackSegment(QColor("dimgrey").rgb());
+                sendToken(TokenType::SolitudeLeadL2, true, leadValue);
             }
         }
         // if there is a vector waiting to be put into lane 2, put it there
-        if(peekAtToken(TokenType::SolitudeVectorL1, prevAgentDir) != -1 && canSendToken(TokenType::SolitudeVectorL2, prevAgentDir)) {
-            sendToken(TokenType::SolitudeVectorL2, prevAgentDir, receiveToken(TokenType::SolitudeVectorL1, prevAgentDir).value);
+        if(peekAtToken(TokenType::SolitudeVectorL1, true) != -1 && canSendToken(TokenType::SolitudeVectorL2, true)) {
+            sendToken(TokenType::SolitudeVectorL2, true, receiveToken(TokenType::SolitudeVectorL1, true).value);
         }
 
       //  the next block of tasks are dependent upon subphase
-        if(electionSubphase == ElectionSubphase::SegmentComparison) {
-            if(peekAtToken(TokenType::PassiveSegment, nextAgentDir) != -1 && canSendToken(TokenType::ActiveSegment, prevAgentDir)) {
+        if(self.electionSubphase == ElectionSubphase::SegmentComparison) {
+            if(peekAtToken(TokenType::PassiveSegment, false) != -1 && canSendToken(TokenType::ActiveSegment, true)) {
                 // if there is an incoming passive token, pass it on as an active token
-                int passiveValue = receiveToken(TokenType::PassiveSegment, nextAgentDir).value;
-                sendToken(TokenType::ActiveSegment, prevAgentDir, passiveValue);
+                int passiveValue = receiveToken(TokenType::PassiveSegment, false).value;
+                sendToken(TokenType::ActiveSegment, true, passiveValue);
                 if(passiveValue == 2) {
-                    paintFrontSegment(QColor("dimgrey").rgb());
                 }
-            } else if(peekAtToken(TokenType::FinalSegmentClean, prevAgentDir) != -1) {
+            } else if(peekAtToken(TokenType::FinalSegmentClean, true) != -1) {
                 // if there is an incoming final cleaning token, consume it and proceed according to its value
-                int finalCleanValue = receiveToken(TokenType::FinalSegmentClean, prevAgentDir).value;
-                if(finalCleanValue == 0 && !gotAnnounceInCompare) { // if this candidate did not cover any tokens and was not transferred candidacy, demote
+                int finalCleanValue = receiveToken(TokenType::FinalSegmentClean, true).value;
+                if(finalCleanValue == 0 && self.switches.at((int)SwitchVariable::gotAnnounceInCompare)==0) { // if this candidate did not cover any tokens and was not transferred candidacy, demote
                     setElectionRole(ElectionRole::Demoted);
                 } else {
                     setElectionSubphase(ElectionSubphase::CoinFlip);
                 }
-                comparingSegment = false;
-                gotAnnounceInCompare = false;
+                self.switches.at((int)SwitchVariable::comparingSegment) = 0;
+                self.switches.at((int)SwitchVariable::gotAnnounceInCompare) = 0;
                 return; // completed subphase and thus shouldn't perform any more operations in this round
-            } else if(!comparingSegment) {
+            } else if(self.switches.at((int)SwitchVariable::comparingSegment)==0) {
                 // begin segment comparison by generating a segment lead token
-                Q_ASSERT(canSendToken(TokenType::SegmentLead, nextAgentDir) && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir));
-                sendToken(TokenType::SegmentLead, nextAgentDir, 1);
-                paintFrontSegment(QColor("red").rgb());
-                comparingSegment = true;
+                Q_ASSERT(canSendToken(TokenType::SegmentLead, false) && canSendToken(TokenType::PassiveSegmentClean, false));
+                sendToken(TokenType::SegmentLead, false, 1);
+                self.switches.at((int)SwitchVariable::comparingSegment) = 0;
             }
-        } else if(electionSubphase == ElectionSubphase::CoinFlip) {
-            if(peekAtToken(TokenType::CandidacyAck, nextAgentDir) != -1) {
+        } else if(self.electionSubphase == ElectionSubphase::CoinFlip) {
+            if(peekAtToken(TokenType::CandidacyAck, false) != -1) {
                 // if there is an acknowledgement waiting, consume the acknowledgement and proceed to the next subphase
-                receiveToken(TokenType::CandidacyAck, nextAgentDir);
-                paintFrontSegment(QColor("dimgrey").rgb());
+                receiveToken(TokenType::CandidacyAck, false);
                 setElectionSubphase(ElectionSubphase::SolitudeVerification);
-                if(!gotAnnounceBeforeAck) {
+                if(self.switches.at((int)SwitchVariable::gotAnnounceBeforeAck)==0) {
                     setElectionRole(ElectionRole::Demoted);
                 }
-                waitingForTransferAck = false;
-                gotAnnounceBeforeAck = false;
+                self.switches.at((int)SwitchVariable::waitingForTransferAck) = 0;
+               self.switches.at((int)SwitchVariable:: gotAnnounceBeforeAck) = 0;
                 return; // completed subphase and thus shouldn't perform any more operations in this round
-            } else if(!waitingForTransferAck && randBool()) {
+            } else if(self.switches.at((int)SwitchVariable::waitingForTransferAck)==0 && randBool()) {
                 // if I am not waiting for an acknowlegdement of my previous announcement and I win the coin flip, announce a transfer of candidacy
-                Q_ASSERT(canSendToken(TokenType::CandidacyAnnounce, nextAgentDir) && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir)); // there shouldn't be a call to make two announcements
-                sendToken(TokenType::CandidacyAnnounce, nextAgentDir, 1);
-                paintFrontSegment(QColor("orange").rgb());
-                waitingForTransferAck = true;
+                Q_ASSERT(canSendToken(TokenType::CandidacyAnnounce, false) && canSendToken(TokenType::PassiveSegmentClean, false)); // there shouldn't be a call to make two announcements
+                sendToken(TokenType::CandidacyAnnounce, false, 1);
+                self.switches.at((int)SwitchVariable::waitingForTransferAck) = 1;
             }
-        } else if(electionSubphase == ElectionSubphase::SolitudeVerification) {
+        } else if(self.electionSubphase == ElectionSubphase::SolitudeVerification) {
             // if the agent needs to, generate a lane 1 vector token
-            if(generateVectorDir != -1 && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir) && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir)) {
-                sendToken(TokenType::SolitudeVectorL1, nextAgentDir, generateVectorDir);
-                generateVectorDir = -1;
+            if(self.switches.at((int)SwitchVariable::generateVectorDir) != -1 && canSendToken(TokenType::SolitudeVectorL1, false) && canSendToken(TokenType::PassiveSegmentClean, false)) {
+                sendToken(TokenType::SolitudeVectorL1, false, self.switches.at((int)SwitchVariable::generateVectorDir));
+               self.switches.at((int)SwitchVariable:: generateVectorDir) = -1;
             }
 
-            if(peekAtToken(TokenType::SolitudeVectorL2, nextAgentDir) != -1) {
+            if(peekAtToken(TokenType::SolitudeVectorL2, false) != -1) {
                 // consume all vector tokens that have not been matched, decide that solitude has failed
-                Q_ASSERT(peekAtToken(TokenType::SolitudeVectorL2, nextAgentDir) != 0); // matched tokens should have dropped
-                receiveToken(TokenType::SolitudeVectorL2, nextAgentDir);
-                sawUnmatchedToken = true;
-            } else if(peekAtToken(TokenType::SolitudeLeadL2, nextAgentDir) != -1) {
+                Q_ASSERT(peekAtToken(TokenType::SolitudeVectorL2, false) != 0); // matched tokens should have dropped
+                receiveToken(TokenType::SolitudeVectorL2, false);
+               self.switches.at((int)SwitchVariable:: sawUnmatchedToken) = 1;
+            } else if(peekAtToken(TokenType::SolitudeLeadL2, false) != -1) {
                 // if the lead token has returned, either put it back in lane 1 (lap 1) or consume it and decide solitude (lap 2)
-                if((peekAtToken(TokenType::SolitudeLeadL2, nextAgentDir) % 1000) / 100 == 1) { // lead has just completed lap 1
-                    if(canSendToken(TokenType::SolitudeLeadL1, nextAgentDir) && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir) &&
-                            canSendToken(TokenType::PassiveSegmentClean, nextAgentDir)) {
-                        int leadValue = receiveToken(TokenType::SolitudeLeadL2, nextAgentDir).value;
-                        sendToken(TokenType::SolitudeLeadL1, nextAgentDir, (leadValue / 1000) * 1000 + 200); // lap 2, orientation no longer matters => 200
-                        paintFrontSegment(QColor("deepskyblue").lighter().rgb());
+                if((peekAtToken(TokenType::SolitudeLeadL2, false) % 1000) / 100 == 1) { // lead has just completed lap 1
+                    if(canSendToken(TokenType::SolitudeLeadL1, false) && canSendToken(TokenType::SolitudeVectorL1, false) &&
+                            canSendToken(TokenType::PassiveSegmentClean, false)) {
+                        int leadValue = receiveToken(TokenType::SolitudeLeadL2, false).value;
+                        sendToken(TokenType::SolitudeLeadL1, false, (leadValue / 1000) * 1000 + 200); // lap 2, orientation no longer matters => 200
                     }
-                } else if((peekAtToken(TokenType::SolitudeLeadL2, nextAgentDir) % 1000) / 100 == 2) { // lead has just completed lap 2
-                    int leadValue = receiveToken(TokenType::SolitudeLeadL2, nextAgentDir).value;
-                    paintFrontSegment(QColor("dimgrey").rgb());
-                    if(!sawUnmatchedToken && (leadValue / 1000) == 1) { // if it did not consume an unmatched token and it assures it's matching with itself, go to inner/outer test
+                } else if((peekAtToken(TokenType::SolitudeLeadL2, false) % 1000) / 100 == 2) { // lead has just completed lap 2
+                    int leadValue = receiveToken(TokenType::SolitudeLeadL2, false).value;
+                    if(self.switches.at((int)SwitchVariable::sawUnmatchedToken)==0 && (leadValue / 1000) == 1) { // if it did not consume an unmatched token and it assures it's matching with itself, go to inner/outer test
                         setElectionRole(ElectionRole::SoleCandidate);
                     } else { // if solitude verification failed, then do another coin flip compeititon
                         setElectionSubphase(ElectionSubphase::SegmentComparison);
                     }
-                    createdLead = false;
-                    sawUnmatchedToken = false;
+                    self.switches.at((int)SwitchVariable::createdLead) = 0;
+                    self.switches.at((int)SwitchVariable::sawUnmatchedToken) = 0;
                     return; // completed subphase and thus shouldn't perform any more operations in this round
                 }
-            } else if(!createdLead) {
+            } else if(self.switches.at((int)SwitchVariable::createdLead)==0) {
                 // to begin the solitude verification, create a lead token with an orientation to communicate to its segment
-                Q_ASSERT(canSendToken(TokenType::SolitudeLeadL1, nextAgentDir) && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir) &&
-                         canSendToken(TokenType::PassiveSegmentClean, nextAgentDir)); // there shouldn't be a call to make two leads
-                sendToken(TokenType::SolitudeLeadL1, nextAgentDir, 100 + encodeVector(std::make_pair(1,0))); // lap 1 in direction (1,0)
-                paintFrontSegment(QColor("deepskyblue").darker().rgb());
-                createdLead = true;
-                generateVectorDir = encodeVector(std::make_pair(1,0));
+                Q_ASSERT(canSendToken(TokenType::SolitudeLeadL1, false) && canSendToken(TokenType::SolitudeVectorL1, false) &&
+                         canSendToken(TokenType::PassiveSegmentClean, false)); // there shouldn't be a call to make two leads
+                sendToken(TokenType::SolitudeLeadL1, false, 100 + encodeVector(std::make_pair(1,0))); // lap 1 in direction (1,0)
+               self.switches.at((int)SwitchVariable:: createdLead)=1;
+                self.switches.at((int)SwitchVariable::generateVectorDir) = encodeVector(std::make_pair(1,0));
             }
         }
-    } else if(electionRole == ElectionRole::SoleCandidate) {
-        if(!testingBorder) { // begin the inner/outer border test
-            Q_ASSERT(canSendToken(TokenType::BorderTest, nextAgentDir));
-            sendToken(TokenType::BorderTest, nextAgentDir, addNextBorder(0,prevAgentDir,nextAgentDir));
-            paintFrontSegment(-1);
-            testingBorder = true;
-        } else if(peekAtToken(TokenType::BorderTest, prevAgentDir) != -1) { // test is complete
-            int borderSum = receiveToken(TokenType::BorderTest, prevAgentDir).value;
-            paintBackSegment(-1);
+    } else if(self.electionRole == ElectionRole::SoleCandidate) {
+        if(self.switches.at((int)SwitchVariable::testingBorder)==0) { // begin the inner/outer border test
+            Q_ASSERT(canSendToken(TokenType::BorderTest, false));
+         //   sendToken(TokenType::BorderTest, false, addNextBorder(0,prevAgentDir,nextAgentDir));
+           //paintBackSegment(-1);?
+           self.switches.at((int)SwitchVariable:: testingBorder) = 1;
+        } else if(peekAtToken(TokenType::BorderTest, true) != -1) { // test is complete
+            int borderSum = receiveToken(TokenType::BorderTest, true).value;
+          //  paintBackSegment(-1);
             if(borderSum == 1) { // outer border, agent becomes the leader
                 setElectionRole(ElectionRole::Leader);
             } else if(borderSum == 4) { // inner border, demote agent and set to finished
                 //setElectionRole(ElectionRole::Finished);
                 qDebug()<<"inner border??";
             }
-            testingBorder = false;
+            self.switches.at((int)SwitchVariable::testingBorder) = 0;
             return; // completed subphase and thus shouldn't perform any more operations in this round
         }
-    } else if(electionRole == ElectionRole::Demoted) {
+    } else if(self.electionRole == ElectionRole::Demoted) {
         // SUBPHASE: Segment Comparison
         // pass passive segment cleaning tokens forward, and perform cleaning
-        if(peekAtToken(TokenType::PassiveSegmentClean, prevAgentDir) != -1 && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir)) {
-            performPassiveClean(3,prevAgentDir,nextAgentDir); // clean the full segment
-            sendToken(TokenType::PassiveSegmentClean, nextAgentDir, receiveToken(TokenType::PassiveSegmentClean, prevAgentDir).value);
-            paintFrontSegment(QColor("dimgrey").rgb()); paintBackSegment(QColor("dimgrey").rgb());
+        if(peekAtToken(TokenType::PassiveSegmentClean, true) != -1 && canSendToken(TokenType::PassiveSegmentClean, false)) {
+            performPassiveClean(3); // clean the full segment
+            sendToken(TokenType::PassiveSegmentClean, false, receiveToken(TokenType::PassiveSegmentClean, true).value);
         }
         // pass active segment cleaning tokens backward, and perform cleaning
-        if(peekAtToken(TokenType::ActiveSegmentClean, nextAgentDir) != -1 && canSendToken(TokenType::ActiveSegmentClean, prevAgentDir)) {
-            performActiveClean(3,prevAgentDir,nextAgentDir); // clean the full segment
-            sendToken(TokenType::ActiveSegmentClean, prevAgentDir, receiveToken(TokenType::ActiveSegmentClean, nextAgentDir).value);
+        if(peekAtToken(TokenType::ActiveSegmentClean, false) != -1 && canSendToken(TokenType::ActiveSegmentClean, true)) {
+            performActiveClean(3); // clean the full segment
+            sendToken(TokenType::ActiveSegmentClean, true, receiveToken(TokenType::ActiveSegmentClean, false).value);
         }
         // if there is an incoming segment lead token, pass it forward and generate a passive token
-        if(peekAtToken(TokenType::SegmentLead, prevAgentDir) != -1 && canSendToken(TokenType::SegmentLead, nextAgentDir) &&
-                canSendToken(TokenType::PassiveSegment, prevAgentDir) && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir)) {
-            sendToken(TokenType::SegmentLead, nextAgentDir, receiveToken(TokenType::SegmentLead, prevAgentDir).value);
-            sendToken(TokenType::PassiveSegment, prevAgentDir, 1); // 1 => usual passive/active token
-            paintFrontSegment(QColor("red").rgb()); paintBackSegment(QColor("red").rgb());
+        if(peekAtToken(TokenType::SegmentLead, true) != -1 && canSendToken(TokenType::SegmentLead, false) &&
+                canSendToken(TokenType::PassiveSegment, true) && canSendToken(TokenType::PassiveSegmentClean, false)) {
+            sendToken(TokenType::SegmentLead, false, receiveToken(TokenType::SegmentLead, true).value);
+            sendToken(TokenType::PassiveSegment, true, 1); // 1 => usual passive/active token
         }
         // pass passive tokens backward
-        if(peekAtToken(TokenType::PassiveSegment, nextAgentDir) != -1 && canSendToken(TokenType::PassiveSegment, prevAgentDir)) {
-            int passiveValue = receiveToken(TokenType::PassiveSegment, nextAgentDir).value;
-            sendToken(TokenType::PassiveSegment, prevAgentDir, passiveValue);
+        if(peekAtToken(TokenType::PassiveSegment, false) != -1 && canSendToken(TokenType::PassiveSegment, true)) {
+            int passiveValue = receiveToken(TokenType::PassiveSegment, false).value;
+            sendToken(TokenType::PassiveSegment, true, passiveValue);
             if(passiveValue == 2) {
-                paintFrontSegment(QColor("dimgrey").rgb()); paintBackSegment(QColor("dimgrey").rgb());
             }
         }
         // either absorb active tokens or pass them backward (but don't pass an active cleaning token)
         if(peekAtToken(TokenType::ActiveSegment, nextAgentDir) != -1) {
             // absorb the token if possible
-            if(!absorbedActiveToken) {
+            if(self.switches.at((int)SwitchVariable::absorbedActiveToken)==0) {
                 if(receiveToken(TokenType::ActiveSegment, nextAgentDir).value == 2) { // if absorbing the final active token, generate the final cleaning token
                     sendToken(TokenType::FinalSegmentClean, nextAgentDir, 0); // the final segment cleaning token begins as having not seen covered candidates
                 } else {
-                    absorbedActiveToken = true;
+                   self.switches.at((int)SwitchVariable:: absorbedActiveToken) = 1;
                 }
             } else if(canSendToken(TokenType::ActiveSegment, prevAgentDir) && canSendToken(TokenType::ActiveSegmentClean, prevAgentDir)) {
                 // pass active token backward if doing so does not pass the active cleaning token
@@ -2137,11 +2120,11 @@ void UniversalCoating::ExecuteLeaderElection(LocData myData,std::array<Token, 15
         // pass final cleaning token forward, perform cleaning, and check for covered candidates
         if(peekAtToken(TokenType::FinalSegmentClean, prevAgentDir) != -1 && canSendToken(TokenType::FinalSegmentClean, nextAgentDir)) {
             int finalCleanValue = receiveToken(TokenType::FinalSegmentClean, prevAgentDir).value;
-            if(finalCleanValue != 2 && isCoveredCandidate) {
+            if(finalCleanValue != 2 && self.switches.at((int)SwitchVariable::isCoveredCandidate)==1) {
                 finalCleanValue = 1;
             }
-            absorbedActiveToken = false;
-            isCoveredCandidate = false;
+            self.switches.at((int)SwitchVariable::absorbedActiveToken )= 0;
+           self.switches.at((int)SwitchVariable:: isCoveredCandidate) = 0;
             sendToken(TokenType::FinalSegmentClean, nextAgentDir, finalCleanValue);
         }
 
@@ -2166,8 +2149,8 @@ void UniversalCoating::ExecuteLeaderElection(LocData myData,std::array<Token, 15
             if(code / 100 == 1) { // lead token is on its first lap, so update the lead direction as it's passed
                 std::pair<int, int> leadVector = decodeVector(code);
                 int offset = (nextAgentDir - ((prevAgentDir + 3) % 6) + 6) % 6;
-                generateVectorDir = encodeVector(augmentDirVector(leadVector, offset));
-                sendToken(TokenType::SolitudeLeadL1, nextAgentDir, 100 + generateVectorDir); // lap 1 + new encoded direction vector
+                self.switches.at((int)SwitchVariable::generateVectorDir) = encodeVector(augmentDirVector(leadVector, offset));
+                sendToken(TokenType::SolitudeLeadL1, nextAgentDir, 100 + self.switches.at((int)SwitchVariable::generateVectorDir)); // lap 1 + new encoded direction vector
                 paintFrontSegment(QColor("deepskyblue").darker().rgb()); paintBackSegment(QColor("deepskyblue").darker().rgb());
             } else { // lead token is on its second pass, just send it forward
                 sendToken(TokenType::SolitudeLeadL1, nextAgentDir, code);
@@ -2186,9 +2169,9 @@ void UniversalCoating::ExecuteLeaderElection(LocData myData,std::array<Token, 15
             }
         }
         // if the agent needs to, generate a lane 1 vector token
-        if(generateVectorDir != -1 && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir) && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir)) {
-            sendToken(TokenType::SolitudeVectorL1, nextAgentDir, generateVectorDir);
-            generateVectorDir = -1;
+        if(self.switches.at((int)SwitchVariable::generateVectorDir) != -1 && canSendToken(TokenType::SolitudeVectorL1, nextAgentDir) && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir)) {
+            sendToken(TokenType::SolitudeVectorL1, nextAgentDir, self.switches.at((int)SwitchVariable::generateVectorDir));
+           self.switches.at((int)SwitchVariable:: generateVectorDir) = -1;
         }
         // perform token matching if there are incoming lane 1 and lane 2 vectors and the various passings are safe
         if(peekAtToken(TokenType::SolitudeVectorL1, prevAgentDir) != -1 && peekAtToken(TokenType::SolitudeVectorL2, nextAgentDir) != -1) {
@@ -2232,7 +2215,7 @@ void UniversalCoating::ExecuteLeaderElection(LocData myData,std::array<Token, 15
             //   setElectionRole(ElectionRole::Finished);
         }
     }
-*/
+
 }
 
 void UniversalCoating::paintFrontSegment(const int color)
@@ -2243,87 +2226,116 @@ void UniversalCoating::paintBackSegment(const int color)
 {
 }
 
-bool UniversalCoating::canSendToken(TokenType type, int dir) const
+bool UniversalCoating::canSendToken(TokenType type, bool toBack) const
 {
-    // return (outFlags[dir].tokens.at((int) type).value == -1 && !inFlags[dir]->tokens.at((int) type).receivedToken);
+    if(toBack)
+     return (self.backTokens.at((int) type).value == -1 && !followTokens.at((int) type).receivedToken);
+    else
+        return (self.forwardTokens.at((int) type).value == -1 && !parentTokens.at((int) type).receivedToken);
+
 }
 
-void UniversalCoating::sendToken(TokenType type, int dir, int value)
+void UniversalCoating::sendToken(TokenType type, bool toBack, int value)
 {
+    qDebug()<<"send: "<<(int)type<<"back? "<<(int)toBack;
+      Q_ASSERT(canSendToken(type, toBack));
+    if(toBack)
+      self.backTokens.at((int) type).value = value;
+    else
+        self.forwardTokens.at((int) type).value = value;
 
-    //  Q_ASSERT(canSendToken(type, dir));
-    //  outFlags[dir].tokens.at((int) type).value = value;
 }
 
-int UniversalCoating::peekAtToken(TokenType type, int dir) const
+int UniversalCoating::peekAtToken(TokenType type, bool fromBack) const
 {
-    /*  if(outFlags[dir].tokens.at((int) type).receivedToken) {
-        // if this agent has already read this token, don't peek the same value again
-        return -1;
-    } else {
-        return inFlags[dir]->tokens.at((int) type).value;
-    }*/
-}
-
-Token UniversalCoating::receiveToken(TokenType type, int dir)
-{
-    /*  Q_ASSERT(peekAtToken(type, dir) != -1);
-    qDebug()<<"receive: "<<(int)type<< peekAtToken(type, dir);
-    outFlags[dir].tokens.at((int) type).receivedToken = true;
-    return inFlags[dir]->tokens.at((int) type);*/
-}
-
-void UniversalCoating::tokenCleanup(int prevAgentDir, int nextAgentDir)
-{
-    /*  for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
-        TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest}) {
-        if(inFlags[nextAgentDir]->tokens.at((int) tokenType).receivedToken) {
-            outFlags[nextAgentDir].tokens.at((int) tokenType).value = -1;
+    if(fromBack)
+    {
+        if(self.backTokens.at((int) type).receivedToken) {
+            // if this agent has already read this token, don't peek the same value again
+            return -1;
+        } else {
+            return followTokens.at((int) type).value;
         }
-        if(inFlags[prevAgentDir]->tokens.at((int) tokenType).value == -1) {
-            outFlags[prevAgentDir].tokens.at((int) tokenType).receivedToken = false;
+    }
+    else//from front
+    {
+        if(self.forwardTokens.at((int) type).receivedToken) {
+            // if this agent has already read this token, don't peek the same value again
+            return -1;
+        } else {
+            return parentTokens.at((int) type).value;
+        }
+    }
+}
+
+Token UniversalCoating::receiveToken(TokenType type, bool fromBack)
+{
+    Q_ASSERT(peekAtToken(type, fromBack) != -1);
+    qDebug()<<"receive: "<<(int)type<< peekAtToken(type, fromBack);
+    if(fromBack)
+    {
+        self.backTokens.at((int) type).receivedToken = true;
+        return followTokens.at((int) type);
+    }
+    else//from front
+    {
+        self.forwardTokens.at((int) type).receivedToken = true;
+        return parentTokens.at((int) type);
+    }
+
+}
+
+void UniversalCoating::tokenCleanup()
+{
+    for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
+        TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest}) {
+        if(parentTokens.at((int) tokenType).receivedToken) {
+            self.forwardTokens.at((int) tokenType).value = -1;
+        }
+        if(followTokens.at((int) tokenType).value == -1) {
+            self.backTokens.at((int) tokenType).receivedToken = false;
         }
     }
     for(auto tokenType : {TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean, TokenType::CandidacyAck,
         TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
-        if(inFlags[prevAgentDir]->tokens.at((int) tokenType).receivedToken) {
-            outFlags[prevAgentDir].tokens.at((int) tokenType).value = -1;
+        if(followTokens.at((int) tokenType).receivedToken) {
+            self.backTokens.at((int) tokenType).value = -1;
         }
-        if(inFlags[nextAgentDir]->tokens.at((int) tokenType).value == -1) {
-            outFlags[nextAgentDir].tokens.at((int) tokenType).receivedToken = false;
+        if(parentTokens.at((int) tokenType).value == -1) {
+            self.forwardTokens.at((int) tokenType).receivedToken = false;
         }
-    }*/
+    }
 }
 
-void UniversalCoating::performPassiveClean(const int region, int prevAgentDir, int nextAgentDir)
+void UniversalCoating::performPassiveClean(const int region)
 {
-    /* Q_ASSERT(1 <= region && region <= 3); // 1 => back, 2 => front, 3 => both
+    Q_ASSERT(1 <= region && region <= 3); // 1 => back, 2 => front, 3 => both
     if(region != 2) { // back
         for(auto tokenType : {TokenType::SegmentLead, TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1}) {
-            if(peekAtToken(tokenType, prevAgentDir) != -1) {
-                receiveToken(tokenType, prevAgentDir);
+            if(peekAtToken(tokenType, true) != -1) {
+                receiveToken(tokenType, true);
             }
         }
     }
     if(region != 1) { // front
         for(auto tokenType : {TokenType::PassiveSegment, TokenType::CandidacyAck, TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
-            if(peekAtToken(tokenType, nextAgentDir) != -1) {
-                receiveToken(tokenType, nextAgentDir);
+            if(peekAtToken(tokenType, false) != -1) {
+                receiveToken(tokenType, false);
             }
         }
-    }*/
+    }
 }
 
-void UniversalCoating::performActiveClean(const int region, int prevAgentDir, int nextAgentDir)
+void UniversalCoating::performActiveClean(const int region)
 {
-    /* Q_ASSERT(1 <= region && region <= 3); // 1 => back, 2 => front, 3 => both
-    if(region != 2 && peekAtToken(TokenType::FinalSegmentClean, prevAgentDir) != -1) { // back
-        receiveToken(TokenType::FinalSegmentClean, prevAgentDir);
+    Q_ASSERT(1 <= region && region <= 3); // 1 => back, 2 => front, 3 => both
+    if(region != 2 && peekAtToken(TokenType::FinalSegmentClean, true) != -1) { // back
+        receiveToken(TokenType::FinalSegmentClean, true);
     }
-    if(region != 1 && peekAtToken(TokenType::ActiveSegment, nextAgentDir) != -1) { // front
-        receiveToken(TokenType::ActiveSegment, nextAgentDir);
+    if(region != 1 && peekAtToken(TokenType::ActiveSegment, false) != -1) { // front
+        receiveToken(TokenType::ActiveSegment, false);
     }
-    absorbedActiveToken = false;*/
+    self.switches.at((int)SwitchVariable::absorbedActiveToken) = 0;//0 = false
 }
 
 int UniversalCoating::encodeVector(std::pair<int, int> vector) const
@@ -2373,20 +2385,12 @@ int UniversalCoating::addNextBorder(int currentSum, int prevAgentDir, int nextAg
 
 void UniversalCoating::setElectionRole(ElectionRole role)
 {
-    /*   electionRole = role;
-    for(int dir = 0; dir<10;dir++)
-    {
-        outFlags[dir].electionRole = role;
-    }*/
+    self.electionRole = role;
 }
 
 void UniversalCoating::setElectionSubphase(ElectionSubphase subphase)
 {
-    /*  electionSubphase = subphase;
-    for(int dir = 0; dir<10;dir++)
-    {
-        outFlags[dir].electionSubphase = subphase;
-    }*/
+    self.electionSubphase = subphase;
 }
 
 
@@ -2482,18 +2486,18 @@ void UniversalCoating::cleanTailLocData()
 }
 bool UniversalCoating::expandedOnSurface()
 {
-      bool tailOnSurface = false;
-      bool headOnSurface = false;
-      for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
-          auto label = *it;
-          if(neighborIsInPhase(label,Phase::Static))
-              tailOnSurface = true;
-      }
-      for(auto it = headLabels().cbegin(); it != headLabels().cend(); ++it) {
-          auto label = *it;
-          if(neighborIsInPhase(label,Phase::Static))
-              headOnSurface = true;
-      }
-      return tailOnSurface && headOnSurface;
+    bool tailOnSurface = false;
+    bool headOnSurface = false;
+    for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
+        auto label = *it;
+        if(neighborIsInPhase(label,Phase::Static))
+            tailOnSurface = true;
+    }
+    for(auto it = headLabels().cbegin(); it != headLabels().cend(); ++it) {
+        auto label = *it;
+        if(neighborIsInPhase(label,Phase::Static))
+            headOnSurface = true;
+    }
+    return tailOnSurface && headOnSurface;
 }
 }

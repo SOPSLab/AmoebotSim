@@ -187,14 +187,14 @@ protected:
     void setElectionRole(ElectionRole role);
     void setElectionSubphase(ElectionSubphase electionSubphase);
 
-    bool canSendToken(TokenType type, int dir) const;
-    void sendToken(TokenType type, int dir, int value);
-    int peekAtToken(TokenType type, int dir) const;
-    Token receiveToken(TokenType type, int dir);
-    void tokenCleanup(int prevAgentDir, int nextAgentDir);
+    bool canSendToken(TokenType type, bool toBack) const;
+    void sendToken(TokenType type, bool toBack, int value);
+    int peekAtToken(TokenType type, bool fromBack) const;
+    Token receiveToken(TokenType type, bool fromBack);
+    void tokenCleanup();
 
-    void performPassiveClean(const int region, int prevAgentDir, int nextAgentDir);
-    void performActiveClean(const int region1, int prevAgentDir, int nextAgentDir);
+    void performPassiveClean(const int region);
+    void performActiveClean(const int region1);
 
     int encodeVector(std::pair<int, int> vector) const;
     std::pair<int, int> decodeVector(int code);
@@ -231,6 +231,11 @@ protected:
 
     LocData headLocData;
     LocData tailLocData;
+
+    //in execute these get set, temp used
+    LocData self;
+    std::array<Token, 15> followTokens;
+    std::array<Token, 15> parentTokens;
 };
 }
 
