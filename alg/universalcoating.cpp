@@ -46,7 +46,7 @@ UniversalCoatingFlag::UniversalCoatingFlag()
         token->receivedToken = false;
         ++typenum;
     }
-     typenum = 0;
+    typenum = 0;
     for(auto token = tailLocData.backTokens.begin(); token != tailLocData.backTokens.end(); ++token) {
         token->type = (TokenType) typenum;
         token->value = -1;
@@ -69,14 +69,14 @@ UniversalCoatingFlag::UniversalCoatingFlag()
     tailLocData.electionSubphase = ElectionSubphase::SegmentComparison;
 
 
-  for (int i =0; i<tailLocData.switches.size();i++)
-  {
-      tailLocData.switches.at(i) = 0;
-  }
-  for (int i =0; i<headLocData.switches.size();i++)
-  {
-      headLocData.switches.at(i) = 0;
-  }
+    for (int i =0; i<tailLocData.switches.size();i++)
+    {
+        tailLocData.switches.at(i) = 0;
+    }
+    for (int i =0; i<headLocData.switches.size();i++)
+    {
+        headLocData.switches.at(i) = 0;
+    }
 
 }
 
@@ -122,55 +122,8 @@ UniversalCoating::UniversalCoating(const Phase _phase)
     superLeader= false;
     borderPasses = 0;
     id = -1;
-    //init: all 4 tokens sets
-    int typenum = 0;
-    for(auto token = headLocData.backTokens.begin(); token != headLocData.backTokens.end(); ++token) {
-        token->type = (TokenType) typenum;
-        token->value = -1;
-        token->receivedToken = false;
-        ++typenum;
-    }
-
-    typenum = 0;
-    for(auto token = headLocData.forwardTokens.begin(); token != headLocData.forwardTokens.end(); ++token) {
-        token->type = (TokenType) typenum;
-        token->value = -1;
-        token->receivedToken = false;
-        ++typenum;
-    }
-     typenum = 0;
-    for(auto token = tailLocData.backTokens.begin(); token != tailLocData.backTokens.end(); ++token) {
-        token->type = (TokenType) typenum;
-        token->value = -1;
-        token->receivedToken = false;
-        ++typenum;
-    }
-
-    typenum = 0;
-    for(auto token = tailLocData.forwardTokens.begin(); token != tailLocData.forwardTokens.end(); ++token) {
-        token->type = (TokenType) typenum;
-        token->value = -1;
-        token->receivedToken = false;
-        ++typenum;
-    }
-
-    headLocData.electionRole = ElectionRole::Demoted;
-    tailLocData.electionRole = ElectionRole::Demoted;
-
-    headLocData.electionSubphase = ElectionSubphase::SegmentComparison;
-    tailLocData.electionSubphase = ElectionSubphase::SegmentComparison;
-
-
-  for (int i =0; i<tailLocData.switches.size();i++)
-  {
-      tailLocData.switches.at(i) = 0;
-  }
-  for (int i =0; i<headLocData.switches.size();i++)
-  {
-      headLocData.switches.at(i) = 0;
-  }
-
-
+    cleanHeadLocData();
+    cleanTailLocData();
 
 
 }
@@ -195,8 +148,8 @@ UniversalCoating::UniversalCoating(const UniversalCoating& other)
       hasLost(other.hasLost),
       borderPasses(other.borderPasses),
       id(other.id),
-        headLocData(other.headLocData),
-        tailLocData(other.tailLocData)
+      headLocData(other.headLocData),
+      tailLocData(other.tailLocData)
 {
 }
 
@@ -516,9 +469,64 @@ std::shared_ptr<System> UniversalCoating::instance(const int staticParticlesRadi
     return system;
 */
 //}
-
-
+//wrapper to capture motion for token storage moving stuff before actually returning it
 Movement UniversalCoating::execute()
+{
+    auto surfaceFollower = firstNeighborInPhase(Phase::Static);
+    int   surfaceParent = headMarkDir;
+    if(surfaceFollower!=-1)
+    {
+        if(isExpanded())
+        {
+            while(neighborIsInPhase(surfaceFollower,Phase::Static))
+            {
+                surfaceFollower = (surfaceFollower+1)%10;
+            }
+        }
+        else
+        {
+            while(neighborIsInPhase(surfaceFollower,Phase::Static))
+            {
+                surfaceFollower = (surfaceFollower+1)%6;
+            }
+        }
+
+    }
+    Movement movement= subExecute();
+
+    qDebug()<<"id: "<<id<<" contracted? "<<isContracted();
+   if(surfaceFollower > 0 && inFlags[surfaceFollower]!=nullptr)
+       qDebug()<<"follow: "<<inFlags[surfaceFollower]->id;
+   if(surfaceParent> 0 && inFlags[surfaceParent]!=nullptr)
+       qDebug()<<"parent: "<<inFlags[surfaceParent]->id;
+
+    qDebug()<<"head: "<<(int)headLocData.electionRole<<" tail: "<<(int)tailLocData.electionRole;
+    switch(movement.type)
+    {
+    case MovementType::Expand:
+        //if neighbor in front, head = their tail
+        if(inFlags[surfaceParent]!=nullptr)
+            headLocData = inFlags[surfaceParent]->tailLocData;
+        break;
+    case MovementType::Contract:
+        tailLocData = headLocData;
+        cleanHeadLocData();
+        break;
+    case MovementType::HandoverContract:
+        tailLocData = headLocData;
+        cleanHeadLocData();
+        break;
+    }
+    //put everything available everywhere, for now
+    for(int i = 0; i<10;i++)
+    {
+        outFlags[i].headLocData =headLocData;
+        outFlags[i].tailLocData =tailLocData;
+    }
+    qDebug()<<"head: "<<(int)headLocData.electionRole<<" tail: "<<(int)tailLocData.electionRole;
+    return movement;
+}
+Movement UniversalCoating::subExecute()
 {
 
 
@@ -757,7 +765,8 @@ Movement UniversalCoating::execute()
                     while(!neighborIsInPhase(staticRecDir,Phase::Static))
                         staticRecDir = (staticRecDir+5)%6;
 
-                    headLocData.electionRole = ElectionRole::Candidate;
+                    tailLocData.electionRole = ElectionRole::Candidate;//goes in tail b/c that's what gets read off a contracted particle
+                  //  headLocData.electionRole = ElectionRole::Candidate;//also goes on head because head will get put it in to tail and cleared on first motion
 
                 }
 
@@ -1001,7 +1010,7 @@ Movement UniversalCoating::execute()
             }
             else if(phase == Phase::Follow) {
                 if(neighborIsInPhase(headMarkDir,Phase::Lead) && inFlags[headMarkDir]->isExpanded())// && hasNeighborInPhase(Phase::retiredLeader))
-                qDebug()<<" follow executed"<< neighborIsInPhase(headMarkDir,Phase::Lead)<<" "<<headMarkDir<<" "<<followDir<<" "<<inFlags[headMarkDir]->isExpanded()<<" "<<(int)inFlags[headMarkDir]->phase;
+                    qDebug()<<" follow executed"<< neighborIsInPhase(headMarkDir,Phase::Lead)<<" "<<headMarkDir<<" "<<followDir<<" "<<inFlags[headMarkDir]->isExpanded()<<" "<<(int)inFlags[headMarkDir]->phase;
                 if(inFlags[followDir]==nullptr)//with bordering, this loss of leader can happen
                 {
                     qDebug()<<"null followdir";
@@ -1754,7 +1763,7 @@ bool UniversalCoating::parentActivated()
 
 void UniversalCoating::handlePositionElection()
 {
-/*
+    /*
     Q_ASSERT(hasNeighborInPhase(Phase::Static));
 
 
@@ -1870,7 +1879,7 @@ void UniversalCoating::handlePositionElection()
 void UniversalCoating::ExecuteLeaderElection(int prevAgentDir, int nextAgentDir)
 
 {
-   /* tokenCleanup(prevAgentDir, nextAgentDir); // clean token remnants before doing new actions
+    /* tokenCleanup(prevAgentDir, nextAgentDir); // clean token remnants before doing new actions
 
     if(electionRole == ElectionRole::Candidate) {
 
@@ -2202,19 +2211,19 @@ void UniversalCoating::paintBackSegment(const int color)
 
 bool UniversalCoating::canSendToken(TokenType type, int dir) const
 {
-   // return (outFlags[dir].tokens.at((int) type).value == -1 && !inFlags[dir]->tokens.at((int) type).receivedToken);
+    // return (outFlags[dir].tokens.at((int) type).value == -1 && !inFlags[dir]->tokens.at((int) type).receivedToken);
 }
 
 void UniversalCoating::sendToken(TokenType type, int dir, int value)
 {
 
-  //  Q_ASSERT(canSendToken(type, dir));
-  //  outFlags[dir].tokens.at((int) type).value = value;
+    //  Q_ASSERT(canSendToken(type, dir));
+    //  outFlags[dir].tokens.at((int) type).value = value;
 }
 
 int UniversalCoating::peekAtToken(TokenType type, int dir) const
 {
-  /*  if(outFlags[dir].tokens.at((int) type).receivedToken) {
+    /*  if(outFlags[dir].tokens.at((int) type).receivedToken) {
         // if this agent has already read this token, don't peek the same value again
         return -1;
     } else {
@@ -2224,7 +2233,7 @@ int UniversalCoating::peekAtToken(TokenType type, int dir) const
 
 Token UniversalCoating::receiveToken(TokenType type, int dir)
 {
-  /*  Q_ASSERT(peekAtToken(type, dir) != -1);
+    /*  Q_ASSERT(peekAtToken(type, dir) != -1);
     qDebug()<<"receive: "<<(int)type<< peekAtToken(type, dir);
     outFlags[dir].tokens.at((int) type).receivedToken = true;
     return inFlags[dir]->tokens.at((int) type);*/
@@ -2232,7 +2241,7 @@ Token UniversalCoating::receiveToken(TokenType type, int dir)
 
 void UniversalCoating::tokenCleanup(int prevAgentDir, int nextAgentDir)
 {
-  /*  for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
+    /*  for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
         TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest}) {
         if(inFlags[nextAgentDir]->tokens.at((int) tokenType).receivedToken) {
             outFlags[nextAgentDir].tokens.at((int) tokenType).value = -1;
@@ -2254,7 +2263,7 @@ void UniversalCoating::tokenCleanup(int prevAgentDir, int nextAgentDir)
 
 void UniversalCoating::performPassiveClean(const int region, int prevAgentDir, int nextAgentDir)
 {
-   /* Q_ASSERT(1 <= region && region <= 3); // 1 => back, 2 => front, 3 => both
+    /* Q_ASSERT(1 <= region && region <= 3); // 1 => back, 2 => front, 3 => both
     if(region != 2) { // back
         for(auto tokenType : {TokenType::SegmentLead, TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1}) {
             if(peekAtToken(tokenType, prevAgentDir) != -1) {
@@ -2273,7 +2282,7 @@ void UniversalCoating::performPassiveClean(const int region, int prevAgentDir, i
 
 void UniversalCoating::performActiveClean(const int region, int prevAgentDir, int nextAgentDir)
 {
-   /* Q_ASSERT(1 <= region && region <= 3); // 1 => back, 2 => front, 3 => both
+    /* Q_ASSERT(1 <= region && region <= 3); // 1 => back, 2 => front, 3 => both
     if(region != 2 && peekAtToken(TokenType::FinalSegmentClean, prevAgentDir) != -1) { // back
         receiveToken(TokenType::FinalSegmentClean, prevAgentDir);
     }
@@ -2330,7 +2339,7 @@ int UniversalCoating::addNextBorder(int currentSum, int prevAgentDir, int nextAg
 
 void UniversalCoating::setElectionRole(ElectionRole role)
 {
- /*   electionRole = role;
+    /*   electionRole = role;
     for(int dir = 0; dir<10;dir++)
     {
         outFlags[dir].electionRole = role;
@@ -2339,7 +2348,7 @@ void UniversalCoating::setElectionRole(ElectionRole role)
 
 void UniversalCoating::setElectionSubphase(ElectionSubphase subphase)
 {
-  /*  electionSubphase = subphase;
+    /*  electionSubphase = subphase;
     for(int dir = 0; dir<10;dir++)
     {
         outFlags[dir].electionSubphase = subphase;
@@ -2380,5 +2389,61 @@ void UniversalCoating::printTokens(int prevAgentDir, int nextAgentDir)
 
 
 }
+void UniversalCoating::cleanHeadLocData()
+{
+    int typenum = 0;
+    for(auto token = headLocData.backTokens.begin(); token != headLocData.backTokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        ++typenum;
+    }
 
+    typenum = 0;
+    for(auto token = headLocData.forwardTokens.begin(); token != headLocData.forwardTokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        ++typenum;
+    }
+
+    headLocData.electionRole = ElectionRole::Demoted;
+
+    headLocData.electionSubphase = ElectionSubphase::SegmentComparison;
+
+
+
+    for (int i =0; i<headLocData.switches.size();i++)
+    {
+        headLocData.switches.at(i) = 0;
+    }
+}
+void UniversalCoating::cleanTailLocData()
+{
+    int typenum = 0;
+    for(auto token = tailLocData.backTokens.begin(); token != tailLocData.backTokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        ++typenum;
+    }
+
+    typenum = 0;
+    for(auto token = tailLocData.forwardTokens.begin(); token != tailLocData.forwardTokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        ++typenum;
+    }
+
+    tailLocData.electionRole = ElectionRole::Demoted;
+
+    tailLocData.electionSubphase = ElectionSubphase::SegmentComparison;
+
+
+    for (int i =0; i<tailLocData.switches.size();i++)
+    {
+        tailLocData.switches.at(i) = 0;
+    }
+}
 }

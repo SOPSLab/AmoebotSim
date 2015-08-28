@@ -132,6 +132,7 @@ public:
 
 
     virtual Movement execute();
+    virtual Movement subExecute();
     virtual bool isDeterministic() const;
     void paintFrontSegment(const int color);
     void paintBackSegment(const int color);
@@ -200,6 +201,10 @@ protected:
     int addNextBorder(int currentSum, int prevAgentDir, int nextAgentDir);
 
     void printTokens(int prevAgentDir, int nextAgentDir);
+
+    void cleanHeadLocData();//also used to make clean initial
+    void cleanTailLocData();
+
     Phase phase;
     int followDir;
     int Lnumber;
