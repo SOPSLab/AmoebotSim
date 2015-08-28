@@ -67,7 +67,7 @@ public slots:
     void holeelimstandard(const unsigned int numParticles = 100);
     void holeelimcompaction(const unsigned int numParticles = 100);
     void leaderelection(const unsigned int numParticles = 100);
-    void universalcoating(const int numStaticParticles=50, const int numParticles=50, const float holeProb = 0.2, const bool leftB=false, const bool rightB=false);
+    void universalcoating(const int staticParticlesRadius=5, const int numParticles=50, const float holeProb = 0.2, const bool leftB=false, const bool rightB=false);
     void leaderelectiondemo();
 private:
     Simulator& sim;
@@ -76,7 +76,7 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    sim.setSystem(InfObjCoating::InfObjCoating::instance(100, 0.2));
+    sim.setSystem(UniversalCoating::UniversalCoating::instance(1,50,0.2,false,false));
 }
 
 inline void ScriptInterface::round()
@@ -307,13 +307,13 @@ inline void ScriptInterface::leaderelectiondemo()
    sim.setSystem(LeaderElectionDemo::LeaderElectionDemo::instance());
 }
 
-inline void ScriptInterface::universalcoating(const  int numStaticParticles, const int numParticles, const float holeProb, const bool leftBorder , const bool rightBorder)
+inline void ScriptInterface::universalcoating(const  int staticParticlesRadius, const int numParticles, const float holeProb, const bool leftBorder , const bool rightBorder)
 {
     if(holeProb < 0.0f || holeProb > 1.0f) {
         sim.log("holeProb in [0.0, 1.0] required", true);
         return;
     }
-   sim.setSystem(UniversalCoating::UniversalCoating::instance(numStaticParticles ,numParticles,holeProb, leftBorder, rightBorder));
+   sim.setSystem(UniversalCoating::UniversalCoating::instance(staticParticlesRadius ,numParticles,holeProb, leftBorder, rightBorder));
 
 }
 

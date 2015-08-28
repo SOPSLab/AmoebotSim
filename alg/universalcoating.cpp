@@ -20,54 +20,63 @@ UniversalCoatingFlag::UniversalCoatingFlag()
       leadComplaint(false),
       seedBound(false),
       block(false),
-      tokenValue(-1),
-      tokenD1(0),
-      tokenD2(0),
-      tokenD3(0),
+
       tokenCurrentDir(-1),
       isSendingToken(false),
       ownTokenValue(-1),
       buildBorder(false),
       acceptPositionTokens(false),
-      electionRole(ElectionRole::None),
-      electionSubphase(ElectionSubphase::CoinFlip),
-      waitingForTransferAck(false),
-      gotAnnounceBeforeAck(false),
-      createdLead(false),
-      testingBorder(false),
-      sawUnmatchedToken(false),
-      comparingSegment(false),
-      absorbedActiveToken(false),
-      isCoveredCandidate(false),
-      gotAnnounceInCompare(false),
-      generateVectorDir(-1)
+      id(-1)
 
 {
+
+    //init: all 4 tokens sets
     int typenum = 0;
-    for(auto token = tokens.begin(); token != tokens.end(); ++token) {
+    for(auto token = headLocData.backTokens.begin(); token != headLocData.backTokens.end(); ++token) {
         token->type = (TokenType) typenum;
         token->value = -1;
         token->receivedToken = false;
-        qDebug()<<(int)token->type<<" value "<<token->value;
         ++typenum;
     }
 
     typenum = 0;
-    for(auto token = forwardTokens.begin(); token != forwardTokens.end(); ++token) {
+    for(auto token = headLocData.forwardTokens.begin(); token != headLocData.forwardTokens.end(); ++token) {
         token->type = (TokenType) typenum;
         token->value = -1;
         token->receivedToken = false;
-        qDebug()<<(int)token->type<<" value "<<token->value;
         ++typenum;
     }
+     typenum = 0;
+    for(auto token = tailLocData.backTokens.begin(); token != tailLocData.backTokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        ++typenum;
+    }
+
     typenum = 0;
-    for(auto token = backTokens.begin(); token != backTokens.end(); ++token) {
+    for(auto token = tailLocData.forwardTokens.begin(); token != tailLocData.forwardTokens.end(); ++token) {
         token->type = (TokenType) typenum;
         token->value = -1;
         token->receivedToken = false;
-        qDebug()<<(int)token->type<<" value "<<token->value;
         ++typenum;
     }
+
+    headLocData.electionRole = ElectionRole::Demoted;
+    tailLocData.electionRole = ElectionRole::Demoted;
+
+    headLocData.electionSubphase = ElectionSubphase::SegmentComparison;
+    tailLocData.electionSubphase = ElectionSubphase::SegmentComparison;
+
+
+  for (int i =0; i<tailLocData.switches.size();i++)
+  {
+      tailLocData.switches.at(i) = 0;
+  }
+  for (int i =0; i<headLocData.switches.size();i++)
+  {
+      headLocData.switches.at(i) = 0;
+  }
 
 }
 
@@ -81,30 +90,14 @@ UniversalCoatingFlag::UniversalCoatingFlag(const UniversalCoatingFlag& other)
       leadComplaint(other.leadComplaint),
       seedBound(other.seedBound),
       block(other.block),
-      tokenValue(other.tokenValue),
-      tokenD1(other.tokenD1),
-      tokenD2(other.tokenD2),
-      tokenD3(other.tokenD3),
       tokenCurrentDir(other.tokenCurrentDir),
       isSendingToken(other.isSendingToken),
       ownTokenValue(other.ownTokenValue),
       buildBorder(other.buildBorder),
-      tokens(other.tokens),
-      forwardTokens(other.forwardTokens),
-      backTokens(other.backTokens),
-      acceptPositionTokens(other.acceptPositionTokens),
-      electionRole(other.electionRole),
-      electionSubphase(other.electionSubphase),
-      waitingForTransferAck(other.waitingForTransferAck),
-      gotAnnounceBeforeAck(other.gotAnnounceBeforeAck),
-      generateVectorDir(other.generateVectorDir),
-      createdLead(other.createdLead),
-      sawUnmatchedToken(other.sawUnmatchedToken),
-      comparingSegment(other.comparingSegment),
-      absorbedActiveToken(other.absorbedActiveToken),
-      isCoveredCandidate(other.isCoveredCandidate),
-      gotAnnounceInCompare(other.gotAnnounceInCompare),
-      testingBorder(other.testingBorder)
+      headLocData(other.headLocData),
+      tailLocData(other.tailLocData),
+      id(other.id)
+
 
 {
 }
@@ -129,18 +122,55 @@ UniversalCoating::UniversalCoating(const Phase _phase)
     superLeader= false;
     borderPasses = 0;
     id = -1;
-    electionRole = ElectionRole::None;
-    electionSubphase = ElectionSubphase::CoinFlip;
-    waitingForTransferAck = false;
-    gotAnnounceBeforeAck = false;
-    generateVectorDir = -1;
-    createdLead = false;
-    sawUnmatchedToken = false;
-    comparingSegment= false;
-    absorbedActiveToken = false;
-    isCoveredCandidate = false;
-    gotAnnounceInCompare= false;
-    testingBorder =false;
+    //init: all 4 tokens sets
+    int typenum = 0;
+    for(auto token = headLocData.backTokens.begin(); token != headLocData.backTokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        ++typenum;
+    }
+
+    typenum = 0;
+    for(auto token = headLocData.forwardTokens.begin(); token != headLocData.forwardTokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        ++typenum;
+    }
+     typenum = 0;
+    for(auto token = tailLocData.backTokens.begin(); token != tailLocData.backTokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        ++typenum;
+    }
+
+    typenum = 0;
+    for(auto token = tailLocData.forwardTokens.begin(); token != tailLocData.forwardTokens.end(); ++token) {
+        token->type = (TokenType) typenum;
+        token->value = -1;
+        token->receivedToken = false;
+        ++typenum;
+    }
+
+    headLocData.electionRole = ElectionRole::Demoted;
+    tailLocData.electionRole = ElectionRole::Demoted;
+
+    headLocData.electionSubphase = ElectionSubphase::SegmentComparison;
+    tailLocData.electionSubphase = ElectionSubphase::SegmentComparison;
+
+
+  for (int i =0; i<tailLocData.switches.size();i++)
+  {
+      tailLocData.switches.at(i) = 0;
+  }
+  for (int i =0; i<headLocData.switches.size();i++)
+  {
+      headLocData.switches.at(i) = 0;
+  }
+
+
 
 
 }
@@ -165,19 +195,8 @@ UniversalCoating::UniversalCoating(const UniversalCoating& other)
       hasLost(other.hasLost),
       borderPasses(other.borderPasses),
       id(other.id),
-      electionRole(other.electionRole),
-      electionSubphase(other.electionSubphase),
-      waitingForTransferAck(other.waitingForTransferAck),
-      gotAnnounceBeforeAck(other.gotAnnounceBeforeAck),
-      generateVectorDir(other.generateVectorDir),
-      createdLead(other.createdLead),
-      sawUnmatchedToken(other.sawUnmatchedToken),
-      comparingSegment(other.comparingSegment),
-      absorbedActiveToken(other.absorbedActiveToken),
-      isCoveredCandidate(other.isCoveredCandidate),
-      gotAnnounceInCompare(other.gotAnnounceInCompare),
-      testingBorder(other.testingBorder)
-
+        headLocData(other.headLocData),
+        tailLocData(other.tailLocData)
 {
 }
 
@@ -185,9 +204,9 @@ UniversalCoating::~UniversalCoating()
 {
 }
 
-std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles, const int numParticles, const float holeProb, const bool leftBorder, const bool rightBorder)
+std::shared_ptr<System> UniversalCoating::instance(const int staticParticlesRadius, const int numParticles, const float holeProb, const bool leftBorder, const bool rightBorder)
 {
-    std::shared_ptr<System> system = std::make_shared<System>();
+    /*std::shared_ptr<System> system = std::make_shared<System>();
     std::deque<Node> orderedSurface;
     std::set<Node> occupied;
     Node pos;
@@ -318,94 +337,97 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
     }
 
     return system;
-//<<<<<<< HEAD
-  /*  std::shared_ptr<System> system = std::make_shared<System>();
+      std::shared_ptr<System> system = std::make_shared<System>();*/
     std::deque<Node> orderedSurface;
     std::set<Node> occupied;
     Node pos;
     int lastOffset = 0;
-=======
 
-//    const int hexRadius = 5;
-//    const int numParticles = 100;
-//    const float holeProb = 0.5;
 
-//    std::shared_ptr<System> system = std::make_shared<System>();
+    const int hexRadius = staticParticlesRadius;
+    //   numParticles = 100;
+    // holeProb = 0.5;
 
-//    std::set<Node> occupied;
+    std::shared_ptr<System> system = std::make_shared<System>();
 
-//    // grow hexagon of given radius
-//    system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Static), randDir(), Node(0, 0)));
-//    occupied.insert(Node(0, 0));
-//    std::set<Node> layer1, layer2;
-//    layer1.insert(Node(0, 0));
-//    for(int i = 1; i < hexRadius; i++) {
-//        for(auto n : layer1) {
-//            for(int dir = 0; dir < 6; dir++) {
-//                auto neighbor = n.nodeInDir(dir);
-//                if(occupied.find(neighbor) == occupied.end() && layer1.find(neighbor) == layer1.end()) {
-//                    layer2.insert(neighbor);
-//                }
-//            }
-//        }
+    //  std::set<Node> occupied;
 
-//        for(auto n : layer2) {
-//            system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Static), randDir(), n));
-//            occupied.insert(n);
-//        }
+    // grow hexagon of given radius
+    system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), Node(0, 0)));
+    occupied.insert(Node(0, 0));
+    std::set<Node> layer1, layer2;
+    layer1.insert(Node(0, 0));
+    for(int i = 1; i < hexRadius; i++) {
+        for(auto n : layer1) {
+            for(int dir = 0; dir < 6; dir++) {
+                auto neighbor = n.nodeInDir(dir);
+                if(occupied.find(neighbor) == occupied.end() && layer1.find(neighbor) == layer1.end()) {
+                    layer2.insert(neighbor);
+                }
+            }
+        }
 
-//        layer1 = layer2;
-//        layer2.clear();
-//    }
+        for(auto n : layer2) {
+            system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), n));
+            occupied.insert(n);
+        }
 
-//    // determine candidate set by "growing an additional layer"
-//    std::set<Node> candidates;
-//    for(auto n : layer1) {
-//        for(int dir = 0; dir < 6; dir++) {
-//            auto neighbor = n.nodeInDir(dir);
-//            if(occupied.find(neighbor) == occupied.end() && layer1.find(neighbor) == layer1.end()) {
-//                candidates.insert(neighbor);
-//            }
-//        }
-//    }
+        layer1 = layer2;
+        layer2.clear();
+    }
 
-//    // add inactive particles
-//    int numNonStaticParticles = 0;
-//    while(numNonStaticParticles < numParticles && !candidates.empty()) {
-//        // pick random candidate
-//        int randIndex = randInt(0, candidates.size());
-//        Node randomCandidate;
-//        for(auto it = candidates.begin(); it != candidates.end(); ++it) {
-//            if(randIndex == 0) {
-//                randomCandidate = *it;
-//                candidates.erase(it);
-//                break;
-//            } else {
-//                randIndex--;
-//            }
-//        }
+    // determine candidate set by "growing an additional layer"
+    std::set<Node> candidates;
+    for(auto n : layer1) {
+        for(int dir = 0; dir < 6; dir++) {
+            auto neighbor = n.nodeInDir(dir);
+            if(occupied.find(neighbor) == occupied.end() && layer1.find(neighbor) == layer1.end()) {
+                candidates.insert(neighbor);
+            }
+        }
+    }
 
-//        occupied.insert(randomCandidate);
+    // add inactive particles
+    int particleID = 0;
+    int numNonStaticParticles = 0;
+    while(numNonStaticParticles < numParticles && !candidates.empty()) {
+        // pick random candidate
+        int randIndex = randInt(0, candidates.size());
+        Node randomCandidate;
+        for(auto it = candidates.begin(); it != candidates.end(); ++it) {
+            if(randIndex == 0) {
+                randomCandidate = *it;
+                candidates.erase(it);
+                break;
+            } else {
+                randIndex--;
+            }
+        }
 
-//        if(randBool(1.0f - holeProb)) {
-//            // only add particle if not a hole
-//            system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Inactive), randDir(), randomCandidate));
-//            numNonStaticParticles++;
+        occupied.insert(randomCandidate);
 
-//            // add new candidates
-//            for(int i = 0; i < 6; i++) {
-//                auto neighbor = randomCandidate.nodeInDir(i);
-//                if(occupied.find(neighbor) == occupied.end()) {
-//                    candidates.insert(neighbor);
-//                }
-//            }
-//        }
-//    }
+        if(randBool(1.0f - holeProb)) {
+            // only add particle if not a hole
+            std::shared_ptr<UniversalCoating> newParticle= std::make_shared<UniversalCoating>(Phase::Inactive);
+            newParticle->id = particleID;
+            qDebug()<<"id: "<<particleID;
+            particleID++;
+            system->insertParticle(Particle(newParticle, randDir(), randomCandidate));
+            numNonStaticParticles++;
 
-//    return system;
+            // add new candidates
+            for(int i = 0; i < 6; i++) {
+                auto neighbor = randomCandidate.nodeInDir(i);
+                if(occupied.find(neighbor) == occupied.end()) {
+                    candidates.insert(neighbor);
+                }
+            }
+        }
+    }
+
+    return system;
 }
->>>>>>> 33bc9603045fa48632c128a0046aac4ccd51cf6c
-
+/*
     // begin hexagon structure
     int offset =0;
     int itercount =0;
@@ -493,7 +515,7 @@ std::shared_ptr<System> UniversalCoating::instance(const int numStaticParticles,
 
     return system;
 */
-}
+//}
 
 
 Movement UniversalCoating::execute()
@@ -513,7 +535,7 @@ Movement UniversalCoating::execute()
         if(phase!=Phase::Inactive  )
         {
             handlePositionElection();
-            if(electionRole == ElectionRole::SoleCandidate)
+            /*if(electionRole == ElectionRole::SoleCandidate)
             {
                 auto surfaceFollower = firstNeighborInPhase(Phase::Static);
                 int   surfaceParent = headMarkDir;
@@ -525,24 +547,33 @@ Movement UniversalCoating::execute()
                     }
 
                 }
-
-                int borderBuildDir = (headMarkDir+1)%6;
+                downDir = getDownDir();
+                headMarkDir = downDir;
+                int borderBuildDir =(firstNeighborInPhase((Phase::Static))+3)%6;
                 while(neighborIsInPhase(borderBuildDir,Phase::Static) || neighborIsInPhase(borderBuildDir,Phase::StaticBorder))
                     borderBuildDir = (borderBuildDir+5)%6;
                 outFlags[borderBuildDir].buildBorder= true;
+                NumFinishedNeighbors = 2;//must be 2 for leader election to have finished...
+                setNumFinishedNeighbors(NumFinishedNeighbors);
                 qDebug()<<"trying to border?"<<borderBuildDir<<" "<<surfaceParent<<" "<<surfaceFollower;
-                setPhase(Phase::Border);
+                Lnumber = 0;
+                setLayerNumber(Lnumber);
+
+                setPhase(Phase::retiredLeader);
                 return Movement(MovementType::Idle);
 
-            }
+            }*/
 
         }
 
     }
 
+
+
     if(isExpanded()) {
+
         setElectionRole(ElectionRole::None);
-        if(hasNeighborInPhase(Phase::Static) || hasNeighborInPhase(Phase::StaticBorder))
+        /*if(hasNeighborInPhase(Phase::Static) || hasNeighborInPhase(Phase::StaticBorder))
         {
             bool hasFollower = false;
             for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
@@ -572,17 +603,22 @@ Movement UniversalCoating::execute()
                 qDebug()<<"no follow, not contracting";
                 return Movement(MovementType::Idle);
             }
-        }
+        }*/
         if(phase == Phase::Lead)
         {
+            qDebug()<<"expanded leader";
             if(phase == Phase::Lead && hasNeighborInPhase(Phase::Border))
             {
                 borderPasses++;
             }
 
             if(hasNeighborInPhase(Phase::Inactive) || tailReceivesFollowIndicator()) {
+                qDebug()<<"expanded leader: handover";
+
                 return Movement(MovementType::HandoverContract, tailContractionLabel());
             } else {
+
+                qDebug()<<"expanded leader: contract";
 
                 return Movement(MovementType::Contract, tailContractionLabel());
             }
@@ -608,6 +644,11 @@ Movement UniversalCoating::execute()
             {
                 outFlags[label].block =false;
             }
+            if(phase==Phase::Follow && hasNeighborInPhase(Phase::retiredLeader))
+            {
+                qDebug()<<"expanded follower on retired: followers <2, idling";
+
+            }
             return Movement(MovementType::Idle);
         }
 
@@ -620,15 +661,28 @@ Movement UniversalCoating::execute()
                 setPhase(Phase::Normal);
 
             }
+            if(phase==Phase::Follow && hasNeighborInPhase(Phase::retiredLeader))
+            {
+                qDebug()<<"expanded follower on retired: handover contract";
+                unsetFollowIndicator();
+                setPhase(Phase::Lead);
+                return Movement(MovementType::Idle);
+
+
+
+            }
             return Movement(MovementType::HandoverContract, tailContractionLabel());
         } else {
             if(phase==Phase::Hold && isSuperLeader())
             {
                 setPhase(Phase::Normal);
+
             }
+
             return Movement(MovementType::Contract, tailContractionLabel());
         }
-    } else
+    }
+    else
         //contracted
     {
 
@@ -645,27 +699,7 @@ Movement UniversalCoating::execute()
                 outFlags[borderBuildDir].buildBorder= true;
                 return Movement(MovementType::Idle);
             }
-            else if(phase==Phase::retiredLeader || phase == Phase::Lead)
-                // || phase == Phase::Follow || phase == Phase::Wait
-                //||phase == Phase::Hold || phase == Phase::Send) //check if on regular border
-            {
-                for(int label= 0; label<10;label++)
-                {
-                    if(inFlags[label]!=nullptr && inFlags[label]->buildBorder)
-                    {
 
-                        headMarkDir = label;
-                        setPhase(Phase::Border);
-                        int borderBuildDir = (headMarkDir+3)%6;
-                        while(neighborIsInPhase(borderBuildDir,Phase::Static) || neighborIsInPhase(borderBuildDir,Phase::StaticBorder))
-                            borderBuildDir = (borderBuildDir+1)%6;
-                        outFlags[borderBuildDir].buildBorder= true;
-                        qDebug()<<"trying to border?";
-                        setPhase(Phase::Border);
-                        return Movement(MovementType::Idle);
-                    }
-                }
-            }
             setBlock();
             if(hasNeighborInPhase(Phase::Static) || hasNeighborInPhase(Phase::StaticBorder) )
             {
@@ -692,6 +726,7 @@ Movement UniversalCoating::execute()
 
             }
         }
+
         if(phase == Phase::Inactive) {
             if(hasNeighborInPhase(Phase::Static) || hasNeighborInPhase(Phase::StaticBorder)) {
                 setPhase(Phase::Normal);
@@ -708,7 +743,22 @@ Movement UniversalCoating::execute()
                 if(hasNeighborInPhase(Phase::Static))
                 {
                     setElectionRole(ElectionRole::Candidate);
-                    //inFlags[firstNeighborInPhase(Phase::Static)]->electionRole = ElectionRole::Candidate;
+
+                    auto surfaceFollower = firstNeighborInPhase(Phase::Static);
+                    if(surfaceFollower!=-1)
+                    {
+                        while(neighborIsInPhase(surfaceFollower,Phase::Static))
+                        {
+                            surfaceFollower = (surfaceFollower+1)%6;
+                        }
+
+                    }
+                    int staticRecDir = surfaceFollower;//always same for anyone in this position
+                    while(!neighborIsInPhase(staticRecDir,Phase::Static))
+                        staticRecDir = (staticRecDir+5)%6;
+
+                    headLocData.electionRole = ElectionRole::Candidate;
+
                 }
 
 
@@ -782,6 +832,9 @@ Movement UniversalCoating::execute()
                     }
                 }
             }
+
+
+
             //phase changing block
             if(phase == Phase::Normal)
             {
@@ -808,7 +861,6 @@ Movement UniversalCoating::execute()
 
                 if(holdCount>0)
                 {
-                    qDebug()<<"hold count: "<<holdCount;
                     holdCount--;
                     setPhase(Phase::Hold);
                 }
@@ -865,6 +917,7 @@ Movement UniversalCoating::execute()
 
                     }
                 }
+
             }
             else if(phase == Phase::Send)
             {
@@ -882,28 +935,29 @@ Movement UniversalCoating::execute()
             else if(phase == Phase::Lead)
             {
 
+
                 downDir= getDownDir();
                 if(downDir == -1)
                 {
+                    qDebug()<<"no down dir, going to follow";
                     setPhase(Phase::Follow);
                     return Movement(MovementType::Idle);
                 }
                 else
                     downDir=labelToDir(downDir);
 
-                //check for tunnel against border, if necessary/possible, fillit
-
                 Lnumber = getLnumber();
                 setLayerNumber(Lnumber);
                 int moveDir = getMoveDir();
 
-                if (neighborIsInPhase(moveDir, Phase::Border)|| neighborIsInPhaseandLayer(moveDir, Phase::retiredLeader, Lnumber) ||(hasNeighborInPhase(Phase::Border)&& borderPasses>1))//??aya checke Lnumber nemikhad? ghanunan na age movedir dorost amal karde bashe
+                if (neighborIsInPhase(moveDir, Phase::Border)|| neighborIsInPhaseandLayer(moveDir, Phase::retiredLeader, Lnumber) ||(hasNeighborInPhase(Phase::Border)))//??aya checke Lnumber nemikhad? ghanunan na age movedir dorost amal karde bashe
                 {
 
                     setPhase(Phase::retiredLeader);
                     getLeftDir();
                     Q_ASSERT(leftDir>=0 && leftDir<=5);
                     NumFinishedNeighbors = CountFinishedSides(leftDir, rightDir);
+                    qDebug()<<"num fin neighbors: "<<NumFinishedNeighbors;
                     setNumFinishedNeighbors(NumFinishedNeighbors);
                     headMarkDir = downDir;//-1;
 
@@ -911,7 +965,32 @@ Movement UniversalCoating::execute()
 
                     return Movement(MovementType::Idle);
                 }
+                else
+                {
+                    for(int label= 0; label<10;label++)
+                    {
 
+                        if(inFlags[label]!=nullptr && inFlags[label]->buildBorder)
+                        {
+                            qDebug()<<"lead border.";
+
+                            headMarkDir = label;
+                            setPhase(Phase::retiredLeader);
+                            int borderBuildDir = (headMarkDir+3)%6;
+                            //  while(neighborIsInPhase(borderBuildDir,Phase::Static) || neighborIsInPhase(borderBuildDir,Phase::StaticBorder))
+                            //     borderBuildDir = (borderBuildDir+1)%6;
+                            // outFlags[borderBuildDir].buildBorder= true;
+
+                            Lnumber = getLnumber();
+                            setLayerNumber(Lnumber);
+                            downDir= getDownDir();
+
+                            qDebug()<<"trying to border? l 2"<<Lnumber;
+                            setPhase(Phase::retiredLeader);
+                            return Movement(MovementType::Idle);
+                        }
+                    }
+                }
 
                 setContractDir(moveDir);
                 headMarkDir = downDir;
@@ -921,31 +1000,17 @@ Movement UniversalCoating::execute()
 
             }
             else if(phase == Phase::Follow) {
+                if(neighborIsInPhase(headMarkDir,Phase::Lead) && inFlags[headMarkDir]->isExpanded())// && hasNeighborInPhase(Phase::retiredLeader))
+                qDebug()<<" follow executed"<< neighborIsInPhase(headMarkDir,Phase::Lead)<<" "<<headMarkDir<<" "<<followDir<<" "<<inFlags[headMarkDir]->isExpanded()<<" "<<(int)inFlags[headMarkDir]->phase;
                 if(inFlags[followDir]==nullptr)//with bordering, this loss of leader can happen
                 {
+                    qDebug()<<"null followdir";
                     setPhase(Phase::Normal);
-                    qDebug()<<"used leads2";
-
                     return Movement(MovementType::Idle);
                 }
                 //Q_ASSERT(inFlags[followDir] != nullptr);
                 if(hasNeighborInPhase(Phase::Static) || hasNeighborInPhase(Phase::StaticBorder)) {
-                    setPhase(Phase::Lead);
-                    downDir= getDownDir();
-
-                    if(downDir == -1)
-                        return Movement(MovementType::Idle);
-                    else downDir=labelToDir(downDir);
-
-                    Lnumber = getLnumber();
-                    setLayerNumber(Lnumber);
-                    unsetFollowIndicator();
-
-                    setPhase(Phase::Lead);
-                    return Movement(MovementType::Idle);
-                }
-                if(hasNeighborInPhase(Phase::retiredLeader)) {
-
+                    qDebug()<<"static or static border, to lead";
 
                     setPhase(Phase::Lead);
                     downDir= getDownDir();
@@ -957,12 +1022,14 @@ Movement UniversalCoating::execute()
                     Lnumber = getLnumber();
                     setLayerNumber(Lnumber);
                     unsetFollowIndicator();
-
                     setPhase(Phase::Lead);
-
                     return Movement(MovementType::Idle);
                 }
+
+
+
                 if(inFlags[followDir]->isExpanded() && !inFlags[followDir]->fromHead) {
+                    qDebug()<<"parent expand, trying to expand";
                     int expansionDir = followDir;
                     setContractDir(expansionDir);
                     followDir = updatedFollowDir();
@@ -970,33 +1037,57 @@ Movement UniversalCoating::execute()
                     auto temp = dirToHeadLabelAfterExpansion(followDir, expansionDir);
                     Q_ASSERT(labelToDirAfterExpansion(temp, expansionDir) == followDir);
                     setFollowIndicatorLabel(temp);
+                    qDebug()<<"follow expanding";
                     return Movement(MovementType::Expand, expansionDir);
                 }
+                if(hasNeighborInPhase(Phase::retiredLeader)) {
+
+                    qDebug()<<"Follow with retiredlead neighbor"<<id;
+                    setPhase(Phase::Lead);
+                    downDir= getDownDir();
+
+                    if(downDir == -1)
+                        return Movement(MovementType::Idle);
+                    else downDir=labelToDir(downDir);
+
+                    Lnumber = getLnumber();
+                    setLayerNumber(Lnumber);
+                    unsetFollowIndicator();
+
+                    setPhase(Phase::Lead);
+
+                    return Movement(MovementType::Idle);
+                }
+
                 return Movement(MovementType::Idle);
 
             }
 
             else if(phase == Phase::retiredLeader )
             {
-                /* for(int label= 0; label<10;label++)
-                {
-                    if(inFlags[label]!=nullptr && inFlags[label]->buildBorder)
-                    {
-                        qDebug()<<"retiredLeader gets border";
-                        headMarkDir = label;
-                        setPhase(Phase::Border);
-                        int borderBuildDir = (headMarkDir+3)%6;
-                        while(neighborIsInPhase(borderBuildDir,Phase::Static) || neighborIsInPhase(borderBuildDir,Phase::StaticBorder))
-                            borderBuildDir = (borderBuildDir+1)%6;
-                        outFlags[borderBuildDir].buildBorder= true;
-                        qDebug()<<"trying to border?";
-                        return Movement(MovementType::Idle);
-                    }
-                }*/
+
                 getLeftDir();
                 Q_ASSERT(leftDir >=0 && leftDir<=5);
                 NumFinishedNeighbors = CountFinishedSides(leftDir, rightDir);
                 setNumFinishedNeighbors(NumFinishedNeighbors);
+                if(NumFinishedNeighbors == 2)
+                {
+                    for(int label= 0; label<10;label++)
+                    {
+                        if(inFlags[label]!=nullptr && inFlags[label]->buildBorder)
+                        {
+                            qDebug()<<"retiredLeader finished, sending border";
+                            headMarkDir = label;
+                            int borderBuildDir = (headMarkDir+3)%6;
+                            while(neighborIsInPhase(borderBuildDir,Phase::Static) || neighborIsInPhase(borderBuildDir,Phase::StaticBorder))
+                                borderBuildDir = (borderBuildDir+1)%6;
+                            outFlags[borderBuildDir].buildBorder= true;
+                            qDebug()<<"trying to border?";
+                            return Movement(MovementType::Idle);
+                        }
+                    }
+
+                }
                 Q_ASSERT(NumFinishedNeighbors>=0 && NumFinishedNeighbors<=2);
                 /* if(NumFinishedNeighbors==2)
                 {
@@ -1021,6 +1112,9 @@ Movement UniversalCoating::execute()
                         qDebug()<<"retired stuck to bound";
                     }
                 }
+                Lnumber = getLnumber();
+                setLayerNumber(Lnumber);
+                setPhase(Phase::retiredLeader);
                 return Movement(MovementType::Idle);
 
             }
@@ -1050,6 +1144,7 @@ Movement UniversalCoating::execute()
             }
         }
     }
+    qDebug()<<"empty: "<<(int)phase;
 
     return Movement(MovementType::Empty);
 }
@@ -1072,13 +1167,17 @@ bool UniversalCoating::isDeterministic() const
 bool UniversalCoating::isStatic() const
 {
     // NOTE: Alex, I'm not sure what to put here since you have two different kinds of static.
+    if(phase==Phase::Static)
+        return true;
     return false;
 }
 
 void UniversalCoating::setPhase(const Phase _phase)
 {
     phase = _phase;
-
+    for(int label = 0; label < 10; label++) {
+        outFlags[label].phase = phase;
+    }
     if(phase == Phase::Normal)
     {
         headMarkColor = 0xff0000;
@@ -1258,6 +1357,7 @@ int UniversalCoating::getMoveDir() const
         label = firstNeighborInPhase(Phase::Static);
         if(label==-1)
             label = firstNeighborInPhase(Phase::StaticBorder);
+
         if(label != -1)
         {
             label = (label+5)%6;
@@ -1281,10 +1381,12 @@ int UniversalCoating::getMoveDir() const
         if(label==-1)
             label = firstNeighborInPhase(Phase::StaticBorder);
 
+
         if(label != -1)
         {
             label = (label+1)%6;
-            while (neighborIsInPhase(label, Phase::Static)  || neighborIsInPhase(label,Phase::StaticBorder)){
+            while (neighborIsInPhase(label, Phase::Static)  || neighborIsInPhase(label,Phase::StaticBorder)//  || neighborIsInPhase(label,Phase::Border)
+                   ){
                 label = (label+1)%6;
             }
         }
@@ -1316,6 +1418,8 @@ int UniversalCoating::getDownDir() const
         label = firstNeighborInPhase(Phase::StaticBorder);
     }
 
+
+
     else
     {
         int ZeroLayerGreens=0;
@@ -1336,6 +1440,7 @@ int UniversalCoating::getDownDir() const
 
             }else //from each layer there are some retireds. So we need to decide based on f
             {
+                qDebug()<<"counting ret finished: "<<countRetiredareFinished(0)<<" "<<countRetiredareFinished(1);
                 if(countRetiredareFinished(0) == ZeroLayerGreens)
                 {
                     label= firstNeighborInPhaseandLayer(Phase::retiredLeader, 0);
@@ -1359,7 +1464,8 @@ int UniversalCoating::getLnumber() const
     Q_ASSERT(inFlags[downDir] != nullptr);
     if(inFlags[downDir] != nullptr)
     {
-        if(inFlags[downDir]->phase == Phase::Static || inFlags[downDir]->phase == Phase::StaticBorder)
+        if(inFlags[downDir]->phase == Phase::Static || inFlags[downDir]->phase == Phase::StaticBorder
+                )
             return 0;
         else
             return (inFlags[downDir]->Lnumber +1)%2;
@@ -1648,39 +1754,60 @@ bool UniversalCoating::parentActivated()
 
 void UniversalCoating::handlePositionElection()
 {
-
+/*
     Q_ASSERT(hasNeighborInPhase(Phase::Static));
-    auto surfaceFollower = firstNeighborInPhase(Phase::Static);
-    int   surfaceParent = headMarkDir;
-    if(surfaceFollower!=-1)
-    {
-        while(neighborIsInPhase(surfaceFollower,Phase::Static))
-        {
-            surfaceFollower = (surfaceFollower+1)%6;
-        }
 
-    }
-    if( surfaceFollower<0 || surfaceParent<0 ||
-            neighborIsInPhase(surfaceParent,Phase::Inactive) || neighborIsInPhase(surfaceFollower,Phase::Inactive ) ||
-            inFlags[surfaceFollower] ==nullptr || inFlags[surfaceParent]==nullptr || inFlags[surfaceParent]->isExpanded() ||inFlags[surfaceFollower]->isExpanded()
-           )
-    {
-        return;
-    }
 
-    qDebug()<<"id: "<<id<<"parent: "<<inFlags[surfaceParent]->id<<" follow: "<<inFlags[surfaceFollower]->id<<" "<<isExpanded();
     if(isExpanded())//copy up values but for now don't act on them
     {
-
+        qDebug()<<id<<" expanded handle pos";
     }
     else
     {
+        auto surfaceFollower = firstNeighborInPhase(Phase::Static);
+        int   surfaceParent = headMarkDir;
+        if(surfaceFollower!=-1)
+        {
+            while(neighborIsInPhase(surfaceFollower,Phase::Static))
+            {
+                surfaceFollower = (surfaceFollower+1)%6;
+            }
+
+        }
+        if( surfaceFollower<0 || surfaceParent<0 ||
+                neighborIsInPhase(surfaceParent,Phase::Inactive) || neighborIsInPhase(surfaceFollower,Phase::Inactive ) ||
+                inFlags[surfaceFollower] ==nullptr || inFlags[surfaceParent]==nullptr || inFlags[surfaceParent]->isExpanded() ||inFlags[surfaceFollower]->isExpanded()
+                )
+        {
+            return;
+        }
+        if(id!=-1)
+            qDebug()<<"id: "<<id<<"parent: "<<inFlags[surfaceParent]->id<<" follow: "<<inFlags[surfaceFollower]->id<<" "<<isExpanded();
+
         //copy up
 
 
         int staticRecDir = surfaceFollower;//always same for anyone in this position
         while(!neighborIsInPhase(staticRecDir,Phase::Static))
             staticRecDir = (staticRecDir+5)%6;
+        qDebug()<<"save location? "<<inFlags[staticRecDir]->saveLocation<<" "<<(int)inFlags[staticRecDir]->electionRole<<" "<<staticRecDir<<neighborIsInPhase(staticRecDir,Phase::Static);
+        qDebug()<<"has static? "<<neighborIsInPhase(staticRecDir,Phase::Static);
+        if(!inFlags[staticRecDir]->saveLocation)
+        {
+            for(int i =0; i<6; i++)
+            {
+                if(inFlags[i]!=nullptr && inFlags[i]->saveLocation && neighborIsInPhase(i,Phase::Static))//if there is a valid, static, switch to it.
+                    staticRecDir = i;
+            }
+
+        }
+        qDebug()<<"new rec dir? "<<inFlags[staticRecDir]->saveLocation<<" "<<(int)inFlags[staticRecDir]->electionRole<<" "<<staticRecDir<<" "<<staticRecDir<<neighborIsInPhase(staticRecDir,Phase::Static);
+
+        if(!inFlags[staticRecDir]->saveLocation)
+        {
+            //  setElectionRole(ElectionRole::None);
+            //  return;
+        }
         //copy tokens for forward and backward
         outFlags[surfaceParent].tokens = inFlags[staticRecDir]->forwardTokens;
         outFlags[surfaceFollower].tokens = inFlags[staticRecDir]->backTokens;
@@ -1698,45 +1825,63 @@ void UniversalCoating::handlePositionElection()
         isCoveredCandidate = inFlags[staticRecDir]->isCoveredCandidate;
         gotAnnounceInCompare= inFlags[staticRecDir]->gotAnnounceInCompare;
         testingBorder = inFlags[staticRecDir]->testingBorder;
-        qDebug()<<"read role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
+        if(id!=-1)
+            qDebug()<<"read role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
+        else
+            qDebug()<<"-1 role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
         //act
         if(electionRole == ElectionRole::None)
             electionRole = ElectionRole::Demoted;
         if( inFlags[surfaceParent]->electionRole != ElectionRole::None && inFlags[surfaceFollower]->electionRole != ElectionRole::None)
-                  ExecuteLeaderElection(surfaceFollower,surfaceParent);
-        printTokens(surfaceFollower,surfaceParent);
+        {
+            ExecuteLeaderElection(surfaceFollower,surfaceParent);
+            printTokens(surfaceFollower,surfaceParent);
+        }
         //copy down
-      /*  inFlags[staticRecDir]->forwardTokens =  outFlags[surfaceParent].tokens;
-        inFlags[staticRecDir]->backTokens =  outFlags[surfaceFollower].tokens ;
-        inFlags[staticRecDir]->electionSubphase = electionSubphase;
-        inFlags[staticRecDir]->electionRole = electionRole;
-        //other info is only for local use, doesn't have to go to outflags
-        inFlags[staticRecDir]-> waitingForTransferAck = waitingForTransferAck;
-        inFlags[staticRecDir]-> gotAnnounceBeforeAck = gotAnnounceBeforeAck;
-        inFlags[staticRecDir]-> generateVectorDir = generateVectorDir;
-        inFlags[staticRecDir]-> createdLead =createdLead;
-        inFlags[staticRecDir]->sawUnmatchedToken = sawUnmatchedToken;
-        inFlags[staticRecDir]->comparingSegment= comparingSegment;
-        inFlags[staticRecDir]-> absorbedActiveToken =absorbedActiveToken;
-        inFlags[staticRecDir]->isCoveredCandidate = isCoveredCandidate;
-        inFlags[staticRecDir]->gotAnnounceInCompare= gotAnnounceInCompare;
-        inFlags[staticRecDir]->testingBorder = testingBorder;*/
-        qDebug()<<"wrote role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
-    }
+        for(int i =0; i<6; i++)
+        {
+            if(neighborIsInPhase(i,Phase::Static)){
+                qDebug()<<"write";
+                staticRecDir = i;
+                inFlags[staticRecDir]->forwardTokens =  outFlags[surfaceParent].tokens;
+                inFlags[staticRecDir]->backTokens =  outFlags[surfaceFollower].tokens ;
+                inFlags[staticRecDir]->electionSubphase = electionSubphase;
+                inFlags[staticRecDir]->electionRole = electionRole;
+                //other info is only for local use, doesn't have to go to outflags
+                inFlags[staticRecDir]-> waitingForTransferAck = waitingForTransferAck;
+                inFlags[staticRecDir]-> gotAnnounceBeforeAck = gotAnnounceBeforeAck;
+                inFlags[staticRecDir]-> generateVectorDir = generateVectorDir;
+                inFlags[staticRecDir]-> createdLead =createdLead;
+                inFlags[staticRecDir]->sawUnmatchedToken = sawUnmatchedToken;
+                inFlags[staticRecDir]->comparingSegment= comparingSegment;
+                inFlags[staticRecDir]-> absorbedActiveToken =absorbedActiveToken;
+                inFlags[staticRecDir]->isCoveredCandidate = isCoveredCandidate;
+                inFlags[staticRecDir]->gotAnnounceInCompare= gotAnnounceInCompare;
+                inFlags[staticRecDir]->testingBorder = testingBorder;
+                inFlags[staticRecDir]->saveLocation = true;
+            }
+        }
+        if(id!=-1)
+            qDebug()<<"wrote role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
+
+    }*/
 }
+
 void UniversalCoating::ExecuteLeaderElection(int prevAgentDir, int nextAgentDir)
+
 {
-    tokenCleanup(prevAgentDir,nextAgentDir);
+   /* tokenCleanup(prevAgentDir, nextAgentDir); // clean token remnants before doing new actions
+
     if(electionRole == ElectionRole::Candidate) {
-        /* this first block of tasks should be performed by any candidate, regardless of subphase */
+
         // if there is an incoming active segment cleaning token, consume it
         if(peekAtToken(TokenType::ActiveSegmentClean, nextAgentDir) != -1) {
-            performActiveClean(2, prevAgentDir, nextAgentDir); // clean the front side only
+            performActiveClean(2,prevAgentDir,nextAgentDir); // clean the front side only
             receiveToken(TokenType::ActiveSegmentClean, nextAgentDir);
         }
         // if there is an incoming passive segment cleaning token, consume it
         if(peekAtToken(TokenType::PassiveSegmentClean, prevAgentDir) != -1) {
-            performPassiveClean(1, prevAgentDir, nextAgentDir); // clean the back side only
+            performPassiveClean(1,prevAgentDir,nextAgentDir); // clean the back side only
             receiveToken(TokenType::PassiveSegmentClean, prevAgentDir);
             paintBackSegment(QColor("dimgrey").rgb());
         }
@@ -1754,10 +1899,10 @@ void UniversalCoating::ExecuteLeaderElection(int prevAgentDir, int nextAgentDir)
                 } else { // this candidate is now covered
                     Q_ASSERT(canSendToken(TokenType::ActiveSegmentClean, prevAgentDir) && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir));
                     sendToken(TokenType::PassiveSegmentClean, nextAgentDir, 1);
-                    performPassiveClean(2, prevAgentDir, nextAgentDir); // clean the front side only
+                    performPassiveClean(2,prevAgentDir,nextAgentDir); // clean the front side only
                     paintFrontSegment(QColor("dimgrey").rgb());
                     sendToken(TokenType::ActiveSegmentClean, prevAgentDir, 1);
-                    performActiveClean(1, prevAgentDir, nextAgentDir); // clean the back side only
+                    performActiveClean(1,prevAgentDir,nextAgentDir); // clean the back side only
                     absorbedActiveToken = true;
                     isCoveredCandidate = true;
                     setElectionRole(ElectionRole::Demoted);
@@ -1797,7 +1942,7 @@ void UniversalCoating::ExecuteLeaderElection(int prevAgentDir, int nextAgentDir)
             sendToken(TokenType::SolitudeVectorL2, prevAgentDir, receiveToken(TokenType::SolitudeVectorL1, prevAgentDir).value);
         }
 
-        /* the next block of tasks are dependent upon subphase */
+      //  the next block of tasks are dependent upon subphase
         if(electionSubphase == ElectionSubphase::SegmentComparison) {
             if(peekAtToken(TokenType::PassiveSegment, nextAgentDir) != -1 && canSendToken(TokenType::ActiveSegment, prevAgentDir)) {
                 // if there is an incoming passive token, pass it on as an active token
@@ -1889,7 +2034,7 @@ void UniversalCoating::ExecuteLeaderElection(int prevAgentDir, int nextAgentDir)
     } else if(electionRole == ElectionRole::SoleCandidate) {
         if(!testingBorder) { // begin the inner/outer border test
             Q_ASSERT(canSendToken(TokenType::BorderTest, nextAgentDir));
-            sendToken(TokenType::BorderTest, nextAgentDir, addNextBorder(0, prevAgentDir, nextAgentDir));
+            sendToken(TokenType::BorderTest, nextAgentDir, addNextBorder(0,prevAgentDir,nextAgentDir));
             paintFrontSegment(-1);
             testingBorder = true;
         } else if(peekAtToken(TokenType::BorderTest, prevAgentDir) != -1) { // test is complete
@@ -1898,7 +2043,8 @@ void UniversalCoating::ExecuteLeaderElection(int prevAgentDir, int nextAgentDir)
             if(borderSum == 1) { // outer border, agent becomes the leader
                 setElectionRole(ElectionRole::Leader);
             } else if(borderSum == 4) { // inner border, demote agent and set to finished
-                setElectionRole(ElectionRole::Demoted);
+                //setElectionRole(ElectionRole::Finished);
+                qDebug()<<"inner border??";
             }
             testingBorder = false;
             return; // completed subphase and thus shouldn't perform any more operations in this round
@@ -1907,13 +2053,13 @@ void UniversalCoating::ExecuteLeaderElection(int prevAgentDir, int nextAgentDir)
         // SUBPHASE: Segment Comparison
         // pass passive segment cleaning tokens forward, and perform cleaning
         if(peekAtToken(TokenType::PassiveSegmentClean, prevAgentDir) != -1 && canSendToken(TokenType::PassiveSegmentClean, nextAgentDir)) {
-            performPassiveClean(3, prevAgentDir, nextAgentDir); // clean the full segment
+            performPassiveClean(3,prevAgentDir,nextAgentDir); // clean the full segment
             sendToken(TokenType::PassiveSegmentClean, nextAgentDir, receiveToken(TokenType::PassiveSegmentClean, prevAgentDir).value);
             paintFrontSegment(QColor("dimgrey").rgb()); paintBackSegment(QColor("dimgrey").rgb());
         }
         // pass active segment cleaning tokens backward, and perform cleaning
         if(peekAtToken(TokenType::ActiveSegmentClean, nextAgentDir) != -1 && canSendToken(TokenType::ActiveSegmentClean, prevAgentDir)) {
-            performActiveClean(3, prevAgentDir, nextAgentDir); // clean the full segment
+            performActiveClean(3,prevAgentDir,nextAgentDir); // clean the full segment
             sendToken(TokenType::ActiveSegmentClean, prevAgentDir, receiveToken(TokenType::ActiveSegmentClean, nextAgentDir).value);
         }
         // if there is an incoming segment lead token, pass it forward and generate a passive token
@@ -2037,12 +2183,13 @@ void UniversalCoating::ExecuteLeaderElection(int prevAgentDir, int nextAgentDir)
 
         // SUBPHASE: Inner/Outer Border Test
         if(peekAtToken(TokenType::BorderTest, prevAgentDir) != -1 && canSendToken(TokenType::BorderTest, nextAgentDir)) {
-            int borderSum = addNextBorder(receiveToken(TokenType::BorderTest, prevAgentDir).value, prevAgentDir, nextAgentDir);
+            int borderSum = addNextBorder(receiveToken(TokenType::BorderTest, prevAgentDir).value,prevAgentDir,nextAgentDir);
             sendToken(TokenType::BorderTest, nextAgentDir, borderSum);
             paintFrontSegment(-1); paintBackSegment(-1);
-            setElectionRole(ElectionRole::Demoted);
+            //   setElectionRole(ElectionRole::Finished);
         }
     }
+*/
 }
 
 void UniversalCoating::paintFrontSegment(const int color)
@@ -2055,37 +2202,37 @@ void UniversalCoating::paintBackSegment(const int color)
 
 bool UniversalCoating::canSendToken(TokenType type, int dir) const
 {
-    return (outFlags[dir].tokens.at((int) type).value == -1 && !inFlags[dir]->tokens.at((int) type).receivedToken);
+   // return (outFlags[dir].tokens.at((int) type).value == -1 && !inFlags[dir]->tokens.at((int) type).receivedToken);
 }
 
 void UniversalCoating::sendToken(TokenType type, int dir, int value)
 {
 
-    Q_ASSERT(canSendToken(type, dir));
-    outFlags[dir].tokens.at((int) type).value = value;
+  //  Q_ASSERT(canSendToken(type, dir));
+  //  outFlags[dir].tokens.at((int) type).value = value;
 }
 
 int UniversalCoating::peekAtToken(TokenType type, int dir) const
 {
-    if(outFlags[dir].tokens.at((int) type).receivedToken) {
+  /*  if(outFlags[dir].tokens.at((int) type).receivedToken) {
         // if this agent has already read this token, don't peek the same value again
         return -1;
     } else {
         return inFlags[dir]->tokens.at((int) type).value;
-    }
+    }*/
 }
 
 Token UniversalCoating::receiveToken(TokenType type, int dir)
 {
-    Q_ASSERT(peekAtToken(type, dir) != -1);
+  /*  Q_ASSERT(peekAtToken(type, dir) != -1);
     qDebug()<<"receive: "<<(int)type<< peekAtToken(type, dir);
     outFlags[dir].tokens.at((int) type).receivedToken = true;
-    return inFlags[dir]->tokens.at((int) type);
+    return inFlags[dir]->tokens.at((int) type);*/
 }
 
 void UniversalCoating::tokenCleanup(int prevAgentDir, int nextAgentDir)
 {
-    for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
+  /*  for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
         TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest}) {
         if(inFlags[nextAgentDir]->tokens.at((int) tokenType).receivedToken) {
             outFlags[nextAgentDir].tokens.at((int) tokenType).value = -1;
@@ -2102,12 +2249,12 @@ void UniversalCoating::tokenCleanup(int prevAgentDir, int nextAgentDir)
         if(inFlags[nextAgentDir]->tokens.at((int) tokenType).value == -1) {
             outFlags[nextAgentDir].tokens.at((int) tokenType).receivedToken = false;
         }
-    }
+    }*/
 }
 
 void UniversalCoating::performPassiveClean(const int region, int prevAgentDir, int nextAgentDir)
 {
-    Q_ASSERT(1 <= region && region <= 3); // 1 => back, 2 => front, 3 => both
+   /* Q_ASSERT(1 <= region && region <= 3); // 1 => back, 2 => front, 3 => both
     if(region != 2) { // back
         for(auto tokenType : {TokenType::SegmentLead, TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1}) {
             if(peekAtToken(tokenType, prevAgentDir) != -1) {
@@ -2121,19 +2268,19 @@ void UniversalCoating::performPassiveClean(const int region, int prevAgentDir, i
                 receiveToken(tokenType, nextAgentDir);
             }
         }
-    }
+    }*/
 }
 
 void UniversalCoating::performActiveClean(const int region, int prevAgentDir, int nextAgentDir)
 {
-    Q_ASSERT(1 <= region && region <= 3); // 1 => back, 2 => front, 3 => both
+   /* Q_ASSERT(1 <= region && region <= 3); // 1 => back, 2 => front, 3 => both
     if(region != 2 && peekAtToken(TokenType::FinalSegmentClean, prevAgentDir) != -1) { // back
         receiveToken(TokenType::FinalSegmentClean, prevAgentDir);
     }
     if(region != 1 && peekAtToken(TokenType::ActiveSegment, nextAgentDir) != -1) { // front
         receiveToken(TokenType::ActiveSegment, nextAgentDir);
     }
-    absorbedActiveToken = false;
+    absorbedActiveToken = false;*/
 }
 
 int UniversalCoating::encodeVector(std::pair<int, int> vector) const
@@ -2183,20 +2330,20 @@ int UniversalCoating::addNextBorder(int currentSum, int prevAgentDir, int nextAg
 
 void UniversalCoating::setElectionRole(ElectionRole role)
 {
-    electionRole = role;
+ /*   electionRole = role;
     for(int dir = 0; dir<10;dir++)
     {
         outFlags[dir].electionRole = role;
-    }
+    }*/
 }
 
 void UniversalCoating::setElectionSubphase(ElectionSubphase subphase)
 {
-    electionSubphase = subphase;
+  /*  electionSubphase = subphase;
     for(int dir = 0; dir<10;dir++)
     {
         outFlags[dir].electionSubphase = subphase;
-    }
+    }*/
 }
 
 
@@ -2205,7 +2352,8 @@ void UniversalCoating::setElectionSubphase(ElectionSubphase subphase)
 
 void UniversalCoating::printTokens(int prevAgentDir, int nextAgentDir)
 {
-    qDebug()<<"forward out: ";
+    /*if(id!=-1)
+        qDebug()<<"forward out: ";
     for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
         TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest, TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean, TokenType::CandidacyAck,
         TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
@@ -2216,7 +2364,8 @@ void UniversalCoating::printTokens(int prevAgentDir, int nextAgentDir)
             qDebug()<<"  token "<<(int)tokenType<<" value: "<<outFlags[nextAgentDir].tokens.at((int) tokenType).value;
         }
     }
-    qDebug()<<"backward out: ";
+    if(id!=-1)
+        qDebug()<<"backward out: ";
     for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
         TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest, TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean, TokenType::CandidacyAck,
         TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
@@ -2227,7 +2376,7 @@ void UniversalCoating::printTokens(int prevAgentDir, int nextAgentDir)
             qDebug()<<"  token "<<(int)tokenType<<" value: "<<outFlags[prevAgentDir].tokens.at((int) tokenType).value;
         }
     }
-
+*/
 
 
 }

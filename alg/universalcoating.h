@@ -21,7 +21,8 @@ enum class Phase {
     Send,
     Wait,
     Normal,
-    Leader
+    Leader,
+    Finished
 
 
 };
@@ -58,12 +59,36 @@ enum class TokenType {
     PosCandidate,
     PosCandidateClean
 };
+enum class SwitchVariable
+{
+     comparingSegment =0,
+    absorbedActiveToken,
+    isCoveredCandidate,
+    gotAnnounceInCompare,
+    waitingForTransferAck,
+     gotAnnounceBeforeAck,
+     generateVectorDir,
+     createdLead,
+    sawUnmatchedToken,
+     testingBorder,
+     contractedFinished,
+     saveLocation
+
+};
 
 typedef struct {
     TokenType type;
     int value;
     bool receivedToken;
 } Token;
+
+typedef struct {
+    std::array<Token, 15> forwardTokens;
+    std::array<Token, 15> backTokens;
+    std::array<int,13> switches;
+    ElectionSubphase electionSubphase;
+    ElectionRole electionRole;
+} LocData;
 
 class UniversalCoatingFlag : public Flag
 {
@@ -79,29 +104,17 @@ public:
     bool leadComplaint;
     bool seedBound;
     bool block;
-    int tokenValue;
-    int tokenD1;
-    int tokenD2;
-    int tokenD3;
+
     int tokenCurrentDir;
     bool isSendingToken;
     int ownTokenValue;
     bool buildBorder;
     int id;
     bool acceptPositionTokens;
-    std::array<Token, 15> tokens;
-    std::array<Token, 15> forwardTokens;
-    std::array<Token, 15> backTokens;
 
-    ElectionRole electionRole;
-    ElectionSubphase electionSubphase;
-    bool comparingSegment, absorbedActiveToken, isCoveredCandidate, gotAnnounceInCompare; // segment comparison information
-    bool waitingForTransferAck;
-    bool gotAnnounceBeforeAck;
-    int generateVectorDir;
-    bool createdLead, sawUnmatchedToken; // solitude verification information
-    bool testingBorder;
 
+    LocData headLocData;
+    LocData tailLocData;
 
 
 
@@ -119,17 +132,12 @@ public:
 
 
     virtual Movement execute();
-//<<<<<<< HEAD
-//    virtual std::shared_ptr<Algorithm> clone();
     virtual bool isDeterministic() const;
     void paintFrontSegment(const int color);
     void paintBackSegment(const int color);
-//=======
     virtual std::shared_ptr<Algorithm> blank() const override;
     virtual std::shared_ptr<Algorithm> clone();
-//    virtual bool isDeterministic() const;
     virtual bool isStatic() const;
-//>>>>>>> 33bc9603045fa48632c128a0046aac4ccd51cf6c
 
 protected:
     void setPhase(const Phase _phase);
@@ -210,17 +218,11 @@ protected:
     bool hasLost;
     bool superLeader;
     int borderPasses;
-    //leader election
-    ElectionRole electionRole;
-    ElectionSubphase electionSubphase;
-    bool comparingSegment, absorbedActiveToken, isCoveredCandidate, gotAnnounceInCompare; // segment comparison information
-    bool waitingForTransferAck;
-    bool gotAnnounceBeforeAck;
     int id;
-    int generateVectorDir;
-    bool createdLead, sawUnmatchedToken; // solitude verification information
-    bool testingBorder;
+    //leader election
 
+    LocData headLocData;
+    LocData tailLocData;
 };
 }
 
