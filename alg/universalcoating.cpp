@@ -472,78 +472,133 @@ std::shared_ptr<System> UniversalCoating::instance(const int staticParticlesRadi
 //wrapper to capture motion for token storage moving stuff before actually returning it
 Movement UniversalCoating::execute()
 {
-    auto surfaceFollower = firstNeighborInPhase(Phase::Static);
-    int   surfaceParent = headMarkDir;
-    if(surfaceFollower!=-1)
-    {
-        if(isExpanded())
-        {
-            while(neighborIsInPhase(surfaceFollower,Phase::Static))
-            {
-                surfaceFollower = (surfaceFollower+1)%10;
-            }
-        }
-        else
-        {
-            while(neighborIsInPhase(surfaceFollower,Phase::Static))
-            {
-                surfaceFollower = (surfaceFollower+1)%6;
-            }
-        }
 
-    }
-    Movement movement= subExecute();
-
-    qDebug()<<"id: "<<id<<" contracted? "<<isContracted();
-   if(surfaceFollower > 0 && inFlags[surfaceFollower]!=nullptr)
-       qDebug()<<"follow: "<<inFlags[surfaceFollower]->id;
-   if(surfaceParent> 0 && inFlags[surfaceParent]!=nullptr)
-       qDebug()<<"parent: "<<inFlags[surfaceParent]->id;
-
-    qDebug()<<"head: "<<(int)headLocData.electionRole<<" tail: "<<(int)tailLocData.electionRole;
-    switch(movement.type)
-    {
-    case MovementType::Expand:
-        //if neighbor in front, head = their tail
-        if(inFlags[surfaceParent]!=nullptr)
-            headLocData = inFlags[surfaceParent]->tailLocData;
-        break;
-    case MovementType::Contract:
-        tailLocData = headLocData;
-        cleanHeadLocData();
-        break;
-    case MovementType::HandoverContract:
-        tailLocData = headLocData;
-        cleanHeadLocData();
-        break;
-    }
-    //put everything available everywhere, for now
     for(int i = 0; i<10;i++)
     {
         outFlags[i].headLocData =headLocData;
         outFlags[i].tailLocData =tailLocData;
     }
-    qDebug()<<"head: "<<(int)headLocData.electionRole<<" tail: "<<(int)tailLocData.electionRole;
-    return movement;
-}
-Movement UniversalCoating::subExecute()
-{
-
-
-    for(int i =0; i<10;i++)
-        outFlags[i].id = id;
-
-    updateNeighborStages();
-
-    if(phase == Phase::Lead || phase == Phase::retiredLeader)
-        unsetFollowIndicator();
-
-    if(hasNeighborInPhase(Phase::Static))
+    qDebug()<<"id: "<<id<<" contracted? "<<isContracted();
+    auto surfaceParent = -1;
+    auto surfaceFollower = -1;
+    if(hasNeighborInPhase(Phase::Static) && phase != Phase::Inactive)
     {
-        if(phase!=Phase::Inactive  )
+       if(isContracted() && tailLocData.switches.at((int)SwitchVariable::invalidTail) == 1)
         {
-            handlePositionElection();
-            /*if(electionRole == ElectionRole::SoleCandidate)
+           qDebug()<<"invalid tail fixed";
+            tailLocData = headLocData;
+            cleanHeadLocData();
+        }
+
+        //get people on surface if possible
+        surfaceFollower = firstNeighborInPhase(Phase::Static);
+        surfaceParent = firstNeighborInPhase(Phase::Static);
+        qDebug()<<"start surface follow: "<<surfaceFollower;
+        if(surfaceFollower!=-1)
+        {
+            if(isExpanded())
+            {
+                while(neighborIsInPhase(surfaceFollower,Phase::Static))
+                {
+                    surfaceFollower = (surfaceFollower+1)%10;
+                }
+            }
+            else
+            {
+                while(neighborIsInPhase(surfaceFollower,Phase::Static))
+                {
+                    surfaceFollower = (surfaceFollower+1)%6;
+                    qDebug()<<"? "<<surfaceFollower;
+                }
+
+            }
+
+        }
+        if(surfaceParent!=-1)
+        {
+            if(isExpanded())
+            {
+                while(neighborIsInPhase(surfaceParent,Phase::Static))
+                {
+                    surfaceParent = (surfaceParent+9)%10;
+                }
+            }
+            else
+            {
+                while(neighborIsInPhase(surfaceParent,Phase::Static))
+                {
+                    surfaceParent = (surfaceParent+5)%6;
+                }
+            }
+
+        }
+        if(surfaceFollower > 0 && inFlags[surfaceFollower]!=nullptr)
+            qDebug()<<"follow: "<<inFlags[surfaceFollower]->id;
+        if(surfaceParent> 0 && inFlags[surfaceParent]!=nullptr)
+            qDebug()<<"parent: "<<inFlags[surfaceParent]->id;
+
+
+
+        if(isContracted() && surfaceParent> 0 && inFlags[surfaceParent]!=nullptr &&
+                surfaceFollower > 0 && inFlags[surfaceFollower]!=nullptr)
+        {
+            LocData myData = tailLocData;
+            LocData parentData = inFlags[surfaceParent]->tailLocData;//true if expanded or contracted
+            LocData followData = inFlags[surfaceFollower]->tailLocData;
+            if(inFlags[surfaceFollower]->isExpanded())
+            {
+                followData = inFlags[surfaceFollower]->headLocData;
+            }
+
+            handlePositionElection(myData,followData,parentData);
+        }
+
+        else if(isExpanded())//expanded
+        {
+            if(expandedOnSurface())
+            {
+                   qDebug()<<"expanded on surface";
+                //head
+                if(surfaceParent> 0 && inFlags[surfaceParent]!=nullptr )//need parent to process head
+                {
+                    LocData myData =headLocData;
+                    LocData parentData = inFlags[surfaceParent]->tailLocData;
+                    LocData followData = tailLocData;
+                    handlePositionElection(myData,followData,parentData);
+                }
+                //tail
+                if(surfaceFollower > 0 && inFlags[surfaceFollower]!=nullptr)//need follower to process tail
+                {
+                    LocData myData =tailLocData;
+                    LocData parentData = headLocData;
+
+                    LocData followData = inFlags[surfaceFollower]->tailLocData;
+                    if(inFlags[surfaceFollower]->isExpanded())
+                    {
+                        followData = inFlags[surfaceFollower]->headLocData;
+                    }
+
+                    handlePositionElection(myData,followData,parentData);
+                }
+            }
+            else//expanded, head is on surface but tail isn't
+            {
+                qDebug()<<"jsut head on surface";
+                if(surfaceParent> 0 && inFlags[surfaceParent]!=nullptr &&
+                        surfaceFollower > 0 && inFlags[surfaceFollower]!=nullptr)
+                {
+                    LocData myData = headLocData;
+                    LocData parentData = inFlags[surfaceParent]->tailLocData;//true if expanded or contracted
+                    LocData followData = inFlags[surfaceFollower]->tailLocData;
+                    if(inFlags[surfaceFollower]->isExpanded()|| followData.switches.at((int)SwitchVariable::invalidTail)==1)//if expanded read head, or if tail not valid (ie just contracted)
+                        followData = inFlags[surfaceFollower]->headLocData;
+
+                    handlePositionElection(myData,followData,parentData);
+                    tailLocData =headLocData;
+                }
+            }
+        }
+        /*if(electionRole == ElectionRole::SoleCandidate)
             {
                 auto surfaceFollower = firstNeighborInPhase(Phase::Static);
                 int   surfaceParent = headMarkDir;
@@ -572,9 +627,69 @@ Movement UniversalCoating::subExecute()
 
             }*/
 
+    }
+      int prevHead = headMarkDir;
+    Movement movement= subExecute();
+    if(hasNeighborInPhase(Phase::Static) && phase != Phase::Inactive)
+    {
+        qDebug()<<"head: "<<(int)headLocData.electionRole<<" tail: "<<(int)tailLocData.electionRole;
+    }
+    switch(movement.type)
+    {
+    case MovementType::Expand:
+        //if neighbor in front, head = their tail
+        qDebug()<<"expanding- copying parent "<<headMarkDir<<" "<<prevHead<<" "<<surfaceParent;
+        qDebug()<<"head mark inflags null? "<<(int)(inFlags[prevHead]==nullptr);
+        if(surfaceParent!=-1 && inFlags[surfaceParent]!=nullptr)//if on surface, has parent
+        {
+
+            headLocData = inFlags[surfaceParent]->tailLocData;
+            headLocData.switches.at((int)SwitchVariable::invalidTail) = 0;
+
+            qDebug()<<"on surface, "<<(int)headLocData.electionRole;
+
+        }
+        else if(prevHead!=-1 && inFlags[prevHead]!=nullptr)//otherwise, could be going to surface so do this just in case
+        {
+            headLocData = inFlags[prevHead]->tailLocData;
+            headLocData.switches.at((int)SwitchVariable::invalidTail) = 0;
+            tailLocData = inFlags[prevHead]->tailLocData;//head and tail so others on surface read correctly
+            tailLocData.switches.at((int)SwitchVariable::invalidTail) = 0;
+
+            qDebug()<<"to surface, "<<(int)headLocData.electionRole<<" "<<inFlags[prevHead]->id;
         }
 
+        break;
+    case MovementType::Contract:
+        tailLocData.switches.at((int)SwitchVariable::invalidTail) = 1;
+
+        break;
+    case MovementType::HandoverContract:
+        tailLocData.switches.at((int)SwitchVariable::invalidTail) = 1;
+        break;
     }
+    //put everything available everywhere, for now
+    for(int i = 0; i<10;i++)
+    {
+        outFlags[i].headLocData =headLocData;
+        outFlags[i].tailLocData =tailLocData;
+    }
+    qDebug()<<"head: "<<(int)headLocData.electionRole<<" tail: "<<(int)tailLocData.electionRole;
+    return movement;
+}
+Movement UniversalCoating::subExecute()
+{
+
+
+    for(int i =0; i<10;i++)
+        outFlags[i].id = id;
+
+    updateNeighborStages();
+
+    if(phase == Phase::Lead || phase == Phase::retiredLeader)
+        unsetFollowIndicator();
+
+
 
 
 
@@ -766,7 +881,7 @@ Movement UniversalCoating::subExecute()
                         staticRecDir = (staticRecDir+5)%6;
 
                     tailLocData.electionRole = ElectionRole::Candidate;//goes in tail b/c that's what gets read off a contracted particle
-                  //  headLocData.electionRole = ElectionRole::Candidate;//also goes on head because head will get put it in to tail and cleared on first motion
+                    //  headLocData.electionRole = ElectionRole::Candidate;//also goes on head because head will get put it in to tail and cleared on first motion
 
                 }
 
@@ -1761,124 +1876,18 @@ bool UniversalCoating::parentActivated()
     return false;
 }
 
-void UniversalCoating::handlePositionElection()
+void UniversalCoating::handlePositionElection(LocData myData, LocData followData, LocData parentData)
 {
-    /*
-    Q_ASSERT(hasNeighborInPhase(Phase::Static));
-
-
-    if(isExpanded())//copy up values but for now don't act on them
-    {
-        qDebug()<<id<<" expanded handle pos";
-    }
-    else
-    {
-        auto surfaceFollower = firstNeighborInPhase(Phase::Static);
-        int   surfaceParent = headMarkDir;
-        if(surfaceFollower!=-1)
-        {
-            while(neighborIsInPhase(surfaceFollower,Phase::Static))
-            {
-                surfaceFollower = (surfaceFollower+1)%6;
-            }
-
-        }
-        if( surfaceFollower<0 || surfaceParent<0 ||
-                neighborIsInPhase(surfaceParent,Phase::Inactive) || neighborIsInPhase(surfaceFollower,Phase::Inactive ) ||
-                inFlags[surfaceFollower] ==nullptr || inFlags[surfaceParent]==nullptr || inFlags[surfaceParent]->isExpanded() ||inFlags[surfaceFollower]->isExpanded()
-                )
-        {
-            return;
-        }
-        if(id!=-1)
-            qDebug()<<"id: "<<id<<"parent: "<<inFlags[surfaceParent]->id<<" follow: "<<inFlags[surfaceFollower]->id<<" "<<isExpanded();
-
-        //copy up
-
-
-        int staticRecDir = surfaceFollower;//always same for anyone in this position
-        while(!neighborIsInPhase(staticRecDir,Phase::Static))
-            staticRecDir = (staticRecDir+5)%6;
-        qDebug()<<"save location? "<<inFlags[staticRecDir]->saveLocation<<" "<<(int)inFlags[staticRecDir]->electionRole<<" "<<staticRecDir<<neighborIsInPhase(staticRecDir,Phase::Static);
-        qDebug()<<"has static? "<<neighborIsInPhase(staticRecDir,Phase::Static);
-        if(!inFlags[staticRecDir]->saveLocation)
-        {
-            for(int i =0; i<6; i++)
-            {
-                if(inFlags[i]!=nullptr && inFlags[i]->saveLocation && neighborIsInPhase(i,Phase::Static))//if there is a valid, static, switch to it.
-                    staticRecDir = i;
-            }
-
-        }
-        qDebug()<<"new rec dir? "<<inFlags[staticRecDir]->saveLocation<<" "<<(int)inFlags[staticRecDir]->electionRole<<" "<<staticRecDir<<" "<<staticRecDir<<neighborIsInPhase(staticRecDir,Phase::Static);
-
-        if(!inFlags[staticRecDir]->saveLocation)
-        {
-            //  setElectionRole(ElectionRole::None);
-            //  return;
-        }
-        //copy tokens for forward and backward
-        outFlags[surfaceParent].tokens = inFlags[staticRecDir]->forwardTokens;
-        outFlags[surfaceFollower].tokens = inFlags[staticRecDir]->backTokens;
-        //methods put to local + outFlag copies
-        setElectionRole(inFlags[staticRecDir]->electionRole);
-        setElectionSubphase(inFlags[staticRecDir]->electionSubphase);
-        //other info is only for local use, doesn't have to go to outflags
-        waitingForTransferAck = inFlags[staticRecDir]->waitingForTransferAck;
-        gotAnnounceBeforeAck = inFlags[staticRecDir]->gotAnnounceBeforeAck;
-        generateVectorDir = inFlags[staticRecDir]->generateVectorDir;
-        createdLead = inFlags[staticRecDir]->createdLead;
-        sawUnmatchedToken = inFlags[staticRecDir]->sawUnmatchedToken;
-        comparingSegment= inFlags[staticRecDir]->comparingSegment;
-        absorbedActiveToken = inFlags[staticRecDir]->absorbedActiveToken;
-        isCoveredCandidate = inFlags[staticRecDir]->isCoveredCandidate;
-        gotAnnounceInCompare= inFlags[staticRecDir]->gotAnnounceInCompare;
-        testingBorder = inFlags[staticRecDir]->testingBorder;
-        if(id!=-1)
-            qDebug()<<"read role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
-        else
-            qDebug()<<"-1 role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
-        //act
-        if(electionRole == ElectionRole::None)
-            electionRole = ElectionRole::Demoted;
-        if( inFlags[surfaceParent]->electionRole != ElectionRole::None && inFlags[surfaceFollower]->electionRole != ElectionRole::None)
-        {
-            ExecuteLeaderElection(surfaceFollower,surfaceParent);
-            printTokens(surfaceFollower,surfaceParent);
-        }
-        //copy down
-        for(int i =0; i<6; i++)
-        {
-            if(neighborIsInPhase(i,Phase::Static)){
-                qDebug()<<"write";
-                staticRecDir = i;
-                inFlags[staticRecDir]->forwardTokens =  outFlags[surfaceParent].tokens;
-                inFlags[staticRecDir]->backTokens =  outFlags[surfaceFollower].tokens ;
-                inFlags[staticRecDir]->electionSubphase = electionSubphase;
-                inFlags[staticRecDir]->electionRole = electionRole;
-                //other info is only for local use, doesn't have to go to outflags
-                inFlags[staticRecDir]-> waitingForTransferAck = waitingForTransferAck;
-                inFlags[staticRecDir]-> gotAnnounceBeforeAck = gotAnnounceBeforeAck;
-                inFlags[staticRecDir]-> generateVectorDir = generateVectorDir;
-                inFlags[staticRecDir]-> createdLead =createdLead;
-                inFlags[staticRecDir]->sawUnmatchedToken = sawUnmatchedToken;
-                inFlags[staticRecDir]->comparingSegment= comparingSegment;
-                inFlags[staticRecDir]-> absorbedActiveToken =absorbedActiveToken;
-                inFlags[staticRecDir]->isCoveredCandidate = isCoveredCandidate;
-                inFlags[staticRecDir]->gotAnnounceInCompare= gotAnnounceInCompare;
-                inFlags[staticRecDir]->testingBorder = testingBorder;
-                inFlags[staticRecDir]->saveLocation = true;
-            }
-        }
-        if(id!=-1)
-            qDebug()<<"wrote role: "<<(int)electionRole<<" subphase: "<<(int)electionSubphase;
-
-    }*/
+    ExecuteLeaderElection(myData,
+                          followData.forwardTokens,followData.electionRole,followData.electionSubphase,
+                          parentData.backTokens,parentData.electionRole,parentData.electionSubphase);
 }
 
-void UniversalCoating::ExecuteLeaderElection(int prevAgentDir, int nextAgentDir)
+void UniversalCoating::ExecuteLeaderElection(LocData myData,std::array<Token, 15> followTokens,ElectionRole followRole,ElectionSubphase followSubphase,
+                                             std::array<Token, 15>parentTokens,ElectionRole parentRole,ElectionSubphase parentSubphase)
 
 {
+    qDebug()<<"   execute: me: "<<(int)myData.electionRole<<" parent: "<<(int)parentRole<<" follow: "<<(int)followRole;
     /* tokenCleanup(prevAgentDir, nextAgentDir); // clean token remnants before doing new actions
 
     if(electionRole == ElectionRole::Candidate) {
@@ -2445,5 +2454,21 @@ void UniversalCoating::cleanTailLocData()
     {
         tailLocData.switches.at(i) = 0;
     }
+}
+bool UniversalCoating::expandedOnSurface()
+{
+      bool tailOnSurface = false;
+      bool headOnSurface = false;
+      for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
+          auto label = *it;
+          if(neighborIsInPhase(label,Phase::Static))
+              tailOnSurface = true;
+      }
+      for(auto it = headLabels().cbegin(); it != headLabels().cend(); ++it) {
+          auto label = *it;
+          if(neighborIsInPhase(label,Phase::Static))
+              headOnSurface = true;
+      }
+      return tailOnSurface && headOnSurface;
 }
 }

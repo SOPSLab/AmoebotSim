@@ -72,7 +72,7 @@ enum class SwitchVariable
     sawUnmatchedToken,
      testingBorder,
      contractedFinished,
-     saveLocation
+     invalidTail
 
 };
 
@@ -180,8 +180,9 @@ protected:
     void updateChildStage();
     void updateNeighborStages();
 
-    void handlePositionElection();
-    void ExecuteLeaderElection(int prevAgentDir, int nextAgentDir);
+    void handlePositionElection(LocData myData, LocData followData, LocData parentData);
+    void ExecuteLeaderElection(LocData myData,std::array<Token, 15> followTokens,ElectionRole followRole,ElectionSubphase followSubphase,
+                               std::array<Token, 15>parentTokens,ElectionRole parentRole,ElectionSubphase parentSubphase);
 
     void setElectionRole(ElectionRole role);
     void setElectionSubphase(ElectionSubphase electionSubphase);
@@ -204,6 +205,8 @@ protected:
 
     void cleanHeadLocData();//also used to make clean initial
     void cleanTailLocData();
+
+    bool expandedOnSurface();
 
     Phase phase;
     int followDir;
