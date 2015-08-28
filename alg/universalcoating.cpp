@@ -514,6 +514,7 @@ Movement UniversalCoating::execute()
             }
 
         }
+        qDebug()<<"start surface parent";
         if(surfaceParent!=-1)
         {
             if(isExpanded())
@@ -528,19 +529,43 @@ Movement UniversalCoating::execute()
                 while(neighborIsInPhase(surfaceParent,Phase::Static))
                 {
                     surfaceParent = (surfaceParent+5)%6;
+                    qDebug()<<" ? "<<surfaceParent;
+
                 }
             }
 
         }
-        if(surfaceFollower > 0 && inFlags[surfaceFollower]!=nullptr)
+        if(inFlags[surfaceParent] == nullptr)
+        {
+            for(int i =0; i<6; i++)
+            {
+                qDebug()<<i<<" "<<(int)(inFlags[i]==nullptr);
+                if(inFlags[i]!=nullptr)
+                {
+                    qDebug()<<"   "<<inFlags[i]->id<<" "<<(int)inFlags[i]->phase;
+                }
+            }
+        }
+       else if(inFlags[surfaceFollower] == nullptr)
+        {
+            for(int i =0; i<6; i++)
+            {
+                qDebug()<<i<<" "<<(int)(inFlags[i]==nullptr);
+                if(inFlags[i]!=nullptr)
+                {
+                    qDebug()<<"   "<<inFlags[i]->id<<" "<<(int)inFlags[i]->phase;
+                }
+            }
+        }
+        if(surfaceFollower > -1 && inFlags[surfaceFollower]!=nullptr)
             qDebug()<<"follow: "<<inFlags[surfaceFollower]->id;
-        if(surfaceParent> 0 && inFlags[surfaceParent]!=nullptr)
+        if(surfaceParent> -1 && inFlags[surfaceParent]!=nullptr)
             qDebug()<<"parent: "<<inFlags[surfaceParent]->id;
 
 
 
-        if(isContracted() && surfaceParent> 0 && inFlags[surfaceParent]!=nullptr &&
-                surfaceFollower > 0 && inFlags[surfaceFollower]!=nullptr)
+        if(isContracted() && surfaceParent> -1 && inFlags[surfaceParent]!=nullptr &&
+                surfaceFollower > -1 && inFlags[surfaceFollower]!=nullptr)
         {
             LocData myData = tailLocData;
             LocData parentData = inFlags[surfaceParent]->tailLocData;//true if expanded or contracted
@@ -559,7 +584,7 @@ Movement UniversalCoating::execute()
             {
                    qDebug()<<"expanded on surface";
                 //head
-                if(surfaceParent> 0 && inFlags[surfaceParent]!=nullptr )//need parent to process head
+                if(surfaceParent> -1 && inFlags[surfaceParent]!=nullptr )//need parent to process head
                 {
                     LocData myData =headLocData;
                     LocData parentData = inFlags[surfaceParent]->tailLocData;
@@ -567,7 +592,7 @@ Movement UniversalCoating::execute()
                     handlePositionElection(myData,followData,parentData);
                 }
                 //tail
-                if(surfaceFollower > 0 && inFlags[surfaceFollower]!=nullptr)//need follower to process tail
+                if(surfaceFollower > -1 && inFlags[surfaceFollower]!=nullptr)//need follower to process tail
                 {
                     LocData myData =tailLocData;
                     LocData parentData = headLocData;
@@ -584,8 +609,8 @@ Movement UniversalCoating::execute()
             else//expanded, head is on surface but tail isn't
             {
                 qDebug()<<"jsut head on surface";
-                if(surfaceParent> 0 && inFlags[surfaceParent]!=nullptr &&
-                        surfaceFollower > 0 && inFlags[surfaceFollower]!=nullptr)
+                if(surfaceParent > -1 && inFlags[surfaceParent]!=nullptr &&
+                        surfaceFollower > -1 && inFlags[surfaceFollower]!=nullptr)
                 {
                     LocData myData = headLocData;
                     LocData parentData = inFlags[surfaceParent]->tailLocData;//true if expanded or contracted
