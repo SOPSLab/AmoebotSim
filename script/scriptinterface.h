@@ -76,7 +76,7 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    sim.setSystem(UniversalCoating::UniversalCoating::instance(1,50,0.2,false,false));
+    sim.setSystem(UniversalCoating::UniversalCoating::instance(2,120,0,false,false));
 }
 
 inline void ScriptInterface::round()

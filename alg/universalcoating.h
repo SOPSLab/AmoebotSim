@@ -61,18 +61,18 @@ enum class TokenType {
 };
 enum class SwitchVariable
 {
-     comparingSegment =0,
+    comparingSegment =0,
     absorbedActiveToken,
     isCoveredCandidate,
     gotAnnounceInCompare,
     waitingForTransferAck,
-     gotAnnounceBeforeAck,
-     generateVectorDir,
-     createdLead,
+    gotAnnounceBeforeAck,
+    generateVectorDir,
+    createdLead,
     sawUnmatchedToken,
-     testingBorder,
-     contractedFinished,
-     invalidTail
+    testingBorder,
+    contractedFinished,
+    invalidTail
 
 };
 
@@ -112,7 +112,7 @@ public:
     int id;
     bool acceptPositionTokens;
 
-
+    bool expandPrepped;
     LocData headLocData;
     LocData tailLocData;
 
@@ -182,7 +182,7 @@ protected:
 
     LocData handlePositionElection(LocData myData, LocData followData, LocData parentData);
     LocData ExecuteLeaderElection(LocData myData,std::array<Token, 15> followTokens,ElectionRole followRole,ElectionSubphase followSubphase,
-                               std::array<Token, 15>parentTokens,ElectionRole parentRole,ElectionSubphase parentSubphase);
+                                  std::array<Token, 15>parentTokens,ElectionRole parentRole,ElectionSubphase parentSubphase);
 
     void setElectionRole(ElectionRole role);
     void setElectionSubphase(ElectionSubphase electionSubphase);
