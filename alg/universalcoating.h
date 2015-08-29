@@ -180,8 +180,8 @@ protected:
     void updateChildStage();
     void updateNeighborStages();
 
-    void handlePositionElection(LocData myData, LocData followData, LocData parentData);
-    void ExecuteLeaderElection(LocData myData,std::array<Token, 15> followTokens,ElectionRole followRole,ElectionSubphase followSubphase,
+    LocData handlePositionElection(LocData myData, LocData followData, LocData parentData);
+    LocData ExecuteLeaderElection(LocData myData,std::array<Token, 15> followTokens,ElectionRole followRole,ElectionSubphase followSubphase,
                                std::array<Token, 15>parentTokens,ElectionRole parentRole,ElectionSubphase parentSubphase);
 
     void setElectionRole(ElectionRole role);
