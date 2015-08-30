@@ -112,9 +112,12 @@ public:
     int id;
     bool acceptPositionTokens;
 
-    bool expandPrepped;
+    bool calledExpand;
+    bool calledContract;
     LocData headLocData;
     LocData tailLocData;
+    LocData contrLocData;
+    bool hasData;
 };
 
 class UniversalCoating : public AlgorithmWithFlags<UniversalCoatingFlag>
@@ -203,7 +206,7 @@ protected:
     void cleanTailLocData();
 
     bool expandedOnSurface();
-
+    bool tailOnSurface();
     Phase phase;
     int followDir;
     int Lnumber;
@@ -225,10 +228,12 @@ protected:
     int id;
     bool sentBorder;
     bool startedRetired;
+
     //leader election
 
     LocData headLocData;
     LocData tailLocData;
+    LocData contrLocData;
 
     //in execute these get set, temp used
     LocData self;
