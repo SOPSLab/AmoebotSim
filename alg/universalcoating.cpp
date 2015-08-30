@@ -1260,7 +1260,7 @@ Movement UniversalCoating::subExecute()
                                 sentBorder = true;
                             outFlags[borderBuildDir].buildBorder= true;
                             }
-                            qDebug()<<"trying to border?";
+                            qDebug()<<"trying to border? b";
                             return Movement(MovementType::Idle);
                         }
                     }
@@ -1384,6 +1384,28 @@ void UniversalCoating::setPhase(const Phase _phase)
         headMarkColor = 0x00ff00;
         tailMarkColor = 0x00ff00;
         //}
+        bool inBorder = false;
+        bool outBorder = false;
+        for(int i =0; i<6; i++)
+        {
+            if(inFlags[i]!=nullptr && inFlags[i]->buildBorder)
+                inBorder = true;
+            if(outFlags[i].buildBorder)
+                outBorder = true;
+        }
+        if(inBorder && outBorder)
+        {
+
+            headMarkColor = 0x666666;
+            tailMarkColor = 0x666666
+                    ;
+        }
+        else if(inBorder)
+        {
+            headMarkColor = 0xD3D3D3;
+            tailMarkColor = 0xD3D3D3;
+        }
+
     }
     else if(phase == Phase::Seed)
     {
