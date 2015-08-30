@@ -561,11 +561,16 @@ Movement UniversalCoating::execute()
         {
             LocData myData = tailLocData;
             LocData parentData = inFlags[surfaceParent]->tailLocData;//true if expanded or contracted
+            if(inFlags[surfaceParent]->tailLocData.switches.at((int)SwitchVariable::invalidTail)==1)
+            {
+                parentData= inFlags[surfaceParent]->headLocData;
+            }
             LocData followData = inFlags[surfaceFollower]->tailLocData;
-            if(inFlags[surfaceFollower]->isExpanded())
+            if(inFlags[surfaceFollower]->isExpanded() || inFlags[surfaceFollower]->tailLocData.switches.at((int)SwitchVariable::invalidTail)==1)
             {
                 followData = inFlags[surfaceFollower]->headLocData;
             }
+
 
             tailLocData =handlePositionElection(myData,followData,parentData);
             if(tailLocData.electionRole == ElectionRole::SoleCandidate)
@@ -683,6 +688,7 @@ Movement UniversalCoating::execute()
         outFlags[i].headLocData =headLocData;
         outFlags[i].tailLocData =tailLocData;
     }
+    printTokens(tailLocData);
     qDebug()<<"head: "<<(int)headLocData.electionRole<<" tail: "<<(int)tailLocData.electionRole;
     return movement;
 }
@@ -2423,33 +2429,31 @@ void UniversalCoating::setElectionSubphase(ElectionSubphase subphase)
 
 
 
-void UniversalCoating::printTokens(int prevAgentDir, int nextAgentDir)
+void UniversalCoating::printTokens(LocData ldata)
 {
-    /*if(id!=-1)
         qDebug()<<"forward out: ";
     for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
         TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest, TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean, TokenType::CandidacyAck,
         TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
-        if(outFlags[nextAgentDir].tokens.at((int) tokenType).receivedToken) {
+        if(ldata.forwardTokens.at((int) tokenType).receivedToken) {
             qDebug()<<"  token "<<(int)tokenType<<" received";
         }
-        if(outFlags[nextAgentDir].tokens.at((int) tokenType).value != -1) {
-            qDebug()<<"  token "<<(int)tokenType<<" value: "<<outFlags[nextAgentDir].tokens.at((int) tokenType).value;
+        if(ldata.forwardTokens.at((int) tokenType).value != -1) {
+            qDebug()<<"  token "<<(int)tokenType<<" value: "<<ldata.forwardTokens.at((int) tokenType).value;
         }
     }
-    if(id!=-1)
         qDebug()<<"backward out: ";
     for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
         TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest, TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean, TokenType::CandidacyAck,
         TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
-        if(outFlags[prevAgentDir].tokens.at((int) tokenType).receivedToken) {
+        if(ldata.backTokens.at((int) tokenType).receivedToken) {
             qDebug()<<"  token "<<(int)tokenType<<" received";
         }
-        if(outFlags[prevAgentDir].tokens.at((int) tokenType).value != -1) {
-            qDebug()<<"  token "<<(int)tokenType<<" value: "<<outFlags[prevAgentDir].tokens.at((int) tokenType).value;
+        if(ldata.backTokens.at((int) tokenType).value != -1) {
+            qDebug()<<"  token "<<(int)tokenType<<" value: "<<ldata.backTokens.at((int) tokenType).value;
         }
     }
-*/
+
 
 
 }

@@ -201,7 +201,7 @@ protected:
     std::pair<int, int> augmentDirVector(std::pair<int, int> vector, const int offset);
     int addNextBorder(int currentSum, int prevAgentDir, int nextAgentDir);
 
-    void printTokens(int prevAgentDir, int nextAgentDir);
+    void printTokens(LocData ldata);
 
     void cleanHeadLocData();//also used to make clean initial
     void cleanTailLocData();
