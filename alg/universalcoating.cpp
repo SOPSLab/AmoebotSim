@@ -28,10 +28,8 @@ UniversalCoatingFlag::UniversalCoatingFlag()
       acceptPositionTokens(false),
       id(-1),
       expandPrepped(false)
-
 {
-
-    //init: all 4 tokens sets
+    // init: all 4 tokens sets
     int typenum = 0;
     for(auto token = headLocData.backTokens.begin(); token != headLocData.backTokens.end(); ++token) {
         token->type = (TokenType) typenum;
@@ -39,7 +37,6 @@ UniversalCoatingFlag::UniversalCoatingFlag()
         token->receivedToken = false;
         ++typenum;
     }
-
     typenum = 0;
     for(auto token = headLocData.forwardTokens.begin(); token != headLocData.forwardTokens.end(); ++token) {
         token->type = (TokenType) typenum;
@@ -54,7 +51,6 @@ UniversalCoatingFlag::UniversalCoatingFlag()
         token->receivedToken = false;
         ++typenum;
     }
-
     typenum = 0;
     for(auto token = tailLocData.forwardTokens.begin(); token != tailLocData.forwardTokens.end(); ++token) {
         token->type = (TokenType) typenum;
@@ -70,17 +66,14 @@ UniversalCoatingFlag::UniversalCoatingFlag()
     tailLocData.electionSubphase = ElectionSubphase::SegmentComparison;
 
 
-    for (int i =0; i<tailLocData.switches.size();i++)
-    {
+    for(int i = 0; i < tailLocData.switches.size(); i++) {
         tailLocData.switches.at(i) = 0;
     }
-    for (int i =0; i<headLocData.switches.size();i++)
-    {
+    for(int i = 0; i < headLocData.switches.size(); i++) {
         headLocData.switches.at(i) = 0;
     }
-    headLocData.switches.at((int)SwitchVariable::generateVectorDir)=-1;
-    tailLocData.switches.at((int)SwitchVariable::generateVectorDir)=-1;
-
+    headLocData.switches.at((int)SwitchVariable::generateVectorDir) = -1;
+    tailLocData.switches.at((int)SwitchVariable::generateVectorDir) = -1;
 }
 
 UniversalCoatingFlag::UniversalCoatingFlag(const UniversalCoatingFlag& other)
@@ -101,10 +94,7 @@ UniversalCoatingFlag::UniversalCoatingFlag(const UniversalCoatingFlag& other)
       tailLocData(other.tailLocData),
       id(other.id),
       expandPrepped( other.expandPrepped)
-
-
-{
-}
+{}
 
 UniversalCoating::UniversalCoating(const Phase _phase)
 {
@@ -130,8 +120,6 @@ UniversalCoating::UniversalCoating(const Phase _phase)
     startedRetired =false;
     cleanHeadLocData();
     cleanTailLocData();
-
-
 }
 
 UniversalCoating::UniversalCoating(const UniversalCoating& other)
@@ -158,160 +146,16 @@ UniversalCoating::UniversalCoating(const UniversalCoating& other)
       tailLocData(other.tailLocData),
       sentBorder(other.sentBorder),
       startedRetired(other.startedRetired)
-{
-}
+{}
 
 UniversalCoating::~UniversalCoating()
+{}
+
+std::shared_ptr<System> UniversalCoating::instance(const int staticParticlesRadius, const int numParticles, const float holeProb)
 {
-}
-
-std::shared_ptr<System> UniversalCoating::instance(const int staticParticlesRadius, const int numParticles, const float holeProb, const bool leftBorder, const bool rightBorder)
-{
-    /*std::shared_ptr<System> system = std::make_shared<System>();
-    std::deque<Node> orderedSurface;
-    std::set<Node> occupied;
-    Node pos;
-    Node Start;
-    Node End;
-    int lastOffset = 0;
-
-    bool first = !leftBorder && !rightBorder;
-    while(system->getNumParticles() < numStaticParticles) {
-        if(first)
-        {
-            system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));
-            first = false;
-        }
-        else
-        {
-            system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));
-        }
-        occupied.insert(pos);
-        orderedSurface.push_back(pos);
-        int offset;
-        if(lastOffset == 4) {
-            offset = randInt(3, 5);
-        } else {
-            offset = randInt(2, 5);
-        }
-        lastOffset = offset;
-        End=pos;
-        pos = pos.nodeInDir(offset);
-    }
-
-    //arbitrary borders
-    lastOffset = 0;
-    int counter=0;
-    int yMax= numParticles;
-    Node pos1= Node(Start.x + 1 ,Start.y);//start of the left border
-    Node pos2= Node((End.x)-1 ,End.y);//start of the right border
-    if(leftBorder)
-    {
-        //while(counter < yMax) {
-        system->insertParticle( Particle(std::make_shared<UniversalCoating>(Phase::StaticBorder), randDir(), pos1));
-
-        occupied.insert(pos1);
-        orderedSurface.push_back(pos1);
-        int offset;
-        if(lastOffset == 3) {
-            offset = randInt(1, 4);
-        } else {
-            offset = randInt(1, 3);
-        }
-        lastOffset = offset;
-        pos1 = pos1.nodeInDir(offset);
-        counter++;
-        // }
-    }
-    if(rightBorder)
-    {
-        counter =0;
-        //  while(counter < yMax) {
-        system->insertParticle( Particle(std::make_shared<UniversalCoating>(Phase::StaticBorder), randDir(), pos2));
-        occupied.insert(pos2);
-        orderedSurface.push_back(pos2);
-        int offset;
-        if(lastOffset == 2) {
-            offset = randInt(1, 3);
-        } else {
-            offset = randInt(1, 4);
-        }
-        lastOffset = offset;
-        pos2 = pos2.nodeInDir(offset);
-        counter++;
-        //   }
-
-    }
-    //arbitrary borders
-
-    std::set<Node> candidates;
-    int count = 0;
-    for(auto it = orderedSurface.begin(); it != orderedSurface.end(); ++it) {
-        if(count >= sqrt(numParticles)) {
-            break;
-        }
-        count++;
-
-        for(int dir = 1; dir <= 2; dir++) {
-            const Node node = it->nodeInDir(dir);
-            if(occupied.find(node) == occupied.end()) {
-                candidates.insert(node);
-                occupied.insert(node);
-            }
-        }
-    }
-
-    yMax=0;
-    int numNonStaticParticles = 0;
-    int idCounter = 0;
-
-    while(numNonStaticParticles < numParticles) {
-        if(candidates.empty()) {
-            return system;
-        }
-
-        std::set<Node> nextCandidates;
-        for(auto it = candidates.begin(); it != candidates.end() && numNonStaticParticles < numParticles; ++it) {
-            if(randBool(1.0f - holeProb)) {
-                std::shared_ptr<UniversalCoating> newParticle= std::make_shared<UniversalCoating>(Phase::Inactive);
-                newParticle->id = idCounter;
-                system->insertParticle(Particle(newParticle, randDir(), *it));
-                // system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Inactive), randDir(), *it));
-                numNonStaticParticles++;
-
-                for(int dir = 1; dir <= 2; dir++) {
-                    const Node node = it->nodeInDir(dir);
-                    if(occupied.find(node) == occupied.end()) {
-                        nextCandidates.insert(node);
-                        occupied.insert(node);
-
-                        if(node.y > yMax) {
-                            yMax = node.y;
-                        }
-                    }
-                }
-            }
-            idCounter++;
-
-        }
-        nextCandidates.swap(candidates);
-    }
-
-    return system;
-      std::shared_ptr<System> system = std::make_shared<System>();*/
-    std::deque<Node> orderedSurface;
-    std::set<Node> occupied;
-    Node pos;
-    int lastOffset = 0;
-
-
-    const int hexRadius = staticParticlesRadius;
-    //   numParticles = 100;
-    // holeProb = 0.5;
-
     std::shared_ptr<System> system = std::make_shared<System>();
-
-    //  std::set<Node> occupied;
+    std::set<Node> occupied;
+    const int hexRadius = staticParticlesRadius;
 
     // grow hexagon of given radius
     system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), Node(0, 0)));
@@ -387,96 +231,9 @@ std::shared_ptr<System> UniversalCoating::instance(const int staticParticlesRadi
 
     return system;
 }
-/*
-    // begin hexagon structure
-    int offset =0;
-    int itercount =0;
-    int structSideLength=  2;
-    int numStructParticles = 6*structSideLength;
-    while(system->size() < numStructParticles) {
-        system->insert(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), pos));
-        occupied.insert(pos);
 
-        orderedSurface.push_back(pos);
-        if(itercount%structSideLength ==0)
-            offset--;
-        if(offset<0) offset = 5;
-        lastOffset = offset;
-        pos = pos.nodeInDir(offset);
-        itercount++;
-    }//end hexagon structure
 
-    lastOffset = 0;
-    int yMax= numParticles;
-
-    std::set<Node> candidates;
-    int count = 0;
-    for(auto it = orderedSurface.begin(); it != orderedSurface.end(); ++it) {
-        if(count >= sqrt(numParticles)) {
-            break;
-        }
-        count++;
-
-        for(int dir = 1; dir <= 2; dir++) {
-            const Node node = it->nodeInDir(dir);
-            if(occupied.find(node) == occupied.end()) {
-                candidates.insert(node);
-                occupied.insert(node);
-            }
-        }
-    }
-    yMax=0;
-    int numNonStaticParticles = 0;
-    //begin surround hexagon
-    itercount = 0;
-    offset = 0;
-    int idCounter = 0;
-    int newNumParticles = 18;
-    bool initSide = true;
-    while(numNonStaticParticles < newNumParticles) {
-        if(candidates.empty()) {
-            return system;
-        }
-
-        std::set<Node> nextCandidates;
-        for(auto it = candidates.begin(); it != candidates.end() && numNonStaticParticles < newNumParticles; ++it) {
-            std::shared_ptr<UniversalCoating> newParticle= std::make_shared<UniversalCoating>(Phase::Inactive);
-            newParticle->id = idCounter;
-            // if(idCounter!=0 && idCounter!=9)
-            // newParticle->ownTokenValue =0;
-            system->insert(Particle(newParticle, randDir(), *it));
-            numNonStaticParticles++;
-            //           qDebug()<<"init? "<<initSide<<"iter: "<<itercount;
-            if(!initSide && (itercount-1)%3 ==0)
-                offset--;
-            else if (initSide && itercount%2 ==0)
-            {
-                offset--;
-                initSide = false;
-            }
-            if(offset<0) offset = 5;
-            lastOffset = offset;
-            const Node node = it->nodeInDir(offset);
-            if(occupied.find(node) == occupied.end()) {
-                nextCandidates.insert(node);
-                occupied.insert(node);
-
-                if(node.y > yMax) {
-                    yMax = node.y;
-                }
-
-            }
-            idCounter++;
-        }
-        nextCandidates.swap(candidates);
-        itercount++;
-    }
-    //end surround hexagon
-
-    return system;
-*/
-//}
-//wrapper to capture motion for token storage moving stuff before actually returning it
+// wrapper to capture motion for token storage moving stuff before actually returning it
 Movement UniversalCoating::execute()
 {
     //vars for determining if to return empty

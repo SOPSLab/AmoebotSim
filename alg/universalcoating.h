@@ -23,8 +23,6 @@ enum class Phase {
     Normal,
     Leader,
     Finished
-
-
 };
 
 enum class ElectionSubphase {
@@ -33,6 +31,7 @@ enum class ElectionSubphase {
     CoinFlip,
     SolitudeVerification
 };
+
 enum class ElectionRole{
     Pipeline,
     Candidate,
@@ -59,6 +58,7 @@ enum class TokenType {
     PosCandidate,
     PosCandidateClean
 };
+
 enum class SwitchVariable
 {
     comparingSegment =0,
@@ -115,21 +115,16 @@ public:
     bool expandPrepped;
     LocData headLocData;
     LocData tailLocData;
-
-
-
 };
 
 class UniversalCoating : public AlgorithmWithFlags<UniversalCoatingFlag>
 {
-
 public:
     UniversalCoating(const Phase _phase);
     UniversalCoating(const UniversalCoating& other);
     virtual ~UniversalCoating();
 
-    static std::shared_ptr<System> instance(const int numStaticParticles, const int numParticles, const float holeProb, const bool rectWidth, const bool rectLength);
-
+    static std::shared_ptr<System> instance(const int numStaticParticles, const int numParticles, const float holeProb);
 
     virtual Movement execute();
     virtual Movement subExecute();
@@ -140,7 +135,6 @@ public:
     virtual std::shared_ptr<Algorithm> clone();
     virtual bool isStatic() const;
     virtual bool isSemiActive() const;
-
 
 protected:
     void setPhase(const Phase _phase);
