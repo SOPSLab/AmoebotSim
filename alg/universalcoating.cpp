@@ -705,7 +705,7 @@ Movement UniversalCoating::subExecute()
     if(isExpanded()) {
 
         setElectionRole(ElectionRole::None);
-        /*if(hasNeighborInPhase(Phase::Static) || hasNeighborInPhase(Phase::StaticBorder))
+        if(hasNeighborInPhase(Phase::Static) || hasNeighborInPhase(Phase::StaticBorder))
         {
             bool hasFollower = false;
             for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
@@ -730,12 +730,19 @@ Movement UniversalCoating::subExecute()
             {
                 hasFollower = true;
             }
-            if(!hasFollower)
+            bool tailOnSurface = false;
+            for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
+                auto label = *it;
+                if(neighborIsInPhase(label,Phase::Static))
+                    tailOnSurface = true;
+            }
+
+            if(!hasFollower  && tailOnSurface)
             {
-                qDebug()<<"no follow, not contracting";
+                qDebug()<<"no follow and tail on surface, not contracting";
                 return Movement(MovementType::Idle);
             }
-        }*/
+        }
         if(phase == Phase::Lead)
         {
             qDebug()<<"expanded leader";
@@ -976,11 +983,10 @@ Movement UniversalCoating::subExecute()
                 }
             }
 
-
-
             //phase changing block
             if(phase == Phase::Normal)
             {
+                qDebug()<<"is normal!";
                 if(hasNeighborInPhase(Phase::Static) || hasNeighborInPhase(Phase::StaticBorder))
                 {
                     auto label = getMoveDir();
@@ -1145,8 +1151,7 @@ Movement UniversalCoating::subExecute()
 
             }
             else if(phase == Phase::Follow) {
-                if(neighborIsInPhase(headMarkDir,Phase::Lead) && inFlags[headMarkDir]->isExpanded())// && hasNeighborInPhase(Phase::retiredLeader))
-                    qDebug()<<" follow executed"<< neighborIsInPhase(headMarkDir,Phase::Lead)<<" "<<headMarkDir<<" "<<followDir<<" "<<inFlags[headMarkDir]->isExpanded()<<" "<<(int)inFlags[headMarkDir]->phase;
+                qDebug()<<"contracted follow executed";
                 if(inFlags[followDir]==nullptr)//with bordering, this loss of leader can happen
                 {
                     qDebug()<<"null followdir";
@@ -2255,7 +2260,7 @@ bool UniversalCoating::canSendToken(TokenType type, bool toBack) const
 
 void UniversalCoating::sendToken(TokenType type, bool toBack, int value)
 {
-    qDebug()<<"send: "<<(int)type<<"back? "<<(int)toBack;
+    qDebug()<<"send: "<<(int)type<<" value: "<<value<<" back? "<<(int)toBack;
     Q_ASSERT(canSendToken(type, toBack));
     if(toBack)
         self.backTokens.at((int) type).value = value;
@@ -2290,16 +2295,18 @@ Token UniversalCoating::receiveToken(TokenType type, bool fromBack)
 {
     Q_ASSERT(peekAtToken(type, fromBack) != -1);
 
-    qDebug()<<"receive: "<<(int)type<< peekAtToken(type, fromBack);
     if(fromBack)
     {
         self.backTokens.at((int) type).receivedToken = true;
+        qDebug()<<"received: "<<(int)type<<" value: "<<followTokens.at((int)type).value;
         return followTokens.at((int) type);
     }
     else//from front
     {
         self.forwardTokens.at((int) type).receivedToken = true;
-        return parentTokens.at((int) type);
+        qDebug()<<"received: "<<(int)type<<" value: "<<parentTokens.at((int)type).value;
+        return parentTokens.at((int) type
+                               );
     }
 
 }
