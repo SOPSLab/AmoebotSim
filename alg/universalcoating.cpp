@@ -126,6 +126,8 @@ UniversalCoating::UniversalCoating(const Phase _phase)
     superLeader= false;
     borderPasses = 0;
     id = -1;
+    sentBorder =false;
+    startedRetired =false;
     cleanHeadLocData();
     cleanTailLocData();
 
@@ -153,7 +155,9 @@ UniversalCoating::UniversalCoating(const UniversalCoating& other)
       borderPasses(other.borderPasses),
       id(other.id),
       headLocData(other.headLocData),
-      tailLocData(other.tailLocData)
+      tailLocData(other.tailLocData),
+      sentBorder(other.sentBorder),
+      startedRetired(other.startedRetired)
 {
 }
 
@@ -476,6 +480,12 @@ std::shared_ptr<System> UniversalCoating::instance(const int staticParticlesRadi
 //wrapper to capture motion for token storage moving stuff before actually returning it
 Movement UniversalCoating::execute()
 {
+    //vars for determining if to return empty
+    sentBorder = false;
+    if(phase==Phase::retiredLeader)
+        startedRetired = true;
+    else
+        startedRetired =false;
 
     for(int i = 0; i<10;i++)
     {
@@ -573,7 +583,7 @@ Movement UniversalCoating::execute()
 
 
             tailLocData =handlePositionElection(myData,followData,parentData);
-            if(tailLocData.electionRole == ElectionRole::SoleCandidate)
+            if(tailLocData.electionRole == ElectionRole::SoleCandidate && phase!=Phase::retiredLeader)
             {
 
                 downDir = getDownDir();
@@ -581,13 +591,17 @@ Movement UniversalCoating::execute()
                 int borderBuildDir =(firstNeighborInPhase((Phase::Static))+3)%6;
                 while(neighborIsInPhase(borderBuildDir,Phase::Static) || neighborIsInPhase(borderBuildDir,Phase::StaticBorder))
                     borderBuildDir = (borderBuildDir+5)%6;
-                outFlags[borderBuildDir].buildBorder= true;
+
+                if(outFlags[borderBuildDir].buildBorder==false)
+                {
+                    sentBorder = true;
+                    outFlags[borderBuildDir].buildBorder= true;
+                }
                 NumFinishedNeighbors = 2;//must be 2 for leader election to have finished...
                 setNumFinishedNeighbors(NumFinishedNeighbors);
-                qDebug()<<"trying to border?"<<borderBuildDir<<" "<<surfaceParent<<" "<<surfaceFollower;
+                qDebug()<<"trying to border? a"<<borderBuildDir<<" "<<surfaceParent<<" "<<surfaceFollower;
                 Lnumber = 0;
                 setLayerNumber(Lnumber);
-
                 setPhase(Phase::retiredLeader);
                 return Movement(MovementType::Idle);
 
@@ -690,6 +704,9 @@ Movement UniversalCoating::execute()
     }
     printTokens(tailLocData);
     qDebug()<<"head: "<<(int)headLocData.electionRole<<" tail: "<<(int)tailLocData.electionRole;
+    qDebug()<<sentBorder<<" " <<startedRetired;
+    if(phase ==Phase::retiredLeader && !sentBorder && startedRetired && !hasNeighborInPhase(Phase::Lead) && !hasNeighborInPhase(Phase::Follow))
+        return Movement(MovementType::Empty);
     return movement;
 }
 Movement UniversalCoating::subExecute()
@@ -1221,12 +1238,12 @@ Movement UniversalCoating::subExecute()
 
             else if(phase == Phase::retiredLeader )
             {
-
+                qDebug()<<"retired leader execute";
                 getLeftDir();
                 Q_ASSERT(leftDir >=0 && leftDir<=5);
                 NumFinishedNeighbors = CountFinishedSides(leftDir, rightDir);
                 setNumFinishedNeighbors(NumFinishedNeighbors);
-                if(NumFinishedNeighbors == 2)
+                if(NumFinishedNeighbors == 2 )
                 {
                     for(int label= 0; label<10;label++)
                     {
@@ -1237,7 +1254,12 @@ Movement UniversalCoating::subExecute()
                             int borderBuildDir = (headMarkDir+3)%6;
                             while(neighborIsInPhase(borderBuildDir,Phase::Static) || neighborIsInPhase(borderBuildDir,Phase::StaticBorder))
                                 borderBuildDir = (borderBuildDir+1)%6;
+
+                            if(outFlags[borderBuildDir].buildBorder ==false)
+                            {
+                                sentBorder = true;
                             outFlags[borderBuildDir].buildBorder= true;
+                            }
                             qDebug()<<"trying to border?";
                             return Movement(MovementType::Idle);
                         }
@@ -1260,14 +1282,9 @@ Movement UniversalCoating::subExecute()
                         outFlags[seedBoundFlagDir].seedBound = true;
                     }
                 }*/
+                qDebug()<<(int)phase<<" to retired? ";
                 setPhase(Phase::retiredLeader);
-                for(int label =0; label<10;label++)
-                {
-                    if(inFlags[label]!=nullptr && inFlags[label]->seedBound && !reachedSeedBound)
-                    {
-                        qDebug()<<"retired stuck to bound";
-                    }
-                }
+
                 Lnumber = getLnumber();
                 setLayerNumber(Lnumber);
                 setPhase(Phase::retiredLeader);
@@ -1322,8 +1339,14 @@ bool UniversalCoating::isDeterministic() const
 
 bool UniversalCoating::isStatic() const
 {
-    // NOTE: Alex, I'm not sure what to put here since you have two different kinds of static.
     if(phase==Phase::Static)
+        return true;
+    return false;
+}
+
+bool UniversalCoating::isSemiActive() const
+{
+    if(phase == Phase::retiredLeader)
         return true;
     return false;
 }
@@ -1605,8 +1628,21 @@ int UniversalCoating::getDownDir() const
                 {
                     label = firstNeighborInPhaseandLayer(Phase::retiredLeader, 1);
                 }
+                /*  else if(ZeroLayerGreens == 2 && OneLayerGreens == 1)
+                {
+                    qDebug()<<"fixit 2 zeros 1 one";
+                    label = firstNeighborInPhaseandLayer(Phase::retiredLeader,1);
+                }
+                else if (OneLayerGreens == 2  && ZeroLayerGreens ==1 )
+                {
+                    qDebug()<<"fixit 2 ones 1 zero";
 
-                else label= -1;
+                    label = firstNeighborInPhaseandLayer(Phase::retiredLeader,0);
+                }*/
+                else
+                {
+                    label= -1;
+                }
             }
         }
     }
@@ -2431,7 +2467,7 @@ void UniversalCoating::setElectionSubphase(ElectionSubphase subphase)
 
 void UniversalCoating::printTokens(LocData ldata)
 {
-        qDebug()<<"forward out: ";
+    qDebug()<<"forward out: ";
     for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
         TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest, TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean, TokenType::CandidacyAck,
         TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {
@@ -2442,7 +2478,7 @@ void UniversalCoating::printTokens(LocData ldata)
             qDebug()<<"  token "<<(int)tokenType<<" value: "<<ldata.forwardTokens.at((int) tokenType).value;
         }
     }
-        qDebug()<<"backward out: ";
+    qDebug()<<"backward out: ";
     for(auto tokenType : {TokenType::SegmentLead, TokenType::PassiveSegmentClean, TokenType::FinalSegmentClean,
         TokenType::CandidacyAnnounce, TokenType::SolitudeLeadL1, TokenType::SolitudeVectorL1, TokenType::BorderTest, TokenType::PassiveSegment, TokenType::ActiveSegment, TokenType::ActiveSegmentClean, TokenType::CandidacyAck,
         TokenType::SolitudeLeadL2, TokenType::SolitudeVectorL2}) {

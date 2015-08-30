@@ -139,6 +139,8 @@ public:
     virtual std::shared_ptr<Algorithm> blank() const override;
     virtual std::shared_ptr<Algorithm> clone();
     virtual bool isStatic() const;
+    virtual bool isSemiActive() const;
+
 
 protected:
     void setPhase(const Phase _phase);
@@ -227,6 +229,8 @@ protected:
     bool superLeader;
     int borderPasses;
     int id;
+    bool sentBorder;
+    bool startedRetired;
     //leader election
 
     LocData headLocData;
