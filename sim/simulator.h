@@ -42,6 +42,8 @@ public slots:
     void start();
     void stop();
 
+    void runUntilNonValid();
+
     void finished();
 
     void roundForParticleAt(const int x, const int y);
