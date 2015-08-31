@@ -32,6 +32,7 @@ public:
     
 public slots:
     void round();
+    void runUntilNotValid();
 
     void runScript(const QString scriptFilePath);
     void writeToFile(const QString filePath, const QString text);
@@ -82,6 +83,11 @@ inline ScriptInterface::ScriptInterface(Simulator& _sim)
 inline void ScriptInterface::round()
 {
     sim.round();
+}
+
+inline void ScriptInterface::runUntilNotValid()
+{
+    sim.runUntilNonValid();
 }
 
 inline void ScriptInterface::runScript(const QString scriptFilePath)

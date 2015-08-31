@@ -33,7 +33,7 @@ public:
     int getNumNonStaticParticles() const;
 
     SystemState round();
-    SystemState roundPermutation();
+    SystemState runUntilNotValid();
     SystemState roundForParticle(const Node node);
 
     SystemState getSystemState() const;

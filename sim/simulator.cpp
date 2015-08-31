@@ -84,6 +84,11 @@ void Simulator::stop()
     emit stopped();
 }
 
+void Simulator::runUntilNonValid()
+{
+    system->runUntilNotValid();
+}
+
 void Simulator::roundForParticleAt(const int x, const int y)
 {
     if(!roundTimer->isActive()) {
