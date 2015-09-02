@@ -34,7 +34,7 @@ signals:
     void stopped();
 
     void log(const QString msg, const bool isError);
-    void saveScreenshotSignal(const QString filePath);
+    void saveScreenshotSignal(std::shared_ptr<System> _system, const QString filePath);
 
 public slots:
     void init();

@@ -74,8 +74,11 @@ void VisItem::focusOnCenterOfMass()
     focusPosGui = sum / numNodes;
 }
 
-void VisItem::saveScreenshot(QString filePath)
+void VisItem::saveScreenshot(std::shared_ptr<System> _system, QString filePath)
 {
+    updateSystem(_system);
+    update();
+
     if(filePath == "") {
         filePath = QString("amoebotsim_") + QString::number(QTime::currentTime().msecsSinceStartOfDay()) + QString(".png");
     }
@@ -130,13 +133,11 @@ void VisItem::paint()
     drawGrid(view);
 
     QMutexLocker locker(&systemMutex);
-    if(system == nullptr) {
-        return;
-    }
-
-    drawParticles(view);
-    if(system->getSystemState() == System::SystemState::Disconnected) {
-        drawDisconnectionNode();
+    if(system != nullptr) {
+        drawParticles(view);
+        if(system->getSystemState() == System::SystemState::Disconnected) {
+            drawDisconnectionNode();
+        }
     }
 }
 

@@ -186,7 +186,5 @@ void Simulator::setRoundDuration(int ms)
 
 void Simulator::saveScreenshotSlot(const QString filePath)
 {
-    // first make sure the visualization has the most recent system
-    emit updateSystem(std::make_shared<System>(*system));
-    emit saveScreenshotSignal(filePath);
+    emit saveScreenshotSignal(std::make_shared<System>(*system), filePath);
 }
