@@ -112,12 +112,10 @@ public:
     int id;
     bool acceptPositionTokens;
 
-    bool calledExpand;
-    bool calledContract;
-    LocData headLocData;
-    LocData tailLocData;
     LocData contrLocData;
-    bool hasData;
+    LocData expLocData;
+    std::string status;
+
 };
 
 class UniversalCoating : public AlgorithmWithFlags<UniversalCoatingFlag>
@@ -207,6 +205,9 @@ protected:
 
     bool expandedOnSurface();
     bool tailOnSurface();
+    int getSurfaceFollowDir();
+    int getSurfaceParentDir();
+
     Phase phase;
     int followDir;
     int Lnumber;
