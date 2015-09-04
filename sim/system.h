@@ -24,7 +24,6 @@ public:
 public:
     System();
     System(const System& other);
-    System& operator=(const System& other);
 
     void insertParticle(const Particle &p);
     void insertParticleAt(const Node &n);

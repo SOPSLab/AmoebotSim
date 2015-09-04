@@ -26,28 +26,14 @@ System::System()
 
 System::System(const System& other)
     : rng(other.rng),
+      particles(other.particles),
+      particleMap(other.particleMap),
       systemState(other.systemState),
       disconnectionNode(other.disconnectionNode),
       numNonStaticParticles(other.numNonStaticParticles),
       numMovements(other.numMovements),
       numRounds(other.numRounds)
-{
-    for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
-        insertParticle(*it);
-    }
-}
-
-System& System::operator=(const System& other){
-    rng = other.rng;
-    systemState = other.systemState;
-    disconnectionNode = other.disconnectionNode;
-    numNonStaticParticles = other.numNonStaticParticles;
-    numMovements = other.numMovements;
-    numRounds = other.numRounds;
-    for(auto it = other.particles.cbegin(); it != other.particles.cend(); ++it) {
-        insertParticle(*it);
-    }
-    return (*this);
+{   
 }
 
 void System::insertParticle(const Particle& p)
