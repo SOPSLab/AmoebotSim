@@ -494,13 +494,23 @@ Movement UniversalCoating::subExecute()
 
         setFollowIndicatorLabel(followDir);
         superLeader = isSuperLeader();//to know when contracted
+       /* if(phase==Phase::Hold && hasNeighborInPhase(Phase::Static))
+        {
+            qDebug()<<"fix head for super leader";
+            followDir = labelToDir(getSurfaceParentDir());
+            headMarkDir = followDir;
+            setFollowIndicatorLabel(followDir);
+
+        }*/
+
+        if(isSuperLeader() && phase == Phase::Hold)
+           {
+               setPhase(Phase::Normal);
+           }
+
         if(hasNeighborInPhase(Phase::Inactive) || tailReceivesFollowIndicator()) {
 
-            if(phase==Phase::Hold && isSuperLeader())
-            {
-                setPhase(Phase::Normal);
 
-            }
             if(phase==Phase::Follow && hasNeighborInPhase(Phase::retiredLeader))
             {
                 //  qDebug()<<"expanded follower on retired: handover contract";
@@ -513,11 +523,7 @@ Movement UniversalCoating::subExecute()
             }
             return Movement(MovementType::HandoverContract, tailContractionLabel());
         } else {
-            if(phase==Phase::Hold && isSuperLeader())
-            {
-                setPhase(Phase::Normal);
 
-            }
 
             return Movement(MovementType::Contract, tailContractionLabel());
         }
@@ -592,7 +598,6 @@ Movement UniversalCoating::subExecute()
 
                 if(hasNeighborInPhase(Phase::Static))
                 {
-                    setElectionRole(ElectionRole::Candidate);
 
                     auto surfaceFollower = firstNeighborInPhase(Phase::Static);
                     if(surfaceFollower!=-1)
@@ -603,14 +608,8 @@ Movement UniversalCoating::subExecute()
                         }
 
                     }
-                    int staticRecDir = surfaceFollower;//always same for anyone in this position
-                    while(!neighborIsInPhase(staticRecDir,Phase::Static))
-                        staticRecDir = (staticRecDir+5)%6;
-
-                    contrLocData.electionRole = ElectionRole::Candidate;//goes in contracted b/c that's what gets read off a contracted particle
 
                 }
-
 
                 return Movement(MovementType::Idle);
             }
@@ -741,12 +740,13 @@ Movement UniversalCoating::subExecute()
                 {
                     int moveDir = getMoveDir();
                     setContractDir(moveDir);
-                    headMarkDir = moveDir;
-                    followDir = headMarkDir;
+                    followDir = getSurfaceParentDir();
+                    headMarkDir = followDir;
+
                     auto temp = dirToHeadLabelAfterExpansion(followDir, moveDir);
                     setFollowIndicatorLabel(temp);
 
-                    if(!(inFlags[moveDir]!=nullptr && (inFlags[moveDir]->isContracted())) )
+                    if(inFlags[moveDir]==nullptr || inFlags[moveDir]->isExpanded())
                     {
                         return Movement(MovementType::Expand, moveDir);
                     }
@@ -845,6 +845,8 @@ Movement UniversalCoating::subExecute()
                 headMarkDir = downDir;
                 setPhase(Phase::Lead);
 
+                qDebug()<<"lead expand";
+
                 return Movement(MovementType::Expand, moveDir);
 
             }
@@ -886,6 +888,7 @@ Movement UniversalCoating::subExecute()
                     Q_ASSERT(labelToDirAfterExpansion(temp, expansionDir) == followDir);
                     setFollowIndicatorLabel(temp);
                     //  qDebug()<<"follow expanding";
+                    qDebug()<<"follow expand";
                     return Movement(MovementType::Expand, expansionDir);
                 }
                 if(hasNeighborInPhase(Phase::retiredLeader)) {
@@ -982,6 +985,7 @@ Movement UniversalCoating::subExecute()
                         auto temp = dirToHeadLabelAfterExpansion(followDir, expansionDir);
                         Q_ASSERT(labelToDirAfterExpansion(temp, expansionDir) == followDir);
                         setFollowIndicatorLabel(temp);
+                        qDebug()<<"motionblock expand";
                         return Movement(MovementType::Expand, expansionDir);
                     }
                 }
@@ -1125,7 +1129,7 @@ void UniversalCoating::setPhase(const Phase _phase)
     }
 */
     //new colors block...
-    if(phase == Phase::Normal || phase == Phase::Wait )
+   /* if(phase == Phase::Normal || phase == Phase::Wait )
     {
         headMarkColor = 0x0000FF;
         tailMarkColor = 0x0000FF;
@@ -1139,7 +1143,7 @@ void UniversalCoating::setPhase(const Phase _phase)
     {
         headMarkColor = 0xFF0000;
         tailMarkColor = 0xFF0000;
-    }
+    }*/
 }
 
 bool UniversalCoating::neighborIsInPhase(const int label, const Phase _phase) const

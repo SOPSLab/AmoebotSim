@@ -56,7 +56,7 @@ enum class TokenType {
     SolitudeVectorL2,
     BorderTest,
     PosCandidate,
-    PosCandidateClean
+    PosCandidateClean,
 };
 
 enum class SwitchVariable
