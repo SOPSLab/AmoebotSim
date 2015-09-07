@@ -1,15 +1,21 @@
 #ifndef UNIVERSALCOATINGHELPER
 #define UNIVERSALCOATINGHELPER
 
+#include<QDebug>
+#include <set>
+
+#include "sim/node.h"
+#include "sim/particle.h"
+
+// use this to get some debug output
+#define UNIVERSAL_COATING_HELPER_DEBUG
+
 namespace UniversalCoating
 {
 int getLowerBound(const System& system);
 
 inline int getLowerBound(const System& system)
 {
-// use this to get some debug output
-//#define UNIVERSAL_COATING_OPT_DEBUG
-
     std::set<Node> object, particles;
 
     // setup object and particles
@@ -27,7 +33,7 @@ inline int getLowerBound(const System& system)
         }
     }
 
-#ifdef UNIVERSAL_COATING_OPT_DEBUG
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
     qDebug() << "------------------------------------";
     qDebug() << "numObjectPositions:" << object.size();
     qDebug() << "numParticlePositions:" << particles.size();
@@ -66,7 +72,7 @@ inline int getLowerBound(const System& system)
         }
     }
 
-#ifdef UNIVERSAL_COATING_OPT_DEBUG
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
     qDebug() << "numMandatoryLayers:" << numMandatoryLayers;
     qDebug() << "numMandatoryOpenPositions:" << mandatoryOpenPositions.size();
     qDebug() << "numOptionalOpenPositions:" << optionalOpenPositions.size();
@@ -110,7 +116,7 @@ inline int getLowerBound(const System& system)
 
     Q_ASSERT(mandatoryOpenPositions.empty());
 
-#ifdef UNIVERSAL_COATING_OPT_DEBUG
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
     qDebug() << "lowerBound:" << lowerBound;
     qDebug() << "------------------------------------";
 #endif
