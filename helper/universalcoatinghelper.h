@@ -1,7 +1,9 @@
 #ifndef UNIVERSALCOATINGHELPER
 #define UNIVERSALCOATINGHELPER
 
-#include<QDebug>
+#include <QDebug>
+
+#include <deque>
 #include <set>
 
 #include "sim/node.h"
@@ -9,6 +11,8 @@
 
 // use this to get some debug output
 //#define UNIVERSAL_COATING_HELPER_DEBUG
+// additionally use this to output matchings
+//#define UNIVERSAL_COATING_HELPER_DEBUG_MATCHING
 
 namespace UniversalCoating
 {
@@ -78,7 +82,7 @@ inline int setupOpenPositions(const std::set<Node>& object,
     return numMandatoryLayers;
 }
 
-inline int getLowerBound(const System& system)
+inline int getLowerBoundbla(const System& system)
 {
 #ifdef UNIVERSAL_COATING_HELPER_DEBUG
     qDebug() << "------------------------------------";
@@ -133,7 +137,158 @@ inline int getLowerBound(const System& system)
     return lowerBound;
 }
 
-inline int getBetterLowerBound(const System& system)
+class Graph
+{
+private:
+    struct GraphNode
+    {
+        GraphNode(Node node, bool right) : node(node), right(right), mate(nullptr), pred(nullptr) { }
+
+        Node node;
+        bool right;
+        GraphNode* mate;
+        GraphNode* pred;
+    };
+
+public:
+
+    Graph() { }
+    ~Graph()
+    {
+        for(GraphNode* node : nodes) {
+            delete node;
+        }
+    }
+
+    void addNode(Node node, bool right)
+    {
+        nodes.push_back(new GraphNode(node, right));
+    }
+
+    void updateMatching(const int weightLimit)
+    {
+        // augment as far as possible
+        while(augment(weightLimit))
+        {
+            Q_ASSERT(isValid());
+        }
+
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+        report();
+#endif
+    }
+
+private:
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+    void report()
+    {
+        int matchingSize = 0;
+        for(GraphNode* node : nodes) {
+            if(!node->right && node->mate != nullptr) {
+                matchingSize++;
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG_MATCHING
+                qDebug() << "(" << node->node.x << ", " << node->node.y << ") <--> (" << node->mate->node.x << ", " << node->mate->node.y << ")";
+#endif
+            }
+        }
+
+        qDebug() << "matching size:" << matchingSize;
+    }
+#endif
+
+    bool isValid()
+    {
+        for(GraphNode* node : nodes) {
+            if(node->mate != nullptr) {
+                if(node->mate->mate != node && node->right == node->mate->right) {
+                    return false;
+                }
+            }
+
+            if(node->pred != nullptr) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool areNeighbors(const int weightLimit, GraphNode* node1, GraphNode* node2)
+    {
+        if(node1->right == node2->right) {
+            return false;
+        }
+
+        // FIXME: this is not what we want!
+        const int distance = (node2->node.x - node1->node.x) + (node2->node.y - node1->node.y);
+        return distance <= weightLimit;
+    }
+
+    void clean(std::deque<GraphNode*>& visitedNode)
+    {
+        for(GraphNode* node : visitedNode) {
+            node->pred = nullptr;
+        }
+    }
+
+    void augmentPath(GraphNode* node)
+    {
+        // fun!
+        while(node != node->pred) {
+            node->mate = node->pred;
+            node->pred->mate = node;
+            node = node->pred->pred;
+        }
+    }
+
+    bool augment(const int weightLimit)
+    {
+        // look for augmenting path using bfs
+        // bfs queue
+        std::deque<GraphNode*> queue;
+
+        // queue for cleanup
+        std::deque<GraphNode*> visitedNodes;
+
+        // add all unmatched node in left set to queue
+        // the bfs is started from these nodes
+        for(GraphNode* node : nodes) {
+            if(!node->right && node->mate == nullptr) {
+                node->pred = node;
+                queue.push_back(node);
+                visitedNodes.push_back(node);
+            }
+        }
+
+        // bfs
+        while(!queue.empty()) {
+            GraphNode* node = queue.front();
+            queue.pop_front();
+
+            for(GraphNode* otherNode : nodes) {
+                if(areNeighbors(weightLimit, node, otherNode) && otherNode->pred == nullptr) {
+                    otherNode->pred = node;
+                    queue.push_back(otherNode);
+                    visitedNodes.push_back(otherNode);
+
+                    if(otherNode->right && otherNode->mate == nullptr) {
+                        // augmenting path found
+                        augmentPath(otherNode);
+                        clean(visitedNodes);
+                        return true;
+                    }
+                }
+            }
+        }
+
+        clean(visitedNodes);
+        return false;
+    }
+
+private:
+    std::deque<GraphNode*> nodes;
+};
+
+inline int getLowerBound(const System& system)
 {
 #ifdef UNIVERSAL_COATING_HELPER_DEBUG
     qDebug() << "------------------------------------";
@@ -144,6 +299,18 @@ inline int getBetterLowerBound(const System& system)
 
     std::set<Node> mandatoryOpenPositions, optionalOpenPositions;
     setupOpenPositions(object, particles, mandatoryOpenPositions, optionalOpenPositions);
+
+    Graph graph;
+
+    for(auto& node : particles) {
+        graph.addNode(node, false);
+    }
+
+    for(auto& node : mandatoryOpenPositions) {
+        graph.addNode(node, true);
+    }
+
+    graph.updateMatching(200000);
 
 #ifdef UNIVERSAL_COATING_HELPER_DEBUG
     qDebug() << "------------------------------------";
