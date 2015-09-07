@@ -21,6 +21,9 @@
 #include "alg/leaderelection.h"
 #include "alg/universalcoating.h"
 #include "alg/leaderelectiondemo.h"
+
+#include "helper/universalcoatinghelper.h"
+
 /*
  * The methods of the following class are automatically available during runtime as command in the command-line.
  * */
@@ -325,7 +328,7 @@ inline void ScriptInterface::universalcoating(const  int staticParticlesRadius, 
 
 inline int ScriptInterface::getUniversalCoatingLowerBound()
 {
-    return UniversalCoating::UniversalCoating::getLowerBound(*sim.getSystem());
+    return UniversalCoating::getLowerBound(*sim.getSystem());
 }
 
 #endif // SCRIPTINTERFACE_H

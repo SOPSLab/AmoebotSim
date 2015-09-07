@@ -35,7 +35,8 @@ HEADERS += \
     alg/holeelimcompaction.h \
     alg/universalcoating.h \
     alg/leaderelectiondemo.h \
-    alg/leaderelection.h
+    alg/leaderelection.h \
+    helper/universalcoatinghelper.h
 
 SOURCES += \
     alg/algorithm.cpp \
