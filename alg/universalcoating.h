@@ -139,6 +139,8 @@ public:
     virtual bool isStatic() const;
     virtual bool isSemiActive() const;
 
+    static int getLowerBound(const System& system);
+
 protected:
     void setPhase(const Phase _phase);
 

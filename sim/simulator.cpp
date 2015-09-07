@@ -30,6 +30,11 @@ void Simulator::setSystem(std::shared_ptr<System> _system)
     emit numRoundsChanged(system->getNumRounds());
 }
 
+std::shared_ptr<System> Simulator::getSystem() const
+{
+    return system;
+}
+
 void Simulator::init()
 {
     if(roundTimer == nullptr) {

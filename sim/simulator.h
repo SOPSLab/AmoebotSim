@@ -18,6 +18,7 @@ public:
     virtual ~Simulator();
 
     void setSystem(std::shared_ptr<System> _system);
+    std::shared_ptr<System> getSystem() const;
 
 signals:
     void updateSystem(std::shared_ptr<System> _system);
