@@ -12,20 +12,13 @@
 
 namespace UniversalCoating
 {
-int getLowerBound(const System& system);
 
-inline int getLowerBound(const System& system)
+inline void setupObjectAndParticles(const System& system,
+                                    std::set<Node>& object,
+                                    std::set<Node>& particles)
 {
-    std::set<Node> object, particles;
-
-    // setup object and particles
     for(int i = 0; i < system.getNumParticles(); i++) {
         const Particle& p = system.at(i);
-        if(p.tailDir != -1) {
-            // this should be an initial configuration
-            // do not allow expanded particles
-            return -1;
-        }
         if(p.isStatic()) {
             object.insert(p.head);
         } else {
@@ -34,41 +27,42 @@ inline int getLowerBound(const System& system)
     }
 
 #ifdef UNIVERSAL_COATING_HELPER_DEBUG
-    qDebug() << "------------------------------------";
     qDebug() << "numObjectPositions:" << object.size();
     qDebug() << "numParticlePositions:" << particles.size();
 #endif
+}
 
-    std::set<Node> mandatoryOpenPositions, optionalOpenPositions;
+inline int setupOpenPositions(const std::set<Node>& object,
+                               const std::set<Node>& particles,
+                               std::set<Node>& mandatoryOpenPositions,
+                               std::set<Node>& optionalOpenPositions)
+{
     int numMandatoryLayers = 0;
+    std::set<Node> growingObject;
+    growingObject.insert(object.cbegin(), object.cend());
 
-    {   // setup mandatoryOpenPositions and optionalOpenPositions
-        std::set<Node> growingObject;
-        growingObject.insert(object.cbegin(), object.cend());
-
-        while(true) {
-            // add another layer to the growingObject
-            std::set<Node> layer;
-            for(auto& node : growingObject) {
-                for(int i = 0; i < 6; i++) {
-                    Node neighbor = node.nodeInDir(i);
-                    if(growingObject.find(neighbor) == growingObject.end()) {
-                        layer.insert(neighbor);
-                    }
+    while(true) {
+        // add another layer to the growingObject
+        std::set<Node> layer;
+        for(auto& node : growingObject) {
+            for(int i = 0; i < 6; i++) {
+                Node neighbor = node.nodeInDir(i);
+                if(growingObject.find(neighbor) == growingObject.end()) {
+                    layer.insert(neighbor);
                 }
             }
+        }
 
-            if(mandatoryOpenPositions.size() + layer.size() <= particles.size()) {
-                // found a layer of mandatory positions.
-                mandatoryOpenPositions.insert(layer.cbegin(), layer.cend());
-                growingObject.insert(layer.cbegin(), layer.cend());
-                numMandatoryLayers++;
-            } else {
-                // the first layer that cannot be added to mandatoryOpenPositions is the set of optional open positions
-                optionalOpenPositions = layer;
-                // escape from while loop
-                break;
-            }
+        if(mandatoryOpenPositions.size() + layer.size() <= particles.size()) {
+            // found a layer of mandatory positions.
+            mandatoryOpenPositions.insert(layer.cbegin(), layer.cend());
+            growingObject.insert(layer.cbegin(), layer.cend());
+            numMandatoryLayers++;
+        } else {
+            // the first layer that cannot be added to mandatoryOpenPositions is the set of optional open positions
+            optionalOpenPositions = layer;
+            // escape from while loop
+            break;
         }
     }
 
@@ -80,6 +74,21 @@ inline int getLowerBound(const System& system)
 
     Q_ASSERT(mandatoryOpenPositions.size() <= particles.size());
     Q_ASSERT(mandatoryOpenPositions.size() + optionalOpenPositions.size() >= particles.size());
+
+    return numMandatoryLayers;
+}
+
+inline int getLowerBound(const System& system)
+{
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+    qDebug() << "------------------------------------";
+#endif
+
+    std::set<Node> object, particles;
+    setupObjectAndParticles(system, object, particles);
+
+    std::set<Node> mandatoryOpenPositions, optionalOpenPositions;
+    setupOpenPositions(object, particles, mandatoryOpenPositions, optionalOpenPositions);
 
     const int numOptionalOpenPositionsToBeFilled = particles.size() - mandatoryOpenPositions.size();
     const int numOptinalOpenPositionsToRemain = optionalOpenPositions.size() - numOptionalOpenPositionsToBeFilled;
@@ -122,6 +131,25 @@ inline int getLowerBound(const System& system)
 #endif
 
     return lowerBound;
+}
+
+inline int getBetterLowerBound(const System& system)
+{
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+    qDebug() << "------------------------------------";
+#endif
+
+    std::set<Node> object, particles;
+    setupObjectAndParticles(system, object, particles);
+
+    std::set<Node> mandatoryOpenPositions, optionalOpenPositions;
+    setupOpenPositions(object, particles, mandatoryOpenPositions, optionalOpenPositions);
+
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+    qDebug() << "------------------------------------";
+#endif
+
+    return -1;
 }
 
 }
