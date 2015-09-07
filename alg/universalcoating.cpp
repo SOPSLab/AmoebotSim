@@ -188,6 +188,7 @@ std::shared_ptr<System> UniversalCoating::instance(const int staticParticlesRadi
         layer2.clear();
     }
 
+    // 1. approach: use entire layer as candidate set
     // determine candidate set by "growing an additional layer"
     std::set<Node> candidates;
     for(auto n : layer1) {
@@ -198,6 +199,26 @@ std::shared_ptr<System> UniversalCoating::instance(const int staticParticlesRadi
             }
         }
     }
+
+    // 2. approach: pick only one seed to build the particle structure
+//    std::set<Node> candidates;
+//    for(auto n : layer1) {
+//        for(int dir = 0; dir < 6; dir++) {
+//            auto neighbor = n.nodeInDir(dir);
+//            if(occupied.find(neighbor) == occupied.end() && layer1.find(neighbor) == layer1.end()) {
+//                layer2.insert(neighbor);
+//            }
+//        }
+//    }
+//    {
+//        int randIndex = randInt(0, layer2.size());
+//        auto randIt = layer2.cbegin();
+//        while(randIndex > 0) {
+//            randIt++;
+//            randIndex--;
+//        }
+//        candidates.insert(*randIt);
+//    }
 
     // add inactive particles
     int particleID = 0;
