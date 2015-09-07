@@ -8,7 +8,7 @@
 #include "sim/particle.h"
 
 // use this to get some debug output
-#define UNIVERSAL_COATING_HELPER_DEBUG
+//#define UNIVERSAL_COATING_HELPER_DEBUG
 
 namespace UniversalCoating
 {
