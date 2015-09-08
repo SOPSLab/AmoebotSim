@@ -4,14 +4,14 @@
 #include <QDebug>
 
 #include <deque>
-#include <map>
+#include <unordered_map>
 #include <set>
 
 #include "sim/node.h"
 #include "sim/particle.h"
 
 // use this to get some debug output
-//#define UNIVERSAL_COATING_HELPER_DEBUG
+#define UNIVERSAL_COATING_HELPER_DEBUG
 // additionally use this to output matchings
 //#define UNIVERSAL_COATING_HELPER_DEBUG_MATCHING
 
@@ -149,7 +149,7 @@ private:
         bool right;
         GraphNode* mate;
         GraphNode* pred;
-        std::map<GraphNode*, int> distance;
+        std::unordered_map<GraphNode*, int> distance;
     };
 
     struct Rect
