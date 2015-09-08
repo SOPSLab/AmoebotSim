@@ -4,6 +4,7 @@
 #include <QDebug>
 
 #include <deque>
+#include <map>
 #include <set>
 
 #include "sim/node.h"
@@ -148,11 +149,12 @@ private:
         bool right;
         GraphNode* mate;
         GraphNode* pred;
+        std::map<GraphNode*, int> distance;
     };
 
 public:
 
-    Graph() { }
+    Graph(const std::set<Node>& object) : object(object) { }
     ~Graph()
     {
         for(GraphNode* node : nodes) {
@@ -162,20 +164,44 @@ public:
 
     void addNode(Node node, bool right)
     {
-        nodes.push_back(new GraphNode(node, right));
+        GraphNode* graphNode = new GraphNode(node, right);
+        nodes.push_back(graphNode);
+
+        for(GraphNode* otherGraphNode : nodes) {
+            int dist = distance(graphNode, otherGraphNode);
+            otherGraphNode->distance.insert(std::pair<GraphNode*, int>(graphNode, dist));
+            graphNode->distance.insert(std::pair<GraphNode*, int>(otherGraphNode, dist));
+        }
     }
 
     void updateMatching(const int weightLimit)
     {
         // augment as far as possible
-        while(augment(weightLimit))
-        {
+        while(augment(weightLimit)) {
             Q_ASSERT(isValid());
         }
 
 #ifdef UNIVERSAL_COATING_HELPER_DEBUG
         report();
 #endif
+    }
+
+    void reset()
+    {
+        for(GraphNode* node : nodes) {
+            node->mate = nullptr;
+        }
+    }
+
+    int getMatchingSize()
+    {
+        int matchingSize = 0;
+        for(GraphNode* node : nodes) {
+            if(!node->right && node->mate != nullptr) {
+                matchingSize++;
+            }
+        }
+        return matchingSize;
     }
 
 private:
@@ -212,15 +238,37 @@ private:
         return true;
     }
 
-    bool areNeighbors(const int weightLimit, GraphNode* node1, GraphNode* node2)
+    int distance(GraphNode* graphNode1, GraphNode* graphNode2)
     {
-        if(node1->right == node2->right) {
-            return false;
-        }
+        // use bfs to determine the length of a shortest path between the nodes that does not intersect the object
+        Node node1 = graphNode1->node;
+        Node node2 = graphNode2->node;
 
-        // FIXME: this is not what we want!
-        const int distance = (node2->node.x - node1->node.x) + (node2->node.y - node1->node.y);
-        return distance <= weightLimit;
+        Q_ASSERT(object.find(node1) == object.end() && object.find(node2) == object.end());
+
+        std::set<Node> visitedNodes;
+        visitedNodes.insert(node1);
+        int distance = 0;
+        while(visitedNodes.find(node2) == visitedNodes.end()) {
+            std::set<Node> layer;
+            for(const Node& node : visitedNodes) {
+                for(int i = 0; i < 6; i++) {
+                    Node neighbor = node.nodeInDir(i);
+                    if(visitedNodes.find(neighbor) == visitedNodes.end() && object.find(neighbor) == object.end()) {
+                        layer.insert(neighbor);
+                    }
+                }
+            }
+
+            visitedNodes.insert(layer.cbegin(), layer.cend());
+            distance++;
+        }
+        return distance;
+    }
+
+    bool areNeighbors(const int distanceLimit, GraphNode* node1, GraphNode* node2)
+    {
+        return (node1->right != node2->right) && (node1->distance.at(node2) <= distanceLimit);
     }
 
     void clean(std::deque<GraphNode*>& visitedNode)
@@ -240,8 +288,10 @@ private:
         }
     }
 
-    bool augment(const int weightLimit)
+    bool augment(const int distanceLimit)
     {
+        std::deque<GraphNode*> unvisitedNodes = nodes;
+
         // look for augmenting path using bfs
         // bfs queue
         std::deque<GraphNode*> queue;
@@ -251,11 +301,14 @@ private:
 
         // add all unmatched node in left set to queue
         // the bfs is started from these nodes
-        for(GraphNode* node : nodes) {
+        for(unsigned int i = 0; i < unvisitedNodes.size(); i++) {
+            GraphNode* node = unvisitedNodes.at(i);
             if(!node->right && node->mate == nullptr) {
                 node->pred = node;
                 queue.push_back(node);
                 visitedNodes.push_back(node);
+                std::swap(unvisitedNodes[i], unvisitedNodes[0]);
+                unvisitedNodes.pop_front();
             }
         }
 
@@ -264,11 +317,14 @@ private:
             GraphNode* node = queue.front();
             queue.pop_front();
 
-            for(GraphNode* otherNode : nodes) {
-                if(areNeighbors(weightLimit, node, otherNode) && otherNode->pred == nullptr) {
+            for(unsigned int i = 0; i < unvisitedNodes.size(); i++) {
+                GraphNode* otherNode = unvisitedNodes.at(i);
+                if(areNeighbors(distanceLimit, node, otherNode) && otherNode->pred == nullptr) {
                     otherNode->pred = node;
                     queue.push_back(otherNode);
                     visitedNodes.push_back(otherNode);
+                    std::swap(unvisitedNodes[i], unvisitedNodes[0]);
+                    unvisitedNodes.pop_front();
 
                     if(otherNode->right && otherNode->mate == nullptr) {
                         // augmenting path found
@@ -286,6 +342,7 @@ private:
 
 private:
     std::deque<GraphNode*> nodes;
+    const std::set<Node>& object;
 };
 
 inline int getLowerBound(const System& system)
@@ -300,17 +357,28 @@ inline int getLowerBound(const System& system)
     std::set<Node> mandatoryOpenPositions, optionalOpenPositions;
     setupOpenPositions(object, particles, mandatoryOpenPositions, optionalOpenPositions);
 
-    Graph graph;
+    Graph graph(object);
+
+    qDebug() << "add particles";
 
     for(auto& node : particles) {
         graph.addNode(node, false);
     }
 
+    qDebug() << "add open positions";
+
     for(auto& node : mandatoryOpenPositions) {
         graph.addNode(node, true);
     }
 
-    graph.updateMatching(200000);
+    qDebug() << "calculate matchings";
+
+    for(int i = 0; i < 20; i++) {
+        qDebug() << "i:" << i;
+        graph.updateMatching(i);
+        qDebug() << "matchingSize" << graph.getMatchingSize();
+        graph.reset();
+    }
 
 #ifdef UNIVERSAL_COATING_HELPER_DEBUG
     qDebug() << "------------------------------------";
