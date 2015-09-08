@@ -83,7 +83,7 @@ inline int setupOpenPositions(const std::set<Node>& object,
     return numMandatoryLayers;
 }
 
-inline int getLowerBoundbla(const System& system)
+inline int getWeakLowerBound(const System& system)
 {
 #ifdef UNIVERSAL_COATING_HELPER_DEBUG
     qDebug() << "------------------------------------";
@@ -153,8 +153,8 @@ private:
     };
 
 public:
-
     Graph(const std::set<Node>& object) : object(object) { }
+
     ~Graph()
     {
         for(GraphNode* node : nodes) {
@@ -167,10 +167,38 @@ public:
         GraphNode* graphNode = new GraphNode(node, right);
         nodes.push_back(graphNode);
 
-        for(GraphNode* otherGraphNode : nodes) {
-            int dist = distance(graphNode, otherGraphNode);
-            otherGraphNode->distance.insert(std::pair<GraphNode*, int>(graphNode, dist));
-            graphNode->distance.insert(std::pair<GraphNode*, int>(otherGraphNode, dist));
+        // setup distances
+        std::deque<GraphNode*> undiscoveredGraphNodes = nodes;
+
+        std::set<Node> visitedNodes;
+        visitedNodes.insert(graphNode->node);
+
+        int distance = 0;
+        while(!undiscoveredGraphNodes.empty()) {
+            // check whether a graph node was discovered and if so set the distance accordingly
+            for(unsigned int i = 0; i < undiscoveredGraphNodes.size(); i++) {
+                GraphNode* otherGraphNode = undiscoveredGraphNodes.at(i);
+                if(visitedNodes.find(otherGraphNode->node) != visitedNodes.end()) {
+                    graphNode->distance.insert(std::pair<GraphNode*, int>(otherGraphNode, distance));
+                    otherGraphNode->distance.insert(std::pair<GraphNode*, int>(graphNode, distance));
+                    std::swap(undiscoveredGraphNodes.at(i), undiscoveredGraphNodes.at(0));
+                    undiscoveredGraphNodes.pop_front();
+                }
+            }
+
+            // add another layer to bfs
+            std::set<Node> layer;
+            for(const Node& node : visitedNodes) {
+                for(int i = 0; i < 6; i++) {
+                    Node neighbor = node.nodeInDir(i);
+                    if(visitedNodes.find(neighbor) == visitedNodes.end() && object.find(neighbor) == object.end()) {
+                        layer.insert(neighbor);
+                    }
+                }
+            }
+
+            visitedNodes.insert(layer.cbegin(), layer.cend());
+            distance++;
         }
     }
 
@@ -181,8 +209,12 @@ public:
             Q_ASSERT(isValid());
         }
 
-#ifdef UNIVERSAL_COATING_HELPER_DEBUG
-        report();
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG_MATCHING
+        for(GraphNode* node : nodes) {
+            if(!node->right && node->mate != nullptr) {
+                qDebug() << "(" << node->node.x << ", " << node->node.y << ") <--> (" << node->mate->node.x << ", " << node->mate->node.y << ")";
+            }
+        }
 #endif
     }
 
@@ -204,24 +236,43 @@ public:
         return matchingSize;
     }
 
-private:
-#ifdef UNIVERSAL_COATING_HELPER_DEBUG
-    void report()
+    int getMaxPairwiseDistance()
     {
-        int matchingSize = 0;
+        int max = -1;
         for(GraphNode* node : nodes) {
-            if(!node->right && node->mate != nullptr) {
-                matchingSize++;
-#ifdef UNIVERSAL_COATING_HELPER_DEBUG_MATCHING
-                qDebug() << "(" << node->node.x << ", " << node->node.y << ") <--> (" << node->mate->node.x << ", " << node->mate->node.y << ")";
-#endif
+            for(auto pair : node->distance) {
+                const int dist = pair.second;
+                if(dist > max) {
+                    max = dist;
+                }
             }
         }
-
-        qDebug() << "matching size:" << matchingSize;
+        return max;
     }
-#endif
 
+    std::deque<GraphNode*> getMates()
+    {
+        std::deque<GraphNode*> mates;
+        for(GraphNode* node : nodes) {
+            mates.push_back(node->mate);
+        }
+        return mates;
+    }
+
+    void setMates(const std::deque<GraphNode*>& mates)
+    {
+        std::deque<GraphNode*> matesCopy = mates;
+        for(GraphNode* node : nodes) {
+            if(matesCopy.empty()) {
+                node->mate = nullptr;
+            } else {
+                node->mate = matesCopy.front();
+                matesCopy.pop_front();
+            }
+        }
+    }
+
+private:
     bool isValid()
     {
         for(GraphNode* node : nodes) {
@@ -236,34 +287,6 @@ private:
             }
         }
         return true;
-    }
-
-    int distance(GraphNode* graphNode1, GraphNode* graphNode2)
-    {
-        // use bfs to determine the length of a shortest path between the nodes that does not intersect the object
-        Node node1 = graphNode1->node;
-        Node node2 = graphNode2->node;
-
-        Q_ASSERT(object.find(node1) == object.end() && object.find(node2) == object.end());
-
-        std::set<Node> visitedNodes;
-        visitedNodes.insert(node1);
-        int distance = 0;
-        while(visitedNodes.find(node2) == visitedNodes.end()) {
-            std::set<Node> layer;
-            for(const Node& node : visitedNodes) {
-                for(int i = 0; i < 6; i++) {
-                    Node neighbor = node.nodeInDir(i);
-                    if(visitedNodes.find(neighbor) == visitedNodes.end() && object.find(neighbor) == object.end()) {
-                        layer.insert(neighbor);
-                    }
-                }
-            }
-
-            visitedNodes.insert(layer.cbegin(), layer.cend());
-            distance++;
-        }
-        return distance;
     }
 
     bool areNeighbors(const int distanceLimit, GraphNode* node1, GraphNode* node2)
@@ -345,7 +368,7 @@ private:
     const std::set<Node>& object;
 };
 
-inline int getLowerBound(const System& system)
+inline int getStrongLowerBound(const System& system)
 {
 #ifdef UNIVERSAL_COATING_HELPER_DEBUG
     qDebug() << "------------------------------------";
@@ -357,34 +380,168 @@ inline int getLowerBound(const System& system)
     std::set<Node> mandatoryOpenPositions, optionalOpenPositions;
     setupOpenPositions(object, particles, mandatoryOpenPositions, optionalOpenPositions);
 
-    Graph graph(object);
-
-    qDebug() << "add particles";
-
-    for(auto& node : particles) {
-        graph.addNode(node, false);
-    }
-
-    qDebug() << "add open positions";
-
-    for(auto& node : mandatoryOpenPositions) {
-        graph.addNode(node, true);
-    }
-
-    qDebug() << "calculate matchings";
-
-    for(int i = 0; i < 20; i++) {
-        qDebug() << "i:" << i;
-        graph.updateMatching(i);
-        qDebug() << "matchingSize" << graph.getMatchingSize();
-        graph.reset();
-    }
+    if(mandatoryOpenPositions.size() == 0) {
+        // no layer is mandatory
+        // the particles have to form a connected snake on the surface
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+        qDebug() << "there is no completely filled layer";
+        qDebug() << "sorry, this isn't implemented, yet";
+#endif
+        return -1;
+    } else {
+        // there will be at least one completely filled layer around the object
+        // the particles do not have to form a connected snake in the last, incomplete layer
 
 #ifdef UNIVERSAL_COATING_HELPER_DEBUG
-    qDebug() << "------------------------------------";
+        qDebug() << "at least one complete layer will be filled";
+        qDebug() << "setting up graph";
 #endif
 
-    return -1;
+        Graph graph(object);
+
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+        qDebug() << "adding particles";
+#endif
+        for(auto& node : particles) {
+            graph.addNode(node, false);
+        }
+
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+        qDebug() << "adding mandatory open positions";
+#endif
+        for(auto& node : mandatoryOpenPositions) {
+            graph.addNode(node, true);
+        }
+
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+        qDebug() << "searching for minimal maximum distance for mandatory open positions";
+#endif
+
+        // The mandatory open positions have to be filled.
+        // Hence, we first search for the minimal maximum distance such that there is a matching
+        // between the particle positions and the mandatory open positions that covers all mandatory open positions.
+
+        // setup maxPairwiseDistancePowerOfTwo to be the smallest power of two greater than graph.getMaxPairwiseDistance()
+        const int maxPairwiseDistance = graph.getMaxPairwiseDistance();
+        int maxPairwiseDistancePowerOfTwo = 1;
+        while (maxPairwiseDistance > maxPairwiseDistancePowerOfTwo) {
+            maxPairwiseDistancePowerOfTwo = 2 * maxPairwiseDistancePowerOfTwo;
+        }
+
+        // use binary search in the interval [0, maxPairwiseDistancePowerOfTwo] to find minimal maximum distance
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+        qDebug() << "searching maxDistanceMandatory";
+#endif
+        int maxDistanceMandatory = maxPairwiseDistancePowerOfTwo;
+        int delta = maxDistanceMandatory;
+        while(delta >= 1) {
+            graph.updateMatching(maxDistanceMandatory);
+            if(graph.getMatchingSize() == (int) mandatoryOpenPositions.size()) {
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+                qDebug() << maxDistanceMandatory << " --> success";
+#endif
+                maxDistanceMandatory = maxDistanceMandatory - delta;
+                delta = delta / 2;
+            } else {
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+                qDebug() << maxDistanceMandatory << " --> failure";
+#endif
+                maxDistanceMandatory = maxDistanceMandatory + delta;
+                delta = delta / 2;
+            }
+            graph.reset();
+        }
+
+        graph.updateMatching(maxDistanceMandatory);
+        if(graph.getMatchingSize() == (int) mandatoryOpenPositions.size()) {
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+            qDebug() << maxDistanceMandatory << " --> success";
+#endif
+        } else {
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+            qDebug() << maxDistanceMandatory << " --> failure";
+#endif
+            maxDistanceMandatory = maxDistanceMandatory + 1;
+        }
+
+        graph.reset();
+
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+        qDebug() << "maxDistanceMandatory:" << maxDistanceMandatory;
+#endif
+
+        // backup matching
+        graph.updateMatching(maxDistanceMandatory);
+        auto mates = graph.getMates();
+
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+        qDebug() << "adding optional open positions";
+#endif
+        for(auto& node : optionalOpenPositions) {
+            graph.addNode(node, true);
+        }
+
+        // Now, we try to augment the resulting matching to find the minimal maximum distance such that there is a matching
+        // between the particle positions and all open positions that covers at the same time:
+        // a) all mandatory positions
+        // b) all particle positions
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+        qDebug() << "searching maxDistanceOptional";
+#endif
+        int maxDistanceOptional = maxPairwiseDistancePowerOfTwo;
+        delta = maxDistanceOptional;
+        while(delta >= 1) {
+            if(maxDistanceOptional < maxDistanceMandatory) {
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+                qDebug() << maxDistanceOptional << " --> below maxDistanceMandatory";
+#endif
+                maxDistanceOptional = maxDistanceOptional + delta;
+                delta = delta / 2;
+            } else {
+                graph.updateMatching(maxDistanceOptional);
+                if(graph.getMatchingSize() == (int) particles.size()) {
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+                    qDebug() << maxDistanceOptional << " --> success";
+#endif
+                    maxDistanceOptional = maxDistanceOptional - delta;
+                    delta = delta / 2;
+                } else {
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+                    qDebug() << maxDistanceOptional << " --> failure";
+#endif
+                    maxDistanceOptional = maxDistanceOptional + delta;
+                    delta = delta / 2;
+                }
+                graph.setMates(mates);
+            }
+        }
+
+        if(maxDistanceOptional < maxDistanceMandatory) {
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+            qDebug() << maxDistanceOptional << " --> below maxDistanceMandatory";
+#endif
+            maxDistanceOptional = maxDistanceOptional + 1;
+        } else {
+            graph.updateMatching(maxDistanceOptional);
+            if(graph.getMatchingSize() == (int) particles.size()) {
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+                qDebug() << maxDistanceOptional << " --> success";
+#endif
+            } else {
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+                qDebug() << maxDistanceOptional << " --> failure";
+#endif
+                maxDistanceOptional = maxDistanceOptional + 1;
+            }
+        }
+
+#ifdef UNIVERSAL_COATING_HELPER_DEBUG
+        qDebug() << "minimal maximum distance:" << maxDistanceOptional;
+        qDebug() << "------------------------------------";
+#endif
+
+        return maxDistanceOptional;
+    }
 }
 
 }
