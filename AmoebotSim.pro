@@ -46,7 +46,6 @@ SOURCES += \
     alg/triangle.cpp \
     main/application.cpp \
     main/main.cpp\
-    sim/node.cpp \
     sim/particle.cpp \
     sim/simulator.cpp \
     sim/system.cpp \
