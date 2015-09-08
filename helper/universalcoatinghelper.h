@@ -152,6 +152,39 @@ private:
         std::map<GraphNode*, int> distance;
     };
 
+    struct Rect
+    {
+        Rect() : minX(std::numeric_limits<int>::max()),
+            maxX(std::numeric_limits<int>::min()),
+            minY(std::numeric_limits<int>::max()),
+            maxY(std::numeric_limits<int>::min())
+        { }
+
+        void include(const Node& node)
+        {
+            if(node.x < minX) {
+                minX = node.x;
+            }
+            if(node.x > maxX) {
+                maxX = node.x;
+            }
+            if(node.y < minY) {
+                minY = node.y;
+            }
+            if(node.y > maxY) {
+                maxY = node.y;
+            }
+        }
+
+        bool isInside(const Node& node) const
+        {
+            return minX <= node.x && node.x <= maxX &&
+                   minY <= node.y && node.y <= maxY;
+        }
+
+        int minX, maxX, minY, maxY;
+    };
+
 public:
     Graph(const std::set<Node>& object) : object(object) { }
 
@@ -173,6 +206,8 @@ public:
         std::set<Node> visitedNodes;
         visitedNodes.insert(graphNode->node);
 
+        Rect boundingRect = getLooseBoundingRect();
+
         int distance = 0;
         while(!undiscoveredGraphNodes.empty()) {
             // check whether a graph node was discovered and if so set the distance accordingly
@@ -191,7 +226,9 @@ public:
             for(const Node& node : visitedNodes) {
                 for(int i = 0; i < 6; i++) {
                     Node neighbor = node.nodeInDir(i);
-                    if(visitedNodes.find(neighbor) == visitedNodes.end() && object.find(neighbor) == object.end()) {
+                    if(     boundingRect.isInside(neighbor) &&
+                            visitedNodes.find(neighbor) == visitedNodes.end() &&
+                            object.find(neighbor) == object.end()) {
                         layer.insert(neighbor);
                     }
                 }
@@ -287,6 +324,21 @@ private:
             }
         }
         return true;
+    }
+
+    Rect getLooseBoundingRect()
+    {
+        Rect rect;
+        for(GraphNode* node : nodes) {
+            rect.include(node->node);
+        }
+
+        rect.minX = rect.minX - 1;
+        rect.maxX = rect.maxX + 1;
+        rect.minY = rect.minY - 1;
+        rect.maxY = rect.maxY + 1;
+
+        return rect;
     }
 
     bool areNeighbors(const int distanceLimit, GraphNode* node1, GraphNode* node2)
