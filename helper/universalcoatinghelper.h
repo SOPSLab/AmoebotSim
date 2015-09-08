@@ -96,7 +96,7 @@ inline int getWeakLowerBound(const System& system)
     setupOpenPositions(object, particles, mandatoryOpenPositions, optionalOpenPositions);
 
     const int numOptionalOpenPositionsToBeFilled = particles.size() - mandatoryOpenPositions.size();
-    const int numOptinalOpenPositionsToRemain = optionalOpenPositions.size() - numOptionalOpenPositionsToBeFilled;
+    const int numOptionalOpenPositionsToRemain = optionalOpenPositions.size() - numOptionalOpenPositionsToBeFilled;
     int lowerBound = 0;
 
     for(auto& node : particles) {
@@ -107,7 +107,7 @@ inline int getWeakLowerBound(const System& system)
     std::set<Node> growingParticles;
     growingParticles.insert(particles.cbegin(), particles.cend());
 
-    while(!mandatoryOpenPositions.empty() || (int) optionalOpenPositions.size() > numOptinalOpenPositionsToRemain) {
+    while(!mandatoryOpenPositions.empty() || (int) optionalOpenPositions.size() > numOptionalOpenPositionsToRemain) {
         // add another layer to the growingParticles
         std::set<Node> layer;
         for(auto& node : growingParticles) {
@@ -154,7 +154,8 @@ private:
 
     struct Rect
     {
-        Rect() : minX(std::numeric_limits<int>::max()),
+        Rect() :
+            minX(std::numeric_limits<int>::max()),
             maxX(std::numeric_limits<int>::min()),
             minY(std::numeric_limits<int>::max()),
             maxY(std::numeric_limits<int>::min())
@@ -162,21 +163,13 @@ private:
 
         void include(const Node& node)
         {
-            if(node.x < minX) {
-                minX = node.x;
-            }
-            if(node.x > maxX) {
-                maxX = node.x;
-            }
-            if(node.y < minY) {
-                minY = node.y;
-            }
-            if(node.y > maxY) {
-                maxY = node.y;
-            }
+            if(node.x < minX) minX = node.x;
+            if(node.x > maxX) maxX = node.x;
+            if(node.y < minY) minY = node.y;
+            if(node.y > maxY) maxY = node.y;
         }
 
-        bool isInside(const Node& node) const
+        bool contains(const Node& node) const
         {
             return minX <= node.x && node.x <= maxX &&
                    minY <= node.y && node.y <= maxY;
@@ -226,7 +219,7 @@ public:
             for(const Node& node : visitedNodes) {
                 for(int i = 0; i < 6; i++) {
                     Node neighbor = node.nodeInDir(i);
-                    if(     boundingRect.isInside(neighbor) &&
+                    if(     boundingRect.contains(neighbor) &&
                             visitedNodes.find(neighbor) == visitedNodes.end() &&
                             object.find(neighbor) == object.end()) {
                         layer.insert(neighbor);
@@ -431,14 +424,6 @@ inline int getStrongLowerBound(const System& system)
 
     std::set<Node> mandatoryOpenPositions, optionalOpenPositions;
     setupOpenPositions(object, particles, mandatoryOpenPositions, optionalOpenPositions);
-
-    // there will be at least one completely filled layer around the object
-    // the particles do not have to form a connected snake in the last, incomplete layer
-
-#ifdef UNIVERSAL_COATING_HELPER_DEBUG
-    qDebug() << "at least one complete layer will be filled";
-    qDebug() << "setting up graph";
-#endif
 
     Graph graph(object);
 
