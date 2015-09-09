@@ -130,6 +130,20 @@ inline int getWeakLowerBound(const System& system)
     return lowerBound;
 }
 
+inline std::set<Node> nextLayer(const std::set<Node>& lastLayer, std::function<bool(Node)> checkFunc)
+{
+    std::set<Node> layer;
+    for(const Node& node : lastLayer) {
+        for(int i = 0; i < 6; i++) {
+            const Node neighbor = node.nodeInDir(i);
+            if(checkFunc(neighbor)) {
+                layer.insert(neighbor);
+            }
+        }
+    }
+    return layer;
+}
+
 class Graph
 {
 private:
@@ -194,6 +208,7 @@ public:
         Rect boundingRect = getLooseBoundingRect();
 
         int distance = 0;
+        std::set<Node> lastLayer;
         while(!undiscoveredGraphNodes.empty()) {
             // check whether a graph node was discovered and if so set the distance accordingly
             for(unsigned int i = 0; i < undiscoveredGraphNodes.size(); i++) {
@@ -206,20 +221,25 @@ public:
                 }
             }
 
+            // returns true if the node should be added to the layer
+            auto checkFunc = [&] (const Node& node)
+            {
+                return  boundingRect.contains(node) &&
+                        visitedNodes.find(node) == visitedNodes.end() &&
+                        object.find(node) == object.end();
+            };
+
             // add another layer to bfs
             std::set<Node> layer;
-            for(const Node& node : visitedNodes) {
-                for(int i = 0; i < 6; i++) {
-                    Node neighbor = node.nodeInDir(i);
-                    if(     boundingRect.contains(neighbor) &&
-                            visitedNodes.find(neighbor) == visitedNodes.end() &&
-                            object.find(neighbor) == object.end()) {
-                        layer.insert(neighbor);
-                    }
-                }
+            if(distance == 0) {
+                layer = nextLayer(visitedNodes, checkFunc);
+            } else {
+                layer = nextLayer(lastLayer, checkFunc);
             }
 
             visitedNodes.insert(layer.cbegin(), layer.cend());
+            lastLayer.swap(layer);
+
             distance++;
         }
     }
@@ -508,6 +528,7 @@ inline int getStrongLowerBound(const System& system)
     qDebug() << "numMandatoryLayers:       " << numMandatoryLayers;
     qDebug() << "numMandatoryOpenPositions:" << mandatoryOpenPositions.size();
     qDebug() << "numOptionalOpenPositions: " << optionalOpenPositions.size();
+    qDebug() << "maxPairwiseDistance:      " << maxPairwiseDistance;
     qDebug() << "maxDistanceMandatory:     " << maxDistanceMandatory;
     qDebug() << "maxDistanceOptional:      " << maxDistanceOptional;
     qDebug() << "-----------------------------------------";
