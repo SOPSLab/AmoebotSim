@@ -53,12 +53,12 @@ public:
         Rect boundingRect = getLooseBoundingRect();
 
         int distance = 0;
-        std::set<Node> lastLayer;
+        std::set<Node> layer = visitedNodes;
         while(!undiscoveredGraphNodes.empty()) {
             // check whether a graph node was discovered and if so set the distance accordingly
             for(int i = 0; i < (int) undiscoveredGraphNodes.size(); i++) {
                 GraphNode* otherGraphNode = undiscoveredGraphNodes.at(i);
-                if(visitedNodes.find(otherGraphNode->node) != visitedNodes.end()) {
+                if(layer.find(otherGraphNode->node) != layer.end()) {
                     graphNode->distances[otherGraphNode->id] = distance;
                     otherGraphNode->distances[graphNode->id] = distance;
                     std::swap(undiscoveredGraphNodes[i], undiscoveredGraphNodes[0]);
@@ -76,26 +76,19 @@ public:
             };
 
             // add another layer to bfs
-            std::set<Node> layer;
-            if(distance == 0) {
-                layer = nextLayer(visitedNodes, checkFunc);
-            } else {
-                layer = nextLayer(lastLayer, checkFunc);
-            }
-
+            layer = nextLayer(layer, checkFunc);
             visitedNodes.insert(layer.cbegin(), layer.cend());
-            lastLayer.swap(layer);
 
             distance++;
         }
+
+        Q_ASSERT(distancesAreValid());
     }
 
     void updateMatching(const int distanceLimit)
     {
         // augment as far as possible
-        while(augment(distanceLimit)) {
-            Q_ASSERT(isValid());
-        }
+        while(augment(distanceLimit));
     }
 
     void reset()
@@ -161,21 +154,41 @@ public:
     }
 
 private:
-    bool isValid()
+    bool matchingIsValid()
     {
         for(GraphNode* node : nodes) {
             if(node->mate != nullptr) {
-                if(node->mate->mate != node && node->right == node->mate->right) {
+                if(node->right == node->mate->right) {
+                    return false;
+                }
+                if(node->mate->mate != node) {
                     return false;
                 }
             }
+        }
+        return true;
+    }
 
+    bool isClean()
+    {
+        for(GraphNode* node : nodes) {
             if(node->pred != nullptr) {
                 return false;
             }
+        }
+        return true;
+    }
 
+    bool distancesAreValid()
+    {
+        for(GraphNode* node : nodes) {
             if(node->distances.size() != nodes.size()) {
                 return false;
+            }
+            for(GraphNode* otherNode : nodes) {
+                if(node->distances[otherNode->id] != otherNode->distances[node->id]) {
+                    return false;
+                }
             }
         }
         return true;
@@ -201,7 +214,24 @@ private:
 
     bool areNeighbors(const int distanceLimit, GraphNode* node1, GraphNode* node2)
     {
-        return (node1->right != node2->right) && (node1->distances.at(node2->id) <= distanceLimit);
+        if(node1->right == node2->right) {
+            return false;
+        }
+        if(node1->right) {
+            // edges from right to left have to be in matching
+            if(node1->mate != node2) {
+                return false;
+            }
+        } else {
+            // edges from left to right may not be in matching
+            if(node1->mate == node2) {
+                return false;
+            }
+        }
+        if(node1->distances.at(node2->id) > distanceLimit) {
+            return false;
+        }
+        return true;
     }
 
     void clean(std::deque<GraphNode*>& visitedNode)
@@ -213,16 +243,29 @@ private:
 
     void augmentPath(GraphNode* node)
     {
+#ifdef QT_DEBUG
+        int matchingSizeBefore = getMatchingSize();
+#endif
+
         // fun!
+        Q_ASSERT(node->right);
         while(node != node->pred) {
             node->mate = node->pred;
             node->pred->mate = node;
             node = node->pred->pred;
         }
+        Q_ASSERT(!node->right);
+        Q_ASSERT(matchingIsValid());
+
+#ifdef QT_DEBUG
+        int matchingSizeAfter = getMatchingSize();
+        Q_ASSERT(matchingSizeAfter > matchingSizeBefore);
+#endif
     }
 
     bool augment(const int distanceLimit)
     {
+        Q_ASSERT(isClean());
         std::deque<GraphNode*> unvisitedNodes = nodes;
 
         // look for augmenting path using bfs
@@ -253,7 +296,8 @@ private:
 
             for(unsigned int i = 0; i < unvisitedNodes.size(); i++) {
                 GraphNode* otherNode = unvisitedNodes.at(i);
-                if(areNeighbors(distanceLimit, node, otherNode) && otherNode->pred == nullptr) {
+                if(areNeighbors(distanceLimit, node, otherNode)) {
+                    Q_ASSERT(otherNode->pred == nullptr);
                     otherNode->pred = node;
                     queue.push_back(otherNode);
                     visitedNodes.push_back(otherNode);
