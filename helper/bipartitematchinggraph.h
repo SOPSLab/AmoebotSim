@@ -98,7 +98,7 @@ public:
         }
     }
 
-    int getMatchingSize()
+    int getMatchingSize() const
     {
         int matchingSize = 0;
         for(GraphNode* node : nodes) {
@@ -109,7 +109,7 @@ public:
         return matchingSize;
     }
 
-    int getMaxPairwiseDistance()
+    int getMaxPairwiseDistance() const
     {
         int max = -1;
         for(GraphNode* node : nodes) {
@@ -122,7 +122,7 @@ public:
         return max;
     }
 
-    std::deque<GraphNode*> getMates()
+    std::deque<GraphNode*> getMates() const
     {
         std::deque<GraphNode*> mates;
         for(GraphNode* node : nodes) {
@@ -144,7 +144,7 @@ public:
         }
     }
 
-    void printMatching()
+    void printMatching() const
     {
         for(GraphNode* node : nodes) {
             if(!node->right && node->mate != nullptr) {
@@ -154,7 +154,7 @@ public:
     }
 
 private:
-    bool matchingIsValid()
+    bool matchingIsValid() const
     {
         for(GraphNode* node : nodes) {
             if(node->mate != nullptr) {
@@ -169,7 +169,7 @@ private:
         return true;
     }
 
-    bool isClean()
+    bool isClean() const
     {
         for(GraphNode* node : nodes) {
             if(node->pred != nullptr) {
@@ -179,7 +179,7 @@ private:
         return true;
     }
 
-    bool distancesAreValid()
+    bool distancesAreValid() const
     {
         for(GraphNode* node : nodes) {
             if(node->distances.size() != nodes.size()) {
@@ -194,7 +194,7 @@ private:
         return true;
     }
 
-    Rect getLooseBoundingRect()
+    Rect getLooseBoundingRect() const
     {
         Rect rect;
         for(GraphNode* node : nodes) {
@@ -212,7 +212,7 @@ private:
         return rect;
     }
 
-    bool areNeighbors(const int distanceLimit, GraphNode* node1, GraphNode* node2)
+    bool areNeighbors(const int distanceLimit, GraphNode* node1, GraphNode* node2) const
     {
         if(node1->right == node2->right) {
             return false;
