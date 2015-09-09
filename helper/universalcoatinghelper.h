@@ -11,12 +11,26 @@
 #include "sim/particle.h"
 
 // use this to get some debug output
-#define UNIVERSAL_COATING_HELPER_DEBUG
+//#define UNIVERSAL_COATING_HELPER_DEBUG
 // additionally use this to output matchings
 //#define UNIVERSAL_COATING_HELPER_DEBUG_MATCHING
 
 namespace UniversalCoating
 {
+
+inline std::set<Node> nextLayer(const std::set<Node>& lastLayer, std::function<bool(Node)> checkFunc)
+{
+    std::set<Node> layer;
+    for(const Node& node : lastLayer) {
+        for(int i = 0; i < 6; i++) {
+            const Node neighbor = node.nodeInDir(i);
+            if(checkFunc(neighbor)) {
+                layer.insert(neighbor);
+            }
+        }
+    }
+    return layer;
+}
 
 inline void setupObjectAndParticles(const System& system,
                                     std::set<Node>& object,
@@ -32,26 +46,18 @@ inline void setupObjectAndParticles(const System& system,
     }
 }
 
-inline int setupOpenPositions(const std::set<Node>& object,
-                               const std::set<Node>& particles,
-                               std::set<Node>& mandatoryOpenPositions,
-                               std::set<Node>& optionalOpenPositions)
+inline int setupOpenPositions(  const std::set<Node>& object,
+                                const std::set<Node>& particles,
+                                std::set<Node>& mandatoryOpenPositions,
+                                std::set<Node>& optionalOpenPositions)
 {
     int numMandatoryLayers = 0;
     std::set<Node> growingObject;
     growingObject.insert(object.cbegin(), object.cend());
 
+    std::set<Node> layer = growingObject;
     while(true) {
-        // add another layer to the growingObject
-        std::set<Node> layer;
-        for(auto& node : growingObject) {
-            for(int i = 0; i < 6; i++) {
-                Node neighbor = node.nodeInDir(i);
-                if(growingObject.find(neighbor) == growingObject.end()) {
-                    layer.insert(neighbor);
-                }
-            }
-        }
+        layer = nextLayer(layer, [&](const Node& node) { return growingObject.find(node) == growingObject.end(); });
 
         if(mandatoryOpenPositions.size() + layer.size() <= particles.size()) {
             // found a layer of mandatory positions.
@@ -61,8 +67,7 @@ inline int setupOpenPositions(const std::set<Node>& object,
         } else {
             // the first layer that cannot be added to mandatoryOpenPositions is the set of optional open positions
             optionalOpenPositions = layer;
-            // escape from while loop
-            break;
+            break; // done
         }
     }
 
@@ -84,7 +89,7 @@ inline int getWeakLowerBound(const System& system)
     const int numOptionalOpenPositionsToRemain = optionalOpenPositions.size() - numOptionalOpenPositionsToBeFilled;
     int lowerBound = 0;
 
-    for(auto& node : particles) {
+    for(const Node& node : particles) {
         mandatoryOpenPositions.erase(node);
         optionalOpenPositions.erase(node);
     }
@@ -92,17 +97,12 @@ inline int getWeakLowerBound(const System& system)
     std::set<Node> growingParticles;
     growingParticles.insert(particles.cbegin(), particles.cend());
 
+    std::set<Node> layer = growingParticles;
     while(!mandatoryOpenPositions.empty() || (int) optionalOpenPositions.size() > numOptionalOpenPositionsToRemain) {
         // add another layer to the growingParticles
-        std::set<Node> layer;
-        for(auto& node : growingParticles) {
-            for(int i = 0; i < 6; i++) {
-                Node neighbor = node.nodeInDir(i);
-                if(growingParticles.find(neighbor) == growingParticles.end() && object.find(neighbor) == object.end()) {
-                    layer.insert(neighbor);
-                }
-            }
-        }
+        layer = nextLayer(layer, [&](const Node& node) {
+           return growingParticles.find(node) == growingParticles.end() && object.find(node) == object.end();
+        });
 
         for(auto& node : layer) {
             mandatoryOpenPositions.erase(node);
@@ -127,20 +127,6 @@ inline int getWeakLowerBound(const System& system)
 #endif
 
     return lowerBound;
-}
-
-inline std::set<Node> nextLayer(const std::set<Node>& lastLayer, std::function<bool(Node)> checkFunc)
-{
-    std::set<Node> layer;
-    for(const Node& node : lastLayer) {
-        for(int i = 0; i < 6; i++) {
-            const Node neighbor = node.nodeInDir(i);
-            if(checkFunc(neighbor)) {
-                layer.insert(neighbor);
-            }
-        }
-    }
-    return layer;
 }
 
 class Graph
