@@ -36,7 +36,10 @@ HEADERS += \
     alg/universalcoating.h \
     alg/leaderelectiondemo.h \
     alg/leaderelection.h \
-    helper/universalcoatinghelper.h
+    helper/universalcoatinghelper.h \
+    helper/rect.h \
+    helper/misc.h \
+    helper/bipartitematchinggraph.h
 
 SOURCES += \
     alg/algorithm.cpp \
