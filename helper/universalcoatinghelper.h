@@ -6,7 +6,6 @@
 #include <deque>
 #include <functional>
 #include <set>
-#include <unordered_map>
 
 #include "sim/node.h"
 #include "sim/particle.h"
@@ -149,13 +148,14 @@ class Graph
 private:
     struct GraphNode
     {
-        GraphNode(Node node, bool right) : node(node), right(right), mate(nullptr), pred(nullptr) { }
+        GraphNode(int id, Node node, bool right) : id(id), node(node), right(right), mate(nullptr), pred(nullptr) { }
 
+        int id;
         Node node;
         bool right;
         GraphNode* mate;
         GraphNode* pred;
-        std::unordered_map<GraphNode*, int> distance;
+        std::deque<int> distances;
     };
 
     struct Rect
@@ -196,10 +196,12 @@ public:
 
     void addNode(Node node, bool right)
     {
-        GraphNode* graphNode = new GraphNode(node, right);
+        GraphNode* graphNode = new GraphNode(nodes.size(), node, right);
         nodes.push_back(graphNode);
 
         // setup distances
+        graphNode->distances.resize(nodes.size());
+
         std::deque<GraphNode*> undiscoveredGraphNodes = nodes;
 
         std::set<Node> visitedNodes;
@@ -214,8 +216,8 @@ public:
             for(int i = 0; i < (int) undiscoveredGraphNodes.size(); i++) {
                 GraphNode* otherGraphNode = undiscoveredGraphNodes.at(i);
                 if(visitedNodes.find(otherGraphNode->node) != visitedNodes.end()) {
-                    graphNode->distance.insert(std::pair<GraphNode*, int>(otherGraphNode, distance));
-                    otherGraphNode->distance.insert(std::pair<GraphNode*, int>(graphNode, distance));
+                    graphNode->distances[otherGraphNode->id] = distance;
+                    otherGraphNode->distances.push_back(distance);
                     std::swap(undiscoveredGraphNodes[i], undiscoveredGraphNodes[0]);
                     undiscoveredGraphNodes.pop_front();
                     i--; // adjust for removed element
@@ -283,10 +285,9 @@ public:
     {
         int max = -1;
         for(GraphNode* node : nodes) {
-            for(auto pair : node->distance) {
-                const int dist = pair.second;
-                if(dist > max) {
-                    max = dist;
+            for(int distance : node->distances) {
+                if(distance > max) {
+                    max = distance;
                 }
             }
         }
@@ -349,7 +350,7 @@ private:
 
     bool areNeighbors(const int distanceLimit, GraphNode* node1, GraphNode* node2)
     {
-        return (node1->right != node2->right) && (node1->distance.at(node2) <= distanceLimit);
+        return (node1->right != node2->right) && (node1->distances.at(node2->id) <= distanceLimit);
     }
 
     void clean(std::deque<GraphNode*>& visitedNode)
