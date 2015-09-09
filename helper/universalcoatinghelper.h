@@ -138,7 +138,7 @@ inline int getStrongLowerBound(const System& system)
     // between the particle positions and the mandatory open positions that covers all mandatory open positions.
 
     // setup maxPairwiseDistancePowerOfTwo to be the smallest power of two greater than graph.getMaxPairwiseDistance()
-    const int maxPairwiseDistance = graph.getMaxPairwiseDistance();
+    int maxPairwiseDistance = graph.getMaxPairwiseDistance();
     int maxPairwiseDistancePowerOfTwo = 1;
     while(maxPairwiseDistance > maxPairwiseDistancePowerOfTwo) {
         maxPairwiseDistancePowerOfTwo = 2 * maxPairwiseDistancePowerOfTwo;
@@ -165,11 +165,19 @@ inline int getStrongLowerBound(const System& system)
 
     // backup matching
     graph.updateMatching(maxDistanceMandatory);
+    Q_ASSERT(graph.getMatchingSize() == (int) mandatoryOpenPositions.size());
     auto mates = graph.getMates();
 
     // extend graph by optional open positions
     for(auto& node : optionalOpenPositions) {
         graph.addNode(node, true);
+    }
+
+    // setup maxPairwiseDistancePowerOfTwo to be the smallest power of two greater than graph.getMaxPairwiseDistance()
+    maxPairwiseDistance = graph.getMaxPairwiseDistance();
+    maxPairwiseDistancePowerOfTwo = 1;
+    while(maxPairwiseDistance > maxPairwiseDistancePowerOfTwo) {
+        maxPairwiseDistancePowerOfTwo = 2 * maxPairwiseDistancePowerOfTwo;
     }
 
     // use binary search over the interval [maxDistanceMandatory, maxPairwiseDistancePowerOfTwo]

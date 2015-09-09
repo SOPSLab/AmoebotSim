@@ -25,6 +25,8 @@ inline std::set<Node> nextLayer(const std::set<Node>& lastLayer, std::function<b
 // BEWARE: This is a quite special case of a binary search right now. It should become more general later on.
 inline int binarySearch(const int start, std::function<bool(int)> func)
 {
+    Q_ASSERT(start > 0);
+
     if(func(0)) {
         return 0;
     }
