@@ -11,7 +11,7 @@
 #include "sim/particle.h"
 
 // use this to get some debug output
-//#define UNIVERSAL_COATING_HELPER_DEBUG
+#define UNIVERSAL_COATING_HELPER_DEBUG
 // additionally use this to output matchings
 //#define UNIVERSAL_COATING_HELPER_DEBUG_MATCHING
 
@@ -200,7 +200,9 @@ public:
         nodes.push_back(graphNode);
 
         // setup distances
-        graphNode->distances.resize(nodes.size());
+        for(GraphNode* node : nodes) {
+            node->distances.resize(nodes.size());
+        }
 
         std::deque<GraphNode*> undiscoveredGraphNodes = nodes;
 
@@ -217,7 +219,7 @@ public:
                 GraphNode* otherGraphNode = undiscoveredGraphNodes.at(i);
                 if(visitedNodes.find(otherGraphNode->node) != visitedNodes.end()) {
                     graphNode->distances[otherGraphNode->id] = distance;
-                    otherGraphNode->distances.push_back(distance);
+                    otherGraphNode->distances[graphNode->id] = distance;
                     std::swap(undiscoveredGraphNodes[i], undiscoveredGraphNodes[0]);
                     undiscoveredGraphNodes.pop_front();
                     i--; // adjust for removed element
@@ -247,10 +249,10 @@ public:
         }
     }
 
-    void updateMatching(const int weightLimit)
+    void updateMatching(const int distanceLimit)
     {
         // augment as far as possible
-        while(augment(weightLimit)) {
+        while(augment(distanceLimit)) {
             Q_ASSERT(isValid());
         }
 
@@ -329,6 +331,10 @@ private:
             if(node->pred != nullptr) {
                 return false;
             }
+
+            if(node->distances.size() != nodes.size()) {
+                return false;
+            }
         }
         return true;
     }
@@ -338,6 +344,9 @@ private:
         Rect rect;
         for(GraphNode* node : nodes) {
             rect.include(node->node);
+        }
+        for(const Node& node : object) {
+            rect.include(node);
         }
 
         rect.minX = rect.minX - 1;
