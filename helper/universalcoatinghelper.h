@@ -211,13 +211,14 @@ public:
         std::set<Node> lastLayer;
         while(!undiscoveredGraphNodes.empty()) {
             // check whether a graph node was discovered and if so set the distance accordingly
-            for(unsigned int i = 0; i < undiscoveredGraphNodes.size(); i++) {
+            for(int i = 0; i < (int) undiscoveredGraphNodes.size(); i++) {
                 GraphNode* otherGraphNode = undiscoveredGraphNodes.at(i);
                 if(visitedNodes.find(otherGraphNode->node) != visitedNodes.end()) {
                     graphNode->distance.insert(std::pair<GraphNode*, int>(otherGraphNode, distance));
                     otherGraphNode->distance.insert(std::pair<GraphNode*, int>(graphNode, distance));
-                    std::swap(undiscoveredGraphNodes.at(i), undiscoveredGraphNodes.at(0));
+                    std::swap(undiscoveredGraphNodes[i], undiscoveredGraphNodes[0]);
                     undiscoveredGraphNodes.pop_front();
+                    i--; // adjust for removed element
                 }
             }
 
@@ -381,7 +382,7 @@ private:
 
         // add all unmatched node in left set to queue
         // the bfs is started from these nodes
-        for(unsigned int i = 0; i < unvisitedNodes.size(); i++) {
+        for(int i = 0; i < (int) unvisitedNodes.size(); i++) {
             GraphNode* node = unvisitedNodes.at(i);
             if(!node->right && node->mate == nullptr) {
                 node->pred = node;
@@ -389,6 +390,7 @@ private:
                 visitedNodes.push_back(node);
                 std::swap(unvisitedNodes[i], unvisitedNodes[0]);
                 unvisitedNodes.pop_front();
+                i--; // adjust for removed element
             }
         }
 
@@ -405,6 +407,7 @@ private:
                     visitedNodes.push_back(otherNode);
                     std::swap(unvisitedNodes[i], unvisitedNodes[0]);
                     unvisitedNodes.pop_front();
+                    i--; // adjust for removed element
 
                     if(otherNode->right && otherNode->mate == nullptr) {
                         // augmenting path found
