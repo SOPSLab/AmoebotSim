@@ -108,12 +108,10 @@ inline int getWeakLowerBound(const System& system)
     Q_ASSERT(mandatoryOpenPositions.empty());
 
 #ifdef UNIVERSAL_COATING_HELPER_DEBUG
-    qDebug() << "-----------------------------------------";
+    qDebug() << "---------- WEAK LOWER BOUND -------------";
     qDebug() << "numObjectPositions:       " << object.size();
     qDebug() << "numParticlePositions:     " << particles.size();
     qDebug() << "numMandatoryLayers:       " << numMandatoryLayers;
-    qDebug() << "numMandatoryOpenPositions:" << mandatoryOpenPositions.size();
-    qDebug() << "numOptionalOpenPositions: " << optionalOpenPositions.size();
     qDebug() << "lowerBound:               " << lowerBound;
     qDebug() << "-----------------------------------------";
 #endif
@@ -203,7 +201,7 @@ inline int getStrongLowerBound(const System& system)
     int maxDistanceOptional = binarySearch(maxPairwiseDistancePowerOfTwo, optionalFunc);
 
 #ifdef UNIVERSAL_COATING_HELPER_DEBUG
-    qDebug() << "-----------------------------------------";
+    qDebug() << "---------- STRONG LOWER BOUND -----------";
     qDebug() << "numObjectPositions:       " << object.size();
     qDebug() << "numParticlePositions:     " << particles.size();
     qDebug() << "numMandatoryLayers:       " << numMandatoryLayers;
