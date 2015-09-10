@@ -42,7 +42,11 @@ public:
 
         // setup distances
         for(GraphNode* node : nodes) {
+#ifdef QT_DEBUG
+            node->distances.resize(nodes.size(), -1);
+#else
             node->distances.resize(nodes.size());
+#endif
         }
 
         std::deque<GraphNode*> undiscoveredGraphNodes = nodes;
@@ -182,6 +186,11 @@ private:
     bool distancesAreValid() const
     {
         for(GraphNode* node : nodes) {
+            for(int distance : node->distances) {
+                if(distance < 0) {
+                    return false;
+                }
+            }
             if(node->distances.size() != nodes.size()) {
                 return false;
             }

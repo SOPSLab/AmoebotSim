@@ -47,7 +47,7 @@ inline int setupOpenPositions(  const std::set<Node>& object,
         layer = nextLayer(layer, [&](const Node& node) { return growingObject.find(node) == growingObject.end(); });
 
         if(mandatoryOpenPositions.size() + layer.size() <= particles.size()) {
-            // found a layer of mandatory positions.
+            // found a layer of mandatory positions
             mandatoryOpenPositions.insert(layer.cbegin(), layer.cend());
             growingObject.insert(layer.cbegin(), layer.cend());
             numMandatoryLayers++;
@@ -59,7 +59,7 @@ inline int setupOpenPositions(  const std::set<Node>& object,
     }
 
     Q_ASSERT(mandatoryOpenPositions.size() <= particles.size());
-    Q_ASSERT(mandatoryOpenPositions.size() + optionalOpenPositions.size() >= particles.size());
+    Q_ASSERT(mandatoryOpenPositions.size() + optionalOpenPositions.size() > particles.size());
 
     return numMandatoryLayers;
 }
@@ -70,7 +70,12 @@ inline int getWeakLowerBound(const System& system)
     setupObjectAndParticles(system, object, particles);
 
     std::set<Node> mandatoryOpenPositions, optionalOpenPositions;
-    int numMandatoryLayers = setupOpenPositions(object, particles, mandatoryOpenPositions, optionalOpenPositions);
+
+    const int numMandatoryLayers = setupOpenPositions(object, particles, mandatoryOpenPositions, optionalOpenPositions);
+
+#ifndef UNIVERSAL_COATING_HELPER_DEBUG
+    Q_UNUSED(numMandatoryLayers); // get rid of warning
+#endif
 
     const int numOptionalOpenPositionsToBeFilled = particles.size() - mandatoryOpenPositions.size();
     const int numOptionalOpenPositionsToRemain = optionalOpenPositions.size() - numOptionalOpenPositionsToBeFilled;
@@ -122,9 +127,15 @@ inline int getStrongLowerBound(const System& system)
     setupObjectAndParticles(system, object, particles);
 
     std::set<Node> mandatoryOpenPositions, optionalOpenPositions;
-    int numMandatoryLayers = setupOpenPositions(object, particles, mandatoryOpenPositions, optionalOpenPositions);
+    const int numMandatoryLayers = setupOpenPositions(object, particles, mandatoryOpenPositions, optionalOpenPositions);
 
-    // setup graph
+#ifndef UNIVERSAL_COATING_HELPER_DEBUG
+    Q_UNUSED(numMandatoryLayers); // get rid of warning
+#endif
+
+    // The mandatory open positions have to be filled.
+    // Hence, we first search for the minimal maximum distance such that there is a matching
+    // between the particle positions and the mandatory open positions that covers all mandatory open positions.
     BipartiteMatchingGraph graph(object);
     for(auto& node : particles) {
         graph.addNode(node, false);
@@ -132,10 +143,6 @@ inline int getStrongLowerBound(const System& system)
     for(auto& node : mandatoryOpenPositions) {
         graph.addNode(node, true);
     }
-
-    // The mandatory open positions have to be filled.
-    // Hence, we first search for the minimal maximum distance such that there is a matching
-    // between the particle positions and the mandatory open positions that covers all mandatory open positions.
 
     // setup maxPairwiseDistancePowerOfTwo to be the smallest power of two greater than graph.getMaxPairwiseDistance()
     int maxPairwiseDistance = graph.getMaxPairwiseDistance();
