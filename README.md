@@ -58,30 +58,32 @@ The following instructions should get you started working with AmoebotSim; pleas
 ###Video capturing###
 Amoebot does not provide direct video export. But with the following script it is possible to capture every frame and save it on the HDD/SDD. 
 
-```function pad(number, length)
-{
-    var str = '' + number;
-    while (str.length < length) {
-        str = '0' + str;
+```
+    function pad(number, length)
+    {
+        var str = '' + number;
+        while (str.length < length) {
+            str = '0' + str;
+        }
+
+        return str;
     }
 
-    return str;
-}
-
-i = 0
-while(isValid())
-{
-  saveScreenshot(pad(i, 6) + ".png")
-  round()
-  i = i + 1
-}```
+    i = 0
+    while(isValid())
+    {
+        saveScreenshot(pad(i, 6) + ".png")
+        round()
+        i = i + 1
+    }
+```
 
 Simply copy the script above to a .js file and save it somewhere (e.g. on C:/script.js). After starting Amoebot, setup your algorithm. When you then execute the script
 (e.g. type into the console `runScript("C:/script.js")`) the script will make a screenshot of the window and execute one round until the algorithm finishes. All screenshots will be 
 saved in the build folder.
 You can then create a video out of this pictures.
 
-One method is using the ffmpeg library. When installed properly you only need to open a console, change into the directory with the screenshots and execute the following command:
+One method is using the ffmpeg library. When installed properly you only need to open a console, go to the directory with the screenshots and execute the following command:
 ```
 ffmpeg -framerate 90 -pattern_type glob -i '*.png' -c:v libx264 -pix_fmt yuv420p -r 30 out.mov
 ```
