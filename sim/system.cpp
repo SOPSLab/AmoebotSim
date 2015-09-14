@@ -252,15 +252,15 @@ bool System::handleExpansion(Particle& p, int label){
         return false;
     }
 
-    label = Particle::posMod<6>(p.orientation + label);
-    Node newHead = p.head.nodeInDir(label);
+    int expansionDir = Particle::posMod<6>(p.orientation + label);
+    Node newHead = p.head.nodeInDir(expansionDir);
 
     auto otherParticleIt = particleMap.find(newHead);
     if(otherParticleIt == particleMap.end() || otherParticleIt->second->isStatic()) {
         // expansion into empty node
         particleMap.insert(std::pair<Node, Particle*>(newHead, &p));
         p.head = newHead;
-        p.tailDir = Particle::posMod<6>(label + 3);
+        p.tailDir = Particle::posMod<6>(expansionDir + 3);
         p.apply();
         numMovements++;
         return true;
@@ -282,12 +282,12 @@ bool System::handleExpansion(Particle& p, int label){
             if(m.type == MovementType::HandoverContract || m.type == MovementType::Contract) {
                 // determine whether the contraction direction is valid
                 // and, if so, whether it is a head or a tail contraction
-                if(label == otherParticle->headContractionLabel()) {
+                if(m.label == otherParticle->headContractionLabel()) {
                     // valid headContraction
                     if(newHead == otherParticle->head) {
                         pushSucceeded = true;
                     }
-                } else if(label == otherParticle->tailContractionLabel()) {
+                } else if(m.label == otherParticle->tailContractionLabel()) {
                     // valid tailContraction
                     if(newHead == otherParticle->tail()) {
                         pushSucceeded = true;
@@ -303,7 +303,7 @@ bool System::handleExpansion(Particle& p, int label){
 
                 particleMap.insert(std::pair<Node, Particle*>(newHead, &p));
                 p.head = newHead;
-                p.tailDir = Particle::posMod<6>(label + 3);
+                p.tailDir = Particle::posMod<6>(expansionDir + 3);
                 p.apply();
 
                 numMovements += 2;
