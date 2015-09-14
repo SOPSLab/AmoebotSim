@@ -266,7 +266,7 @@ bool System::handleExpansion(Particle& p, int label){
         return true;
     } else {
         Particle* otherParticle = otherParticleIt->second;
-        if(otherParticle->tailDir == -1 || otherParticle->tail() != newHead) {
+        if(otherParticle->tailDir == -1) {
             // collision
             p.discard();
             return false;
@@ -278,7 +278,24 @@ bool System::handleExpansion(Particle& p, int label){
             // An attempt towards a pull or push also counts as an activation.
             updateNumRounds(otherParticle);
 
+            bool pushSucceeded = false;
             if(m.type == MovementType::HandoverContract || m.type == MovementType::Contract) {
+                // determine whether the contraction direction is valid
+                // and, if so, whether it is a head or a tail contraction
+                if(label == otherParticle->headContractionLabel()) {
+                    // valid headContraction
+                    if(newHead == otherParticle->head) {
+                        pushSucceeded = true;
+                    }
+                } else if(label == otherParticle->tailContractionLabel()) {
+                    // valid tailContraction
+                    if(newHead == otherParticle->tail()) {
+                        pushSucceeded = true;
+                    }
+                }
+            }
+
+            if(pushSucceeded) {
                 // push succeeded
                 particleMap.erase(newHead);
                 otherParticle->tailDir = -1;
