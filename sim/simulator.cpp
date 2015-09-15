@@ -75,6 +75,10 @@ void Simulator::round()
         roundTimer->stop();
         emit stopped();
     }
+
+#ifdef QT_DEBUG
+    emit updateSystem(std::make_shared<System>(*system));
+#endif
 }
 
 void Simulator::start()
