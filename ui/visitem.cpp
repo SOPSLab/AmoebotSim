@@ -12,12 +12,6 @@
 // visualisation preferences
 static constexpr float targetFramesPerSecond = 60.0f;
 
-// zoom preferences
-static constexpr float zoomInit = 16.0f;
-static constexpr float zoomMin = 4.0f;
-static constexpr float zoomMax = 128.0f;
-static constexpr float zoomAttenuation = 500.0f;
-
 // values derived from the preferences above
 static constexpr float targetFrameDuration = 1000.0f / targetFramesPerSecond;
 
@@ -26,7 +20,6 @@ static const float triangleHeight = sqrtf(3.0f / 4.0f);
 
 VisItem::VisItem(QQuickItem* parent) :
     GLItem(parent),
-    zoomGui(zoomInit),
     blinkValue(-1.0f)
 {
     setAcceptedMouseButtons(Qt::LeftButton);
@@ -40,15 +33,6 @@ VisItem::VisItem(QQuickItem* parent) :
 void VisItem::systemChanged(std::shared_ptr<System> _system)
 {
     system = _system;
-}
-
-void VisItem::setZoom(float factor){
-    zoomGui = factor;
-    if(zoomGui < zoomMin) {
-        zoomGui = zoomMin;
-    } else if(zoomGui > zoomMax) {
-        zoomGui = zoomMax;
-    }
 }
 
 void VisItem::focusOnCenterOfMass()
@@ -71,13 +55,7 @@ void VisItem::focusOnCenterOfMass()
         }
     }
 
-    focusPosGui = sum / numNodes;
-}
-
-void VisItem::sync()
-{
-    focusPos = focusPosGui;
-    zoom = zoomGui;
+    view.setFocusPos(sum / numNodes);
 }
 
 void VisItem::initialize()
@@ -113,12 +91,11 @@ void VisItem::paint()
 
     setupCamera();
 
-    Quad view = calculateView(focusPos, zoom, width(), height());
-    drawGrid(view);
+    drawGrid();
 
     QMutexLocker locker(&system->mutex);
     if(system != nullptr) {
-        drawParticles(view);
+        drawParticles();
         if(system->getSystemState() == System::SystemState::Disconnected) {
             drawDisconnectionNode();
         }
@@ -134,17 +111,21 @@ void VisItem::deinitialize()
     gridTex = nullptr;
 }
 
+void VisItem::sizeChanged(int width, int height)
+{
+    view.setViewportSize(width, height);
+}
+
 void VisItem::setupCamera()
 {
-    Quad view = calculateView(focusPos, zoom, width(), height());
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(view.left, view.right, view.bottom, view.top, 1, -1);
+    glOrtho(view.left(), view.right(), view.bottom(), view.top(), 1, -1);
 }
 
-void VisItem::drawGrid(const Quad& view)
+void VisItem::drawGrid()
 {
     // Textures have to contain an integer number of pixels, but a triangle in our grid has irrational height.
     // Still, we want to tile / repeat the texture to get a background grid.
@@ -157,54 +138,53 @@ void VisItem::drawGrid(const Quad& view)
     // Coordinate sytem voodoo:
     // Calculates the texture coordinates of the corners of the shown part of the grid.
     // In that, it also reverts the distortion in the gridTex.
-    Quad gridTexCoords;
-    gridTexCoords.left = fmodf(view.left, 1.0f);
-    gridTexCoords.right = gridTexCoords.left + view.right - view.left;
-    gridTexCoords.bottom = fmodf(view.bottom, gridTexHeight);
-    gridTexCoords.top = gridTexCoords.bottom + view.top - view.bottom;
-    gridTexCoords.bottom /= gridTexHeight;
-    gridTexCoords.top /= gridTexHeight;
+    float left = fmodf(view.left(), 1.0f);
+    float right = left + view.right() - view.left();
+    float bottom = fmodf(view.bottom(), gridTexHeight);
+    float top = bottom + view.top() - view.bottom();
+    bottom /= gridTexHeight;
+    top /= gridTexHeight;
 
     // Draw screen-filling quad with gridTex according to above texture coordinates.
     gridTex->bind();
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
-    glTexCoord2f(gridTexCoords.left, gridTexCoords.bottom);
-    glVertex2f(view.left, view.bottom);
-    glTexCoord2f(gridTexCoords.right, gridTexCoords.bottom);
-    glVertex2f(view.right, view.bottom);
-    glTexCoord2f(gridTexCoords.right, gridTexCoords.top);
-    glVertex2f(view.right, view.top);
-    glTexCoord2f(gridTexCoords.left, gridTexCoords.top);
-    glVertex2f(view.left, view.top);
+    glTexCoord2f(left, bottom);
+    glVertex2f(view.left(), view.bottom());
+    glTexCoord2f(right, bottom);
+    glVertex2f(view.right(), view.bottom());
+    glTexCoord2f(right, top);
+    glVertex2f(view.right(), view.top());
+    glTexCoord2f(left, top);
+    glVertex2f(view.left(), view.top());
     glEnd();
 }
 
-void VisItem::drawParticles(const Quad& view)
+void VisItem::drawParticles()
 {
     particleTex->bind();
     glBegin(GL_QUADS);
     for(int i = 0; i < system->getNumParticles(); ++i) {
         const Particle& p = system->at(i);
-        if(inView(nodeToWorldCoord(p.head), view)) {
+        if(view.includes(nodeToWorldCoord(p.head))) {
             drawMarks(p);
         }
     }
     for(int i = 0; i < system->getNumParticles(); ++i) {
         const Particle& p = system->at(i);
-        if(inView(nodeToWorldCoord(p.head), view)) {
+        if(view.includes(nodeToWorldCoord(p.head))) {
             drawParticle(p);
         }
     }
     for(int i = 0; i < system->getNumParticles(); ++i) {
         const Particle& p = system->at(i);
-        if(inView(nodeToWorldCoord(p.head), view)) {
+        if(view.includes(nodeToWorldCoord(p.head))) {
             drawBorders(p);
         }
     }
     for(int i = 0; i < system->getNumParticles(); ++i) {
         const Particle& p = system->at(i);
-        if(inView(nodeToWorldCoord(p.head), view)) {
+        if(view.includes(nodeToWorldCoord(p.head))) {
             drawBorderPoints(p);
         }
     }
@@ -291,27 +271,6 @@ void VisItem::drawFromParticleTex(const int index, const QPointF& pos)
     glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
 }
 
-VisItem::Quad VisItem::calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight)
-{
-    // setup view according to zoom and so that the focusPoint is in the middle
-    const float halfZoomRec = 0.5f / zoom;
-    Quad view;
-    view.left    = focusPos.x() - halfZoomRec * viewportWidth;
-    view.right   = focusPos.x() + halfZoomRec * viewportWidth;
-    view.bottom  = focusPos.y() - halfZoomRec * viewportHeight;
-    view.top     = focusPos.y() + halfZoomRec * viewportHeight;
-    return view;
-}
-
-bool VisItem::inView(const QPointF& headWorldPos, const Quad& view)
-{
-    constexpr float slack = 2.0f;
-    return  (headWorldPos.x() >= view.left   - slack) &&
-            (headWorldPos.x() <= view.right  + slack) &&
-            (headWorldPos.y() >= view.bottom - slack) &&
-            (headWorldPos.y() <= view.top    + slack);
-}
-
 QPointF VisItem::nodeToWorldCoord(Node node)
 {
     return QPointF(node.x + 0.5f * node.y, node.y * triangleHeight);
@@ -326,9 +285,8 @@ Node VisItem::worldCoordToNode(QPointF worldCord)
 
 QPointF VisItem::windowCoordToWorldCoord(const QPointF windowCoord)
 {
-    auto view = calculateView(focusPosGui, zoomGui, width(), height());
-    const float x = view.left + (view.right - view.left) * windowCoord.x() / width();
-    const float y = view.top + (view.bottom - view.top ) * windowCoord.y() / height();
+    const float x = view.left() + (view.right() - view.left()) * windowCoord.x() / width();
+    const float y = view.top() + (view.bottom() - view.top() ) * windowCoord.y() / height();
     return QPointF(x, y);
 }
 
@@ -337,12 +295,12 @@ void VisItem::mousePressEvent(QMouseEvent* e)
     if(e->buttons() & Qt::LeftButton) {
         if(e->modifiers() & Qt::ControlModifier) {
             //Executing round for particle
-            translatingGui = false;
+            translating = false;
             auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
             emit roundForParticleAt(node.x, node.y);
         } else {
-            translatingGui = true;
-            lastMousePosGui = e->localPos();
+            translating = true;
+            lastMousePos = e->localPos();
         }
         e->accept();
     }
@@ -351,11 +309,11 @@ void VisItem::mousePressEvent(QMouseEvent* e)
 void VisItem::mouseMoveEvent(QMouseEvent* e)
 {
     if(e->buttons() & Qt::LeftButton) {
-        if(translatingGui){
-            QPointF offset = lastMousePosGui - e->localPos();
-            QPointF scaledOffset = offset / zoomGui;
-            focusPosGui += QPointF(scaledOffset.x(), -scaledOffset.y());
-            lastMousePosGui = e->localPos();
+        if(translating){
+            QPointF offset = lastMousePos - e->localPos();
+            QPointF scaledOffset = offset / view.zoom();
+            view.moveFocusPos(QPointF(scaledOffset.x(), -scaledOffset.y()));
+            lastMousePos = e->localPos();
             e->accept();
         }
     }
@@ -363,21 +321,19 @@ void VisItem::mouseMoveEvent(QMouseEvent* e)
 
 void VisItem::wheelEvent(QWheelEvent* e)
 {
-    Quad view = calculateView(focusPosGui, zoomGui, width(), height());
     QPointF mousePos(QPointF(e->posF().x(), height() - e->posF().y()));
 
     // remember world space coordinate of the point under the cursor before changing zoom
-    QPointF oldPos = QPointF(view.left, view.bottom) + mousePos / zoomGui;
+    QPointF oldPos = QPointF(view.left(), view.bottom()) + mousePos / view.zoom();
 
     // update zoom
-    setZoom(zoom * std::exp(e->angleDelta().y() / zoomAttenuation));
+    view.modifyZoom(e->angleDelta().y());
 
     // calculate new world space coordinate of the point under the cursor
-    view = calculateView(focusPosGui, zoomGui, width(), height());
-    QPointF newPos = QPointF(view.left, view.bottom) + mousePos / zoomGui;
+    QPointF newPos = QPointF(view.left(), view.bottom()) + mousePos / view.zoom();
 
     // move the focus point so that the point under the cursor remains unchanged
-    focusPosGui = focusPosGui + oldPos - newPos;
+    view.moveFocusPos(oldPos - newPos);
 
     e->accept();
 }

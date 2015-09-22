@@ -22,26 +22,32 @@ void GLItem::handleWindowChanged(QQuickWindow* window)
         format.setSwapInterval(0); // deactivate vertical synchronization
         window->setFormat(format);
 
-        connect(window, &QQuickWindow::beforeSynchronizing, this, &GLItem::sync, Qt::DirectConnection);
         connect(window, &QQuickWindow::beforeRendering, this, &GLItem::delegatePaint, Qt::DirectConnection);
         connect(window, &QQuickWindow::sceneGraphAboutToStop, this, &GLItem::delegeteDeinitialize, Qt::DirectConnection);
+        connect(window, &QQuickWindow::heightChanged, this, &GLItem::delegateSizeChanged, Qt::DirectConnection);
+        connect(window, &QQuickWindow::widthChanged, this, &GLItem::delegateSizeChanged, Qt::DirectConnection);
     }
 }
 
 void GLItem::delegatePaint()
 {
     if(!initialized) {
-        initialize();
+        emit initialize();
         initialized = true;
     }
 
-    paint();
+    emit paint();
 }
 
 void GLItem::delegeteDeinitialize()
 {
     initialized = false;
-    deinitialize();
+    emit deinitialize();
+}
+
+void GLItem::delegateSizeChanged()
+{
+    emit sizeChanged(width(), height());
 }
 
 int GLItem::width() const

@@ -39,7 +39,8 @@ HEADERS += \
     helper/universalcoatinghelper.h \
     helper/rect.h \
     helper/misc.h \
-    helper/bipartitematchinggraph.h
+    helper/bipartitematchinggraph.h \
+    ui/view.h
 
 SOURCES += \
     alg/algorithm.cpp \

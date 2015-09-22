@@ -9,6 +9,7 @@
 #include "sim/particle.h"
 #include "sim/system.h"
 #include "ui/glitem.h"
+#include "ui/view.h"
 
 class QMouseEvent;
 class QOpenGLTexture;
@@ -17,15 +18,6 @@ class QWheelEvent;
 class VisItem : public GLItem
 {
     Q_OBJECT
-protected:
-    struct Quad
-    {
-        float left;
-        float right;
-        float bottom;
-        float top;
-    };
-
 public:
     explicit VisItem(QQuickItem* parent = 0);
 
@@ -35,28 +27,24 @@ signals:
 public slots:
     void systemChanged(std::shared_ptr<System> _system);
     void focusOnCenterOfMass();
-    void setZoom(float _zoom);
 
 protected slots:
-    virtual void sync();
     virtual void initialize();
     virtual void paint();
     virtual void deinitialize();
+    virtual void sizeChanged(int width, int height);
 
 protected:
     void setupCamera();
 
-    void drawGrid(const Quad& view);
-    void drawParticles(const Quad& view);
+    void drawGrid();
+    void drawParticles();
     void drawMarks(const Particle& p);
     void drawParticle(const Particle& p);
     void drawBorders(const Particle& p);
     void drawBorderPoints(const Particle& p);
     void drawDisconnectionNode();
     void drawFromParticleTex(const int index, const QPointF& pos);
-
-    static Quad calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight);
-    static bool inView(const QPointF& headWorldPos, const Quad& view);
 
     static QPointF nodeToWorldCoord(Node node);
     static Node worldCoordToNode(QPointF worldCord);
@@ -72,16 +60,10 @@ protected:
     std::shared_ptr<QOpenGLTexture> gridTex;
     std::shared_ptr<QOpenGLTexture> particleTex;
 
-    bool translatingGui;
-    // these variables are used by two threads
-    // variables with suffix Gui are used by the gui thread
-    // and the remaining variables are used by the render thread
-    // variables with the same prefix are synchronized between the threads
-    QPointF lastMousePosGui;
-    QPointF focusPosGui;
-    QPointF focusPos;
-    float zoomGui;
-    float zoom;
+    View view;
+
+    bool translating;
+    QPointF lastMousePos;
 
     std::shared_ptr<System> system;
 
