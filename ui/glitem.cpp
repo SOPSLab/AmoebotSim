@@ -1,14 +1,10 @@
-#include <QOpenGLContext>
-#include <QOpenGLFunctions_2_0>
 #include <QQuickWindow>
 #include <QSurfaceFormat>
-#include <QWindow>
 
 #include "ui/glitem.h"
 
 GLItem::GLItem(QQuickItem* parent) :
     QQuickItem(parent),
-    glfn(nullptr),
     initialized(false)
 {
     connect(this, &QQuickItem::windowChanged, this, &GLItem::handleWindowChanged);
@@ -21,14 +17,7 @@ void GLItem::handleWindowChanged(QQuickWindow* window)
 
         QSurfaceFormat format;
         format.setRenderableType(QSurfaceFormat::OpenGL);
-        format.setVersion(2, 0);
-        format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-        format.setSwapInterval(0);
-        format.setRedBufferSize(8);
-        format.setGreenBufferSize(8);
-        format.setBlueBufferSize(8);
-        format.setDepthBufferSize(24);
-        format.setStencilBufferSize(8);
+        format.setSwapInterval(0); // deactivate vertical synchronization
         window->setFormat(format);
 
         connect(window, &QQuickWindow::beforeSynchronizing, this, &GLItem::sync, Qt::DirectConnection);
@@ -40,10 +29,6 @@ void GLItem::handleWindowChanged(QQuickWindow* window)
 void GLItem::delegatePaint()
 {
     if(!initialized) {
-        // ownership goes to context
-        glfn = window()->openglContext()->versionFunctions<QOpenGLFunctions_2_0>();
-        Q_ASSERT(glfn != nullptr);
-        glfn->initializeOpenGLFunctions();
         initialize();
         initialized = true;
     }
@@ -55,7 +40,6 @@ void GLItem::delegeteDeinitialize()
 {
     initialized = false;
     deinitialize();
-    glfn = nullptr;
 }
 
 int GLItem::width() const
