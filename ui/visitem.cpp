@@ -422,7 +422,7 @@ void VisItem::wheelEvent(QWheelEvent* e)
     QPointF oldPos = QPointF(view.left, view.bottom) + mousePos / zoomGui;
 
     // update zoom
-    setZoom(std::exp(e->angleDelta().y() / zoomAttenuation));
+    setZoom(zoom * std::exp(e->angleDelta().y() / zoomAttenuation));
 
     // calculate new world space coordinate of the point under the cursor
     view = calculateView(focusPosGui, zoomGui, width(), height());
