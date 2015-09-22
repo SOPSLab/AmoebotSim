@@ -44,12 +44,12 @@ void VisItem::updateSystem(std::shared_ptr<System> _system)
 }
 
 void VisItem::setZoom(float factor){
-  zoomGui = factor;
-  if(zoomGui < zoomMin) {
-      zoomGui = zoomMin;
-  } else if(zoomGui > zoomMax) {
-      zoomGui = zoomMax;
-  }
+    zoomGui = factor;
+    if(zoomGui < zoomMin) {
+        zoomGui = zoomMin;
+    } else if(zoomGui > zoomMax) {
+        zoomGui = zoomMax;
+    }
 }
 
 void VisItem::focusOnCenterOfMass()
@@ -240,7 +240,7 @@ void VisItem::drawParticle(const Particle& p)
 void VisItem::drawBorders(const Particle& p)
 {
     auto pos = nodeToWorldCoord(p.head);
-    for(auto i = 0; i < p.borderColors().size(); ++i) {
+    for(unsigned int i = 0; i < p.borderColors().size(); ++i) {
         if(p.borderColors().at(i) != -1) {
             QRgb color = p.borderColors().at(i);
             glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
@@ -252,7 +252,7 @@ void VisItem::drawBorders(const Particle& p)
 void VisItem::drawBorderPoints(const Particle& p)
 {
     auto pos = nodeToWorldCoord(p.head);
-    for(auto i = 0; i < p.borderPointColors().size(); ++i) {
+    for(unsigned int i = 0; i < p.borderPointColors().size(); ++i) {
         if(p.borderPointColors().at(i) != -1) {
             QRgb color = p.borderPointColors().at(i);
             glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 255 << 23);
