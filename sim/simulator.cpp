@@ -22,10 +22,8 @@ Simulator::~Simulator()
 
 void Simulator::setSystem(std::shared_ptr<System> _system)
 {
-    if(roundTimer != nullptr) {
-        roundTimer->stop();
-        emit stopped();
-    }
+    roundTimer.stop();
+    emit stopped();
 
     system = _system;
     emit systemChanged(system);
@@ -42,19 +40,16 @@ std::shared_ptr<System> Simulator::getSystem() const
 
 void Simulator::init()
 {
-    if(roundTimer == nullptr) {
-        roundTimer = std::make_shared<QTimer>(this);
-        roundTimer->setInterval(100);
-        emit roundDurationChanged(100);
-        connect(roundTimer.get(), &QTimer::timeout, this, &Simulator::round);
-    }
+    roundTimer.setInterval(100);
+    emit roundDurationChanged(100);
+    connect(&roundTimer, &QTimer::timeout, this, &Simulator::round);
 
     emit systemChanged(system);
 }
 
 //Is called when thread in which simulator is living is about to finish -> Clean up the simulator.
 void Simulator::finished(){
-    roundTimer->stop();
+    roundTimer.stop();
 }
 
 void Simulator::round()
@@ -64,28 +59,28 @@ void Simulator::round()
     auto systemState = system->getSystemState();
     if(systemState == System::SystemState::Deadlocked) {
         log("Deadlock detected. Simulation aborted.", true);
-        roundTimer->stop();
+        roundTimer.stop();
         emit stopped();
     } else if(systemState == System::SystemState::Disconnected) {
         log("System disconnected. Simulation aborted.", true);
-        roundTimer->stop();
+        roundTimer.stop();
         emit stopped();
     } else if(systemState == System::SystemState::Terminated) {
         log("Algorithm terminated. Simulation finished.", false);
-        roundTimer->stop();
+        roundTimer.stop();
         emit stopped();
     }
 }
 
 void Simulator::start()
 {
-    roundTimer->start();
+    roundTimer.start();
     emit started();
 }
 
 void Simulator::stop()
 {
-    roundTimer->stop();
+    roundTimer.stop();
     emit stopped();
 }
 
@@ -98,7 +93,7 @@ void Simulator::runUntilNonValid()
 void Simulator::roundForParticleAt(const int x, const int y)
 {
     QMutexLocker locker(&system->mutex);
-    if(!roundTimer->isActive()) {
+    if(!roundTimer.isActive()) {
         const Node node(x, y);
         system->roundForParticle(node);
         auto systemState = system->getSystemState();
@@ -185,6 +180,6 @@ void Simulator::setCheckConnectivity(bool b)
 
 void Simulator::setRoundDuration(int ms)
 {
-    roundTimer->setInterval(ms);
+    roundTimer.setInterval(ms);
     emit roundDurationChanged(ms);
 }

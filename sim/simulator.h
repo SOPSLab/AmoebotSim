@@ -4,10 +4,9 @@
 #include <memory>
 
 #include <QJSEngine>
+#include <QTimer>
 
 #include "system.h"
-
-class QTimer;
 
 class Simulator : public QObject
 {
@@ -63,7 +62,7 @@ public slots:
 protected:
     QJSEngine engine;
 
-    std::shared_ptr<QTimer> roundTimer;
+    QTimer roundTimer;
 
     std::shared_ptr<System> system;
 };

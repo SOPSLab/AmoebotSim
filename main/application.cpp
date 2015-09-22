@@ -75,6 +75,6 @@ Application::Application(int argc, char *argv[]) :
 
 Application::~Application()
 {
-    sim.finished();
     sim.abortScript();
+    sim.finished();
 }
