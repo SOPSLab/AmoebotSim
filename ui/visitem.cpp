@@ -1,17 +1,11 @@
-#include <array>
 #include <cmath>
 
-#include <QColor>
 #include <QImage>
 #include <QMutexLocker>
-#include <QOpenGLFunctions_2_0>
 #include <QOpenGLTexture>
-#include <QTime>
-#include <QTimer>
 #include <QQuickWindow>
+#include <QTime>
 
-#include "sim/particle.h"
-#include "sim/system.h"
 #include "ui/visitem.h"
 
 const float VisItem::triangleHeight = sqrtf(0.75f);
@@ -388,17 +382,11 @@ void VisItem::mousePressEvent(QMouseEvent* e)
     if(e->buttons() & Qt::LeftButton) {
         if(e->modifiers() & Qt::ControlModifier) {
             //Executing round for particle
-            translatingGui = addingParticles = false;
+            translatingGui = false;
             auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
             emit roundForParticleAt(node.x, node.y);
-        } else if(e->modifiers() & Qt::ShiftModifier) {
-            translatingGui = false;
-            addingParticles = true;
-            auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
-            emit insertParticleAt(node.x, node.y);
         } else {
             translatingGui = true;
-            addingParticles = false;
             lastMousePosGui = e->localPos();
         }
         e->accept();
@@ -413,11 +401,8 @@ void VisItem::mouseMoveEvent(QMouseEvent* e)
         QPointF scaledOffset = offset / zoomGui;
         focusPosGui += QPointF(scaledOffset.x(), -scaledOffset.y());
         lastMousePosGui = e->localPos();
-      } else if(addingParticles){
-        auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
-        emit insertParticleAt(node.x, node.y);
+        e->accept();
       }
-      e->accept();
     }
 }
 
@@ -436,7 +421,6 @@ void VisItem::wheelEvent(QWheelEvent* e)
     } else if(zoomGui > zoomMax) {
         zoomGui = zoomMax;
     }
-    e->accept();
 
     // calculate new world space coordinate of the point under the cursor
     view = calculateView(focusPosGui, zoomGui, width(), height());
@@ -444,4 +428,6 @@ void VisItem::wheelEvent(QWheelEvent* e)
 
     // move the focus point so that the point under the cursor remains unchanged
     focusPosGui = focusPosGui + oldPos - newPos;
+
+    e->accept();
 }

@@ -7,6 +7,7 @@
 
 #include "sim/node.h"
 #include "sim/particle.h"
+#include "sim/system.h"
 #include "ui/glitem.h"
 
 class QMouseEvent;
@@ -32,7 +33,6 @@ public:
 
 signals:
     void roundForParticleAt(const int x, const int y);
-    void insertParticleAt(const int x, const int y);
 
 public slots:
     void updateSystem(std::shared_ptr<System> _system);
@@ -87,7 +87,6 @@ protected:
     std::shared_ptr<QOpenGLTexture> particleTex;
 
     bool translatingGui;
-    bool addingParticles;
     // these variables are used by two threads
     // variables with suffix Gui are used by the gui thread
     // and the remaining variables are used by the render thread
