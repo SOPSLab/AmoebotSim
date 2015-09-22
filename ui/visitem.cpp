@@ -130,8 +130,8 @@ void VisItem::deinitialize()
     blinkTimer.disconnect();
     renderTimer.disconnect();
 
-    particleTex.reset();
-    gridTex.reset();
+    particleTex = nullptr;
+    gridTex = nullptr;
 }
 
 void VisItem::setupCamera()
