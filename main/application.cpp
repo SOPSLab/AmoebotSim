@@ -1,4 +1,4 @@
-#include <QQmlApplicationEngine>
+#include <memory>
 
 #include "main/application.h"
 #include "ui/visitem.h"
@@ -6,15 +6,14 @@
 Q_DECLARE_METATYPE(std::shared_ptr<System>)
 
 Application::Application(int argc, char *argv[]) :
-    QGuiApplication(argc, argv),
-    engine(std::make_shared<QQmlApplicationEngine>())
+    QGuiApplication(argc, argv)
 {
     //register shared_ptr<System> to allow using it as a parameter in signals/slots
     qRegisterMetaType<std::shared_ptr<System>>();
 
     qmlRegisterType<VisItem>("VisItem", 1, 0, "VisItem");
-    engine->load(QUrl(QStringLiteral("qrc:///qml/main.qml")));
-    auto qmlRoot = engine->rootObjects().first();
+    engine.load(QUrl(QStringLiteral("qrc:///qml/main.qml")));
+    auto qmlRoot = engine.rootObjects().first();
 
     // setup connections between GUI and Simulator
     auto vis = qmlRoot->findChild<VisItem*>();

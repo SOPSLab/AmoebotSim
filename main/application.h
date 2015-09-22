@@ -1,14 +1,11 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
-#include <memory>
-#include <qdebug.h>
 #include <QGuiApplication>
+#include <QQmlApplicationEngine>
 
 #include "sim/simulator.h"
 #include "ui/commandhistorymanager.h"
-
-class QQmlApplicationEngine;
 
 class Application : public QGuiApplication
 {
@@ -18,7 +15,7 @@ public:
     ~Application();
 
 protected:
-    std::shared_ptr<QQmlApplicationEngine> engine;
+    QQmlApplicationEngine engine;
 
     Simulator sim;
 
