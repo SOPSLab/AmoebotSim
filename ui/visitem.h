@@ -1,10 +1,9 @@
 #ifndef VISITEM_H
 #define VISITEM_H
 
-#include <cmath>
-
 #include <QMutex>
 #include <QPointF>
+#include <QTimer>
 
 #include "sim/node.h"
 #include "sim/particle.h"
@@ -12,7 +11,6 @@
 
 class QMouseEvent;
 class QOpenGLTexture;
-class QTimer;
 class QWheelEvent;
 
 class System;
@@ -83,12 +81,12 @@ protected:
     // height of a triangle in our equilateral triangular grid if the side length is 1
     static const float triangleHeight;
 
-    std::shared_ptr<QTimer> renderTimer;
+    QTimer renderTimer;
 
     std::shared_ptr<QOpenGLTexture> gridTex;
     std::shared_ptr<QOpenGLTexture> particleTex;
 
-    bool tranlatingGui;
+    bool translatingGui;
     bool addingParticles;
     // these variables are used by two threads
     // variables with suffix Gui are used by the gui thread
@@ -104,7 +102,7 @@ protected:
 
     QMutex systemMutex;
 
-    std::shared_ptr<QTimer> blinkTimer;
+    QTimer blinkTimer;
     float blinkValue;
 };
 

@@ -23,12 +23,10 @@ VisItem::VisItem(QQuickItem* parent) :
 {
     setAcceptedMouseButtons(Qt::LeftButton);
 
-    renderTimer = std::make_shared<QTimer>(this);
-    renderTimer->start(30);
+    renderTimer.start(30);
 
-    blinkTimer = std::make_shared<QTimer>(this);
-    connect(blinkTimer.get(), &QTimer::timeout, [&](){blinkValue += 0.1; if(blinkValue >= 1.0) blinkValue = -1.0;});
-    blinkTimer->start(15);
+    connect(&blinkTimer, &QTimer::timeout, [&](){blinkValue += 0.1; if(blinkValue >= 1.0) blinkValue = -1.0;});
+    blinkTimer.start(15);
 }
 
 void VisItem::updateSystem(std::shared_ptr<System> _system)
@@ -106,7 +104,7 @@ void VisItem::initialize()
     particleTex->generateMipMaps();
 
     Q_ASSERT(window() != nullptr);
-    connect(renderTimer.get(), &QTimer::timeout, window(), &QQuickWindow::update);
+    connect(&renderTimer, &QTimer::timeout, window(), &QQuickWindow::update);
 }
 
 void VisItem::paint()
@@ -143,7 +141,8 @@ void VisItem::paint()
 
 void VisItem::deinitialize()
 {
-    renderTimer->disconnect();
+    blinkTimer.disconnect();
+    renderTimer.disconnect();
 
     particleTex.reset();
     gridTex.reset();
@@ -389,16 +388,16 @@ void VisItem::mousePressEvent(QMouseEvent* e)
     if(e->buttons() & Qt::LeftButton) {
         if(e->modifiers() & Qt::ControlModifier) {
             //Executing round for particle
-            tranlatingGui = addingParticles = false;
+            translatingGui = addingParticles = false;
             auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
             emit roundForParticleAt(node.x, node.y);
         } else if(e->modifiers() & Qt::ShiftModifier) {
-            tranlatingGui = false;
+            translatingGui = false;
             addingParticles = true;
             auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
             emit insertParticleAt(node.x, node.y);
         } else {
-            tranlatingGui = true;
+            translatingGui = true;
             addingParticles = false;
             lastMousePosGui = e->localPos();
         }
@@ -409,7 +408,7 @@ void VisItem::mousePressEvent(QMouseEvent* e)
 void VisItem::mouseMoveEvent(QMouseEvent* e)
 {
     if(e->buttons() & Qt::LeftButton) {
-      if(tranlatingGui){
+      if(translatingGui){
         QPointF offset = lastMousePosGui - e->localPos();
         QPointF scaledOffset = offset / zoomGui;
         focusPosGui += QPointF(scaledOffset.x(), -scaledOffset.y());
