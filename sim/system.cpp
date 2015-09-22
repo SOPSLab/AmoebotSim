@@ -124,7 +124,7 @@ System::SystemState System::round(){
 
             if(m.type == MovementType::Empty) {
                 p->discard();
-                continue;
+                return systemState;
             } else if(m.type == MovementType::Idle) {
                 p->apply();
                 return systemState;
