@@ -26,9 +26,6 @@ Application::Application(int argc, char *argv[]) :
     auto slider = qmlRoot->findChild<QObject*>("roundDurationSlider");
 
     connect(sim.get(), &Simulator::updateSystem, vis, &VisItem::updateSystem);
-    connect(sim.get(), &Simulator::moveCameraTo, vis, &VisItem::moveCameraTo);
-    connect(sim.get(), &Simulator::setZoom, vis, &VisItem::setZoom);
-    connect(sim.get(), &Simulator::saveScreenshotSignal, vis, &VisItem::saveScreenshot, Qt::BlockingQueuedConnection);
     connect(qmlRoot, SIGNAL(start()), sim.get(), SLOT(start()));
     connect(qmlRoot, SIGNAL(stop() ), sim.get(), SLOT(stop() ));
     connect(qmlRoot, SIGNAL(round()), sim.get(), SLOT(round()));
@@ -67,22 +64,6 @@ Application::Application(int argc, char *argv[]) :
                 QMetaObject::invokeMethod(qmlRoot, "setLabelStart");
             }
     );
-    connect(sim.get(), &Simulator::setResolution,
-            [qmlRoot](const int width, const int height){
-                QMetaObject::invokeMethod(qmlRoot, "setResolution", Q_ARG(QVariant, width), Q_ARG(QVariant, height));
-            }
-    );
-    connect(sim.get(), &Simulator::setFullscreen,
-            [qmlRoot](){
-                QMetaObject::invokeMethod(qmlRoot, "setFullscreen");
-            }
-    );
-    connect(sim.get(), &Simulator::setWindowed,
-            [qmlRoot](){
-                QMetaObject::invokeMethod(qmlRoot, "setWindowed");
-            }
-    );
-
 
     // setup connections between GUI and CommmandHistoryManager
     connect(qmlRoot, SIGNAL(executeCommand(QString)), &commandHistoryManager, SLOT(commandExecuted(QString)));
@@ -98,7 +79,6 @@ Application::Application(int argc, char *argv[]) :
     sim->moveToThread(simThread.get());
     connect(simThread.get(), &QThread::started, sim.get(), &Simulator::init);
     connect(simThread.get(), &QThread::finished, sim.get(), &Simulator::finished);
-
 
     simThread->start();
 }

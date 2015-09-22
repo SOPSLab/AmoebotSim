@@ -37,9 +37,7 @@ signals:
 public slots:
     void updateSystem(std::shared_ptr<System> _system);
     void focusOnCenterOfMass();
-    void saveScreenshot(std::shared_ptr<System> _system, QString filePath = "");
     void setZoom(float _zoom);
-    void moveCameraTo(float worldX, float worldY);
 
 protected slots:
     virtual void sync();

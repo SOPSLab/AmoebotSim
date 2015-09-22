@@ -25,17 +25,11 @@ signals:
     void roundDurationChanged(int ms);
     void numMovementsChanged(int num);
     void numRoundsChanged(int num);
-    void moveCameraTo(float worldX, float wordlY);
-    void setZoom(float factor);
-    void setResolution(const int width, const int height);
-    void setFullscreen();
-    void setWindowed();
 
     void started();
     void stopped();
 
     void log(const QString msg, const bool isError);
-    void saveScreenshotSignal(std::shared_ptr<System> _system, const QString filePath);
 
 public slots:
     void init();
@@ -48,7 +42,6 @@ public slots:
     void finished();
 
     void roundForParticleAt(const int x, const int y);
-    void insertParticleAt(const int x, const int y);
 
     void executeCommand(const QString cmd);
     void runScript(const QString script);
@@ -66,7 +59,6 @@ public slots:
 
     void setCheckConnectivity(bool b);
     void setRoundDuration(int ms);
-    void saveScreenshotSlot(const QString filePath);
 
 protected:
     QJSEngine engine;

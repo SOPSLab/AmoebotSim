@@ -119,11 +119,6 @@ void Simulator::roundForParticleAt(const int x, const int y)
     }
 }
 
-void Simulator::insertParticleAt(const int x, const int y){
-  const Node node(x, y);
-  system->insertParticleAt(node);
-}
-
 void Simulator::executeCommand(const QString cmd)
 {
     auto result = engine.evaluate(cmd);
@@ -191,9 +186,4 @@ void Simulator::setRoundDuration(int ms)
 {
     roundTimer->setInterval(ms);
     emit roundDurationChanged(ms);
-}
-
-void Simulator::saveScreenshotSlot(const QString filePath)
-{
-    emit saveScreenshotSignal(std::make_shared<System>(*system), filePath);
 }

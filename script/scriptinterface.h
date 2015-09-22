@@ -39,7 +39,6 @@ public slots:
 
     void runScript(const QString scriptFilePath);
     void writeToFile(const QString filePath, const QString text);
-    void saveScreenshot(const QString filePath = "");
 
     bool isValid();
     bool isDisconnected();
@@ -53,11 +52,6 @@ public slots:
 
     void setCheckConnectivity(bool b);
     void setRoundDuration(int ms);
-    void moveCameraTo(float worldX, float worldY);
-    void setZoom(float factor);
-    void setResolution(const int width, const int height);
-    void setFullscreen();
-    void setWindowed();
 
     void exampleAlgorithm(const int numParticles);
     void infObjCoating(const int numParticles, const float holeProb = 0.2);
@@ -128,11 +122,6 @@ inline void ScriptInterface::writeToFile(const QString filePath, const QString t
     file.close();
 }
 
-inline void ScriptInterface::saveScreenshot(const QString filePath)
-{
-    sim.saveScreenshotSlot(filePath);
-}
-
 inline bool ScriptInterface::isValid()
 {
     return sim.getSystemValid();
@@ -181,26 +170,6 @@ inline void ScriptInterface::setCheckConnectivity(bool b)
 inline void ScriptInterface::setRoundDuration(int ms)
 {
     sim.setRoundDuration(ms);
-}
-
-inline void ScriptInterface::moveCameraTo(float worldX, float worldY){
-  emit sim.moveCameraTo(worldX, worldY);
-}
-
-inline void ScriptInterface::setZoom(float factor){
-  emit sim.setZoom(factor);
-}
-
-inline void ScriptInterface::setFullscreen(){
-  emit sim.setFullscreen();
-}
-
-inline void ScriptInterface::setWindowed(){
-  emit sim.setWindowed();
-}
-
-inline void ScriptInterface::setResolution(const int width, const int height){
-  emit sim.setResolution(width, height);
 }
 
 inline void ScriptInterface::exampleAlgorithm(const int numParticles)

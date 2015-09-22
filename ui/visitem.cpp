@@ -52,12 +52,6 @@ void VisItem::setZoom(float factor){
   }
 }
 
-void VisItem::moveCameraTo(float worldX, float worldY){
-  const float y = worldY*triangleHeight;
-  const float x = worldX + 0.5 * worldY;
-  focusPosGui = QPointF(x, y);
-}
-
 void VisItem::focusOnCenterOfMass()
 {
     if(system == nullptr || system->getNumParticles() == 0) {
@@ -78,18 +72,6 @@ void VisItem::focusOnCenterOfMass()
     }
 
     focusPosGui = sum / numNodes;
-}
-
-void VisItem::saveScreenshot(std::shared_ptr<System> _system, QString filePath)
-{
-    updateSystem(_system);
-    update();
-
-    if(filePath == "") {
-        filePath = QString("amoebotsim_") + QString::number(QTime::currentTime().msecsSinceStartOfDay()) + QString(".png");
-    }
-
-    window()->grabWindow().save(filePath);
 }
 
 void VisItem::sync()
