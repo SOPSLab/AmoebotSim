@@ -49,6 +49,7 @@ protected slots:
 
 protected:
     void setupCamera();
+
     void drawGrid(const Quad& view);
     void drawParticles(const Quad& view);
     void drawMarks(const Particle& p);
@@ -56,13 +57,14 @@ protected:
     void drawBorders(const Particle& p);
     void drawBorderPoints(const Particle& p);
     void drawDisconnectionNode();
+    void drawFromParticleTex(const int index, const QPointF& pos);
 
     static Quad calculateView(QPointF focusPos, float zoom, int viewportWidth, int viewportHeight);
     static bool inView(const QPointF& headWorldPos, const Quad& view);
+
     static QPointF nodeToWorldCoord(Node node);
     static Node worldCoordToNode(QPointF worldCord);
     QPointF windowCoordToWorldCoord(const QPointF windowCoord);
-    const QPointF indexToParticleTexPos(const int index) const;
 
     void mousePressEvent(QMouseEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
