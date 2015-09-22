@@ -5,12 +5,10 @@
 #include <qdebug.h>
 #include <QGuiApplication>
 
+#include "sim/simulator.h"
 #include "ui/commandhistorymanager.h"
 
 class QQmlApplicationEngine;
-class QThread;
-
-class Simulator;
 
 class Application : public QGuiApplication
 {
@@ -22,8 +20,7 @@ public:
 protected:
     std::shared_ptr<QQmlApplicationEngine> engine;
 
-    std::shared_ptr<Simulator> sim;
-    std::shared_ptr<QThread> simThread;
+    Simulator sim;
 
     CommandHistoryManager commandHistoryManager;
 };
