@@ -38,7 +38,7 @@ public slots:
     void updateSystem(std::shared_ptr<System> _system);
     void focusOnCenterOfMass();
     void saveScreenshot(std::shared_ptr<System> _system, QString filePath = "");
-    void setZoom(float factor);
+    void setZoom(float _zoom);
     void moveCameraTo(float worldX, float worldY);
 
 protected slots:
@@ -69,18 +69,6 @@ protected:
     void wheelEvent(QWheelEvent* e);
 
 protected:
-    static constexpr float zoomMin = 4.0f;
-    static constexpr float zoomMax = 128.0f;
-    static constexpr float zoomInit = 16.0f;
-    static constexpr float zoomAttenuation = 500.0f;
-
-    // these values are a consequence of how the particle texture was created
-    static constexpr float oneEighth = 1.0f / 8.0f;
-    static constexpr float halfQuadSideLength = 256.0f / 220.0f;
-
-    // height of a triangle in our equilateral triangular grid if the side length is 1
-    static const float triangleHeight;
-
     QTimer renderTimer;
 
     std::shared_ptr<QOpenGLTexture> gridTex;

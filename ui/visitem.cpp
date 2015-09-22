@@ -8,7 +8,18 @@
 
 #include "ui/visitem.h"
 
-const float VisItem::triangleHeight = sqrtf(0.75f);
+// zoom preferences
+static constexpr float zoomMin = 4.0f;
+static constexpr float zoomMax = 128.0f;
+static constexpr float zoomInit = 16.0f;
+static constexpr float zoomAttenuation = 500.0f;
+
+// these values are a consequence of how the particle texture was created
+static constexpr float oneEighth = 1.0f / 8.0f;
+static constexpr float halfQuadSideLength = 256.0f / 220.0f;
+
+// height of a triangle in our equilateral triangular grid if the side length is 1
+static const float triangleHeight = sqrtf(3.0f / 4.0f);
 
 VisItem::VisItem(QQuickItem* parent) :
     GLItem(parent),
@@ -115,10 +126,6 @@ void VisItem::paint()
 
     glEnable(GL_TEXTURE_2D);
 
-    glClearColor(1, 1, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glColor4f(1, 1, 1, 1);
-
     setupCamera();
 
     Quad view = calculateView(focusPos, zoom, width(), height());
@@ -175,7 +182,7 @@ void VisItem::drawGrid(const Quad& view)
 
     // Draw screen-filling quad with gridTex according to above texture coordinates.
     gridTex->bind();
-    glColor4f(0.8f, 0.8f, 0.8f, 1.0f);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
     glTexCoord2f(gridTexCoords.left, gridTexCoords.bottom);
     glVertex2f(view.left, view.bottom);
@@ -369,10 +376,10 @@ QPointF VisItem::windowCoordToWorldCoord(const QPointF windowCoord)
 
 const QPointF VisItem::indexToParticleTexPos(const int index) const
 {
-    static const int texSize = 8;
+    static constexpr int texSize = 8;
 
-    float column = index % texSize;
-    float row = index / texSize;
+    const float column = index % texSize;
+    const float row = index / texSize;
 
     return QPointF(column / texSize, row / texSize);
 }
@@ -415,12 +422,7 @@ void VisItem::wheelEvent(QWheelEvent* e)
     QPointF oldPos = QPointF(view.left, view.bottom) + mousePos / zoomGui;
 
     // update zoom
-    zoomGui *= std::exp(e->angleDelta().y() / zoomAttenuation);
-    if(zoomGui < zoomMin) {
-        zoomGui = zoomMin;
-    } else if(zoomGui > zoomMax) {
-        zoomGui = zoomMax;
-    }
+    setZoom(std::exp(e->angleDelta().y() / zoomAttenuation));
 
     // calculate new world space coordinate of the point under the cursor
     view = calculateView(focusPosGui, zoomGui, width(), height());

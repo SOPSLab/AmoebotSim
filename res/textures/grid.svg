@@ -9,15 +9,15 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="515"
-   height="892"
+   width="512"
+   height="1024"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.91 r13725"
    sodipodi:docname="grid.svg"
-   inkscape:export-filename="G:\textures\grid.png"
-   inkscape:export-xdpi="90"
-   inkscape:export-ydpi="90">
+   inkscape:export-filename="/Users/gmyr/Documents/code/amoebotsim/res/textures/grid.png"
+   inkscape:export-xdpi="180"
+   inkscape:export-ydpi="180">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -25,20 +25,20 @@
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="0"
+     inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.90509668"
-     inkscape:cx="347.05794"
-     inkscape:cy="422.37134"
+     inkscape:zoom="0.57783753"
+     inkscape:cx="131.21355"
+     inkscape:cy="563.50492"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:object-nodes="true"
      units="px"
-     inkscape:window-width="1680"
-     inkscape:window-height="987"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:window-width="1916"
+     inkscape:window-height="1155"
+     inkscape:window-x="4"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:snap-object-midpoints="true" />
   <metadata
@@ -49,7 +49,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -57,36 +57,47 @@
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="Helper Grid"
-     sodipodi:insensitive="true"
-     style="display:inline">
+     style="display:inline"
+     transform="translate(0,132)"
+     sodipodi:insensitive="true">
+    <rect
+       style="display:inline;fill:#00ff00;fill-opacity:1;stroke:none"
+       id="rect3775-8"
+       width="512"
+       height="1024"
+       x="0"
+       y="-132" />
     <rect
        style="fill:#ff0000;fill-opacity:1;stroke:none"
        id="rect3775"
-       width="515"
-       height="892"
+       width="512"
+       height="886.81"
        x="0"
-       y="0" />
+       y="5.1900024" />
   </g>
   <g
      inkscape:label="Texture"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-160.3622)">
-    <path
-       style="fill:none;stroke:#ffffff;stroke-width:20;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-       d="m 10.000147,606.3622 494.999703,0"
-       id="path2987"
-       inkscape:connector-curvature="0" />
-    <path
-       style="fill:none;stroke:#ffffff;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
-       d="M 0,0 515,0 257.5,446 z"
-       id="path3784"
-       inkscape:connector-curvature="0"
-       transform="translate(0,160.3622)" />
-    <path
-       style="fill:none;stroke:#ffffff;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-       d="M 515,1052.3622 -3e-6,1052.3622 257.5,606.3622 z"
-       id="path3784-7"
-       inkscape:connector-curvature="0" />
+     transform="translate(0,-28.3622)">
+    <g
+       id="g4185"
+       transform="matrix(1,0,0,1.1547006,0,-162.80102)">
+      <path
+         inkscape:connector-curvature="0"
+         id="path2987"
+         d="m 1.1e-5,608.9572 511.999979,0"
+         style="fill:none;stroke:#cccccc;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path4168"
+         d="m 0,1052.3622 256,-443.405 255.99998,443.405 z"
+         style="fill:none;fill-rule:evenodd;stroke:#cccccc;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path4168-5"
+         d="m 0,165.5522 256,443.405 255.99998,-443.405 z"
+         style="fill:none;fill-rule:evenodd;stroke:#cccccc;stroke-width:20;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
   </g>
 </svg>
