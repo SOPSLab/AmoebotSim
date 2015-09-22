@@ -322,18 +322,7 @@ void VisItem::mouseMoveEvent(QMouseEvent* e)
 void VisItem::wheelEvent(QWheelEvent* e)
 {
     QPointF mousePos(QPointF(e->posF().x(), height() - e->posF().y()));
-
-    // remember world space coordinate of the point under the cursor before changing zoom
-    QPointF oldPos = QPointF(view.left(), view.bottom()) + mousePos / view.zoom();
-
-    // update zoom
-    view.modifyZoom(e->angleDelta().y());
-
-    // calculate new world space coordinate of the point under the cursor
-    QPointF newPos = QPointF(view.left(), view.bottom()) + mousePos / view.zoom();
-
-    // move the focus point so that the point under the cursor remains unchanged
-    view.moveFocusPos(oldPos - newPos);
-
+    float mouseAngleDelta = e->angleDelta().y();
+    view.modifyZoom(mousePos, mouseAngleDelta);
     e->accept();
 }

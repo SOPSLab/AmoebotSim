@@ -55,17 +55,15 @@ protected:
     void wheelEvent(QWheelEvent* e);
 
 protected:
-    QTimer renderTimer;
+    std::shared_ptr<System> system;
 
     std::shared_ptr<QOpenGLTexture> gridTex;
     std::shared_ptr<QOpenGLTexture> particleTex;
 
+    QTimer renderTimer;
     View view;
-
     bool translating;
     QPointF lastMousePos;
-
-    std::shared_ptr<System> system;
 
     QTimer blinkTimer;
     float blinkValue;

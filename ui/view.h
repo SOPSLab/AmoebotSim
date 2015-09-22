@@ -107,10 +107,21 @@ public:
         update();
     }
 
-    void modifyZoom(float mouseAngleDelta)
+    void modifyZoom(const QPointF& mousePos, float mouseAngleDelta)
     {
         QMutexLocker locker(&mutex);
+
+        // remember world space coordinate of the point under the cursor before changing zoom
+        QPointF oldPos = QPointF(_left, _bottom) + mousePos / _zoom;
+
+        // update zoom
         setZoom(_zoom * std::exp(mouseAngleDelta / zoomAttenuation));
+
+        // calculate new world space coordinate of the point under the cursor
+        QPointF newPos = QPointF(_left, _bottom) + mousePos / _zoom;
+
+        // move the focus point so that the point under the cursor remains unchanged
+        moveFocusPos(oldPos - newPos);
     }
 
 private:
