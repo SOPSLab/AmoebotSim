@@ -19,7 +19,7 @@ Application::Application(int argc, char *argv[]) :
     auto vis = qmlRoot->findChild<VisItem*>();
     auto slider = qmlRoot->findChild<QObject*>("roundDurationSlider");
 
-    connect(&sim, &Simulator::updateSystem, vis, &VisItem::updateSystem);
+    connect(&sim, &Simulator::systemChanged, vis, &VisItem::systemChanged);
     connect(qmlRoot, SIGNAL(start()), &sim, SLOT(start()));
     connect(qmlRoot, SIGNAL(stop() ), &sim, SLOT(stop() ));
     connect(qmlRoot, SIGNAL(round()), &sim, SLOT(round()));

@@ -25,15 +25,9 @@ System::System()
 }
 
 System::System(const System& other)
-    : rng(other.rng),
-      particles(other.particles),
-      particleMap(other.particleMap),
-      systemState(other.systemState),
-      disconnectionNode(other.disconnectionNode),
-      numNonStaticParticles(other.numNonStaticParticles),
-      numMovements(other.numMovements),
-      numRounds(other.numRounds)
-{   
+{
+    Q_UNUSED(other)
+    Q_ASSERT(false);
 }
 
 void System::insertParticle(const Particle& p)

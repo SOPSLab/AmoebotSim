@@ -1,3 +1,4 @@
+#include <QMutexLocker>
 #include <QTimer>
 
 #include "script/scriptinterface.h"
@@ -5,14 +6,14 @@
 
 Simulator::Simulator()
 {
-  //It's not possible to set ScriptInterface's slots as global functions in the JS-Engine.
-  //Therefore create a ScriptInterface object and bind it to the global variable 'obj'.
-  auto obj = engine.newQObject(new ScriptInterface(*this));
-  engine.globalObject().setProperty("obj", obj);
+    //It's not possible to set ScriptInterface's slots as global functions in the JS-Engine.
+    //Therefore create a ScriptInterface object and bind it to the global variable 'obj'.
+    auto obj = engine.newQObject(new ScriptInterface(*this));
+    engine.globalObject().setProperty("obj", obj);
 
-  //Then bind obj's methods (which are ScriptInterface's slots) to the global scope in 'this',
-  //so that all methods are globally accessible.
-  engine.evaluate("Object.keys(obj).forEach(function(key){ this[key] = obj[key]})");
+    //Then bind obj's methods (which are ScriptInterface's slots) to the global scope in 'this',
+    //so that all methods are globally accessible.
+    engine.evaluate("Object.keys(obj).forEach(function(key){ this[key] = obj[key]})");
 }
 
 Simulator::~Simulator()
@@ -25,7 +26,11 @@ void Simulator::setSystem(std::shared_ptr<System> _system)
         roundTimer->stop();
         emit stopped();
     }
+
     system = _system;
+    emit systemChanged(system);
+
+    QMutexLocker locker(&system->mutex);
     emit numMovementsChanged(system->getNumMovements());
     emit numRoundsChanged(system->getNumRounds());
 }
@@ -42,24 +47,19 @@ void Simulator::init()
         roundTimer->setInterval(100);
         emit roundDurationChanged(100);
         connect(roundTimer.get(), &QTimer::timeout, this, &Simulator::round);
-
-        updateTimer = std::make_shared<QTimer>(this);
-        updateTimer->setInterval(30);
-        connect(updateTimer.get(), &QTimer::timeout, [&](){emit updateSystem(std::make_shared<System>(*system));});
-        connect(updateTimer.get(), &QTimer::timeout, [&](){emit numMovementsChanged(system->getNumMovements());});
-        connect(updateTimer.get(), &QTimer::timeout, [&](){emit numRoundsChanged(system->getNumRounds());});
-        updateTimer->start();
     }
+
+    emit systemChanged(system);
 }
 
 //Is called when thread in which simulator is living is about to finish -> Clean up the simulator.
 void Simulator::finished(){
     roundTimer->stop();
-    updateTimer->stop();
 }
 
 void Simulator::round()
 {
+    QMutexLocker locker(&system->mutex);
     system->round();
     auto systemState = system->getSystemState();
     if(systemState == System::SystemState::Deadlocked) {
@@ -75,10 +75,6 @@ void Simulator::round()
         roundTimer->stop();
         emit stopped();
     }
-
-#ifdef QT_DEBUG
-    emit updateSystem(std::make_shared<System>(*system));
-#endif
 }
 
 void Simulator::start()
@@ -95,11 +91,13 @@ void Simulator::stop()
 
 void Simulator::runUntilNonValid()
 {
+    QMutexLocker locker(&system->mutex);
     system->runUntilNotValid();
 }
 
 void Simulator::roundForParticleAt(const int x, const int y)
 {
+    QMutexLocker locker(&system->mutex);
     if(!roundTimer->isActive()) {
         const Node node(x, y);
         system->roundForParticle(node);
@@ -111,11 +109,6 @@ void Simulator::roundForParticleAt(const int x, const int y)
         } else if(systemState == System::SystemState::Terminated) {
             log("Algorithm terminated.", false);
         }
-
-    #ifdef QT_DEBUG
-        // increases the chance that when the debugger stops the visualization shows the actual configuration of the system
-        emit updateSystem(std::make_shared<System>(*system));
-    #endif
     }
 }
 
@@ -139,41 +132,49 @@ void Simulator::abortScript()
 
 bool Simulator::getSystemValid()
 {
+    QMutexLocker locker(&system->mutex);
     return system->getSystemState() == System::SystemState::Valid;
 }
 
 bool Simulator::getSystemDisconnected()
 {
+    QMutexLocker locker(&system->mutex);
     return system->getSystemState() == System::SystemState::Disconnected;
 }
 
 bool Simulator::getSystemTerminated()
 {
+    QMutexLocker locker(&system->mutex);
     return system->getSystemState() == System::SystemState::Terminated;
 }
 
 bool Simulator::getSystemDeadlocked()
 {
+    QMutexLocker locker(&system->mutex);
     return system->getSystemState() == System::SystemState::Deadlocked;
 }
 
 int Simulator::getNumParticles() const
 {
+    QMutexLocker locker(&system->mutex);
     return system->getNumParticles();
 }
 
 int Simulator::getNumNonStaticParticles() const
 {
+    QMutexLocker locker(&system->mutex);
     return system->getNumNonStaticParticles();
 }
 
 int Simulator::getNumMovements() const
 {
+    QMutexLocker locker(&system->mutex);
     return system->getNumMovements();
 }
 
 int Simulator::getNumRounds() const
 {
+    QMutexLocker locker(&system->mutex);
     return system->getNumRounds();
 }
 

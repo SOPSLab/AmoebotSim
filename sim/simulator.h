@@ -21,7 +21,7 @@ public:
     std::shared_ptr<System> getSystem() const;
 
 signals:
-    void updateSystem(std::shared_ptr<System> _system);
+    void systemChanged(std::shared_ptr<System> _system);
     void roundDurationChanged(int ms);
     void numMovementsChanged(int num);
     void numRoundsChanged(int num);
@@ -62,8 +62,8 @@ public slots:
 
 protected:
     QJSEngine engine;
+
     std::shared_ptr<QTimer> roundTimer;
-    std::shared_ptr<QTimer> updateTimer;
 
     std::shared_ptr<System> system;
 };

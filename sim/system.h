@@ -7,6 +7,8 @@
 #include <random>
 #include <set>
 
+#include <QMutex>
+
 #include "alg/algorithm.h"
 #include "sim/node.h"
 #include "sim/particle.h"
@@ -51,6 +53,8 @@ public:
     // FIXME: Not the nice way of doing it.
     // But until we actually appraoch algorithms for disconnected systems it should do just fine.
     static bool checkConnectivity;
+
+    QMutex mutex;
 
 protected:
     std::mt19937 rng;

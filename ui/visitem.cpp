@@ -37,9 +37,8 @@ VisItem::VisItem(QQuickItem* parent) :
     blinkTimer.start(15);
 }
 
-void VisItem::updateSystem(std::shared_ptr<System> _system)
+void VisItem::systemChanged(std::shared_ptr<System> _system)
 {
-    QMutexLocker locker(&systemMutex);
     system = _system;
 }
 
@@ -54,6 +53,7 @@ void VisItem::setZoom(float factor){
 
 void VisItem::focusOnCenterOfMass()
 {
+    QMutexLocker locker(&system->mutex);
     if(system == nullptr || system->getNumParticles() == 0) {
         return;
     }
@@ -116,7 +116,7 @@ void VisItem::paint()
     Quad view = calculateView(focusPos, zoom, width(), height());
     drawGrid(view);
 
-    QMutexLocker locker(&systemMutex);
+    QMutexLocker locker(&system->mutex);
     if(system != nullptr) {
         drawParticles(view);
         if(system->getSystemState() == System::SystemState::Disconnected) {

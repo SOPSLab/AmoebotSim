@@ -14,8 +14,6 @@ class QMouseEvent;
 class QOpenGLTexture;
 class QWheelEvent;
 
-class System;
-
 class VisItem : public GLItem
 {
     Q_OBJECT
@@ -35,7 +33,7 @@ signals:
     void roundForParticleAt(const int x, const int y);
 
 public slots:
-    void updateSystem(std::shared_ptr<System> _system);
+    void systemChanged(std::shared_ptr<System> _system);
     void focusOnCenterOfMass();
     void setZoom(float _zoom);
 
@@ -86,8 +84,6 @@ protected:
     float zoom;
 
     std::shared_ptr<System> system;
-
-    QMutex systemMutex;
 
     QTimer blinkTimer;
     float blinkValue;

@@ -66,9 +66,10 @@ public slots:
     void holeelimcompaction(const unsigned int numParticles = 100);
     void leaderelection(const unsigned int numParticles = 100);
     void universalcoating(const int staticParticlesRadius = 5, const int numParticles = 50, const float holeProb = 0.2);
-    int getUniversalCoatingWeakLowerBound();
-    int getUniversalCoatingStrongLowerBound();
+//    int getUniversalCoatingWeakLowerBound();
+//    int getUniversalCoatingStrongLowerBound();
     void leaderelectiondemo();
+
 private:
     Simulator& sim;
 };
@@ -296,14 +297,14 @@ inline void ScriptInterface::universalcoating(const  int staticParticlesRadius, 
     sim.setSystem(UniversalCoating::UniversalCoating::instance(staticParticlesRadius, numParticles, holeProb));
 }
 
-inline int ScriptInterface::getUniversalCoatingWeakLowerBound()
-{
-    return UniversalCoating::getWeakLowerBound(*sim.getSystem());
-}
+//inline int ScriptInterface::getUniversalCoatingWeakLowerBound()
+//{
+//    return UniversalCoating::getWeakLowerBound(*sim.getSystem());
+//}
 
-inline int ScriptInterface::getUniversalCoatingStrongLowerBound()
-{
-    return UniversalCoating::getStrongLowerBound(*sim.getSystem());
-}
+//inline int ScriptInterface::getUniversalCoatingStrongLowerBound()
+//{
+//    return UniversalCoating::getStrongLowerBound(*sim.getSystem());
+//}
 
 #endif // SCRIPTINTERFACE_H
