@@ -17,6 +17,8 @@ void GLItem::handleWindowChanged(QQuickWindow* window)
 
         QSurfaceFormat format;
         format.setRenderableType(QSurfaceFormat::OpenGL);
+        format.setDepthBufferSize(24);
+        format.setStencilBufferSize(8);
         format.setSwapInterval(0); // deactivate vertical synchronization
         window->setFormat(format);
 
