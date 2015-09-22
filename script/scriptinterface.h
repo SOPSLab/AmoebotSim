@@ -82,7 +82,7 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    sim.setSystem(UniversalCoating::UniversalCoating::instance(2,120,0));
+    sim.setSystem(Hexagon::Hexagon::instance(200, 0.3));
 }
 
 inline void ScriptInterface::round()
