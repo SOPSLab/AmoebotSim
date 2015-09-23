@@ -1,6 +1,7 @@
 #ifndef RANDOMNUMBERGENERATOR_H
 #define RANDOMNUMBERGENERATOR_H
 
+#include <algorithm>
 #include <chrono>
 #include <random>
 
@@ -9,11 +10,14 @@ class RandomNumberGenerator
 public:
     RandomNumberGenerator();
 
-public:
+protected:
     static int randInt(const int from, const int toNotIncluding);
     static int randDir();
     static float randFloat(const float from, const float toNotIncluding);
     static bool randBool(const double trueProb = 0.5);
+
+    template <class Iterator>
+    void shuffle(Iterator firxt, Iterator last);
 
 private:
     static std::mt19937 rng;
@@ -58,6 +62,12 @@ inline float RandomNumberGenerator::randFloat(const float from, const float toNo
 inline bool RandomNumberGenerator::randBool(const double trueProb)
 {
     return (randFloat(0, 1) < trueProb);
+}
+
+template <class Iterator>
+void RandomNumberGenerator::shuffle(Iterator first, Iterator last)
+{
+    std::shuffle(first, last, rng);
 }
 
 #endif // RANDOMNUMBERGENERATOR_H
