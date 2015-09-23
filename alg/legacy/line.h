@@ -1,13 +1,13 @@
 // Brian Parker
 // Note that all of my shape formation algorithms make use of "State" instead of "phase". The two are equivalent in theory, but not in programming.
-#ifndef HEXAGON_H
-#define HEXAGON_H
+#ifndef LINE_H
+#define LINE_H
 
-#include "alg/algorithmwithflags.h"
+#include "alg/legacy/algorithmwithflags.h"
 
-class System;
+class LegacySystem;
 
-namespace Hexagon
+namespace Line
 {
 enum class State {
     Finished,
@@ -17,26 +17,25 @@ enum class State {
     Seed
 };
 
-// The pointer is initialized here in the HexFlag class.note the use of namespaces and classnames throughout.
-class HexFlag : public Flag
+class LineFlag : public Flag
 {
 public:
-    HexFlag();
-    HexFlag(const HexFlag& other);
+    LineFlag();
+    LineFlag(const LineFlag& other);
     State state;
-    bool point; // 
+    bool point; //
     bool followIndicator;
     int contractDir;
 };
 
-class Hexagon : public AlgorithmWithFlags<HexFlag>
+class Line : public AlgorithmWithFlags<LineFlag>
 {
 public:
-    Hexagon(const State _state);
-    Hexagon(const Hexagon& other);
-    virtual ~Hexagon();
+    Line(const State _state);
+    Line(const Line& other);
+    virtual ~Line();
 
-    static std::shared_ptr<System> instance(const unsigned int size, const double holeProb);
+    static std::shared_ptr<LegacySystem> instance(const unsigned int size, const double holeProb);
 
     virtual Movement execute();
     virtual std::shared_ptr<Algorithm> blank() const override;
@@ -45,7 +44,7 @@ public:
     virtual bool isStatic() const;
 
 protected:
-    int isPointedAt(); // Function to easily use the pointer mechanic
+    int isPointedAt(); //
 
     void setState(State _state);
     bool neighborInState(int direction, State _state);
@@ -67,5 +66,5 @@ protected:
 };
 }
 
-#endif // HEXAGON_H
+#endif // LINE_H
 

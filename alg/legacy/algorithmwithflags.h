@@ -4,7 +4,7 @@
 #include <array>
 #include <type_traits>
 
-#include "alg/algorithm.h"
+#include "alg/legacy/algorithm.h"
 
 template <class FlagClass>
 class AlgorithmWithFlags : public Algorithm

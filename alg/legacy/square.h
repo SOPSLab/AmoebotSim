@@ -6,9 +6,9 @@
 #ifndef SQUARE_H
 #define SQUARE_H
 
-#include "alg/algorithmwithflags.h"
+#include "alg/legacy/algorithmwithflags.h"
 
-class System;
+class LegacySystem;
 
 namespace Square 
 {
@@ -44,7 +44,7 @@ namespace Square
 		Square(const Square& other);
 		virtual ~Square();
 
-		static std::shared_ptr<System> instance(const unsigned int numParticles, const double holeProb);
+        static std::shared_ptr<LegacySystem> instance(const unsigned int numParticles, const double holeProb);
 
 		virtual Movement execute();
         virtual std::shared_ptr<Algorithm> blank() const override;

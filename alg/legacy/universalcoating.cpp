@@ -4,9 +4,9 @@
 #include <deque>
 #include <set>
 
-#include "alg/universalcoating.h"
+#include "alg/legacy/legacysystem.h"
+#include "alg/legacy/universalcoating.h"
 #include "sim/particle.h"
-#include "sim/system.h"
 #include <QDebug>
 
 
@@ -158,9 +158,9 @@ UniversalCoating::UniversalCoating(const UniversalCoating& other)
 UniversalCoating::~UniversalCoating()
 {}
 
-std::shared_ptr<System> UniversalCoating::instance(const int staticParticlesRadius, const int numParticles, const float holeProb)
+std::shared_ptr<LegacySystem> UniversalCoating::instance(const int staticParticlesRadius, const int numParticles, const float holeProb)
 {
-    std::shared_ptr<System> system = std::make_shared<System>();
+    std::shared_ptr<LegacySystem> system = std::make_shared<LegacySystem>();
     std::set<Node> occupied;
     const int hexRadius = staticParticlesRadius;
 

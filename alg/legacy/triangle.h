@@ -1,13 +1,13 @@
 // Brian Parker
 // Note that all of my shape formation algorithms make use of "State" instead of "phase". The two are equivalent in theory, but not in programming.
-#ifndef LINE_H
-#define LINE_H
+#ifndef TRIANGLE_H
+#define TRIANGLE_H
 
-#include "alg/algorithmwithflags.h"
+#include "alg/legacy/algorithmwithflags.h"
 
-class System;
+class LegacySystem;
 
-namespace Line
+namespace Triangle
 {
 enum class State {
     Finished,
@@ -17,25 +17,26 @@ enum class State {
     Seed
 };
 
-class LineFlag : public Flag
+class TriFlag : public Flag
 {
 public:
-    LineFlag();
-    LineFlag(const LineFlag& other);
-    State state;
-    bool point; //
+    TriFlag();
+    TriFlag(const TriFlag& other);
+    Triangle::State state;
+    bool point; // 
+    bool side; // This algorithm makes use of a "side" flag that specifically indicates the right side of the forming triangle
     bool followIndicator;
     int contractDir;
 };
 
-class Line : public AlgorithmWithFlags<LineFlag>
+class Triangle : public AlgorithmWithFlags<TriFlag>
 {
 public:
-    Line(const State _state);
-    Line(const Line& other);
-    virtual ~Line();
+    Triangle(const State _state);
+    Triangle(const Triangle& other);
+    virtual ~Triangle();
 
-    static std::shared_ptr<System> instance(const unsigned int size, const double holeProb);
+    static std::shared_ptr<LegacySystem> instance(const unsigned int size, const double holeProb);
 
     virtual Movement execute();
     virtual std::shared_ptr<Algorithm> blank() const override;
@@ -44,7 +45,7 @@ public:
     virtual bool isStatic() const;
 
 protected:
-    int isPointedAt(); //
+    int isPointedAt();
 
     void setState(State _state);
     bool neighborInState(int direction, State _state);
@@ -66,5 +67,4 @@ protected:
 };
 }
 
-#endif // LINE_H
-
+#endif // TRIANGLE_H

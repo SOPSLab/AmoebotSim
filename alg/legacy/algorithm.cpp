@@ -1,4 +1,4 @@
-#include "alg/algorithm.h"
+#include "alg/legacy/algorithm.h"
 
 std::mt19937 Algorithm::rng;
 const std::vector<int> Algorithm::sixLabels = {{0, 1, 2, 3, 4, 5}};

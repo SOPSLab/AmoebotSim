@@ -43,7 +43,8 @@ protected:
     void drawParticle(const Particle& p);
     void drawBorders(const Particle& p);
     void drawBorderPoints(const Particle& p);
-    void drawDisconnectionNode();
+    // FIXME: Bring this back?
+//    void drawDisconnectionNode();
     void drawFromParticleTex(const int index, const QPointF& pos);
 
     static QPointF nodeToWorldCoord(Node node);

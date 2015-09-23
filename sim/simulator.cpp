@@ -29,8 +29,6 @@ void Simulator::setSystem(std::shared_ptr<System> _system)
     emit systemChanged(system);
 
     QMutexLocker locker(&system->mutex);
-    emit numMovementsChanged(system->getNumMovements());
-    emit numRoundsChanged(system->getNumRounds());
 }
 
 std::shared_ptr<System> Simulator::getSystem() const
@@ -55,21 +53,7 @@ void Simulator::finished(){
 void Simulator::round()
 {
     QMutexLocker locker(&system->mutex);
-    system->round();
-    auto systemState = system->getSystemState();
-    if(systemState == System::SystemState::Deadlocked) {
-        log("Deadlock detected. Simulation aborted.", true);
-        roundTimer.stop();
-        emit stopped();
-    } else if(systemState == System::SystemState::Disconnected) {
-        log("System disconnected. Simulation aborted.", true);
-        roundTimer.stop();
-        emit stopped();
-    } else if(systemState == System::SystemState::Terminated) {
-        log("Algorithm terminated. Simulation finished.", false);
-        roundTimer.stop();
-        emit stopped();
-    }
+    system->activate();
 }
 
 void Simulator::start()
@@ -82,29 +66,6 @@ void Simulator::stop()
 {
     roundTimer.stop();
     emit stopped();
-}
-
-void Simulator::runUntilNonValid()
-{
-    QMutexLocker locker(&system->mutex);
-    system->runUntilNotValid();
-}
-
-void Simulator::roundForParticleAt(const int x, const int y)
-{
-    QMutexLocker locker(&system->mutex);
-    if(!roundTimer.isActive()) {
-        const Node node(x, y);
-        system->roundForParticle(node);
-        auto systemState = system->getSystemState();
-        if(systemState == System::SystemState::Deadlocked) {
-            log("Deadlock detected.", true);
-        } else if(systemState == System::SystemState::Disconnected) {
-            log("System disconnected.", true);
-        } else if(systemState == System::SystemState::Terminated) {
-            log("Algorithm terminated.", false);
-        }
-    }
 }
 
 void Simulator::executeCommand(const QString cmd)
@@ -125,57 +86,22 @@ void Simulator::abortScript()
     //engine.abortEvaluation();
 }
 
-bool Simulator::getSystemValid()
-{
-    QMutexLocker locker(&system->mutex);
-    return system->getSystemState() == System::SystemState::Valid;
-}
-
-bool Simulator::getSystemDisconnected()
-{
-    QMutexLocker locker(&system->mutex);
-    return system->getSystemState() == System::SystemState::Disconnected;
-}
-
-bool Simulator::getSystemTerminated()
-{
-    QMutexLocker locker(&system->mutex);
-    return system->getSystemState() == System::SystemState::Terminated;
-}
-
-bool Simulator::getSystemDeadlocked()
-{
-    QMutexLocker locker(&system->mutex);
-    return system->getSystemState() == System::SystemState::Deadlocked;
-}
-
 int Simulator::getNumParticles() const
 {
     QMutexLocker locker(&system->mutex);
-    return system->getNumParticles();
-}
-
-int Simulator::getNumNonStaticParticles() const
-{
-    QMutexLocker locker(&system->mutex);
-    return system->getNumNonStaticParticles();
+    return system->size();
 }
 
 int Simulator::getNumMovements() const
 {
     QMutexLocker locker(&system->mutex);
-    return system->getNumMovements();
+    return system->numMovements();
 }
 
 int Simulator::getNumRounds() const
 {
     QMutexLocker locker(&system->mutex);
-    return system->getNumRounds();
-}
-
-void Simulator::setCheckConnectivity(bool b)
-{
-    System::checkConnectivity = b;
+    return system->numRounds();
 }
 
 void Simulator::setRoundDuration(int ms)

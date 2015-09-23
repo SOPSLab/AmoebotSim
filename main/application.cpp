@@ -23,7 +23,6 @@ Application::Application(int argc, char *argv[]) :
     connect(qmlRoot, SIGNAL(start()), &sim, SLOT(start()));
     connect(qmlRoot, SIGNAL(stop() ), &sim, SLOT(stop() ));
     connect(qmlRoot, SIGNAL(round()), &sim, SLOT(round()));
-    connect(vis, &VisItem::roundForParticleAt, &sim, &Simulator::roundForParticleAt);
     connect(qmlRoot, SIGNAL(executeCommand(QString)), &sim, SLOT(executeCommand(QString)));
 
     connect(slider, SIGNAL(roundDurationChanged(int)), &sim, SLOT(setRoundDuration(int)));
@@ -33,16 +32,16 @@ Application::Application(int argc, char *argv[]) :
             }
     );
 
-    connect(&sim,  &Simulator::numMovementsChanged,
-            [qmlRoot](const int& num){
-                QMetaObject::invokeMethod(qmlRoot, "setNumMovements", Q_ARG(QVariant, num));
-            }
-    );
-    connect(&sim,  &Simulator::numRoundsChanged,
-            [qmlRoot](const int& rounds){
-                QMetaObject::invokeMethod(qmlRoot, "setNumRounds", Q_ARG(QVariant, rounds));
-            }
-    );
+//    connect(&sim,  &Simulator::numMovementsChanged,
+//            [qmlRoot](const int& num){
+//                QMetaObject::invokeMethod(qmlRoot, "setNumMovements", Q_ARG(QVariant, num));
+//            }
+//    );
+//    connect(&sim,  &Simulator::numRoundsChanged,
+//            [qmlRoot](const int& rounds){
+//                QMetaObject::invokeMethod(qmlRoot, "setNumRounds", Q_ARG(QVariant, rounds));
+//            }
+//    );
     connect(&sim,  &Simulator::log,
             [qmlRoot](const QString msg, const bool isError){
                 QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));

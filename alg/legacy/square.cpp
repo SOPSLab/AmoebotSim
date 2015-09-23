@@ -1,9 +1,9 @@
 #include <set>
 #include <random>
 #include <QTime>
-#include "square.h"
+#include "alg/legacy/legacysystem.h"
+#include "alg/legacy/square.h"
 #include "sim/particle.h"
-#include "sim/system.h"
 #include <QDebug>
 
 namespace Square {
@@ -44,8 +44,8 @@ namespace Square {
 	Square::~Square() {
 	}
 
-	std::shared_ptr<System> Square::instance(const unsigned int size, const double holeProb) {
-	    std::shared_ptr<System> system = std::make_shared<System>();
+    std::shared_ptr<LegacySystem> Square::instance(const unsigned int size, const double holeProb) {
+        std::shared_ptr<LegacySystem> system = std::make_shared<LegacySystem>();
 	    std::set<Node> occupied, candidates;
 
 	    // Create Seed Particle

@@ -6,21 +6,25 @@
 #include <QString>
 #include <QTextStream>
 
-#include "alg/examplealgorithm.h"
-#include "alg/infobjcoating.h"
-#include "alg/boundedobjcoating.h"
-#include "alg/line.h"
-#include "alg/hexagon.h"
-#include "alg/triangle.h"
-#include "alg/ring.h"
+#include "alg/legacy/legacysystem.h"
+
+#include "alg/legacy/boundedobjcoating.h"
+#include "alg/legacy/compaction.h"
+#include "alg/legacy/compaction.h"
+#include "alg/legacy/examplealgorithm.h"
+#include "alg/legacy/hexagon.h"
+#include "alg/legacy/holeelimcompaction.h"
+#include "alg/legacy/holeelimstandard.h"
+#include "alg/legacy/infobjcoating.h"
+#include "alg/legacy/leaderelection.h"
+#include "alg/legacy/leaderelectiondemo.h"
+#include "alg/legacy/line.h"
+#include "alg/legacy/ring.h"
+#include "alg/legacy/square.h"
+#include "alg/legacy/triangle.h"
+#include "alg/legacy/universalcoating.h"
+
 #include "sim/simulator.h"
-#include "alg/square.h"
-#include "alg/compaction.h"
-#include "alg/holeelimstandard.h"
-#include "alg/holeelimcompaction.h"
-#include "alg/leaderelection.h"
-#include "alg/universalcoating.h"
-#include "alg/leaderelectiondemo.h"
 
 #include "helper/universalcoatinghelper.h"
 
@@ -35,22 +39,14 @@ public:
     
 public slots:
     void round();
-    void runUntilNotValid();
 
     void runScript(const QString scriptFilePath);
     void writeToFile(const QString filePath, const QString text);
 
-    bool isValid();
-    bool isDisconnected();
-    bool isTerminated();
-    bool isDeadlocked();
-
     int getNumParticles();
-    int getNumNonStaticParticles();
     int getNumMovements();
     int getNumRounds();
 
-    void setCheckConnectivity(bool b);
     void setRoundDuration(int ms);
 
     void exampleAlgorithm(const int numParticles);
@@ -66,9 +62,10 @@ public slots:
     void holeelimcompaction(const unsigned int numParticles = 100);
     void leaderelection(const unsigned int numParticles = 100);
     void universalcoating(const int staticParticlesRadius = 5, const int numParticles = 50, const float holeProb = 0.2);
-//    int getUniversalCoatingWeakLowerBound();
-//    int getUniversalCoatingStrongLowerBound();
     void leaderelectiondemo();
+
+    int getUniversalCoatingWeakLowerBound();
+    int getUniversalCoatingStrongLowerBound();
 
 private:
     Simulator& sim;
@@ -77,17 +74,12 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    sim.setSystem(Hexagon::Hexagon::instance(200, 0.3));
+    sim.setSystem(Hexagon::Hexagon::instance(200, 0.4));
 }
 
 inline void ScriptInterface::round()
 {
     sim.round();
-}
-
-inline void ScriptInterface::runUntilNotValid()
-{
-    sim.runUntilNonValid();
 }
 
 inline void ScriptInterface::runScript(const QString scriptFilePath)
@@ -123,34 +115,9 @@ inline void ScriptInterface::writeToFile(const QString filePath, const QString t
     file.close();
 }
 
-inline bool ScriptInterface::isValid()
-{
-    return sim.getSystemValid();
-}
-
-inline bool ScriptInterface::isDisconnected()
-{
-    return sim.getSystemDisconnected();
-}
-
-inline bool ScriptInterface::isTerminated()
-{
-    return sim.getSystemTerminated();
-}
-
-inline bool ScriptInterface::isDeadlocked()
-{
-    return sim.getSystemDeadlocked();
-}
-
 inline int ScriptInterface::getNumParticles()
 {
     return sim.getNumParticles();
-}
-
-inline int ScriptInterface::getNumNonStaticParticles()
-{
-    return sim.getNumNonStaticParticles();
 }
 
 inline int ScriptInterface::getNumMovements()
@@ -161,11 +128,6 @@ inline int ScriptInterface::getNumMovements()
 inline int ScriptInterface::getNumRounds()
 {
     return sim.getNumRounds();
-}
-
-inline void ScriptInterface::setCheckConnectivity(bool b)
-{
-    sim.setCheckConnectivity(b);
 }
 
 inline void ScriptInterface::setRoundDuration(int ms)
@@ -297,14 +259,14 @@ inline void ScriptInterface::universalcoating(const  int staticParticlesRadius, 
     sim.setSystem(UniversalCoating::UniversalCoating::instance(staticParticlesRadius, numParticles, holeProb));
 }
 
-//inline int ScriptInterface::getUniversalCoatingWeakLowerBound()
-//{
-//    return UniversalCoating::getWeakLowerBound(*sim.getSystem());
-//}
+inline int ScriptInterface::getUniversalCoatingWeakLowerBound()
+{
+    return UniversalCoating::getWeakLowerBound(*sim.getSystem());
+}
 
-//inline int ScriptInterface::getUniversalCoatingStrongLowerBound()
-//{
-//    return UniversalCoating::getStrongLowerBound(*sim.getSystem());
-//}
+inline int ScriptInterface::getUniversalCoatingStrongLowerBound()
+{
+    return UniversalCoating::getStrongLowerBound(*sim.getSystem());
+}
 
 #endif // SCRIPTINTERFACE_H

@@ -1,47 +1,42 @@
 // Brian Parker
 // Note that all of my shape formation algorithms make use of "State" instead of "phase". The two are equivalent in theory, but not in programming.
-#ifndef RING_H
-#define RING_H
+#ifndef HEXAGON_H
+#define HEXAGON_H
 
-#include "alg/algorithmwithflags.h"
+#include "alg/legacy/algorithmwithflags.h"
 
-class System;
+class LegacySystem;
 
-namespace Ring
+namespace Hexagon
 {
 enum class State {
     Finished,
-    Leader2,
-    Follower2,
-    Set,
     Leader,
     Follower,
     Idle,
     Seed
 };
 
-
-class RingFlag : public Flag
+// The pointer is initialized here in the HexFlag class.note the use of namespaces and classnames throughout.
+class HexFlag : public Flag
 {
 public:
-    RingFlag();
-    RingFlag(const RingFlag& other);
-    Ring::State state;
-    bool point; //
-    bool stopper; // This algorithm also makes use of a stopper, which is a "mid-point" for the expanded ring
+    HexFlag();
+    HexFlag(const HexFlag& other);
+    State state;
+    bool point; // 
     bool followIndicator;
     int contractDir;
 };
 
-class Ring : public AlgorithmWithFlags<RingFlag>
+class Hexagon : public AlgorithmWithFlags<HexFlag>
 {
 public:
-    
-    Ring(const State _state);
-    Ring(const Ring& other);
-    virtual ~Ring();
+    Hexagon(const State _state);
+    Hexagon(const Hexagon& other);
+    virtual ~Hexagon();
 
-    static std::shared_ptr<System> instance(const unsigned int size, const double holeProb);
+    static std::shared_ptr<LegacySystem> instance(const unsigned int size, const double holeProb);
 
     virtual Movement execute();
     virtual std::shared_ptr<Algorithm> blank() const override;
@@ -50,21 +45,14 @@ public:
     virtual bool isStatic() const;
 
 protected:
-    
-    
-    int isPointedAt(); // 
-    void setPoint(int _label);
-
-    // Functions to access the stopper
-    bool nearStopper();
-    void setStopper(bool value = true);
+    int isPointedAt(); // Function to easily use the pointer mechanic
 
     void setState(State _state);
     bool neighborInState(int direction, State _state);
     bool hasNeighborInState(State _state);
     int firstNeighborInState(State _state);
 
-    int getMoveDir(); 
+    int getMoveDir();
     void setContractDir(const int contractDir);
     int updatedFollowDir() const;
 
@@ -72,14 +60,12 @@ protected:
     void setFollowIndicatorLabel(const int label);
     bool tailReceivesFollowIndicator() const;
     bool followIndicatorMatchState(State _state) const;
-    
+
 protected:
     State state;
     int followDir;
-    int wait;
 };
 }
 
+#endif // HEXAGON_H
 
-
-#endif // RING_H

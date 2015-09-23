@@ -1,42 +1,47 @@
 // Brian Parker
 // Note that all of my shape formation algorithms make use of "State" instead of "phase". The two are equivalent in theory, but not in programming.
-#ifndef TRIANGLE_H
-#define TRIANGLE_H
+#ifndef RING_H
+#define RING_H
 
-#include "alg/algorithmwithflags.h"
+#include "alg/legacy/algorithmwithflags.h"
 
-class System;
+class LegacySystem;
 
-namespace Triangle
+namespace Ring
 {
 enum class State {
     Finished,
+    Leader2,
+    Follower2,
+    Set,
     Leader,
     Follower,
     Idle,
     Seed
 };
 
-class TriFlag : public Flag
+
+class RingFlag : public Flag
 {
 public:
-    TriFlag();
-    TriFlag(const TriFlag& other);
-    Triangle::State state;
-    bool point; // 
-    bool side; // This algorithm makes use of a "side" flag that specifically indicates the right side of the forming triangle
+    RingFlag();
+    RingFlag(const RingFlag& other);
+    Ring::State state;
+    bool point; //
+    bool stopper; // This algorithm also makes use of a stopper, which is a "mid-point" for the expanded ring
     bool followIndicator;
     int contractDir;
 };
 
-class Triangle : public AlgorithmWithFlags<TriFlag>
+class Ring : public AlgorithmWithFlags<RingFlag>
 {
 public:
-    Triangle(const State _state);
-    Triangle(const Triangle& other);
-    virtual ~Triangle();
+    
+    Ring(const State _state);
+    Ring(const Ring& other);
+    virtual ~Ring();
 
-    static std::shared_ptr<System> instance(const unsigned int size, const double holeProb);
+    static std::shared_ptr<LegacySystem> instance(const unsigned int size, const double holeProb);
 
     virtual Movement execute();
     virtual std::shared_ptr<Algorithm> blank() const override;
@@ -45,14 +50,21 @@ public:
     virtual bool isStatic() const;
 
 protected:
-    int isPointedAt();
+    
+    
+    int isPointedAt(); // 
+    void setPoint(int _label);
+
+    // Functions to access the stopper
+    bool nearStopper();
+    void setStopper(bool value = true);
 
     void setState(State _state);
     bool neighborInState(int direction, State _state);
     bool hasNeighborInState(State _state);
     int firstNeighborInState(State _state);
 
-    int getMoveDir();
+    int getMoveDir(); 
     void setContractDir(const int contractDir);
     int updatedFollowDir() const;
 
@@ -60,11 +72,14 @@ protected:
     void setFollowIndicatorLabel(const int label);
     bool tailReceivesFollowIndicator() const;
     bool followIndicatorMatchState(State _state) const;
-
+    
 protected:
     State state;
     int followDir;
+    int wait;
 };
 }
 
-#endif // TRIANGLE_H
+
+
+#endif // RING_H

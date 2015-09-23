@@ -1,9 +1,9 @@
 #ifndef BOUNDEDOBJCOATING_H
 #define BOUNDEDOBJCOATING_H
 
-#include "alg/algorithmwithflags.h"
+#include "alg/legacy/algorithmwithflags.h"
 
-class System;
+class LegacySystem;
 
 namespace BoundedObjCoating
 {
@@ -37,7 +37,7 @@ public:
     BoundedObjCoating(const BoundedObjCoating& other);
     virtual ~BoundedObjCoating();
 
-    static std::shared_ptr<System> instance(const int numStaticParticles, const int numParticles, const float holeProb);
+    static std::shared_ptr<LegacySystem> instance(const int numStaticParticles, const int numParticles, const float holeProb);
 
     virtual Movement execute();
     virtual std::shared_ptr<Algorithm> blank() const override;

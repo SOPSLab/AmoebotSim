@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 
-#include "alg/algorithm.h"
+#include "alg/legacy/algorithm.h"
 #include "sim/movement.h"
 #include "sim/node.h"
 

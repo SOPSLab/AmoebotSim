@@ -1,9 +1,9 @@
 #ifndef HOLEELIMSTANDARD_H
 #define HOLEELIMSTANDARD_H
 
-#include "alg/algorithmwithflags.h"
+#include "alg/legacy/algorithmwithflags.h"
 
-class System;
+class LegacySystem;
 
 namespace HoleElimStandard
 {
@@ -34,7 +34,7 @@ public:
     HoleElimStandard(const HoleElimStandard& other);
     virtual ~HoleElimStandard();
 
-    static std::shared_ptr<System> instance(const unsigned int size);
+    static std::shared_ptr<LegacySystem> instance(const unsigned int size);
 
     virtual Movement execute();
 

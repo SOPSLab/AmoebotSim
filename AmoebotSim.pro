@@ -10,12 +10,12 @@ QMAKE_INFO_PLIST = res/Info.plist
 win32:RC_FILE = res/AmoebotSim.rc
 
 HEADERS += \
-    alg/algorithm.h \
-    alg/algorithmwithflags.h \
-    alg/examplealgorithm.h \
-    alg/hexagon.h \
-    alg/infobjcoating.h \
-    alg/triangle.h \
+    alg/legacy/algorithm.h \
+    alg/legacy/algorithmwithflags.h \
+    alg/legacy/examplealgorithm.h \
+    alg/legacy/hexagon.h \
+    alg/legacy/infobjcoating.h \
+    alg/legacy/triangle.h \
     main/application.h \
     script/scriptinterface.h \
     sim/movement.h \
@@ -26,28 +26,29 @@ HEADERS += \
     ui/glitem.h \
     ui/commandhistorymanager.h \
     ui/visitem.h \
-    alg/ring.h \
-    alg/line.h \
-    alg/square.h \
-    alg/boundedobjcoating.h \
-    alg/compaction.h \
-    alg/holeelimstandard.h \
-    alg/holeelimcompaction.h \
-    alg/universalcoating.h \
-    alg/leaderelectiondemo.h \
-    alg/leaderelection.h \
+    alg/legacy/ring.h \
+    alg/legacy/line.h \
+    alg/legacy/square.h \
+    alg/legacy/boundedobjcoating.h \
+    alg/legacy/compaction.h \
+    alg/legacy/holeelimstandard.h \
+    alg/legacy/holeelimcompaction.h \
+    alg/legacy/universalcoating.h \
+    alg/legacy/leaderelectiondemo.h \
+    alg/legacy/leaderelection.h \
     helper/universalcoatinghelper.h \
     helper/rect.h \
     helper/misc.h \
     helper/bipartitematchinggraph.h \
-    ui/view.h
+    ui/view.h \
+    alg/legacy/legacysystem.h
 
 SOURCES += \
-    alg/algorithm.cpp \
-    alg/examplealgorithm.cpp \
-    alg/hexagon.cpp \
-    alg/infobjcoating.cpp \
-    alg/triangle.cpp \
+    alg/legacy/algorithm.cpp \
+    alg/legacy/examplealgorithm.cpp \
+    alg/legacy/hexagon.cpp \
+    alg/legacy/infobjcoating.cpp \
+    alg/legacy/triangle.cpp \
     main/application.cpp \
     main/main.cpp\
     sim/particle.cpp \
@@ -56,16 +57,17 @@ SOURCES += \
     ui/commandhistorymanager.cpp \
     ui/glitem.cpp \
     ui/visitem.cpp \
-    alg/ring.cpp \
-    alg/line.cpp \
-    alg/square.cpp \
-    alg/boundedobjcoating.cpp \
-    alg/compaction.cpp \
-    alg/holeelimstandard.cpp \
-    alg/holeelimcompaction.cpp \
-    alg/universalcoating.cpp \
-    alg/leaderelectiondemo.cpp \
-    alg/leaderelection.cpp
+    alg/legacy/ring.cpp \
+    alg/legacy/line.cpp \
+    alg/legacy/square.cpp \
+    alg/legacy/boundedobjcoating.cpp \
+    alg/legacy/compaction.cpp \
+    alg/legacy/holeelimstandard.cpp \
+    alg/legacy/holeelimcompaction.cpp \
+    alg/legacy/universalcoating.cpp \
+    alg/legacy/leaderelectiondemo.cpp \
+    alg/legacy/leaderelection.cpp \
+    alg/legacy/legacysystem.cpp
 
 RESOURCES += \
     res/qml.qrc \

@@ -1,10 +1,10 @@
 #ifndef   UNIVERSALCOATING
 #define UNIVERSALCOATING
 
-#include "alg/algorithmwithflags.h"
+#include "alg/legacy/algorithmwithflags.h"
 #include <QColor>
 
-class System;
+class LegacySystem;
 
 namespace UniversalCoating
 {
@@ -125,7 +125,7 @@ public:
     UniversalCoating(const UniversalCoating& other);
     virtual ~UniversalCoating();
 
-    static std::shared_ptr<System> instance(const int numStaticParticles, const int numParticles, const float holeProb);
+    static std::shared_ptr<LegacySystem> instance(const int numStaticParticles, const int numParticles, const float holeProb);
 
     virtual Movement execute();
     virtual Movement subExecute();

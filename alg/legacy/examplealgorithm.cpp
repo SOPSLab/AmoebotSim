@@ -1,6 +1,6 @@
-#include "alg/examplealgorithm.h"
+#include "alg/legacy/examplealgorithm.h"
+#include "alg/legacy/legacysystem.h"
 #include "sim/particle.h"
-#include "sim/system.h"
 
 namespace ExampleAlgorithm
 {
@@ -25,10 +25,10 @@ ExampleAlgorithm::~ExampleAlgorithm()
 {
 }
 
-std::shared_ptr<System> ExampleAlgorithm::instance(const int numParticles)
+std::shared_ptr<LegacySystem> ExampleAlgorithm::instance(const int numParticles)
 {
     // Create a line of particles where the right-most one is a leader.
-    std::shared_ptr<System> system = std::make_shared<System>();
+    std::shared_ptr<LegacySystem> system = std::make_shared<LegacySystem>();
     for(int x = 0; x < numParticles; x++) {
         Phase phase = x == numParticles - 1 ? Phase::Leader : Phase::Idle;
         int orientation = randDir();

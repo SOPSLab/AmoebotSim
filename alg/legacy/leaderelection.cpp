@@ -1,6 +1,7 @@
 #include <set>
 
-#include "leaderelection.h"
+#include "alg/legacy/leaderelection.h"
+#include "alg/legacy/legacysystem.h"
 #include "sim/particle.h"
 #include "sim/system.h"
 
@@ -540,9 +541,9 @@ LeaderElection::LeaderElection(const LeaderElection& other) :
 LeaderElection::~LeaderElection()
 {}
 
-std::shared_ptr<System> LeaderElection::instance(const unsigned int size)
+std::shared_ptr<LegacySystem> LeaderElection::instance(const unsigned int size)
 {
-    std::shared_ptr<System> system = std::make_shared<System>();
+    std::shared_ptr<LegacySystem> system = std::make_shared<LegacySystem>();
     std::set<Node> occupied, baseComponent;
     std::deque<Node> queue;
 

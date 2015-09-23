@@ -38,14 +38,14 @@ void VisItem::systemChanged(std::shared_ptr<System> _system)
 void VisItem::focusOnCenterOfMass()
 {
     QMutexLocker locker(&system->mutex);
-    if(system == nullptr || system->getNumParticles() == 0) {
+    if(system == nullptr || system->size() == 0) {
         return;
     }
 
     QPointF sum(0, 0);
     int numNodes = 0;
 
-    for(int i = 0; i < system->getNumParticles(); i++) {
+    for(int i = 0; i < system->size(); i++) {
         const Particle& p = system->at(i);
         sum = sum + nodeToWorldCoord(p.head);
         numNodes++;
@@ -93,12 +93,12 @@ void VisItem::paint()
 
     drawGrid();
 
-    QMutexLocker locker(&system->mutex);
     if(system != nullptr) {
+        QMutexLocker locker(&system->mutex);
         drawParticles();
-        if(system->getSystemState() == System::SystemState::Disconnected) {
-            drawDisconnectionNode();
-        }
+//        if(system->getSystemState() == System::SystemState::Disconnected) {
+//            drawDisconnectionNode();
+//        }
     }
 }
 
@@ -164,25 +164,25 @@ void VisItem::drawParticles()
 {
     particleTex->bind();
     glBegin(GL_QUADS);
-    for(int i = 0; i < system->getNumParticles(); ++i) {
+    for(int i = 0; i < (int) system->size(); ++i) {
         const Particle& p = system->at(i);
         if(view.includes(nodeToWorldCoord(p.head))) {
             drawMarks(p);
         }
     }
-    for(int i = 0; i < system->getNumParticles(); ++i) {
+    for(int i = 0; i < (int) system->size(); ++i) {
         const Particle& p = system->at(i);
         if(view.includes(nodeToWorldCoord(p.head))) {
             drawParticle(p);
         }
     }
-    for(int i = 0; i < system->getNumParticles(); ++i) {
+    for(int i = 0; i < (int) system->size(); ++i) {
         const Particle& p = system->at(i);
         if(view.includes(nodeToWorldCoord(p.head))) {
             drawBorders(p);
         }
     }
-    for(int i = 0; i < system->getNumParticles(); ++i) {
+    for(int i = 0; i < (int) system->size(); ++i) {
         const Particle& p = system->at(i);
         if(view.includes(nodeToWorldCoord(p.head))) {
             drawBorderPoints(p);
@@ -241,14 +241,14 @@ void VisItem::drawBorderPoints(const Particle& p)
     }
 }
 
-void VisItem::drawDisconnectionNode()
-{
-    auto pos = nodeToWorldCoord(system->getDisconnectionNode());
-    glColor4i(255 << 23, 0, 0, (0.6f * fabsf(blinkValue) + 0.4f) * (180 << 23));
-    glBegin(GL_QUADS);
-    drawFromParticleTex(14, pos);
-    glEnd();
-}
+//void VisItem::drawDisconnectionNode()
+//{
+//    auto pos = nodeToWorldCoord(system->getDisconnectionNode());
+//    glColor4i(255 << 23, 0, 0, (0.6f * fabsf(blinkValue) + 0.4f) * (180 << 23));
+//    glBegin(GL_QUADS);
+//    drawFromParticleTex(14, pos);
+//    glEnd();
+//}
 
 void VisItem::drawFromParticleTex(const int index, const QPointF& pos)
 {

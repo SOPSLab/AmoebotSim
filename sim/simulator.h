@@ -22,8 +22,6 @@ public:
 signals:
     void systemChanged(std::shared_ptr<System> _system);
     void roundDurationChanged(int ms);
-    void numMovementsChanged(int num);
-    void numRoundsChanged(int num);
 
     void started();
     void stopped();
@@ -36,27 +34,16 @@ public slots:
     void start();
     void stop();
 
-    void runUntilNonValid();
-
     void finished();
-
-    void roundForParticleAt(const int x, const int y);
 
     void executeCommand(const QString cmd);
     void runScript(const QString script);
     void abortScript();
 
-    bool getSystemValid();
-    bool getSystemDisconnected();
-    bool getSystemTerminated();
-    bool getSystemDeadlocked();
-
     int getNumParticles() const;
-    int getNumNonStaticParticles() const;
     int getNumMovements() const;
     int getNumRounds() const;
 
-    void setCheckConnectivity(bool b);
     void setRoundDuration(int ms);
 
 protected:

@@ -1,56 +1,59 @@
 #include <set>
 #include <random>
 #include <QTime>
-#include "line.h"
+#include "alg/legacy/legacysystem.h"
+#include "alg/legacy/triangle.h"
 #include "sim/particle.h"
 #include "sim/system.h"
 
-namespace Line
+namespace Triangle
 {
-LineFlag::LineFlag()
+TriFlag::TriFlag()
     : point(false),
+      side(false),
       followIndicator(false)
 {
 }
 
-LineFlag::LineFlag(const LineFlag& other)
+TriFlag::TriFlag(const TriFlag& other)
     : Flag(other),
       state(other.state),
       point(other.point),
+      side(other.side),
       followIndicator(other.followIndicator)
 {
 }
 
-Line::Line(const State _state)
+Triangle::Triangle(const State _state)
     : state(_state),
       followDir(-1)
 {
     if (_state == State::Seed){
         outFlags[0].point = true;
-        outFlags[3].point = true;
         headMarkDir = 0;
     }
     setState(_state);
 }
 
-Line::Line(const Line& other)
+
+Triangle::Triangle(const Triangle& other)
     : AlgorithmWithFlags(other),
       state(other.state),
       followDir(other.followDir)
 {
 }
 
-Line::~Line()
+Triangle::~Triangle()
 {
 }
 
-std::shared_ptr<System> Line::instance(const unsigned int size, const double holeProb)
+std::shared_ptr<LegacySystem> Triangle::instance(const unsigned int size, const double holeProb)
 {
-    std::shared_ptr<System> system = std::make_shared<System>();
+    std::shared_ptr<LegacySystem> system = std::make_shared<LegacySystem>();
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insertParticle(Particle(std::make_shared<Line>(State::Seed), randDir(), Node(0,0), -1));
+    system->insertParticle(Particle(std::make_shared<Triangle>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -80,26 +83,23 @@ std::shared_ptr<System> Line::instance(const unsigned int size, const double hol
             }
         }
         // Insert new idle particle
-        system->insertParticle(Particle(std::make_shared<Line>(State::Idle), randDir(), head, -1));
+        system->insertParticle(Particle(std::make_shared<Triangle>(State::Idle), randDir(), head, -1));
     }
     return system;
 }
 
-Movement Line::execute()
+Movement Triangle::execute()
 {
     if(isExpanded()){
         if(state == State::Follower) {
             setFollowIndicatorLabel(followDir);
         }
-
         if(hasNeighborInState(State::Idle) || (tailReceivesFollowIndicator() && (followIndicatorMatchState(State::Follower) || (followIndicatorMatchState(State::Leader) && state != State::Follower)))) {
             return Movement(MovementType::HandoverContract, tailContractionLabel());
-        }
-        else {
+        } else {
             return Movement(MovementType::Contract, tailContractionLabel());
         }
-    }
-    else {
+    } else {
         if (state == State::Idle){
             if (hasNeighborInState(State::Finished) || hasNeighborInState(State::Seed)){
                 setState(State::Leader);
@@ -112,23 +112,14 @@ Movement Line::execute()
                 setFollowIndicatorLabel(followDir);
                 headMarkDir = followDir;
                 return Movement(MovementType::Idle);
+            } else {
+                return Movement(MovementType::Empty);
             }
-        }
-
-        else if (state == State::Follower && !hasNeighborInState(State::Idle)) {
-
-            if (hasNeighborInState(State::Finished)){
+        } else if(state == State::Follower && !hasNeighborInState(State::Idle)) {
+            if(hasNeighborInState(State::Finished)){
                 setState(State::Leader);
-            }
-            else {
-                if(inFlags[followDir] == nullptr){
-                    if (hasNeighborInState(State::Leader)){
-                        followDir = firstNeighborInState(State::Leader);
-                    }
-                    else {
-                        followDir = firstNeighborInState(State::Follower);
-                    }
-                }
+                return Movement(MovementType::Idle);
+            } else {
                 if(inFlags[followDir]->isExpanded() && !inFlags[followDir]->fromHead) {
                     int expansionDir = followDir;
                     setContractDir(expansionDir);
@@ -138,55 +129,67 @@ Movement Line::execute()
                     Q_ASSERT(labelToDirAfterExpansion(temp, expansionDir) == followDir);
                     setFollowIndicatorLabel(temp);
                     return Movement(MovementType::Expand, expansionDir);
+                } else {
+                    return Movement(MovementType::Empty);
                 }
             }
-        }
-
-        // Leader: Only changes to finished if pointed at, and sets point to continue in straight line
-        else if (state == State::Leader && !hasNeighborInState(State::Idle)){
+        } else if(state == State::Leader && !hasNeighborInState(State::Idle)){
             headMarkDir = -1;
             int direction = isPointedAt();
             headMarkDir = direction;
             if(direction != -1){
                 setState(State::Finished);
-                outFlags[(direction+3)%6].point = true; // Set point
-            }
-            else {
+                // The following checks surroundings to ensure that the formation continues in a snaking pattern
+                if(neighborInState((direction+4)%6, State::Finished) || neighborInState((direction+2)%6, State::Finished)){
+                    outFlags[(direction+3)%6].point = true;
+                } else{
+                    if (!neighborInState((direction+1)%6, State::Finished) && !neighborInState((direction+5)%6, State::Finished) && !neighborInState((direction+5)%6, State::Seed)){
+                        if (inFlags[direction]->side || neighborInState(direction,State::Seed)){
+                            outFlags[(direction+5)%6].point = true;
+                        } else {
+                            outFlags[(direction+1)%6].point = true;
+                        }
+                    } else if (hasNeighborInState(State::Seed) || neighborInState((direction+5)%6, State::Finished)){
+                        outFlags[(direction+2)%6].point = true;
+                    } else if (neighborInState((direction+1)%6, State::Finished)){
+                        outFlags[(direction+4)%6].point = true;
+                        outFlags[(direction+4)%6].side = true;
+                    }
+                }
+                return Movement(MovementType::Idle);
+            } else {
                 auto moveDir = getMoveDir();
                 setContractDir(moveDir);
                 headMarkDir = moveDir;
                 return Movement(MovementType::Expand, moveDir);
             }
-        }
-
-        else if (state == State::Finished || state == State::Seed){
+        } else {
             return Movement(MovementType::Empty);
         }
-        return Movement(MovementType::Idle);
     }
 }
 
-std::shared_ptr<Algorithm> Line::blank() const
+std::shared_ptr<Algorithm> Triangle::blank() const
 {
-    return std::make_shared<Line>(State::Idle);
+    return std::make_shared<Triangle>(State::Idle);
 }
 
-std::shared_ptr<Algorithm> Line::clone()
+std::shared_ptr<Algorithm> Triangle::clone()
 {
-    return std::make_shared<Line>(*this);
+    return std::make_shared<Triangle>(*this);
 }
 
-bool Line::isDeterministic() const
+bool Triangle::isDeterministic() const
 {
     return true;
 }
 
-bool Line::isStatic() const
+bool Triangle::isStatic() const
 {
     return false;
 }
 
-int Line::isPointedAt(){
+int Triangle::isPointedAt(){
     for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr) {
             if(inFlags[label]->point){
@@ -197,7 +200,7 @@ int Line::isPointedAt(){
     return -1;
 }
 
-void Line::setState(State _state)
+void Triangle::setState(State _state)
 {
     state = _state;
     if (state == State::Seed){
@@ -215,23 +218,22 @@ void Line::setState(State _state)
     else { // phase == Phase::Idle
         headMarkColor = -1; tailMarkColor = -1; // No color
     }
-
     for(int i = 0; i < 10; i++) {
         outFlags[i].state = state;
     }
 }
 
-bool Line::neighborInState(int direction, State _state){
+bool Triangle::neighborInState(int direction, State _state){
     Q_ASSERT(0 <= direction && direction <= 9);
     return (inFlags[direction] != nullptr && inFlags[direction]->state == _state);
 }
 
-bool Line::hasNeighborInState(State _state)
+bool Triangle::hasNeighborInState(State _state)
 {
     return (firstNeighborInState(_state) != -1);
 }
 
-int Line::firstNeighborInState(State _state)
+int Triangle::firstNeighborInState(State _state)
 {
     for(int label = 0; label < 10; label++) {
         if(neighborInState(label, _state)) {
@@ -241,7 +243,7 @@ int Line::firstNeighborInState(State _state)
     return -1;
 }
 
-int Line::getMoveDir()
+int Triangle::getMoveDir()
 {
     Q_ASSERT(isContracted());
     int objectDir = firstNeighborInState(State::Finished);
@@ -255,13 +257,13 @@ int Line::getMoveDir()
     return labelToDir(objectDir);
 }
 
-void Line::setContractDir(const int contractDir)
+void Triangle::setContractDir(const int contractDir)
 {
     for(int label = 0; label < 10; label++) {
         outFlags[label].contractDir = contractDir;
     }
 }
-int Line::updatedFollowDir() const
+int Triangle::updatedFollowDir() const
 {
     int contractDir = inFlags[followDir]->contractDir;
     int offset = (followDir - inFlags[followDir]->dir + 9) % 6;
@@ -270,21 +272,21 @@ int Line::updatedFollowDir() const
     return tempFollowDir;
 }
 
-void Line::unsetFollowIndicator()
+void Triangle::unsetFollowIndicator()
 {
     for(int i = 0; i < 10; i++) {
         outFlags[i].followIndicator = false;
     }
 }
 
-void Line::setFollowIndicatorLabel(const int label)
+void Triangle::setFollowIndicatorLabel(const int label)
 {
     for(int i = 0; i < 10; i++) {
         outFlags[i].followIndicator = (i == label);
     }
 }
 
-bool Line::tailReceivesFollowIndicator() const
+bool Triangle::tailReceivesFollowIndicator() const
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;
@@ -297,7 +299,7 @@ bool Line::tailReceivesFollowIndicator() const
     return false;
 }
 
-bool Line::followIndicatorMatchState(State _state) const
+bool Triangle::followIndicatorMatchState(State _state) const
 {
     for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
         auto label = *it;
@@ -309,5 +311,4 @@ bool Line::followIndicatorMatchState(State _state) const
     }
     return false;
 }
-
 }

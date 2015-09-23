@@ -1,9 +1,9 @@
 #ifndef   LEADERELECTIONDEMO
 #define LEADERELECTIONDEMO
 
-#include "alg/algorithmwithflags.h"
+#include "alg/legacy/algorithmwithflags.h"
 
-class System;
+class LegacySystem;
 
 namespace LeaderElectionDemo
 {
@@ -70,7 +70,7 @@ public:
     LeaderElectionDemo(const LeaderElectionDemo& other);
     virtual ~LeaderElectionDemo();
 
-    static std::shared_ptr<System> instance();
+    static std::shared_ptr<LegacySystem> instance();
 
 
     virtual Movement execute();

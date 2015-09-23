@@ -1,10 +1,10 @@
 #ifndef LEADERELECTION_H
 #define LEADERELECTION_H
 
-#include "alg/algorithmwithflags.h"
+#include "alg/legacy/algorithmwithflags.h"
 #include <QColor>
 
-class System;
+class LegacySystem;
 
 namespace LeaderElection
 {
@@ -102,7 +102,7 @@ public:
     LeaderElection(const LeaderElection& other);
     virtual ~LeaderElection();
 
-    static std::shared_ptr<System> instance(const unsigned int size);
+    static std::shared_ptr<LegacySystem> instance(const unsigned int size);
     virtual Movement execute();
     virtual std::shared_ptr<Algorithm> blank() const override;
     virtual std::shared_ptr<Algorithm> clone() override;

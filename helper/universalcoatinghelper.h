@@ -9,6 +9,7 @@
 
 #include "sim/node.h"
 #include "sim/particle.h"
+#include "sim/system.h"
 #include "bipartitematchinggraph.h"
 #include "misc.h"
 #include "rect.h"
@@ -23,7 +24,7 @@ inline void setupObjectAndParticles(const System& system,
                                     std::set<Node>& object,
                                     std::set<Node>& particles)
 {
-    for(int i = 0; i < system.getNumParticles(); i++) {
+    for(int i = 0; i < (int) system.size(); i++) {
         const Particle& p = system.at(i);
         if(p.isStatic()) {
             object.insert(p.head);

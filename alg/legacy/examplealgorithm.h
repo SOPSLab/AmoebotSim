@@ -46,9 +46,9 @@
 #ifndef EXAMPLEALGORITHM_H
 #define EXAMPLEALGORITHM_H
 
-#include "alg/algorithmwithflags.h"
+#include "alg/legacy/algorithmwithflags.h"
 
-class System;
+class LegacySystem;
 
 // We put everything in a namespace so we do not pollute the global namespace.
 namespace ExampleAlgorithm
@@ -97,7 +97,7 @@ public:
      * does not check it and will most probably fail in very unpleasent and undebuggable ways if the requirement is not
      * satisfied.
      * */
-    static std::shared_ptr<System> instance(const int numParticles);
+    static std::shared_ptr<LegacySystem> instance(const int numParticles);
 
     // This method essentially determines the behavior of a particle. See description above.
     virtual Movement execute();

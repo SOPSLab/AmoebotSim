@@ -3,9 +3,9 @@
 #include <deque>
 #include <set>
 
-#include "alg/boundedobjcoating.h"
+#include "alg/legacy/boundedobjcoating.h"
+#include "alg/legacy/legacysystem.h"
 #include "sim/particle.h"
-#include "sim/system.h"
 
 namespace BoundedObjCoating
 {
@@ -52,9 +52,9 @@ BoundedObjCoating::~BoundedObjCoating()
 {
 }
 
-std::shared_ptr<System> BoundedObjCoating::instance(const int numStaticParticles, const int numParticles, const float holeProb)
+std::shared_ptr<LegacySystem> BoundedObjCoating::instance(const int numStaticParticles, const int numParticles, const float holeProb)
 {
-    std::shared_ptr<System> system = std::make_shared<System>();
+    std::shared_ptr<LegacySystem> system = std::make_shared<LegacySystem>();
 
     std::deque<Node> orderedSurface;
     std::set<Node> occupied;
@@ -63,7 +63,7 @@ std::shared_ptr<System> BoundedObjCoating::instance(const int numStaticParticles
     Node Start;
     Node End;
     int lastOffset = 0;
-    while(system->getNumParticles() < numStaticParticles) {
+    while((int) system->size() < numStaticParticles) {
         system->insertParticle(Particle(std::make_shared<BoundedObjCoating>(Phase::Static), randDir(), pos));
         occupied.insert(pos);
         orderedSurface.push_back(pos);

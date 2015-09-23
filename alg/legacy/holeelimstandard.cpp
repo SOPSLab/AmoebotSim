@@ -1,9 +1,9 @@
 #include <set>
 #include <random>
 
-#include "holeelimstandard.h"
+#include "alg/legacy/holeelimstandard.h"
+#include "alg/legacy/legacysystem.h"
 #include "sim/particle.h"
-#include "sim/system.h"
 
 namespace HoleElimStandard
 {
@@ -39,9 +39,9 @@ HoleElimStandard::~HoleElimStandard()
 {
 }
 
-std::shared_ptr<System> HoleElimStandard::instance(const unsigned int size)
+std::shared_ptr<LegacySystem> HoleElimStandard::instance(const unsigned int size)
 {
-    std::shared_ptr<System> system = std::make_shared<System>();
+    std::shared_ptr<LegacySystem> system = std::make_shared<LegacySystem>();
     std::set<Node> occupied, seedComponent;
     std::deque<Node> queue;
 
