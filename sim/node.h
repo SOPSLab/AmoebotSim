@@ -3,6 +3,8 @@
 
 #include <array>
 
+#include <QtGlobal>
+
 class Node
 {
 public:

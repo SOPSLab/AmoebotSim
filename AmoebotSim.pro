@@ -42,7 +42,8 @@ HEADERS += \
     helper/bipartitematchinggraph.h \
     ui/view.h \
     alg/legacy/legacysystem.h \
-    alg/legacy/legacyparticle.h
+    alg/legacy/legacyparticle.h \
+    alg/labellednocompassparticle.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -69,7 +70,8 @@ SOURCES += \
     alg/legacy/leaderelectiondemo.cpp \
     alg/legacy/leaderelection.cpp \
     alg/legacy/legacysystem.cpp \
-    alg/legacy/legacyparticle.cpp
+    alg/legacy/legacyparticle.cpp \
+    alg/labellednocompassparticle.cpp
 
 RESOURCES += \
     res/qml.qrc \
