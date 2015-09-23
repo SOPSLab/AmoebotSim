@@ -35,3 +35,12 @@ const Particle& AmoebotSystem::at(const int i) const
 {
     return *particles.at(i);
 }
+
+void AmoebotSystem::insert(AmoebotParticle* particle)
+{
+    particles.push_back(particle);
+    particleMap[particle->head] = particle;
+    if(particle->isExpanded()) {
+        particleMap[particle->tail()] = particle;
+    }
+}

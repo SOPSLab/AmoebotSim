@@ -56,13 +56,10 @@ int TestParticle::headMarkDir() const
 
 TestSystem::TestSystem()
 {
-    particles.push_back(new TestParticle(Node(0, 0), -1, randDir(), particleMap, State::Seed));
-    particleMap[Node(0, 0)] = particles.back();
+    insert(new TestParticle(Node(0, 0), -1, randDir(), particleMap, State::Seed));
 
     for(int x = 1; x < 10; x++) {
-        Node node(x, 0);
-        particles.push_back(new TestParticle(node, -1, randDir(), particleMap, State::Idle));
-        particleMap[node] = particles.back();
+        insert(new TestParticle(Node(x, 0), -1, randDir(), particleMap, State::Idle));
     }
 }
 

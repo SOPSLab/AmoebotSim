@@ -13,12 +13,14 @@ class AmoebotSystem : public System, public RandomNumberGenerator
 {
 public:
     AmoebotSystem();
-    ~AmoebotSystem();
+    virtual ~AmoebotSystem();
 
     virtual void activate();
 
     virtual unsigned int size() const;
     virtual const Particle& at(const int i) const;
+
+    virtual void insert(AmoebotParticle* particle);
 
 protected:
     std::deque<AmoebotParticle*> particles;
