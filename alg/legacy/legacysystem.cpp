@@ -355,17 +355,15 @@ bool LegacySystem::handleContraction(LegacyParticle& p, int label, bool isHandov
         particleMap.insert(std::pair<Node, LegacyParticle*>(handoverNode, handoverParticle));
     } else {
         // an isolated contraction is the only action that can disconnect the system
-        if(checkConnectivity) {
-            std::set<Node> occupiedNodes;
-            for(auto& p : particles) {
-                occupiedNodes.insert(p.head);
-                if(p.tailDir != -1) {
-                    occupiedNodes.insert(p.tail());
-                }
+        std::set<Node> occupiedNodes;
+        for(auto& p : particles) {
+            occupiedNodes.insert(p.head);
+            if(p.tailDir != -1) {
+                occupiedNodes.insert(p.tail());
             }
-            if(!isConnected(occupiedNodes)) {
-                systemState = SystemState::Disconnected;
-            }
+        }
+        if(!isConnected(occupiedNodes)) {
+            systemState = SystemState::Disconnected;
         }
     }
     return true;

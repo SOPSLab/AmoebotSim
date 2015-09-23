@@ -52,8 +52,6 @@ protected:
 
     SystemState systemState;
 
-    bool checkConnectivity;
-
     unsigned int numNonStaticParticles;
     int _numMovements;
     int _numRounds;
