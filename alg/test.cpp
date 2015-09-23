@@ -19,12 +19,9 @@ void TestParticle::activate()
     if(state == State::Seed) {
         return;
     }
-    for(int label = 0; label < 6; label++) {
-        if(hasNeighborAtLabel(label)) {
-            if(neighborAtLabel<TestParticle>(label).state != State::Idle) {
-                state = State::Follow;
-            }
-        }
+
+    if(hasNeighborInState({State::Seed, State::Follow})) {
+        state = State::Follow;
     }
 }
 
@@ -52,6 +49,20 @@ int TestParticle::headMarkColor() const
 int TestParticle::headMarkDir() const
 {
     return -1;
+}
+
+bool TestParticle::hasNeighborInState(std::initializer_list<State> states)
+{
+    for(int label = 0; label < 6; label++) {
+        if(hasNeighborAtLabel(label)) {
+            for(auto state : states) {
+                if(neighborAtLabel<TestParticle>(label).state == state) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 TestSystem::TestSystem()
