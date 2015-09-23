@@ -12,6 +12,16 @@ System::~System()
 
 }
 
+int System::numMovements() const
+{
+    return 0;
+}
+
+int System::numRounds() const
+{
+    return 0;
+}
+
 bool System::isConnected(std::set<Node>& occupiedNodes)
 {
     std::deque<Node> queue;

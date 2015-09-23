@@ -13,15 +13,13 @@ public:
 
     Node tail() const;
 
-    virtual int headMarkColor() const = 0;
-    virtual int headMarkDir() const = 0;
-    virtual int tailMarkColor() const = 0;
-    virtual int tailMarkDir() const = 0;
+    virtual int headMarkColor() const;
+    virtual int headMarkDir() const;
+    virtual int tailMarkColor() const;
+    virtual int tailMarkDir() const;
 
-    virtual std::array<int, 18> borderColors() const = 0;
-    virtual int borderDir(const int dir) const = 0;
-    virtual std::array<int, 6> borderPointColors() const = 0;
-    virtual int borderPointDir(const int dir) const = 0;
+    virtual std::array<int, 18> borderColors() const;
+    virtual std::array<int, 6> borderPointColors() const;
 
 public:
     Node head;

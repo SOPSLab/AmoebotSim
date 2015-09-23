@@ -224,7 +224,7 @@ void VisItem::drawBorders(const Particle& p)
         if(p.borderColors().at(i) != -1) {
             QRgb color = p.borderColors().at(i);
             glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
-            drawFromParticleTex(p.borderDir(i) + 21, pos);
+            drawFromParticleTex(i + 21, pos);
         }
     }
 }
@@ -236,7 +236,7 @@ void VisItem::drawBorderPoints(const Particle& p)
         if(p.borderPointColors().at(i) != -1) {
             QRgb color = p.borderPointColors().at(i);
             glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 255 << 23);
-            drawFromParticleTex(p.borderPointDir(i) + 15, pos);
+            drawFromParticleTex(i + 15, pos);
         }
     }
 }

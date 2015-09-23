@@ -23,9 +23,9 @@ const std::array<std::array<int, 10>, 6> LegacyParticle::labelDir =
 
 LegacyParticle::LegacyParticle(std::shared_ptr<Algorithm> _algorithm,
                                const int _orientation,
-                               const Node _head,
-                               const int _tailDir) :
-    Particle(_head, _tailDir),
+                               const Node head,
+                               const int tailDir) :
+    Particle(head, tailDir),
     orientation(_orientation),
     algorithm(_algorithm)
 {
@@ -221,7 +221,13 @@ int LegacyParticle::tailMarkDir() const
 
 std::array<int, 18> LegacyParticle::borderColors() const
 {
-    return algorithm->borderColors;
+    std::array<int, 18> rearranged;
+
+    for(unsigned int i = 0; i < 18; i++) {
+        rearranged[borderDir(i)] = algorithm->borderColors[i];
+    }
+
+    return rearranged;
 }
 
 int LegacyParticle::borderDir(const int dir) const
@@ -236,7 +242,13 @@ int LegacyParticle::borderDir(const int dir) const
 
 std::array<int, 6> LegacyParticle::borderPointColors() const
 {
-    return algorithm->borderPointColors;
+    std::array<int, 6> rearranged;
+
+    for(unsigned int i = 0; i < 6; i++) {
+        rearranged[borderPointDir(i)] = algorithm->borderPointColors[i];
+    }
+
+    return rearranged;
 }
 
 int LegacyParticle::borderPointDir(const int dir) const

@@ -19,8 +19,8 @@ public:
     virtual unsigned int size() const = 0;
     virtual const Particle& at(const int i) const = 0;
 
-    virtual int numMovements() const = 0;
-    virtual int numRounds() const = 0;
+    virtual int numMovements() const;
+    virtual int numRounds() const;
 
 protected:
     static bool isConnected(std::set<Node>& occupiedNodes);
