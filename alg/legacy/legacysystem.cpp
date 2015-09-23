@@ -111,6 +111,11 @@ int LegacySystem::numRounds() const
     return _numRounds;
 }
 
+bool LegacySystem::hasTerminated() const
+{
+    return systemState != SystemState::Valid;
+}
+
 void LegacySystem::insertParticle(const LegacyParticle& p)
 {
     Q_ASSERT(particleMap.find(p.head) == particleMap.end());

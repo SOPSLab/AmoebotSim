@@ -32,6 +32,8 @@ public:
     virtual int numMovements() const;
     virtual int numRounds() const;
 
+    virtual bool hasTerminated() const;
+
     void insertParticle(const LegacyParticle& p);
 
 protected:

@@ -55,6 +55,11 @@ int System::numRounds() const
     return 0;
 }
 
+bool System::hasTerminated() const
+{
+    return false;
+}
+
 bool System::isConnected(std::set<Node>& occupiedNodes)
 {
     std::deque<Node> queue;

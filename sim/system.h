@@ -41,6 +41,8 @@ public:
     virtual int numMovements() const;
     virtual int numRounds() const;
 
+    virtual bool hasTerminated() const;
+
 protected:
     static bool isConnected(std::set<Node>& occupiedNodes);
 

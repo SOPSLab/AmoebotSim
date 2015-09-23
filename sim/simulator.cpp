@@ -54,6 +54,10 @@ void Simulator::round()
 {
     QMutexLocker locker(&system->mutex);
     system->activate();
+
+    if(system->hasTerminated()) {
+        stop();
+    }
 }
 
 void Simulator::start()
