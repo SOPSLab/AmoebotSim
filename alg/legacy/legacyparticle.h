@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "alg/legacy/algorithm.h"
-#include "sim/movement.h"
+#include "alg/legacy/movement.h"
 #include "sim/node.h"
 #include "sim/particle.h"
 

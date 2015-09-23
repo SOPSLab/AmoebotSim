@@ -18,7 +18,7 @@ HEADERS += \
     alg/legacy/triangle.h \
     main/application.h \
     script/scriptinterface.h \
-    sim/movement.h \
+    alg/legacy/movement.h \
     sim/node.h \
     sim/particle.h \
     sim/simulator.h \

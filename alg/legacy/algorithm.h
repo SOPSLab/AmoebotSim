@@ -9,7 +9,7 @@
 
 #include <QtGlobal>
 
-#include "sim/movement.h"
+#include "alg/legacy/movement.h"
 
 class Flag;
 
