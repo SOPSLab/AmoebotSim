@@ -45,8 +45,7 @@ void VisItem::focusOnCenterOfMass()
     QPointF sum(0, 0);
     int numNodes = 0;
 
-    for(int i = 0; i < system->size(); i++) {
-        const Particle& p = system->at(i);
+    for(const Particle& p : *system) {
         sum = sum + nodeToWorldCoord(p.head);
         numNodes++;
         if(p.tailDir != -1) {
@@ -164,26 +163,22 @@ void VisItem::drawParticles()
 {
     particleTex->bind();
     glBegin(GL_QUADS);
-    for(int i = 0; i < (int) system->size(); ++i) {
-        const Particle& p = system->at(i);
+    for(const Particle& p : *system) {
         if(view.includes(nodeToWorldCoord(p.head))) {
             drawMarks(p);
         }
     }
-    for(int i = 0; i < (int) system->size(); ++i) {
-        const Particle& p = system->at(i);
+    for(const Particle& p : *system) {
         if(view.includes(nodeToWorldCoord(p.head))) {
             drawParticle(p);
         }
     }
-    for(int i = 0; i < (int) system->size(); ++i) {
-        const Particle& p = system->at(i);
+    for(const Particle& p : *system) {
         if(view.includes(nodeToWorldCoord(p.head))) {
             drawBorders(p);
         }
     }
-    for(int i = 0; i < (int) system->size(); ++i) {
-        const Particle& p = system->at(i);
+    for(const Particle& p : *system) {
         if(view.includes(nodeToWorldCoord(p.head))) {
             drawBorderPoints(p);
         }
