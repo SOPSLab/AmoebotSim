@@ -2,8 +2,8 @@
 #include <random>
 #include <QTime>
 #include "alg/legacy/hexagon.h"
+#include "alg/legacy/legacyparticle.h"
 #include "alg/legacy/legacysystem.h"
-#include "sim/particle.h"
 
 namespace Hexagon
 {
@@ -49,7 +49,7 @@ std::shared_ptr<LegacySystem> Hexagon::instance(const unsigned int size, const d
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insertParticle(Particle(std::make_shared<Hexagon>(State::Seed), randDir(), Node(0,0), -1));
+    system->insertParticle(LegacyParticle(std::make_shared<Hexagon>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -79,7 +79,7 @@ std::shared_ptr<LegacySystem> Hexagon::instance(const unsigned int size, const d
             }
         }
         // Insert new idle particle
-        system->insertParticle(Particle(std::make_shared<Hexagon>(State::Idle), randDir(), head, -1));
+        system->insertParticle(LegacyParticle(std::make_shared<Hexagon>(State::Idle), randDir(), head, -1));
     }
     return system;
 }

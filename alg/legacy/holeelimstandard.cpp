@@ -2,8 +2,8 @@
 #include <random>
 
 #include "alg/legacy/holeelimstandard.h"
+#include "alg/legacy/legacyparticle.h"
 #include "alg/legacy/legacysystem.h"
-#include "sim/particle.h"
 
 namespace HoleElimStandard
 {
@@ -85,11 +85,11 @@ std::shared_ptr<LegacySystem> HoleElimStandard::instance(const unsigned int size
     }
 
     // insert the seed and all particles from its component into the system
-    system->insertParticle(Particle(std::make_shared<HoleElimStandard>(State::Seed), randDir(), seed, -1));
+    system->insertParticle(LegacyParticle(std::make_shared<HoleElimStandard>(State::Seed), randDir(), seed, -1));
     while(!seedComponent.empty()) {
         auto node = *seedComponent.begin();
         seedComponent.erase(seedComponent.begin());
-        system->insertParticle(Particle(std::make_shared<HoleElimStandard>(State::Idle), randDir(), node, -1));
+        system->insertParticle(LegacyParticle(std::make_shared<HoleElimStandard>(State::Idle), randDir(), node, -1));
     }
 
     return system;

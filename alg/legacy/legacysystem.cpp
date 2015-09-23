@@ -45,7 +45,7 @@ void LegacySystem::activate(){
         }
 
         while(shuffledParticles.size() > 0) {
-            Particle* p = shuffledParticles.front();
+            LegacyParticle* p = shuffledParticles.front();
             shuffledParticles.pop_front();
 
             if(p->isStatic()) {
@@ -96,7 +96,7 @@ unsigned int LegacySystem::size() const
     return particles.size();
 }
 
-const Particle& LegacySystem::at(const int i) const
+const LegacyParticle& LegacySystem::at(const int i) const
 {
     return particles.at(i);
 }
@@ -111,15 +111,15 @@ int LegacySystem::numRounds() const
     return _numRounds;
 }
 
-void LegacySystem::insertParticle(const Particle& p)
+void LegacySystem::insertParticle(const LegacyParticle& p)
 {
     Q_ASSERT(particleMap.find(p.head) == particleMap.end());
     Q_ASSERT(p.tailDir == -1 || particleMap.find(p.tail()) == particleMap.end());
 
     particles.push_back(p);
-    particleMap.insert(std::pair<Node, Particle*>(p.head, &particles.back()));
+    particleMap.insert(std::pair<Node, LegacyParticle*>(p.head, &particles.back()));
     if(p.tailDir != -1) {
-        particleMap.insert(std::pair<Node, Particle*>(p.tail(), &particles.back()));
+        particleMap.insert(std::pair<Node, LegacyParticle*>(p.tail(), &particles.back()));
     }
 
     if(!p.isStatic()) {
@@ -127,7 +127,7 @@ void LegacySystem::insertParticle(const Particle& p)
     }
 }
 
-std::array<const Flag*, 10> LegacySystem::assembleFlags(Particle& p){
+std::array<const Flag*, 10> LegacySystem::assembleFlags(LegacyParticle& p){
     std::array<const Flag*, 10> flags;
 
     int labelLimit = p.tailDir == -1 ? 6 : 10;
@@ -149,7 +149,7 @@ std::array<const Flag*, 10> LegacySystem::assembleFlags(Particle& p){
     return flags;
 }
 
-bool LegacySystem::handleExpansion(Particle& p, int label){
+bool LegacySystem::handleExpansion(LegacyParticle& p, int label){
     if(p.tailDir != -1) {
         p.discard(); // already expanded particle cannot expand
         return false;
@@ -160,20 +160,20 @@ bool LegacySystem::handleExpansion(Particle& p, int label){
         return false;
     }
 
-    int expansionDir = Particle::posMod<6>(p.orientation + label);
+    int expansionDir = LegacyParticle::posMod<6>(p.orientation + label);
     Node newHead = p.head.nodeInDir(expansionDir);
 
     auto otherParticleIt = particleMap.find(newHead);
     if(otherParticleIt == particleMap.end() || otherParticleIt->second->isStatic()) {
         // expansion into empty node
-        particleMap.insert(std::pair<Node, Particle*>(newHead, &p));
+        particleMap.insert(std::pair<Node, LegacyParticle*>(newHead, &p));
         p.head = newHead;
-        p.tailDir = Particle::posMod<6>(expansionDir + 3);
+        p.tailDir = LegacyParticle::posMod<6>(expansionDir + 3);
         p.apply();
         _numMovements++;
         return true;
     } else {
-        Particle* otherParticle = otherParticleIt->second;
+        LegacyParticle* otherParticle = otherParticleIt->second;
         if(otherParticle->tailDir == -1) {
             // collision
             p.discard();
@@ -209,9 +209,9 @@ bool LegacySystem::handleExpansion(Particle& p, int label){
                 otherParticle->tailDir = -1;
                 otherParticle->apply();
 
-                particleMap.insert(std::pair<Node, Particle*>(newHead, &p));
+                particleMap.insert(std::pair<Node, LegacyParticle*>(newHead, &p));
                 p.head = newHead;
-                p.tailDir = Particle::posMod<6>(expansionDir + 3);
+                p.tailDir = LegacyParticle::posMod<6>(expansionDir + 3);
                 p.apply();
 
                 _numMovements += 2;
@@ -226,7 +226,7 @@ bool LegacySystem::handleExpansion(Particle& p, int label){
     }
 }
 
-bool LegacySystem::handleContraction(Particle& p, int label, bool isHandoverContraction){
+bool LegacySystem::handleContraction(LegacyParticle& p, int label, bool isHandoverContraction){
     if(p.tailDir == -1) {
         p.discard(); // already contracted particle cannot contract
         return false;
@@ -245,7 +245,7 @@ bool LegacySystem::handleContraction(Particle& p, int label, bool isHandoverCont
     }
 
     bool handover = false;
-    Particle* handoverParticle = nullptr;
+    LegacyParticle* handoverParticle = nullptr;
     int handoverExpandDir = -1;
 
     if(isHandoverContraction) {
@@ -280,7 +280,7 @@ bool LegacySystem::handleContraction(Particle& p, int label, bool isHandoverCont
             if(mapIt == particleMap.end()) {
                 continue;
             }
-            Particle& p2 = *mapIt->second;
+            LegacyParticle& p2 = *mapIt->second;
 
             if(p2.isStatic()) {
                 continue;
@@ -305,7 +305,7 @@ bool LegacySystem::handleContraction(Particle& p, int label, bool isHandoverCont
                 p2.discard();
                 continue; // invalid expansion index
             }
-            int expandDir = Particle::posMod<6>(p2.orientation + m.label);
+            int expandDir = LegacyParticle::posMod<6>(p2.orientation + m.label);
             Node newHead = p2.head.nodeInDir(expandDir);
 
             // ensure that the node p2 wants to expand into is the node p wants to contract out of
@@ -344,10 +344,10 @@ bool LegacySystem::handleContraction(Particle& p, int label, bool isHandoverCont
     particleMap.erase(handoverNode);
     if(handover) {
         handoverParticle->head = handoverNode;
-        handoverParticle->tailDir = Particle::posMod<6>(handoverExpandDir + 3);
+        handoverParticle->tailDir = LegacyParticle::posMod<6>(handoverExpandDir + 3);
         handoverParticle->apply();
         _numMovements++;
-        particleMap.insert(std::pair<Node, Particle*>(handoverNode, handoverParticle));
+        particleMap.insert(std::pair<Node, LegacyParticle*>(handoverNode, handoverParticle));
     } else {
         // an isolated contraction is the only action that can disconnect the system
         if(checkConnectivity) {
@@ -366,7 +366,7 @@ bool LegacySystem::handleContraction(Particle& p, int label, bool isHandoverCont
     return true;
 }
 
-void LegacySystem::updateNumRounds(Particle *p)
+void LegacySystem::updateNumRounds(LegacyParticle *p)
 {
     activatedParticles.insert(p);
     if(activatedParticles.size() == numNonStaticParticles) {

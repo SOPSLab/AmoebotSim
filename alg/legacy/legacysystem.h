@@ -8,6 +8,7 @@
 #include <set>
 
 #include "alg/legacy/algorithm.h"
+#include "alg/legacy/legacyparticle.h"
 #include "sim/system.h"
 
 class LegacySystem : public System
@@ -26,24 +27,24 @@ public:
     virtual void activate();
 
     virtual unsigned int size() const;
-    virtual const Particle& at(const int i) const;
+    virtual const LegacyParticle& at(const int i) const;
 
     virtual int numMovements() const;
     virtual int numRounds() const;
 
-    void insertParticle(const Particle& p);
+    void insertParticle(const LegacyParticle& p);
 
 protected:
-    std::array<const Flag*, 10> assembleFlags(Particle& p);
-    bool handleExpansion(Particle& p, int label);
-    bool handleContraction(Particle& p, int label, bool isHandoverContraction);
-    void updateNumRounds(Particle* p);
+    std::array<const Flag*, 10> assembleFlags(LegacyParticle& p);
+    bool handleExpansion(LegacyParticle& p, int label);
+    bool handleContraction(LegacyParticle& p, int label, bool isHandoverContraction);
+    void updateNumRounds(LegacyParticle* p);
 
 protected:
-    std::deque<Particle> particles;
-    std::map<Node, Particle*> particleMap;
-    std::set<Particle*> activatedParticles;
-    std::deque<Particle*> shuffledParticles;
+    std::deque<LegacyParticle> particles;
+    std::map<Node, LegacyParticle*> particleMap;
+    std::set<LegacyParticle*> activatedParticles;
+    std::deque<LegacyParticle*> shuffledParticles;
 
     std::mt19937 rng;
 

@@ -5,9 +5,9 @@
 #include <set>
 
 #include "alg/legacy/leaderelectiondemo.h"
+#include "alg/legacy/legacyparticle.h"
 #include "alg/legacy/legacysystem.h"
-#include "sim/particle.h"
-#include "sim/system.h"
+
 #include <QDebug>
 
 
@@ -147,7 +147,7 @@ std::shared_ptr<LegacySystem> LeaderElectionDemo::instance()
     int structSideLength=  2;
     int numStructParticles = 6*structSideLength;
     while((int) system->size() < numStructParticles) {
-        system->insertParticle(Particle(std::make_shared<LeaderElectionDemo>(Phase::Static), randDir(), pos));
+        system->insertParticle(LegacyParticle(std::make_shared<LeaderElectionDemo>(Phase::Static), randDir(), pos));
         occupied.insert(pos);
 
         orderedSurface.push_back(pos);
@@ -197,7 +197,7 @@ std::shared_ptr<LegacySystem> LeaderElectionDemo::instance()
             newParticle->id = idCounter;
             // if(idCounter!=0 && idCounter!=9)
             // newParticle->ownTokenValue =0;
-            system->insertParticle(Particle(newParticle, randDir(), *it));
+            system->insertParticle(LegacyParticle(newParticle, randDir(), *it));
             numNonStaticParticles++;
             //           qDebug()<<"init? "<<initSide<<"iter: "<<itercount;
             if(!initSide && (itercount-1)%3 ==0)

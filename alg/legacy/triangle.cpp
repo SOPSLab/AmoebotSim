@@ -1,6 +1,7 @@
 #include <set>
 #include <random>
 #include <QTime>
+#include "alg/legacy/legacyparticle.h"
 #include "alg/legacy/legacysystem.h"
 #include "alg/legacy/triangle.h"
 #include "sim/particle.h"
@@ -53,7 +54,7 @@ std::shared_ptr<LegacySystem> Triangle::instance(const unsigned int size, const 
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insertParticle(Particle(std::make_shared<Triangle>(State::Seed), randDir(), Node(0,0), -1));
+    system->insertParticle(LegacyParticle(std::make_shared<Triangle>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -83,7 +84,7 @@ std::shared_ptr<LegacySystem> Triangle::instance(const unsigned int size, const 
             }
         }
         // Insert new idle particle
-        system->insertParticle(Particle(std::make_shared<Triangle>(State::Idle), randDir(), head, -1));
+        system->insertParticle(LegacyParticle(std::make_shared<Triangle>(State::Idle), randDir(), head, -1));
     }
     return system;
 }

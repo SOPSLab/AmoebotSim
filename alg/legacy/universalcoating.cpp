@@ -4,9 +4,9 @@
 #include <deque>
 #include <set>
 
+#include "alg/legacy/legacyparticle.h"
 #include "alg/legacy/legacysystem.h"
 #include "alg/legacy/universalcoating.h"
-#include "sim/particle.h"
 #include <QDebug>
 
 
@@ -165,7 +165,7 @@ std::shared_ptr<LegacySystem> UniversalCoating::instance(const int staticParticl
     const int hexRadius = staticParticlesRadius;
 
     // grow hexagon of given radius
-    system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), Node(0, 0)));
+    system->insertParticle(LegacyParticle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), Node(0, 0)));
     occupied.insert(Node(0, 0));
     std::set<Node> layer1, layer2;
     layer1.insert(Node(0, 0));
@@ -180,7 +180,7 @@ std::shared_ptr<LegacySystem> UniversalCoating::instance(const int staticParticl
         }
 
         for(auto n : layer2) {
-            system->insertParticle(Particle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), n));
+            system->insertParticle(LegacyParticle(std::make_shared<UniversalCoating>(Phase::Static), randDir(), n));
             occupied.insert(n);
         }
 
@@ -244,7 +244,7 @@ std::shared_ptr<LegacySystem> UniversalCoating::instance(const int staticParticl
             std::shared_ptr<UniversalCoating> newParticle= std::make_shared<UniversalCoating>(Phase::Inactive);
             newParticle->id = particleID;
             particleID++;
-            system->insertParticle(Particle(newParticle, randDir(), randomCandidate));
+            system->insertParticle(LegacyParticle(newParticle, randDir(), randomCandidate));
             numNonStaticParticles++;
 
             // add new candidates

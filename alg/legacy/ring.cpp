@@ -3,10 +3,9 @@
 
 #include <QTime>
 
+#include "alg/legacy/legacyparticle.h"
 #include "alg/legacy/legacysystem.h"
 #include "alg/legacy/ring.h"
-#include "sim/particle.h"
-#include "sim/system.h"
 
 namespace Ring
 {
@@ -59,7 +58,7 @@ std::shared_ptr<LegacySystem> Ring::instance(const unsigned int size, const doub
     std::set<Node> occupied, candidates;
 
     // Create Seed Particle
-    system->insertParticle(Particle(std::make_shared<Ring>(State::Seed), randDir(), Node(0,0), -1));
+    system->insertParticle(LegacyParticle(std::make_shared<Ring>(State::Seed), randDir(), Node(0,0), -1));
     occupied.insert(Node(0,0));
 
     for(int dir = 0; dir<6;dir++){
@@ -89,7 +88,7 @@ std::shared_ptr<LegacySystem> Ring::instance(const unsigned int size, const doub
             }
         }
         // Insert new idle particle
-        system->insertParticle(Particle(std::make_shared<Ring>(State::Idle), randDir(), head, -1));
+        system->insertParticle(LegacyParticle(std::make_shared<Ring>(State::Idle), randDir(), head, -1));
     }
     return system;
 }

@@ -1,9 +1,8 @@
 #include <set>
 
 #include "alg/legacy/leaderelection.h"
+#include "alg/legacy/legacyparticle.h"
 #include "alg/legacy/legacysystem.h"
-#include "sim/particle.h"
-#include "sim/system.h"
 
 namespace LeaderElection
 {
@@ -591,7 +590,7 @@ std::shared_ptr<LegacySystem> LeaderElection::instance(const unsigned int size)
     while(!baseComponent.empty()) {
         auto node = *baseComponent.begin();
         baseComponent.erase(baseComponent.begin());
-        system->insertParticle(Particle(std::make_shared<LeaderElection>(State::Idle), randDir(), node, -1));
+        system->insertParticle(LegacyParticle(std::make_shared<LeaderElection>(State::Idle), randDir(), node, -1));
     }
 
     return system;

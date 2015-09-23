@@ -4,9 +4,8 @@
 #include <set>
 
 #include "alg/legacy/infobjcoating.h"
+#include "alg/legacy/legacyparticle.h"
 #include "alg/legacy/legacysystem.h"
-#include "sim/particle.h"
-#include "sim/system.h"
 
 namespace InfObjCoating
 {
@@ -49,7 +48,7 @@ std::shared_ptr<LegacySystem> InfObjCoating::instance(const int numParticles, co
     Node pos;
     int lastOffset = 0;
     while((int) system->size() < 2 * numParticles) {
-        system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Static), randDir(), pos));
+        system->insertParticle(LegacyParticle(std::make_shared<InfObjCoating>(Phase::Static), randDir(), pos));
         occupied.insert(pos);
         orderedSurface.push_back(pos);
         int offset;
@@ -88,7 +87,7 @@ std::shared_ptr<LegacySystem> InfObjCoating::instance(const int numParticles, co
         std::set<Node> nextCandidates;
         for(auto it = candidates.begin(); it != candidates.end() && numNonStaticParticles < numParticles; ++it) {
             if(randBool(1.0f - holeProb)) {
-                system->insertParticle(Particle(std::make_shared<InfObjCoating>(Phase::Inactive), randDir(), *it));
+                system->insertParticle(LegacyParticle(std::make_shared<InfObjCoating>(Phase::Inactive), randDir(), *it));
                 numNonStaticParticles++;
 
                 for(int dir = 1; dir <= 2; dir++) {

@@ -1,9 +1,9 @@
 #include <set>
 #include <random>
 #include <QTime>
+#include "alg/legacy/legacyparticle.h"
 #include "alg/legacy/legacysystem.h"
 #include "alg/legacy/square.h"
-#include "sim/particle.h"
 #include <QDebug>
 
 namespace Square {
@@ -49,7 +49,7 @@ namespace Square {
 	    std::set<Node> occupied, candidates;
 
 	    // Create Seed Particle
-	    system->insertParticle(Particle(std::make_shared<Square>(State::Seed), randDir(), Node(0,0), -1));
+        system->insertParticle(LegacyParticle(std::make_shared<Square>(State::Seed), randDir(), Node(0,0), -1));
 	    occupied.insert(Node(0,0));
 
 	    for(int dir = 0; dir<6;dir++){
@@ -79,7 +79,7 @@ namespace Square {
 	            }
 	        }
 	        // Insert new idle particle
-		system->insertParticle(Particle(std::make_shared<Square>(State::Idle), randDir(), head, -1));
+        system->insertParticle(LegacyParticle(std::make_shared<Square>(State::Idle), randDir(), head, -1));
 	    }
     return system;
 	} 

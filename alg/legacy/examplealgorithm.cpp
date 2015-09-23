@@ -1,6 +1,6 @@
 #include "alg/legacy/examplealgorithm.h"
+#include "alg/legacy/legacyparticle.h"
 #include "alg/legacy/legacysystem.h"
-#include "sim/particle.h"
 
 namespace ExampleAlgorithm
 {
@@ -34,7 +34,7 @@ std::shared_ptr<LegacySystem> ExampleAlgorithm::instance(const int numParticles)
         int orientation = randDir();
         Node position = Node(x - numParticles / 2, 0);
         int tailDir = -1;
-        system->insertParticle(Particle(std::make_shared<ExampleAlgorithm>(phase), orientation, position, tailDir));
+        system->insertParticle(LegacyParticle(std::make_shared<ExampleAlgorithm>(phase), orientation, position, tailDir));
     }
     return system; // Note that the ownership goes to the caller!
 }

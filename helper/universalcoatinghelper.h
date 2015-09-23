@@ -7,6 +7,8 @@
 #include <functional>
 #include <set>
 
+#include "alg/legacy/legacyparticle.h"
+#include "alg/legacy/legacysystem.h"
 #include "sim/node.h"
 #include "sim/particle.h"
 #include "sim/system.h"
@@ -20,12 +22,12 @@
 namespace UniversalCoating
 {
 
-inline void setupObjectAndParticles(const System& system,
+inline void setupObjectAndParticles(const LegacySystem& system,
                                     std::set<Node>& object,
                                     std::set<Node>& particles)
 {
     for(int i = 0; i < (int) system.size(); i++) {
-        const Particle& p = system.at(i);
+        const LegacyParticle& p = system.at(i);
         if(p.isStatic()) {
             object.insert(p.head);
         } else {
@@ -65,7 +67,7 @@ inline int setupOpenPositions(  const std::set<Node>& object,
     return numMandatoryLayers;
 }
 
-inline int getWeakLowerBound(const System& system)
+inline int getWeakLowerBound(const LegacySystem& system)
 {
     std::set<Node> object, particles;
     setupObjectAndParticles(system, object, particles);
@@ -120,7 +122,7 @@ inline int getWeakLowerBound(const System& system)
     return lowerBound;
 }
 
-inline int getStrongLowerBound(const System& system)
+inline int getStrongLowerBound(const LegacySystem& system)
 {
     std::set<Node> object, particles;
     setupObjectAndParticles(system, object, particles);
