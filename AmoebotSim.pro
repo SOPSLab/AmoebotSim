@@ -43,7 +43,11 @@ HEADERS += \
     ui/view.h \
     alg/legacy/legacysystem.h \
     alg/legacy/legacyparticle.h \
-    alg/labellednocompassparticle.h
+    alg/labellednocompassparticle.h \
+    alg/amoebotparticle.h \
+    alg/amoebotsystem.h \
+    helper/randomnumbergenerator.h \
+    alg/test.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -71,7 +75,11 @@ SOURCES += \
     alg/legacy/leaderelection.cpp \
     alg/legacy/legacysystem.cpp \
     alg/legacy/legacyparticle.cpp \
-    alg/labellednocompassparticle.cpp
+    alg/labellednocompassparticle.cpp \
+    alg/amoebotparticle.cpp \
+    alg/amoebotsystem.cpp \
+    helper/randomnumbergenerator.cpp \
+    alg/test.cpp
 
 RESOURCES += \
     res/qml.qrc \

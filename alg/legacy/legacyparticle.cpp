@@ -38,7 +38,7 @@ void LegacyParticle::discard()
 
 const Flag* LegacyParticle::getFlagForNodeInDir(const Node node, const int dir)
 {
-    return algorithm->flagAt(labelOfNeighboringNodeInDir(node, dir));
+    return algorithm->flagAt(labelOfNeighboringNodeInGlobalDir(node, dir));
 }
 
 std::shared_ptr<const Algorithm> LegacyParticle::getAlgorithm() const{

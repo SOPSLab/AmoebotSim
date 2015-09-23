@@ -24,6 +24,8 @@
 #include "alg/legacy/triangle.h"
 #include "alg/legacy/universalcoating.h"
 
+#include "alg/test.h"
+
 #include "sim/simulator.h"
 
 #include "helper/universalcoatinghelper.h"
@@ -74,7 +76,8 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    sim.setSystem(Hexagon::Hexagon::instance(200, 0.4));
+    sim.setSystem(std::make_shared<Test::TestSystem>());
+//    sim.setSystem(Hexagon::Hexagon::instance(200, 0.3));
 }
 
 inline void ScriptInterface::round()

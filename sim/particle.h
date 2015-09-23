@@ -11,6 +11,9 @@ public:
     Particle(const Node _head = Node(0, 0), const int _tailDir = -1);
     virtual ~Particle();
 
+    bool isContracted() const;
+    bool isExpanded() const;
+
     Node tail() const;
 
     virtual int headMarkColor() const;
@@ -23,7 +26,7 @@ public:
 
 public:
     Node head;
-    int tailDir;
+    int globalTailDir;
 };
 
 #endif // PARTICLE_H

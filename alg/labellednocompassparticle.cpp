@@ -35,32 +35,35 @@ LabelledNoCompassParticle::~LabelledNoCompassParticle()
 
 }
 
+int LabelledNoCompassParticle::tailDir() const
+{
+    return globalToLocalDir(globalTailDir);
+}
+
 const std::vector<int>& LabelledNoCompassParticle::headLabels() const
 {
-    Q_ASSERT(-1 <= tailDir && tailDir < 6);
-    if(tailDir == -1) {
+    Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
+    if(globalTailDir == -1) {
         return sixLabels;
     } else {
-        int relativeTailDir = (tailDir - orientation + 6) % 6;
-        return labels[relativeTailDir];
+        return labels[tailDir()];
     }
 }
 
 const std::vector<int>& LabelledNoCompassParticle::tailLabels() const
 {
-    Q_ASSERT(-1 <= tailDir && tailDir < 6);
-    if(tailDir == -1) {
+    Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
+    if(globalTailDir == -1) {
         return sixLabels;
     } else {
-        int relativeTailDir = (tailDir - orientation + 6) % 6;
-        return labels[(relativeTailDir + 3) % 6];
+        return labels[(tailDir() + 3) % 6];
     }
 }
 
 bool LabelledNoCompassParticle::isHeadLabel(const int label) const
 {
-    for(auto it = headLabels().cbegin(); it != headLabels().cend(); ++it) {
-        if(label == *it) {
+    for(int headLabel : headLabels()) {
+        if(label == headLabel) {
             return true;
         }
     }
@@ -69,8 +72,8 @@ bool LabelledNoCompassParticle::isHeadLabel(const int label) const
 
 bool LabelledNoCompassParticle::isTailLabel(const int label) const
 {
-    for(auto it = tailLabels().cbegin(); it != tailLabels().cend(); ++it) {
-        if(label == *it) {
+    for(int tailLabel : tailLabels()) {
+        if(label == tailLabel) {
             return true;
         }
     }
@@ -79,22 +82,102 @@ bool LabelledNoCompassParticle::isTailLabel(const int label) const
 
 int LabelledNoCompassParticle::headContractionLabel() const
 {
-    Q_ASSERT(0 <= tailDir && tailDir <= 5);
-    int relativeTailDir = (tailDir - orientation + 6) % 6;
-    return contractLabels[relativeTailDir];
+    Q_ASSERT(0 <= globalTailDir && globalTailDir <= 5);
+    return contractLabels[tailDir()];
 }
 
 int LabelledNoCompassParticle::tailContractionLabel() const
 {
-    Q_ASSERT(0 <= tailDir && tailDir <= 5);
-    int relativeTailDir = (tailDir - orientation + 6) % 6;
-    return contractLabels[(relativeTailDir + 3) % 6];
+    Q_ASSERT(0 <= globalTailDir && globalTailDir <= 5);
+    return contractLabels[(tailDir() + 3) % 6];
+}
+
+const std::vector<int>& LabelledNoCompassParticle::headLabelsAfterExpansion(const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    int tempTailDir = (expansionDir + 3) % 6;
+    return labels[tempTailDir];
+}
+
+const std::vector<int>& LabelledNoCompassParticle::tailLabelsAfterExpansion(const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    int tempTailDir = (expansionDir + 3) % 6;
+    return labels[(tempTailDir + 3) % 6];
+}
+
+bool LabelledNoCompassParticle::isHeadLabelAfterExpansion(const int label, const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    for(int headLabel : headLabelsAfterExpansion(expansionDir)) {
+        if(label == headLabel) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool LabelledNoCompassParticle::isTailLabelAfterExpansion(const int label, const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    for(int tailLabel : tailLabelsAfterExpansion(expansionDir)) {
+        if(label == tailLabel) {
+            return true;
+        }
+    }
+    return false;
+}
+
+int LabelledNoCompassParticle::dirToHeadLabelAfterExpansion(const int dir, const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= dir && dir <= 5);
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    for(int headLabel : headLabelsAfterExpansion(expansionDir)) {
+        if(dir == labelToDirAfterExpansion(headLabel, expansionDir)) {
+            return headLabel;
+        }
+    }
+    Q_ASSERT(false);
+    return 0; // avoid compiler warning
+}
+
+int LabelledNoCompassParticle::dirToTailLabelAfterExpansion(const int dir, const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= dir && dir <= 5);
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    for(int tailLabel : tailLabelsAfterExpansion(expansionDir)) {
+        if(dir == labelToDirAfterExpansion(tailLabel, expansionDir)) {
+            return tailLabel;
+        }
+    }
+    Q_ASSERT(false);
+    return 0; // avoid compiler warning
+}
+
+int LabelledNoCompassParticle::headContractionLabelAfterExpansion(const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    return contractLabels[(expansionDir + 3) % 6];
+}
+
+int LabelledNoCompassParticle::tailContractionLabelAfterExpansion(const int expansionDir) const
+{
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= expansionDir && expansionDir <= 5);
+    return contractLabels[expansionDir];
 }
 
 Node LabelledNoCompassParticle::occupiedNodeIncidentToLabel(const int label) const
 {
-    Q_ASSERT(-1 <= tailDir && tailDir < 6);
-    if(tailDir == -1) {
+    Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
+    if(globalTailDir == -1) {
         Q_ASSERT(0 <= label && label < 6);
         return head;
     } else {
@@ -109,8 +192,8 @@ Node LabelledNoCompassParticle::occupiedNodeIncidentToLabel(const int label) con
 
 Node LabelledNoCompassParticle::neighboringNodeReachedViaLabel(const int label) const
 {
-    Q_ASSERT(-1 <= tailDir && tailDir < 6);
-    if(tailDir == -1) {
+    Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
+    if(globalTailDir == -1) {
         Q_ASSERT(0 <= label && label < 6);
         int dir = orientation + label;
         dir = (dir % 6 + 6) % 6;
@@ -118,31 +201,54 @@ Node LabelledNoCompassParticle::neighboringNodeReachedViaLabel(const int label) 
     } else {
         Q_ASSERT(0 <= label && label < 10);
         Node incidentNode = occupiedNodeIncidentToLabel(label);
-        return incidentNode.nodeInDir(labelToDir(label));
+        return incidentNode.nodeInDir(labelToGlobalDir(label));
     }
 }
 
 int LabelledNoCompassParticle::labelToDir(const int label) const
 {
-    Q_ASSERT(-1 <= tailDir && tailDir < 6);
-    if(tailDir == -1) {
+    Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
+    if(globalTailDir == -1) {
         Q_ASSERT(0 <= label && label < 6);
-        return (label + orientation) % 6;
+        return label;
     } else {
         Q_ASSERT(0 <= label && label < 10);
-        int relativeTailDir = (tailDir - orientation + 6) % 6;
-        return (labelDir[relativeTailDir][label] + orientation) % 6;
+        return labelDir[tailDir()][label];
     }
 }
 
-int LabelledNoCompassParticle::labelOfNeighboringNodeInDir(const Node node, const int dir) const
+int LabelledNoCompassParticle::labelToDirAfterExpansion(const int label, const int expansionDir) const
 {
-    int labelLimit = tailDir == -1 ? 6 : 10;
+    Q_ASSERT(isContracted());
+    Q_ASSERT(0 <= expansionDir && expansionDir < 6);
+    return labelDir[(expansionDir + 3) % 6][label];
+}
+
+int LabelledNoCompassParticle::labelToGlobalDir(const int label) const
+{
+    return localToGlobalDir(labelToDir(label));
+}
+
+int LabelledNoCompassParticle::labelOfNeighboringNodeInGlobalDir(const Node node, const int globalDir) const
+{
+    int labelLimit = globalTailDir == -1 ? 6 : 10;
     for(int label = 0; label < labelLimit; label++) {
-        if(labelToDir(label) == dir && neighboringNodeReachedViaLabel(label) == node) {
+        if(labelToGlobalDir(label) == globalDir && neighboringNodeReachedViaLabel(label) == node) {
             return label;
         }
     }
     Q_ASSERT(false);
-    return -1; // avoid compiler warning
+    return 0; // avoid compiler warning
+}
+
+int LabelledNoCompassParticle::localToGlobalDir(int dir) const
+{
+    Q_ASSERT(0 <= dir && dir <= 5);
+    return (orientation + dir) % 6;
+}
+
+int LabelledNoCompassParticle::globalToLocalDir(int globalDir) const
+{
+    Q_ASSERT(0 <= globalDir && globalDir <= 5);
+    return (globalDir - orientation + 6) % 6;
 }

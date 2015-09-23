@@ -48,7 +48,7 @@ void VisItem::focusOnCenterOfMass()
     for(const Particle& p : *system) {
         sum = sum + nodeToWorldCoord(p.head);
         numNodes++;
-        if(p.tailDir != -1) {
+        if(p.globalTailDir != -1) {
             sum = sum + nodeToWorldCoord(p.tail());
             numNodes++;
         }
@@ -197,7 +197,7 @@ void VisItem::drawMarks(const Particle& p)
     }
 
     // draw mark around tail
-    if(p.tailDir != -1 && p.tailMarkColor() > -1) {
+    if(p.globalTailDir != -1 && p.tailMarkColor() > -1) {
         auto pos = nodeToWorldCoord(p.tail());
         QRgb color = p.tailMarkColor();
         glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
@@ -209,7 +209,7 @@ void VisItem::drawParticle(const Particle& p)
 {
     auto pos = nodeToWorldCoord(p.head);
     glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-    drawFromParticleTex(p.tailDir + 1, pos);
+    drawFromParticleTex(p.globalTailDir + 1, pos);
 }
 
 void VisItem::drawBorders(const Particle& p)

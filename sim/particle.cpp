@@ -3,7 +3,7 @@
 #include "sim/particle.h"
 
 Particle::Particle(const Node _head, const int _tailDir)
-    : head(_head), tailDir(_tailDir)
+    : head(_head), globalTailDir(_tailDir)
 {
 
 }
@@ -12,9 +12,20 @@ Particle::~Particle()
 {
 }
 
+bool Particle::isContracted() const
+{
+    return globalTailDir == -1;
+}
+
+bool Particle::isExpanded() const
+{
+    return !isContracted();
+}
+
 Node Particle::tail() const
 {
-    return head.nodeInDir(tailDir);
+    Q_ASSERT(isExpanded());
+    return head.nodeInDir(globalTailDir);
 }
 
 int Particle::headMarkColor() const

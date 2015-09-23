@@ -119,11 +119,11 @@ bool LegacySystem::hasTerminated() const
 void LegacySystem::insertParticle(const LegacyParticle& p)
 {
     Q_ASSERT(particleMap.find(p.head) == particleMap.end());
-    Q_ASSERT(p.tailDir == -1 || particleMap.find(p.tail()) == particleMap.end());
+    Q_ASSERT(p.globalTailDir == -1 || particleMap.find(p.tail()) == particleMap.end());
 
     particles.push_back(p);
     particleMap.insert(std::pair<Node, LegacyParticle*>(p.head, &particles.back()));
-    if(p.tailDir != -1) {
+    if(p.globalTailDir != -1) {
         particleMap.insert(std::pair<Node, LegacyParticle*>(p.tail(), &particles.back()));
     }
 
@@ -135,7 +135,7 @@ void LegacySystem::insertParticle(const LegacyParticle& p)
 std::array<const Flag*, 10> LegacySystem::assembleFlags(LegacyParticle& p){
     std::array<const Flag*, 10> flags;
 
-    int labelLimit = p.tailDir == -1 ? 6 : 10;
+    int labelLimit = p.globalTailDir == -1 ? 6 : 10;
     for(int label = 0; label < 10; label++) {
         if(label >= labelLimit) {
             flags[label] = nullptr;
@@ -147,7 +147,7 @@ std::array<const Flag*, 10> LegacySystem::assembleFlags(LegacyParticle& p){
             flags[label] = nullptr;
         } else {
             auto incidentNode = p.occupiedNodeIncidentToLabel(label);
-            flags[label] = neighborIt->second->getFlagForNodeInDir(incidentNode, (p.labelToDir(label) + 3) % 6);
+            flags[label] = neighborIt->second->getFlagForNodeInDir(incidentNode, (p.labelToGlobalDir(label) + 3) % 6);
         }
     }
 
@@ -155,7 +155,7 @@ std::array<const Flag*, 10> LegacySystem::assembleFlags(LegacyParticle& p){
 }
 
 bool LegacySystem::handleExpansion(LegacyParticle& p, int label){
-    if(p.tailDir != -1) {
+    if(p.globalTailDir != -1) {
         p.discard(); // already expanded particle cannot expand
         return false;
     }
@@ -173,13 +173,13 @@ bool LegacySystem::handleExpansion(LegacyParticle& p, int label){
         // expansion into empty node
         particleMap.insert(std::pair<Node, LegacyParticle*>(newHead, &p));
         p.head = newHead;
-        p.tailDir = LegacyParticle::posMod<6>(expansionDir + 3);
+        p.globalTailDir = LegacyParticle::posMod<6>(expansionDir + 3);
         p.apply();
         _numMovements++;
         return true;
     } else {
         LegacyParticle* otherParticle = otherParticleIt->second;
-        if(otherParticle->tailDir == -1) {
+        if(otherParticle->globalTailDir == -1) {
             // collision
             p.discard();
             return false;
@@ -211,12 +211,12 @@ bool LegacySystem::handleExpansion(LegacyParticle& p, int label){
             if(pushSucceeded) {
                 // push succeeded
                 particleMap.erase(newHead);
-                otherParticle->tailDir = -1;
+                otherParticle->globalTailDir = -1;
                 otherParticle->apply();
 
                 particleMap.insert(std::pair<Node, LegacyParticle*>(newHead, &p));
                 p.head = newHead;
-                p.tailDir = LegacyParticle::posMod<6>(expansionDir + 3);
+                p.globalTailDir = LegacyParticle::posMod<6>(expansionDir + 3);
                 p.apply();
 
                 _numMovements += 2;
@@ -232,7 +232,7 @@ bool LegacySystem::handleExpansion(LegacyParticle& p, int label){
 }
 
 bool LegacySystem::handleContraction(LegacyParticle& p, int label, bool isHandoverContraction){
-    if(p.tailDir == -1) {
+    if(p.globalTailDir == -1) {
         p.discard(); // already contracted particle cannot contract
         return false;
     }
@@ -292,7 +292,7 @@ bool LegacySystem::handleContraction(LegacyParticle& p, int label, bool isHandov
             }
 
             // check whether p2 wants to expand and into which node
-            if(p2.tailDir != -1) {
+            if(p2.globalTailDir != -1) {
                 continue; // already expanded particle cannot expand
             }
             auto inFlags = assembleFlags(p2);
@@ -343,13 +343,13 @@ bool LegacySystem::handleContraction(LegacyParticle& p, int label, bool isHandov
     } else {
         handoverNode = p.tail();
     }
-    p.tailDir = -1;
+    p.globalTailDir = -1;
     p.apply();
     _numMovements++;
     particleMap.erase(handoverNode);
     if(handover) {
         handoverParticle->head = handoverNode;
-        handoverParticle->tailDir = LegacyParticle::posMod<6>(handoverExpandDir + 3);
+        handoverParticle->globalTailDir = LegacyParticle::posMod<6>(handoverExpandDir + 3);
         handoverParticle->apply();
         _numMovements++;
         particleMap.insert(std::pair<Node, LegacyParticle*>(handoverNode, handoverParticle));
@@ -358,7 +358,7 @@ bool LegacySystem::handleContraction(LegacyParticle& p, int label, bool isHandov
         std::set<Node> occupiedNodes;
         for(auto& p : particles) {
             occupiedNodes.insert(p.head);
-            if(p.tailDir != -1) {
+            if(p.globalTailDir != -1) {
                 occupiedNodes.insert(p.tail());
             }
         }
