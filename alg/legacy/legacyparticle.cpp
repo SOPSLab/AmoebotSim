@@ -60,7 +60,7 @@ int LegacyParticle::headMarkColor() const
     return algorithm->headMarkColor;
 }
 
-int LegacyParticle::headMarkDir() const
+int LegacyParticle::headMarkGlobalDir() const
 {
     Q_ASSERT(-1 <= algorithm->headMarkDir && algorithm->headMarkDir <= 5);
     if(algorithm->headMarkDir == -1) {
@@ -75,7 +75,7 @@ int LegacyParticle::tailMarkColor() const
     return algorithm->tailMarkColor;
 }
 
-int LegacyParticle::tailMarkDir() const
+int LegacyParticle::tailMarkGlobalDir() const
 {
     Q_ASSERT(-1 <= algorithm->tailMarkDir && algorithm->tailMarkDir <= 5);
     if(algorithm->tailMarkDir == -1) {

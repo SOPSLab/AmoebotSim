@@ -30,7 +30,7 @@ public:
     virtual void activate();
 
     virtual int headMarkColor() const;
-    virtual int headMarkDir() const;
+    virtual int headMarkGlobalDir() const;
 
     virtual TestParticle& neighborAtLabel(int label);
 
@@ -39,6 +39,7 @@ public:
 
 private:
     State state;
+    int dir;
 };
 
 class TestSystem : public AmoebotSystem

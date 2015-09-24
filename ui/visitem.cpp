@@ -193,7 +193,7 @@ void VisItem::drawMarks(const Particle& p)
     if(p.headMarkColor() != -1) {
         QRgb color = p.headMarkColor();
         glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
-        drawFromParticleTex(p.headMarkDir() + 8, pos);
+        drawFromParticleTex(p.headMarkGlobalDir() + 8, pos);
     }
 
     // draw mark around tail
@@ -201,7 +201,7 @@ void VisItem::drawMarks(const Particle& p)
         auto pos = nodeToWorldCoord(p.tail());
         QRgb color = p.tailMarkColor();
         glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
-        drawFromParticleTex(p.headMarkDir() + 8, pos);
+        drawFromParticleTex(p.headMarkGlobalDir() + 8, pos);
     }
 }
 

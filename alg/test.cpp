@@ -9,7 +9,8 @@ TestParticle::TestParticle(const Node head,
                            std::map<Node, AmoebotParticle *> &particleMap,
                            State state)
     : AmoebotParticle(head, globalTailDir, orientation, particleMap),
-      state(state)
+      state(state),
+      dir(-1)
 {
 
 }
@@ -18,10 +19,12 @@ void TestParticle::activate()
 {
     if(state == State::Seed) {
         return;
-    }
-
-    if(hasNeighborInState({State::Seed, State::Follow})) {
-        state = State::Follow;
+    } else if(state == State::Idle) {
+        int label = labelOfFirstNeighborInState({State::Seed, State::Follow});
+        if(label != -1) {
+            dir = label;
+            state = State::Follow;
+        }
     }
 }
 
@@ -46,9 +49,13 @@ int TestParticle::headMarkColor() const
     }
 }
 
-int TestParticle::headMarkDir() const
+int TestParticle::headMarkGlobalDir() const
 {
-    return -1;
+    if(dir == -1) {
+        return -1;
+    } else {
+        return localToGlobalDir(dir);
+    }
 }
 
 TestParticle& TestParticle::neighborAtLabel(int label)
@@ -58,16 +65,16 @@ TestParticle& TestParticle::neighborAtLabel(int label)
 
 int TestParticle::labelOfFirstNeighborInState(std::initializer_list<State> states)
 {
-    for(int label = 0; label < 6; label++) {
-        if(hasNeighborAtLabel(label)) {
-            for(auto state : states) {
-                if(neighborAtLabel(label).state == state) {
-                    return label;
-                }
+    auto propertyCheck = [&](const TestParticle& p) {
+        for(auto state : states) {
+            if(p.state == state) {
+                return true;
             }
         }
-    }
-    return -1;
+        return false;
+    };
+
+    return labelOfFirstNeighborWithProperty<TestParticle>(propertyCheck);
 }
 
 bool TestParticle::hasNeighborInState(std::initializer_list<State> states)

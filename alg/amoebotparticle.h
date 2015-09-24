@@ -3,6 +3,7 @@
 
 #include <array>
 #include <deque>
+#include <functional>
 #include <map>
 
 #include "alg/labellednocompassparticle.h"
@@ -32,6 +33,9 @@ protected:
     bool hasNeighborAtLabel(int label);
     virtual AmoebotParticle& neighborAtLabel(int label);
 
+    template<class ParticleType>
+    int labelOfFirstNeighborWithProperty(std::function<bool(const ParticleType&)> propertyCheck, int startLabel = 0);
+
     void putToken(Token* token);
     template<class TokenType>
     TokenType* takeToken();
@@ -44,6 +48,22 @@ private:
     std::map<Node, AmoebotParticle*>& particleMap;
     std::deque<Token*> tokens;
 };
+
+template<class ParticleType>
+int AmoebotParticle::labelOfFirstNeighborWithProperty(std::function<bool(const ParticleType&)> propertyCheck, int startLabel)
+{
+    int labelLimit = isContracted() ? 6 : 10;
+    for(int labelOffset = 0; labelOffset < labelLimit; labelOffset++) {
+        int label = (startLabel + labelOffset) % labelLimit;
+        if(hasNeighborAtLabel(label)) {
+            const ParticleType& particle = dynamic_cast<const ParticleType&>(neighborAtLabel(label));
+            if(propertyCheck(particle)) {
+                return label;
+            }
+        }
+    }
+    return -1;
+}
 
 template<class TokenType>
 TokenType* AmoebotParticle::takeToken()

@@ -33,7 +33,7 @@ int Particle::headMarkColor() const
     return -1;
 }
 
-int Particle::headMarkDir() const
+int Particle::headMarkGlobalDir() const
 {
     return -1;
 }
@@ -43,7 +43,7 @@ int Particle::tailMarkColor() const
     return -1;
 }
 
-int Particle::tailMarkDir() const
+int Particle::tailMarkGlobalDir() const
 {
     return -1;
 }

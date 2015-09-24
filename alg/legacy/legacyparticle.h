@@ -30,9 +30,9 @@ public:
     bool isStatic() const;
 
     virtual int headMarkColor() const;
-    virtual int headMarkDir() const;
+    virtual int headMarkGlobalDir() const;
     virtual int tailMarkColor() const;
-    virtual int tailMarkDir() const;
+    virtual int tailMarkGlobalDir() const;
 
     virtual std::array<int, 18> borderColors() const;
     virtual int borderDir(const int dir) const;
