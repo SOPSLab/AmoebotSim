@@ -10,6 +10,38 @@ AmoebotParticle::AmoebotParticle(const Node head,
 
 }
 
+int AmoebotParticle::headMarkGlobalDir() const
+{
+    int dir = headMarkDir();
+    Q_ASSERT(-1 <= dir && dir < 6);
+    if(dir == -1) {
+        return -1;
+    } else {
+        return localToGlobalDir(dir);
+    }
+}
+
+int AmoebotParticle::tailMarkGlobalDir() const
+{
+    int dir = tailMarkDir();
+    Q_ASSERT(-1 <= dir && dir < 6);
+    if(dir == -1) {
+        return -1;
+    } else {
+        return localToGlobalDir(dir);
+    }
+}
+
+int AmoebotParticle::headMarkDir() const
+{
+    return -1;
+}
+
+int AmoebotParticle::tailMarkDir() const
+{
+    return -1;
+}
+
 bool AmoebotParticle::canExpand(int label)
 {
     Q_ASSERT(0 <= label && label < 6);

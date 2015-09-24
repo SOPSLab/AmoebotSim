@@ -28,7 +28,7 @@ public:
     virtual void activate();
 
     virtual int headMarkColor() const;
-    virtual int headMarkGlobalDir() const;
+    virtual int headMarkDir() const;
     virtual int tailMarkColor() const;
 
     virtual HexagonParticle& neighborAtLabel(int label) const;

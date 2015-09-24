@@ -23,7 +23,13 @@ public:
 
     virtual void activate() = 0;
 
+    virtual int headMarkGlobalDir() const final;
+    virtual int tailMarkGlobalDir() const final;
+
 protected:
+    virtual int headMarkDir() const;
+    virtual int tailMarkDir() const;
+
     bool canExpand(int label);
     bool expand(int label);
 

@@ -89,14 +89,14 @@ int HexagonParticle::headMarkColor() const
     }
 }
 
-int HexagonParticle::headMarkGlobalDir() const
+int HexagonParticle::headMarkDir() const
 {
     if(state == State::Lead) {
-        return localToGlobalDir(moveDir);
+        return moveDir;
     } else if(state == State::Seed || state == State::Finish) {
-        return localToGlobalDir(constructionDir);
+        return constructionDir;
     } else if(state == State::Follow) {
-        return localToGlobalDir(followDir);
+        return followDir;
     }
     return -1;
 }
