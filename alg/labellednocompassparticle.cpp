@@ -253,6 +253,11 @@ int LabelledNoCompassParticle::globalToLocalDir(int globalDir) const
     return (globalDir - orientation + 6) % 6;
 }
 
+int LabelledNoCompassParticle::convertNeighborDirToMyDir(const LabelledNoCompassParticle& other, int neighborDir) const
+{
+    return globalToLocalDir(other.localToGlobalDir(neighborDir));
+}
+
 bool LabelledNoCompassParticle::pointsAtMe(const LabelledNoCompassParticle& other, int label) const
 {
     if(isContracted()) {
