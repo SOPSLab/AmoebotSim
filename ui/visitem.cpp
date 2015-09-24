@@ -19,15 +19,11 @@ static constexpr float targetFrameDuration = 1000.0f / targetFramesPerSecond;
 static const float triangleHeight = sqrtf(3.0f / 4.0f);
 
 VisItem::VisItem(QQuickItem* parent) :
-    GLItem(parent),
-    blinkValue(-1.0f)
+    GLItem(parent)
 {
     setAcceptedMouseButtons(Qt::LeftButton);
 
     renderTimer.start(targetFrameDuration);
-
-    connect(&blinkTimer, &QTimer::timeout, [&](){blinkValue += 0.1; if(blinkValue >= 1.0) blinkValue = -1.0;});
-    blinkTimer.start(15);
 }
 
 void VisItem::systemChanged(std::shared_ptr<System> _system)
@@ -95,15 +91,11 @@ void VisItem::paint()
     if(system != nullptr) {
         QMutexLocker locker(&system->mutex);
         drawParticles();
-//        if(system->getSystemState() == System::SystemState::Disconnected) {
-//            drawDisconnectionNode();
-//        }
     }
 }
 
 void VisItem::deinitialize()
 {
-    blinkTimer.disconnect();
     renderTimer.disconnect();
 
     particleTex = nullptr;
