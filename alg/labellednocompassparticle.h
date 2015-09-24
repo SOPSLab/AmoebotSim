@@ -29,6 +29,8 @@ public:
     const std::vector<int>& tailLabels() const;
     bool isHeadLabel(const int label) const;
     bool isTailLabel(const int label) const;
+    int dirToHeadLabel(int dir) const;
+    int dirToTailLabel(int dir) const;
     int headContractionLabel() const;
     int tailContractionLabel() const;
 
@@ -54,8 +56,8 @@ public:
 
     template<int n> static int posMod(const int a);
 
-    int convertNeighborDirToMyDir(const LabelledNoCompassParticle& neighbor, int neighborDir) const;
-    int convertMyDirToNeighborDir(const LabelledNoCompassParticle& neighbor, int myDir) const;
+    int neighborDirToDir(const LabelledNoCompassParticle& neighbor, int neighborDir) const;
+    int dirToNeighborDir(const LabelledNoCompassParticle& neighbor, int myDir) const;
 
     bool pointsAtMe(const LabelledNoCompassParticle& neighbor, int neighborLabel) const;
     bool pointsAtMyHead(const LabelledNoCompassParticle& neighbor, int neighborLabel) const;

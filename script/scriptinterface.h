@@ -12,7 +12,6 @@
 #include "alg/legacy/compaction.h"
 #include "alg/legacy/compaction.h"
 #include "alg/legacy/examplealgorithm.h"
-#include "alg/legacy/hexagon.h"
 #include "alg/legacy/holeelimcompaction.h"
 #include "alg/legacy/holeelimstandard.h"
 #include "alg/legacy/infobjcoating.h"
@@ -24,7 +23,7 @@
 #include "alg/legacy/triangle.h"
 #include "alg/legacy/universalcoating.h"
 
-#include "alg/test.h"
+#include "alg/hexagon.h"
 
 #include "sim/simulator.h"
 
@@ -55,7 +54,6 @@ public slots:
     void infObjCoating(const int numParticles, const float holeProb = 0.2);
     void line(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void boundedObjCoating(const int numStaticParticles, const int numParticles, const float holeProb = 0.2);
-    void hexagon(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void triangle(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void ring(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void square(const unsigned int numParticles = 100, const float holeProb = 0.0);
@@ -76,7 +74,7 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    sim.setSystem(std::make_shared<Test::TestSystem>());
+    sim.setSystem(std::make_shared<HexagonSystem>());
 //    sim.setSystem(Hexagon::Hexagon::instance(200, 0.3));
 }
 
@@ -186,16 +184,6 @@ inline void ScriptInterface::line(const unsigned int numParticles, const float h
     }
 
     sim.setSystem(Line::Line::instance(numParticles, holeProb));
-}
-
-inline void ScriptInterface::hexagon(const unsigned int numParticles, const float holeProb)
-{
-    if(holeProb < 0.0f || holeProb > 1.0f) {
-        sim.log("holeProb in [0.0, 1.0] required", true);
-        return;
-    }
-
-    sim.setSystem(Hexagon::Hexagon::instance(numParticles, holeProb));
 }
 
 inline void ScriptInterface::triangle(const unsigned int numParticles, const float holeProb)

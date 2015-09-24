@@ -13,7 +13,6 @@ HEADERS += \
     alg/legacy/algorithm.h \
     alg/legacy/algorithmwithflags.h \
     alg/legacy/examplealgorithm.h \
-    alg/legacy/hexagon.h \
     alg/legacy/infobjcoating.h \
     alg/legacy/triangle.h \
     main/application.h \
@@ -47,12 +46,11 @@ HEADERS += \
     alg/amoebotparticle.h \
     alg/amoebotsystem.h \
     helper/randomnumbergenerator.h \
-    alg/test.h
+    alg/hexagon.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
     alg/legacy/examplealgorithm.cpp \
-    alg/legacy/hexagon.cpp \
     alg/legacy/infobjcoating.cpp \
     alg/legacy/triangle.cpp \
     main/application.cpp \
@@ -79,7 +77,7 @@ SOURCES += \
     alg/amoebotparticle.cpp \
     alg/amoebotsystem.cpp \
     helper/randomnumbergenerator.cpp \
-    alg/test.cpp
+    alg/hexagon.cpp
 
 RESOURCES += \
     res/qml.qrc \

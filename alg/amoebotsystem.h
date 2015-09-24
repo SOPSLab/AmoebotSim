@@ -23,6 +23,9 @@ public:
     virtual void insert(AmoebotParticle* particle);
 
 protected:
+    virtual bool isConnected() const;
+
+protected:
     std::deque<AmoebotParticle*> particles;
     std::map<Node, AmoebotParticle*> particleMap;
     std::deque<AmoebotParticle*> shuffledParticles;

@@ -80,6 +80,30 @@ bool LabelledNoCompassParticle::isTailLabel(const int label) const
     return false;
 }
 
+int LabelledNoCompassParticle::dirToHeadLabel(int dir) const
+{
+    Q_ASSERT(0 <= dir && dir <= 5);
+    for(int headLabel : headLabels()) {
+        if(dir == labelToDir(headLabel)) {
+            return headLabel;
+        }
+    }
+    Q_ASSERT(false);
+    return 0; // avoid compiler warning
+}
+
+int LabelledNoCompassParticle::dirToTailLabel(int dir) const
+{
+    Q_ASSERT(0 <= dir && dir <= 5);
+    for(int tailLabel : tailLabels()) {
+        if(dir == labelToDir(tailLabel)) {
+            return tailLabel;
+        }
+    }
+    Q_ASSERT(false);
+    return 0; // avoid compiler warning
+}
+
 int LabelledNoCompassParticle::headContractionLabel() const
 {
     Q_ASSERT(0 <= globalTailDir && globalTailDir <= 5);
@@ -253,12 +277,12 @@ int LabelledNoCompassParticle::globalToLocalDir(int globalDir) const
     return (globalDir - orientation + 6) % 6;
 }
 
-int LabelledNoCompassParticle::convertNeighborDirToMyDir(const LabelledNoCompassParticle& neighbor, int neighborDir) const
+int LabelledNoCompassParticle::neighborDirToDir(const LabelledNoCompassParticle& neighbor, int neighborDir) const
 {
     return globalToLocalDir(neighbor.localToGlobalDir(neighborDir));
 }
 
-int LabelledNoCompassParticle::convertMyDirToNeighborDir(const LabelledNoCompassParticle& neighbor, int myDir) const
+int LabelledNoCompassParticle::dirToNeighborDir(const LabelledNoCompassParticle& neighbor, int myDir) const
 {
     return neighbor.globalToLocalDir(localToGlobalDir(myDir));
 }
@@ -274,13 +298,11 @@ bool LabelledNoCompassParticle::pointsAtMe(const LabelledNoCompassParticle& neig
 
 bool LabelledNoCompassParticle::pointsAtMyHead(const LabelledNoCompassParticle& neighbor, int neighborLabel) const
 {
-    Node node = neighbor.neighboringNodeReachedViaLabel(neighborLabel);
-    return node == head;
+    return neighbor.neighboringNodeReachedViaLabel(neighborLabel) == head;
 }
 
 bool LabelledNoCompassParticle::pointsAtMyTail(const LabelledNoCompassParticle& neighbor, int neighborLabel) const
 {
     Q_ASSERT(isExpanded());
-    Node node = neighbor.neighboringNodeReachedViaLabel(neighborLabel);
-    return node == tail();
+    return neighbor.neighboringNodeReachedViaLabel(neighborLabel) == tail();
 }

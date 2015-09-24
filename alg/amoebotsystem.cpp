@@ -38,9 +38,26 @@ const Particle& AmoebotSystem::at(const int i) const
 
 void AmoebotSystem::insert(AmoebotParticle* particle)
 {
+    Q_ASSERT(particleMap.find(particle->head) == particleMap.end());
+    if(particle->isExpanded()) {
+        Q_ASSERT(particleMap.find(particle->tail()) == particleMap.end());
+    }
+
     particles.push_back(particle);
     particleMap[particle->head] = particle;
     if(particle->isExpanded()) {
         particleMap[particle->tail()] = particle;
     }
+}
+
+bool AmoebotSystem::isConnected() const
+{
+    std::set<Node> occupiedNodes;
+    for(auto p : particles) {
+        occupiedNodes.insert(p->head);
+        if(p->globalTailDir != -1) {
+            occupiedNodes.insert(p->tail());
+        }
+    }
+    return System::isConnected(occupiedNodes);
 }

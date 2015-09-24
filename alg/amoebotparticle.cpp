@@ -90,13 +90,13 @@ void AmoebotParticle::contract(int label)
     }
 }
 
-bool AmoebotParticle::hasNeighborAtLabel(int label)
+bool AmoebotParticle::hasNeighborAtLabel(int label) const
 {
     Node node = neighboringNodeReachedViaLabel(label);
     return particleMap.find(node) != particleMap.end();
 }
 
-AmoebotParticle& AmoebotParticle::neighborAtLabel(int label)
+AmoebotParticle& AmoebotParticle::neighborAtLabel(int label) const
 {
     Node node = neighboringNodeReachedViaLabel(label);
     auto it = particleMap.find(node);
@@ -105,6 +105,29 @@ AmoebotParticle& AmoebotParticle::neighborAtLabel(int label)
     }
 
     return *((*it).second);
+}
+
+bool AmoebotParticle::hasHeadAtLabel(int label)
+{
+    return hasNeighborAtLabel(label) && neighborAtLabel(label).head == neighboringNodeReachedViaLabel(label);
+}
+
+bool AmoebotParticle::hasTailAtLabel(int label)
+{
+    if(!hasNeighborAtLabel(label)) {
+        return false;
+    }
+
+    AmoebotParticle& neighbor = neighborAtLabel(label);
+    if(neighbor.isContracted()) {
+        return false;
+    }
+
+    if(neighbor.tail() == neighboringNodeReachedViaLabel(label)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 void AmoebotParticle::putToken(Token* token)

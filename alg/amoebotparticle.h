@@ -30,11 +30,13 @@ protected:
     void contractTail();
     void contract(int label);
 
-    bool hasNeighborAtLabel(int label);
-    virtual AmoebotParticle& neighborAtLabel(int label);
+    bool hasNeighborAtLabel(int label) const;
+    virtual AmoebotParticle& neighborAtLabel(int label) const;
+    bool hasHeadAtLabel(int label);
+    bool hasTailAtLabel(int label);
 
     template<class ParticleType>
-    int labelOfFirstNeighborWithProperty(std::function<bool(const ParticleType&)> propertyCheck, int startLabel = 0);
+    int labelOfFirstNeighborWithProperty(std::function<bool(const ParticleType&)> propertyCheck, int startLabel = 0) const;
 
     void putToken(Token* token);
     template<class TokenType>
@@ -50,7 +52,7 @@ private:
 };
 
 template<class ParticleType>
-int AmoebotParticle::labelOfFirstNeighborWithProperty(std::function<bool(const ParticleType&)> propertyCheck, int startLabel)
+int AmoebotParticle::labelOfFirstNeighborWithProperty(std::function<bool(const ParticleType&)> propertyCheck, int startLabel) const
 {
     int labelLimit = isContracted() ? 6 : 10;
     for(int labelOffset = 0; labelOffset < labelLimit; labelOffset++) {

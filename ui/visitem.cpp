@@ -201,7 +201,7 @@ void VisItem::drawMarks(const Particle& p)
         auto pos = nodeToWorldCoord(p.tail());
         QRgb color = p.tailMarkColor();
         glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
-        drawFromParticleTex(p.headMarkGlobalDir() + 8, pos);
+        drawFromParticleTex(p.tailMarkGlobalDir() + 8, pos);
     }
 }
 
