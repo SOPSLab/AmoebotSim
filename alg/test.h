@@ -30,6 +30,8 @@ public:
     virtual int headMarkColor() const;
     virtual int headMarkDir() const;
 
+    virtual TestParticle& neighborAtLabel(int label);
+
     bool hasNeighborInState(std::initializer_list<State> states);
 
 private:

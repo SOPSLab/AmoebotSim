@@ -51,12 +51,17 @@ int TestParticle::headMarkDir() const
     return -1;
 }
 
+TestParticle& TestParticle::neighborAtLabel(int label)
+{
+    return dynamic_cast<TestParticle&>(AmoebotParticle::neighborAtLabel(label));
+}
+
 bool TestParticle::hasNeighborInState(std::initializer_list<State> states)
 {
     for(int label = 0; label < 6; label++) {
         if(hasNeighborAtLabel(label)) {
             for(auto state : states) {
-                if(neighborAtLabel<TestParticle>(label).state == state) {
+                if(neighborAtLabel(label).state == state) {
                     return true;
                 }
             }

@@ -95,3 +95,14 @@ bool AmoebotParticle::hasNeighborAtLabel(int label)
     Node node = neighboringNodeReachedViaLabel(label);
     return particleMap.find(node) != particleMap.end();
 }
+
+AmoebotParticle& AmoebotParticle::neighborAtLabel(int label)
+{
+    Node node = neighboringNodeReachedViaLabel(label);
+    auto it = particleMap.find(node);
+    if(it == particleMap.end()) {
+        Q_ASSERT(false);
+    }
+
+    return *((*it).second);
+}
