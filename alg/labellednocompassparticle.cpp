@@ -252,3 +252,25 @@ int LabelledNoCompassParticle::globalToLocalDir(int globalDir) const
     Q_ASSERT(0 <= globalDir && globalDir <= 5);
     return (globalDir - orientation + 6) % 6;
 }
+
+bool LabelledNoCompassParticle::pointsAtMe(const LabelledNoCompassParticle& other, int label) const
+{
+    if(isContracted()) {
+        return pointsAtMyHead(other, label);
+    } else {
+        return pointsAtMyHead(other, label) || pointsAtMyTail(other, label);
+    }
+}
+
+bool LabelledNoCompassParticle::pointsAtMyHead(const LabelledNoCompassParticle& other, int label) const
+{
+    Node node = other.neighboringNodeReachedViaLabel(label);
+    return node == head;
+}
+
+bool LabelledNoCompassParticle::pointsAtMyTail(const LabelledNoCompassParticle& other, int label) const
+{
+    Q_ASSERT(isExpanded());
+    Node node = other.neighboringNodeReachedViaLabel(label);
+    return node == tail();
+}

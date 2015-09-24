@@ -54,6 +54,10 @@ public:
 
     template<int n> static int posMod(const int a);
 
+    bool pointsAtMe(const LabelledNoCompassParticle& other, int label) const;
+    bool pointsAtMyHead(const LabelledNoCompassParticle& other, int label) const;
+    bool pointsAtMyTail(const LabelledNoCompassParticle& other, int label) const;
+
 public:
     int orientation; // global direction
 
