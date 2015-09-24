@@ -24,6 +24,7 @@
 #include "alg/legacy/universalcoating.h"
 
 #include "alg/hexagon.h"
+#include "alg/tokendemo.h"
 
 #include "sim/simulator.h"
 
@@ -64,6 +65,9 @@ public slots:
     void universalcoating(const int staticParticlesRadius = 5, const int numParticles = 50, const float holeProb = 0.2);
     void leaderelectiondemo();
 
+    void hexagon(int numParticles = 200, float holeProb = 0.2);
+    void tokenDemo(int numParticles = 200, float holeProb = 0.2);
+
 //    int getUniversalCoatingWeakLowerBound();
 //    int getUniversalCoatingStrongLowerBound();
 
@@ -74,8 +78,7 @@ private:
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
     : sim(_sim)
 {
-    sim.setSystem(std::make_shared<HexagonSystem>());
-//    sim.setSystem(Hexagon::Hexagon::instance(200, 0.3));
+    tokenDemo();
 }
 
 inline void ScriptInterface::round()
@@ -248,6 +251,16 @@ inline void ScriptInterface::universalcoating(const  int staticParticlesRadius, 
         return;
     }
     sim.setSystem(UniversalCoating::UniversalCoating::instance(staticParticlesRadius, numParticles, holeProb));
+}
+
+inline void ScriptInterface::hexagon(int numParticles, float holeProb)
+{
+    sim.setSystem(std::make_shared<HexagonSystem>(numParticles, holeProb));
+}
+
+inline void ScriptInterface::tokenDemo(int numParticles, float holeProb)
+{
+    sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
 }
 
 //inline int ScriptInterface::getUniversalCoatingWeakLowerBound()

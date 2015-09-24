@@ -8,7 +8,7 @@ class HexagonParticle : public AmoebotParticle
 {
     friend class HexagonSystem;
 
-protected:
+public:
     enum class State
     {
         Seed,
@@ -33,7 +33,7 @@ public:
 
     virtual HexagonParticle& neighborAtLabel(int label) const;
 
-    int labelOfFirstNeighborInState(std::initializer_list<State> states) const;
+    int labelOfFirstNeighborInState(std::initializer_list<State> states, int startLabel = 0) const;
     bool hasNeighborInState(std::initializer_list<State> states) const;
 
     int constructionReceiveDir() const;
@@ -44,7 +44,7 @@ public:
 
     bool hasTailFollower() const;
 
-private:
+protected:
     State state;
 
     int constructionDir;
@@ -55,7 +55,7 @@ private:
 class HexagonSystem : public AmoebotSystem
 {
 public:
-    HexagonSystem();
+    HexagonSystem(int numParticles = 200, float holeProb = 0.2);
 
     virtual bool hasTerminated() const;
 };

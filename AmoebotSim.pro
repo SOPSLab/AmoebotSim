@@ -46,7 +46,8 @@ HEADERS += \
     alg/amoebotparticle.h \
     alg/amoebotsystem.h \
     helper/randomnumbergenerator.h \
-    alg/hexagon.h
+    alg/hexagon.h \
+    alg/tokendemo.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -77,7 +78,8 @@ SOURCES += \
     alg/amoebotparticle.cpp \
     alg/amoebotsystem.cpp \
     helper/randomnumbergenerator.cpp \
-    alg/hexagon.cpp
+    alg/hexagon.cpp \
+    alg/tokendemo.cpp
 
 RESOURCES += \
     res/qml.qrc \

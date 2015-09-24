@@ -7,12 +7,13 @@
 #include <map>
 
 #include "alg/labellednocompassparticle.h"
+#include "helper/randomnumbergenerator.h"
 #include "sim/node.h"
 
-class AmoebotParticle : public LabelledNoCompassParticle
+class AmoebotParticle : public LabelledNoCompassParticle, public RandomNumberGenerator
 {
 protected:
-    class Token { };
+    struct Token { virtual ~Token(){ } };
 
 public:
     AmoebotParticle(const Node head,

@@ -111,7 +111,7 @@ HexagonParticle& HexagonParticle::neighborAtLabel(int label) const
     return dynamic_cast<HexagonParticle&>(AmoebotParticle::neighborAtLabel(label));
 }
 
-int HexagonParticle::labelOfFirstNeighborInState(std::initializer_list<State> states) const
+int HexagonParticle::labelOfFirstNeighborInState(std::initializer_list<State> states, int startLabel) const
 {
     auto propertyCheck = [&](const HexagonParticle& p) {
         for(auto state : states) {
@@ -122,7 +122,7 @@ int HexagonParticle::labelOfFirstNeighborInState(std::initializer_list<State> st
         return false;
     };
 
-    return labelOfFirstNeighborWithProperty<HexagonParticle>(propertyCheck);
+    return labelOfFirstNeighborWithProperty<HexagonParticle>(propertyCheck, startLabel);
 }
 
 bool HexagonParticle::hasNeighborInState(std::initializer_list<State> states) const
@@ -177,11 +177,8 @@ bool HexagonParticle::hasTailFollower() const
     return labelOfFirstNeighborWithProperty<HexagonParticle>(propertyCheck) != -1;
 }
 
-HexagonSystem::HexagonSystem()
+HexagonSystem::HexagonSystem(int numParticles, float holeProb)
 {
-    int numParticles = 100;
-    float holeProb = 0.3;
-
     insert(new HexagonParticle(Node(0, 0), -1, randDir(), particleMap, HexagonParticle::State::Seed));
 
     std::set<Node> occupied;
