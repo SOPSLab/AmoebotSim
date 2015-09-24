@@ -253,29 +253,34 @@ int LabelledNoCompassParticle::globalToLocalDir(int globalDir) const
     return (globalDir - orientation + 6) % 6;
 }
 
-int LabelledNoCompassParticle::convertNeighborDirToMyDir(const LabelledNoCompassParticle& other, int neighborDir) const
+int LabelledNoCompassParticle::convertNeighborDirToMyDir(const LabelledNoCompassParticle& neighbor, int neighborDir) const
 {
-    return globalToLocalDir(other.localToGlobalDir(neighborDir));
+    return globalToLocalDir(neighbor.localToGlobalDir(neighborDir));
 }
 
-bool LabelledNoCompassParticle::pointsAtMe(const LabelledNoCompassParticle& other, int label) const
+int LabelledNoCompassParticle::convertMyDirToNeighborDir(const LabelledNoCompassParticle& neighbor, int myDir) const
+{
+    return neighbor.globalToLocalDir(localToGlobalDir(myDir));
+}
+
+bool LabelledNoCompassParticle::pointsAtMe(const LabelledNoCompassParticle& neighbor, int neighborLabel) const
 {
     if(isContracted()) {
-        return pointsAtMyHead(other, label);
+        return pointsAtMyHead(neighbor, neighborLabel);
     } else {
-        return pointsAtMyHead(other, label) || pointsAtMyTail(other, label);
+        return pointsAtMyHead(neighbor, neighborLabel) || pointsAtMyTail(neighbor, neighborLabel);
     }
 }
 
-bool LabelledNoCompassParticle::pointsAtMyHead(const LabelledNoCompassParticle& other, int label) const
+bool LabelledNoCompassParticle::pointsAtMyHead(const LabelledNoCompassParticle& neighbor, int neighborLabel) const
 {
-    Node node = other.neighboringNodeReachedViaLabel(label);
+    Node node = neighbor.neighboringNodeReachedViaLabel(neighborLabel);
     return node == head;
 }
 
-bool LabelledNoCompassParticle::pointsAtMyTail(const LabelledNoCompassParticle& other, int label) const
+bool LabelledNoCompassParticle::pointsAtMyTail(const LabelledNoCompassParticle& neighbor, int neighborLabel) const
 {
     Q_ASSERT(isExpanded());
-    Node node = other.neighboringNodeReachedViaLabel(label);
+    Node node = neighbor.neighboringNodeReachedViaLabel(neighborLabel);
     return node == tail();
 }

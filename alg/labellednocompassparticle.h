@@ -54,11 +54,12 @@ public:
 
     template<int n> static int posMod(const int a);
 
-    int convertNeighborDirToMyDir(const LabelledNoCompassParticle& other, int neighborDir) const;
+    int convertNeighborDirToMyDir(const LabelledNoCompassParticle& neighbor, int neighborDir) const;
+    int convertMyDirToNeighborDir(const LabelledNoCompassParticle& neighbor, int myDir) const;
 
-    bool pointsAtMe(const LabelledNoCompassParticle& other, int label) const;
-    bool pointsAtMyHead(const LabelledNoCompassParticle& other, int label) const;
-    bool pointsAtMyTail(const LabelledNoCompassParticle& other, int label) const;
+    bool pointsAtMe(const LabelledNoCompassParticle& neighbor, int neighborLabel) const;
+    bool pointsAtMyHead(const LabelledNoCompassParticle& neighbor, int neighborLabel) const;
+    bool pointsAtMyTail(const LabelledNoCompassParticle& neighbor, int neighborLabel) const;
 
 public:
     int orientation; // global direction
