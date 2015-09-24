@@ -106,3 +106,8 @@ AmoebotParticle& AmoebotParticle::neighborAtLabel(int label)
 
     return *((*it).second);
 }
+
+void AmoebotParticle::putToken(Token* token)
+{
+    tokens.push_back(token);
+}

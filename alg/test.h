@@ -18,6 +18,8 @@ enum class State
 
 class TestParticle : public AmoebotParticle
 {
+    friend class TestSystem;
+
 public:
     TestParticle(const Node head,
                  const int globalTailDir,
@@ -32,6 +34,7 @@ public:
 
     virtual TestParticle& neighborAtLabel(int label);
 
+    int labelOfFirstNeighborInState(std::initializer_list<State> states);
     bool hasNeighborInState(std::initializer_list<State> states);
 
 private:

@@ -56,18 +56,23 @@ TestParticle& TestParticle::neighborAtLabel(int label)
     return dynamic_cast<TestParticle&>(AmoebotParticle::neighborAtLabel(label));
 }
 
-bool TestParticle::hasNeighborInState(std::initializer_list<State> states)
+int TestParticle::labelOfFirstNeighborInState(std::initializer_list<State> states)
 {
     for(int label = 0; label < 6; label++) {
         if(hasNeighborAtLabel(label)) {
             for(auto state : states) {
                 if(neighborAtLabel(label).state == state) {
-                    return true;
+                    return label;
                 }
             }
         }
     }
-    return false;
+    return -1;
+}
+
+bool TestParticle::hasNeighborInState(std::initializer_list<State> states)
+{
+    return labelOfFirstNeighborInState(states) != -1;
 }
 
 TestSystem::TestSystem()
