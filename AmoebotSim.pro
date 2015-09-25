@@ -12,7 +12,6 @@ win32:RC_FILE = res/AmoebotSim.rc
 HEADERS += \
     alg/legacy/algorithm.h \
     alg/legacy/algorithmwithflags.h \
-    alg/legacy/examplealgorithm.h \
     alg/legacy/infobjcoating.h \
     alg/legacy/triangle.h \
     main/application.h \
@@ -51,7 +50,6 @@ HEADERS += \
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
-    alg/legacy/examplealgorithm.cpp \
     alg/legacy/infobjcoating.cpp \
     alg/legacy/triangle.cpp \
     main/application.cpp \

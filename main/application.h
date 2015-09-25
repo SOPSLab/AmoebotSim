@@ -15,9 +15,7 @@ public:
 
 protected:
     QQmlApplicationEngine engine;
-
     Simulator sim;
-
     CommandHistoryManager commandHistoryManager;
 };
 

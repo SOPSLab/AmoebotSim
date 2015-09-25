@@ -11,7 +11,6 @@
 #include "alg/legacy/boundedobjcoating.h"
 #include "alg/legacy/compaction.h"
 #include "alg/legacy/compaction.h"
-#include "alg/legacy/examplealgorithm.h"
 #include "alg/legacy/holeelimcompaction.h"
 #include "alg/legacy/holeelimstandard.h"
 #include "alg/legacy/infobjcoating.h"
@@ -26,9 +25,9 @@
 #include "alg/hexagon.h"
 #include "alg/tokendemo.h"
 
-#include "sim/simulator.h"
-
 #include "helper/universalcoatinghelper.h"
+
+#include "sim/simulator.h"
 
 /*
  * The methods of the following class are automatically available during runtime as command in the command-line.
@@ -40,10 +39,10 @@ public:
     explicit ScriptInterface(Simulator& _sim);
     
 public slots:
+    // interface to simulator
     void round();
 
     void runScript(const QString scriptFilePath);
-    void writeToFile(const QString filePath, const QString text);
 
     int getNumParticles();
     int getNumMovements();
@@ -51,7 +50,17 @@ public slots:
 
     void setRoundDuration(int ms);
 
-    void exampleAlgorithm(const int numParticles);
+    // helpers
+    void writeToFile(const QString filePath, const QString text);
+
+    // algorithms
+    void hexagon(int numParticles = 200, float holeProb = 0.2);
+    void tokenDemo(int numParticles = 200, float holeProb = 0.2);
+
+//    int getUniversalCoatingWeakLowerBound();
+//    int getUniversalCoatingStrongLowerBound();
+
+    // legacy algorithms
     void infObjCoating(const int numParticles, const float holeProb = 0.2);
     void line(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void boundedObjCoating(const int numStaticParticles, const int numParticles, const float holeProb = 0.2);
@@ -64,12 +73,6 @@ public slots:
     void leaderelection(const unsigned int numParticles = 100);
     void universalcoating(const int staticParticlesRadius = 5, const int numParticles = 50, const float holeProb = 0.2);
     void leaderelectiondemo();
-
-    void hexagon(int numParticles = 200, float holeProb = 0.2);
-    void tokenDemo(int numParticles = 200, float holeProb = 0.2);
-
-//    int getUniversalCoatingWeakLowerBound();
-//    int getUniversalCoatingStrongLowerBound();
 
 private:
     Simulator& sim;
@@ -96,27 +99,12 @@ inline void ScriptInterface::runScript(const QString scriptFilePath)
     }
 
     QTextStream stream(&scriptFile);
-    QString script = stream.readAll();
+    const QString script = stream.readAll();
 
     scriptFile.close();
 
     sim.runScript(script);
     sim.log("script finished", false);
-}
-
-inline void ScriptInterface::writeToFile(const QString filePath, const QString text)
-{
-    QFile file(filePath);
-
-    if(!file.open(QFile::WriteOnly | QFile::Append)) {
-        sim.log("could not write to file", true);
-        return;
-    }
-
-    QTextStream stream(&file);
-    stream << text;
-
-    file.close();
 }
 
 inline int ScriptInterface::getNumParticles()
@@ -139,15 +127,40 @@ inline void ScriptInterface::setRoundDuration(int ms)
     sim.setRoundDuration(ms);
 }
 
-inline void ScriptInterface::exampleAlgorithm(const int numParticles)
+inline void ScriptInterface::writeToFile(const QString filePath, const QString text)
 {
-    if(numParticles < 0) {
-        sim.log("numParticles >= 0 required", true);
+    QFile file(filePath);
+
+    if(!file.open(QFile::WriteOnly | QFile::Append)) {
+        sim.log("could not write to file", true);
         return;
     }
 
-    sim.setSystem(ExampleAlgorithm::ExampleAlgorithm::instance(numParticles));
+    QTextStream stream(&file);
+    stream << text;
+
+    file.close();
 }
+
+inline void ScriptInterface::hexagon(int numParticles, float holeProb)
+{
+    sim.setSystem(std::make_shared<HexagonSystem>(numParticles, holeProb));
+}
+
+inline void ScriptInterface::tokenDemo(int numParticles, float holeProb)
+{
+    sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
+}
+
+//inline int ScriptInterface::getUniversalCoatingWeakLowerBound()
+//{
+//    return UniversalCoating::getWeakLowerBound(*sim.getSystem());
+//}
+
+//inline int ScriptInterface::getUniversalCoatingStrongLowerBound()
+//{
+//    return UniversalCoating::getStrongLowerBound(*sim.getSystem());
+//}
 
 inline void ScriptInterface::infObjCoating(const int numParticles, const float holeProb)
 {
@@ -252,25 +265,5 @@ inline void ScriptInterface::universalcoating(const  int staticParticlesRadius, 
     }
     sim.setSystem(UniversalCoating::UniversalCoating::instance(staticParticlesRadius, numParticles, holeProb));
 }
-
-inline void ScriptInterface::hexagon(int numParticles, float holeProb)
-{
-    sim.setSystem(std::make_shared<HexagonSystem>(numParticles, holeProb));
-}
-
-inline void ScriptInterface::tokenDemo(int numParticles, float holeProb)
-{
-    sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
-}
-
-//inline int ScriptInterface::getUniversalCoatingWeakLowerBound()
-//{
-//    return UniversalCoating::getWeakLowerBound(*sim.getSystem());
-//}
-
-//inline int ScriptInterface::getUniversalCoatingStrongLowerBound()
-//{
-//    return UniversalCoating::getStrongLowerBound(*sim.getSystem());
-//}
 
 #endif // SCRIPTINTERFACE_H

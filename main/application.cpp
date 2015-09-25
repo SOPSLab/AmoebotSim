@@ -1,10 +1,8 @@
-#include <memory>
-
 #include "main/application.h"
 #include "ui/visitem.h"
 
-Application::Application(int argc, char *argv[]) :
-    QGuiApplication(argc, argv)
+Application::Application(int argc, char *argv[])
+    : QGuiApplication(argc, argv)
 {
     qmlRegisterType<VisItem>("VisItem", 1, 0, "VisItem");
     engine.load(QUrl(QStringLiteral("qrc:///qml/main.qml")));
@@ -37,6 +35,7 @@ Application::Application(int argc, char *argv[]) :
 //                QMetaObject::invokeMethod(qmlRoot, "setNumRounds", Q_ARG(QVariant, rounds));
 //            }
 //    );
+
     connect(&sim,  &Simulator::log,
             [qmlRoot](const QString msg, const bool isError){
                 QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
@@ -64,5 +63,6 @@ Application::Application(int argc, char *argv[]) :
             }
     );
 
+    // let the simulator inform the visualization about the current system etc.
     sim.emitInitialSignals();
 }
