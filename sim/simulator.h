@@ -20,7 +20,7 @@ public:
     std::shared_ptr<System> getSystem() const;
 
 signals:
-    void systemChanged(std::shared_ptr<System> _system);
+    void systemChanged(std::shared_ptr<System>& _system);
     void roundDurationChanged(int ms);
 
     void started();

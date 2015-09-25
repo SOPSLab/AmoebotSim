@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include <QMutex>
+#include <QOpenGLTexture>
 #include <QPointF>
 #include <QTimer>
 
@@ -14,7 +14,6 @@
 #include "ui/view.h"
 
 class QMouseEvent;
-class QOpenGLTexture;
 class QWheelEvent;
 
 class VisItem : public GLItem
@@ -24,10 +23,10 @@ public:
     explicit VisItem(QQuickItem* parent = 0);
 
 signals:
-    void roundForParticleAt(const int x, const int y);
+    void roundForParticleAt(int x, int y);
 
 public slots:
-    void systemChanged(std::shared_ptr<System> _system);
+    void systemChanged(std::shared_ptr<System>& _system);
     void focusOnCenterOfMass();
 
 protected slots:
@@ -45,26 +44,27 @@ protected:
     void drawParticle(const Particle& p);
     void drawBorders(const Particle& p);
     void drawBorderPoints(const Particle& p);
-    void drawFromParticleTex(const int index, const QPointF& pos);
+    void drawFromParticleTex(int index, const QPointF& pos);
 
-    static QPointF nodeToWorldCoord(Node node);
-    static Node worldCoordToNode(QPointF worldCord);
-    QPointF windowCoordToWorldCoord(const QPointF windowCoord);
+    static QPointF nodeToWorldCoord(const Node& node);
+    static Node worldCoordToNode(const QPointF& worldCord);
+    QPointF windowCoordToWorldCoord(const QPointF& windowCoord);
 
     void mousePressEvent(QMouseEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
     void wheelEvent(QWheelEvent* e);
 
 protected:
-    std::shared_ptr<System> system;
-
-    std::shared_ptr<QOpenGLTexture> gridTex;
-    std::shared_ptr<QOpenGLTexture> particleTex;
+    std::unique_ptr<QOpenGLTexture> gridTex;
+    std::unique_ptr<QOpenGLTexture> particleTex;
 
     QTimer renderTimer;
+
     View view;
-    bool translating;
     QPointF lastMousePos;
+    bool translating;
+
+    std::shared_ptr<System> system;
 };
 
 #endif // VISITEM_H
