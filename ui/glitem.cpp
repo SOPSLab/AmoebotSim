@@ -1,3 +1,4 @@
+#include <QOpenGLFunctions_2_0>
 #include <QQuickWindow>
 #include <QSurfaceFormat>
 
@@ -5,6 +6,7 @@
 
 GLItem::GLItem(QQuickItem* parent) :
     QQuickItem(parent),
+    glfn(nullptr),
     initialized(false)
 {
     connect(this, &QQuickItem::windowChanged, this, &GLItem::handleWindowChanged);
@@ -32,6 +34,8 @@ void GLItem::handleWindowChanged(QQuickWindow* window)
 void GLItem::delegatePaint()
 {
     if(!initialized) {
+        // context retains ownership
+        glfn = window()->openglContext()->versionFunctions<QOpenGLFunctions_2_0>();
         emit initialize();
         initialized = true;
     }
@@ -43,6 +47,7 @@ void GLItem::delegeteDeinitialize()
 {
     initialized = false;
     emit deinitialize();
+    glfn = nullptr;
 }
 
 void GLItem::delegateSizeChanged()

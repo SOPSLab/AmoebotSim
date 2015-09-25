@@ -2,6 +2,7 @@
 
 #include <QImage>
 #include <QMutexLocker>
+#include <QOpenGLFunctions_2_0>
 #include <QOpenGLTexture>
 #include <QQuickWindow>
 #include <QRgb>
@@ -72,17 +73,17 @@ void VisItem::initialize()
 
 void VisItem::paint()
 {
-    glUseProgram(0);
+    glfn->glUseProgram(0);
 
-    glViewport(0, 0, width(), height());
+    glfn->glViewport(0, 0, width(), height());
 
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    glfn->glDisable(GL_DEPTH_TEST);
+    glfn->glDisable(GL_CULL_FACE);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glfn->glEnable(GL_BLEND);
+    glfn->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glEnable(GL_TEXTURE_2D);
+    glfn->glEnable(GL_TEXTURE_2D);
 
     setupCamera();
 
@@ -109,11 +110,11 @@ void VisItem::sizeChanged(int width, int height)
 
 void VisItem::setupCamera()
 {
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(view.left(), view.right(), view.bottom(), view.top(), 1, -1);
+    glfn->glMatrixMode(GL_MODELVIEW);
+    glfn->glLoadIdentity();
+    glfn->glMatrixMode(GL_PROJECTION);
+    glfn->glLoadIdentity();
+    glfn->glOrtho(view.left(), view.right(), view.bottom(), view.top(), 1, -1);
 }
 
 void VisItem::drawGrid()
@@ -138,23 +139,23 @@ void VisItem::drawGrid()
 
     // Draw screen-filling quad with gridTex according to above texture coordinates.
     gridTex->bind();
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-    glTexCoord2f(left, bottom);
-    glVertex2f(view.left(), view.bottom());
-    glTexCoord2f(right, bottom);
-    glVertex2f(view.right(), view.bottom());
-    glTexCoord2f(right, top);
-    glVertex2f(view.right(), view.top());
-    glTexCoord2f(left, top);
-    glVertex2f(view.left(), view.top());
-    glEnd();
+    glfn->glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glfn->glBegin(GL_QUADS);
+    glfn->glTexCoord2f(left, bottom);
+    glfn->glVertex2f(view.left(), view.bottom());
+    glfn->glTexCoord2f(right, bottom);
+    glfn->glVertex2f(view.right(), view.bottom());
+    glfn->glTexCoord2f(right, top);
+    glfn->glVertex2f(view.right(), view.top());
+    glfn->glTexCoord2f(left, top);
+    glfn->glVertex2f(view.left(), view.top());
+    glfn->glEnd();
 }
 
 void VisItem::drawParticles()
 {
     particleTex->bind();
-    glBegin(GL_QUADS);
+    glfn->glBegin(GL_QUADS);
     for(const Particle& p : *system) {
         if(view.includes(nodeToWorldCoord(p.head))) {
             drawMarks(p);
@@ -175,7 +176,7 @@ void VisItem::drawParticles()
             drawBorderPoints(p);
         }
     }
-    glEnd();
+    glfn->glEnd();
 }
 
 void VisItem::drawMarks(const Particle& p)
@@ -184,7 +185,7 @@ void VisItem::drawMarks(const Particle& p)
     // draw mark around head
     if(p.headMarkColor() != -1) {
         QRgb color = p.headMarkColor();
-        glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
+        glfn->glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
         drawFromParticleTex(p.headMarkGlobalDir() + 8, pos);
     }
 
@@ -192,7 +193,7 @@ void VisItem::drawMarks(const Particle& p)
     if(p.globalTailDir != -1 && p.tailMarkColor() > -1) {
         auto pos = nodeToWorldCoord(p.tail());
         QRgb color = p.tailMarkColor();
-        glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
+        glfn->glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
         drawFromParticleTex(p.tailMarkGlobalDir() + 8, pos);
     }
 }
@@ -200,7 +201,7 @@ void VisItem::drawMarks(const Particle& p)
 void VisItem::drawParticle(const Particle& p)
 {
     auto pos = nodeToWorldCoord(p.head);
-    glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+    glfn->glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
     drawFromParticleTex(p.globalTailDir + 1, pos);
 }
 
@@ -210,7 +211,7 @@ void VisItem::drawBorders(const Particle& p)
     for(unsigned int i = 0; i < p.borderColors().size(); ++i) {
         if(p.borderColors().at(i) != -1) {
             QRgb color = p.borderColors().at(i);
-            glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
+            glfn->glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 180 << 23);
             drawFromParticleTex(i + 21, pos);
         }
     }
@@ -222,20 +223,11 @@ void VisItem::drawBorderPoints(const Particle& p)
     for(unsigned int i = 0; i < p.borderPointColors().size(); ++i) {
         if(p.borderPointColors().at(i) != -1) {
             QRgb color = p.borderPointColors().at(i);
-            glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 255 << 23);
+            glfn->glColor4i(qRed(color) << 23, qGreen(color) << 23, qBlue(color) << 23, 255 << 23);
             drawFromParticleTex(i + 15, pos);
         }
     }
 }
-
-//void VisItem::drawDisconnectionNode()
-//{
-//    auto pos = nodeToWorldCoord(system->getDisconnectionNode());
-//    glColor4i(255 << 23, 0, 0, (0.6f * fabsf(blinkValue) + 0.4f) * (180 << 23));
-//    glBegin(GL_QUADS);
-//    drawFromParticleTex(14, pos);
-//    glEnd();
-//}
 
 void VisItem::drawFromParticleTex(const int index, const QPointF& pos)
 {
@@ -248,14 +240,14 @@ void VisItem::drawFromParticleTex(const int index, const QPointF& pos)
     const float row = index / texSize;
     const QPointF texOffset(invTexSize * column, invTexSize * row);
 
-    glTexCoord2f(texOffset.x(), texOffset.y());
-    glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
-    glTexCoord2f(texOffset.x() + invTexSize, texOffset.y());
-    glVertex2f(pos.x() + halfQuadSideLength, pos.y() - halfQuadSideLength);
-    glTexCoord2f(texOffset.x() + invTexSize, texOffset.y() + invTexSize);
-    glVertex2f(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
-    glTexCoord2f(texOffset.x(), texOffset.y() + invTexSize);
-    glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
+    glfn->glTexCoord2f(texOffset.x(), texOffset.y());
+    glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
+    glfn->glTexCoord2f(texOffset.x() + invTexSize, texOffset.y());
+    glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() - halfQuadSideLength);
+    glfn->glTexCoord2f(texOffset.x() + invTexSize, texOffset.y() + invTexSize);
+    glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
+    glfn->glTexCoord2f(texOffset.x(), texOffset.y() + invTexSize);
+    glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
 }
 
 QPointF VisItem::nodeToWorldCoord(Node node)

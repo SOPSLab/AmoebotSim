@@ -1,6 +1,8 @@
 #ifndef VISITEM_H
 #define VISITEM_H
 
+#include <memory>
+
 #include <QMutex>
 #include <QPointF>
 #include <QTimer>

@@ -3,6 +3,8 @@
 
 #include <QQuickItem>
 
+class QOpenGLFunctions_2_0;
+
 class GLItem : public QQuickItem
 {
     Q_OBJECT
@@ -24,6 +26,9 @@ private slots:
 protected:
     int width() const;
     int height() const;
+
+protected:
+    QOpenGLFunctions_2_0* glfn;
 
 private:
     bool initialized;

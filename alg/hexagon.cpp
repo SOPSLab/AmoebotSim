@@ -87,6 +87,8 @@ int HexagonParticle::headMarkColor() const
     case State::Lead:   return 0xff0000;
     case State::Finish: return 0x000000;
     }
+
+    return -1;
 }
 
 int HexagonParticle::headMarkDir() const
