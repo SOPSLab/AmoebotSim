@@ -8,7 +8,7 @@
 class Particle
 {
 public:
-    Particle(const Node head = Node(), int tailDir = -1);
+    Particle(const Node head = Node(), int globalTailDir = -1);
     virtual ~Particle();
 
     bool isContracted() const;

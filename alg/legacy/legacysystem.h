@@ -41,6 +41,7 @@ protected:
     bool handleExpansion(LegacyParticle& p, int label);
     bool handleContraction(LegacyParticle& p, int label, bool isHandoverContraction);
     void updateNumRounds(LegacyParticle* p);
+    template<int n> static int posMod(int a);
 
 protected:
     std::deque<LegacyParticle> particles;
@@ -56,5 +57,10 @@ protected:
     int _numMovements;
     int _numRounds;
 };
+
+template<int n> int LegacySystem::posMod(int a)
+{
+    return (a % n + n) % n;
+}
 
 #endif // LEGACYSYSTEM_H

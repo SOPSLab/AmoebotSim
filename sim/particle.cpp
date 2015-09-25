@@ -2,8 +2,8 @@
 
 #include "sim/particle.h"
 
-Particle::Particle(const Node head, int tailDir)
-    : head(head), globalTailDir(tailDir)
+Particle::Particle(const Node head, int globalTailDir)
+    : head(head), globalTailDir(globalTailDir)
 {
     Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
 }

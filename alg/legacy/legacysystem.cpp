@@ -165,7 +165,7 @@ bool LegacySystem::handleExpansion(LegacyParticle& p, int label){
         return false;
     }
 
-    int expansionDir = LegacyParticle::posMod<6>(p.orientation + label);
+    int expansionDir = posMod<6>(p.orientation + label);
     Node newHead = p.head.nodeInDir(expansionDir);
 
     auto otherParticleIt = particleMap.find(newHead);
@@ -173,7 +173,7 @@ bool LegacySystem::handleExpansion(LegacyParticle& p, int label){
         // expansion into empty node
         particleMap.insert(std::pair<Node, LegacyParticle*>(newHead, &p));
         p.head = newHead;
-        p.globalTailDir = LegacyParticle::posMod<6>(expansionDir + 3);
+        p.globalTailDir = posMod<6>(expansionDir + 3);
         p.apply();
         _numMovements++;
         return true;
@@ -216,7 +216,7 @@ bool LegacySystem::handleExpansion(LegacyParticle& p, int label){
 
                 particleMap.insert(std::pair<Node, LegacyParticle*>(newHead, &p));
                 p.head = newHead;
-                p.globalTailDir = LegacyParticle::posMod<6>(expansionDir + 3);
+                p.globalTailDir = posMod<6>(expansionDir + 3);
                 p.apply();
 
                 _numMovements += 2;
@@ -310,7 +310,7 @@ bool LegacySystem::handleContraction(LegacyParticle& p, int label, bool isHandov
                 p2.discard();
                 continue; // invalid expansion index
             }
-            int expandDir = LegacyParticle::posMod<6>(p2.orientation + m.label);
+            int expandDir = posMod<6>(p2.orientation + m.label);
             Node newHead = p2.head.nodeInDir(expandDir);
 
             // ensure that the node p2 wants to expand into is the node p wants to contract out of
@@ -349,7 +349,7 @@ bool LegacySystem::handleContraction(LegacyParticle& p, int label, bool isHandov
     particleMap.erase(handoverNode);
     if(handover) {
         handoverParticle->head = handoverNode;
-        handoverParticle->globalTailDir = LegacyParticle::posMod<6>(handoverExpandDir + 3);
+        handoverParticle->globalTailDir = posMod<6>(handoverExpandDir + 3);
         handoverParticle->apply();
         _numMovements++;
         particleMap.insert(std::pair<Node, LegacyParticle*>(handoverNode, handoverParticle));
