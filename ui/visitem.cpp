@@ -9,13 +9,13 @@
 #include "ui/visitem.h"
 
 // visualisation preferences
-constexpr float targetFramesPerSecond = 60.0f;
+static constexpr float targetFramesPerSecond = 60.0f;
 
 // values derived from the preferences above
-constexpr float targetFrameDuration = 1000.0f / targetFramesPerSecond;
+static constexpr float targetFrameDuration = 1000.0f / targetFramesPerSecond;
 
 // height of a triangle in our equilateral triangular grid if the side length is 1
-constexpr float triangleHeight = sqrtf(3.0f / 4.0f);
+static constexpr float triangleHeight = sqrtf(3.0f / 4.0f);
 
 VisItem::VisItem(QQuickItem* parent) :
     GLItem(parent),
@@ -26,7 +26,7 @@ VisItem::VisItem(QQuickItem* parent) :
     renderTimer.start(targetFrameDuration);
 }
 
-void VisItem::systemChanged(std::shared_ptr<System>& _system)
+void VisItem::systemChanged(std::shared_ptr<System> _system)
 {
     system = _system;
 }
@@ -119,7 +119,7 @@ void VisItem::setupCamera()
 void VisItem::drawGrid()
 {
     // gridTex has the height of two triangles
-    constexpr float gridTexHeight = 2.0f * triangleHeight;
+    static constexpr float gridTexHeight = 2.0f * triangleHeight;
 
     // Coordinate sytem voodoo:
     // Calculates the texture coordinates of the corners of the shown part of the grid.

@@ -76,7 +76,7 @@ private:
 };
 
 inline ScriptInterface::ScriptInterface(Simulator& _sim)
-    : sim(_sim)
+    : QObject(&_sim), sim(_sim)
 {
     tokenDemo();
 }

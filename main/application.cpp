@@ -64,11 +64,5 @@ Application::Application(int argc, char *argv[]) :
             }
     );
 
-    sim.init();
-}
-
-Application::~Application()
-{
-    sim.abortScript();
-    sim.finished();
+    sim.emitInitialSignals();
 }

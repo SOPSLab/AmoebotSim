@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <QJSEngine>
+#include <QObject>
 #include <QTimer>
 
 #include "system.h"
@@ -11,16 +12,17 @@
 class Simulator : public QObject
 {
     Q_OBJECT
-
 public:
-    explicit Simulator();
+    Simulator();
     virtual ~Simulator();
 
     void setSystem(std::shared_ptr<System> _system);
     std::shared_ptr<System> getSystem() const;
 
+    void emitInitialSignals();
+
 signals:
-    void systemChanged(std::shared_ptr<System>& _system);
+    void systemChanged(std::shared_ptr<System> _system);
     void roundDurationChanged(int ms);
 
     void started();
@@ -29,16 +31,12 @@ signals:
     void log(const QString msg, const bool isError);
 
 public slots:
-    void init();
     void round();
     void start();
     void stop();
 
-    void finished();
-
     void executeCommand(const QString cmd);
     void runScript(const QString script);
-    void abortScript();
 
     int getNumParticles() const;
     int getNumMovements() const;
@@ -48,7 +46,6 @@ public slots:
 
 protected:
     QJSEngine engine;
-
     QTimer roundTimer;
 
     std::shared_ptr<System> system;

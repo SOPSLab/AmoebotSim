@@ -26,7 +26,7 @@ signals:
     void roundForParticleAt(int x, int y);
 
 public slots:
-    void systemChanged(std::shared_ptr<System>& _system);
+    void systemChanged(std::shared_ptr<System> _system);
     void focusOnCenterOfMass();
 
 protected slots:

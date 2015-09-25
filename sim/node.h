@@ -9,11 +9,11 @@ class Node
 {
 public:
     Node();
-    Node(const int _x, const int _y);
+    Node(int x, int y);
     Node(const Node& other);
 
-    bool operator==(const Node& other);
-    bool operator!=(const Node& other);
+    bool operator==(const Node& other) const;
+    bool operator!=(const Node& other) const;
 
     Node nodeInDir(int dir) const;
 
@@ -21,31 +21,32 @@ public:
     int x, y;
 };
 
-bool operator<(const Node& v1, const Node& v2);
+bool operator<(const Node& node1, const Node& node2);
 
 inline Node::Node()
     : x(0), y(0)
 {
+
 }
 
-inline Node::Node(const int _x, const int _y) :
-    x(_x),
-    y(_y)
+inline Node::Node(int x, int y)
+    : x(x), y(y)
 {
+
 }
 
-inline Node::Node(const Node& other) :
-    x(other.x),
-    y(other.y)
+inline Node::Node(const Node& other)
+    : x(other.x), y(other.y)
 {
+
 }
 
-inline bool Node::operator==(const Node& other)
+inline bool Node::operator==(const Node& other) const
 {
     return (x == other.x) && (y == other.y);
 }
 
-inline bool Node::operator!=(const Node& other)
+inline bool Node::operator!=(const Node& other) const
 {
     return !operator==(other);
 }

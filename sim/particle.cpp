@@ -2,19 +2,20 @@
 
 #include "sim/particle.h"
 
-Particle::Particle(const Node _head, const int _tailDir)
-    : head(_head), globalTailDir(_tailDir)
+Particle::Particle(const Node head, int tailDir)
+    : head(head), globalTailDir(tailDir)
 {
-
+    Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
 }
 
 Particle::~Particle()
 {
+
 }
 
 bool Particle::isContracted() const
 {
-    return globalTailDir == -1;
+    return (globalTailDir == -1);
 }
 
 bool Particle::isExpanded() const
@@ -25,6 +26,7 @@ bool Particle::isExpanded() const
 Node Particle::tail() const
 {
     Q_ASSERT(isExpanded());
+    Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
     return head.nodeInDir(globalTailDir);
 }
 

@@ -1,23 +1,23 @@
 #include <QMutexLocker>
-#include <QTimer>
 
 #include "script/scriptinterface.h"
 #include "sim/simulator.h"
 
 Simulator::Simulator()
 {
-    //It's not possible to set ScriptInterface's slots as global functions in the JS-Engine.
-    //Therefore create a ScriptInterface object and bind it to the global variable 'obj'.
-    auto obj = engine.newQObject(new ScriptInterface(*this));
-    engine.globalObject().setProperty("obj", obj);
+    // Create a global object for the javascript engine and make its methods globally accessible.
+    // Ownership of ScriptInterface-object is handled by QObject.
+    auto globalObject = engine.newQObject(new ScriptInterface(*this));
+    engine.globalObject().setProperty("globalObject", globalObject);
+    engine.evaluate("Object.keys(globalObject).forEach(function(key){ this[key] = globalObject[key] })");
 
-    //Then bind obj's methods (which are ScriptInterface's slots) to the global scope in 'this',
-    //so that all methods are globally accessible.
-    engine.evaluate("Object.keys(obj).forEach(function(key){ this[key] = obj[key]})");
+    roundTimer.setInterval(100);
+    connect(&roundTimer, &QTimer::timeout, this, &Simulator::round);
 }
 
 Simulator::~Simulator()
 {
+    roundTimer.stop();
 }
 
 void Simulator::setSystem(std::shared_ptr<System> _system)
@@ -27,8 +27,6 @@ void Simulator::setSystem(std::shared_ptr<System> _system)
 
     system = _system;
     emit systemChanged(system);
-
-    QMutexLocker locker(&system->mutex);
 }
 
 std::shared_ptr<System> Simulator::getSystem() const
@@ -36,18 +34,10 @@ std::shared_ptr<System> Simulator::getSystem() const
     return system;
 }
 
-void Simulator::init()
+void Simulator::emitInitialSignals()
 {
-    roundTimer.setInterval(100);
-    emit roundDurationChanged(100);
-    connect(&roundTimer, &QTimer::timeout, this, &Simulator::round);
-
+    emit roundDurationChanged(roundTimer.interval());
     emit systemChanged(system);
-}
-
-//Is called when thread in which simulator is living is about to finish -> Clean up the simulator.
-void Simulator::finished(){
-    roundTimer.stop();
 }
 
 void Simulator::round()
@@ -83,11 +73,6 @@ void Simulator::executeCommand(const QString cmd)
 void Simulator::runScript(const QString script)
 {
     engine.evaluate(script);
-}
-
-void Simulator::abortScript()
-{
-    //engine.abortEvaluation();
 }
 
 int Simulator::getNumParticles() const

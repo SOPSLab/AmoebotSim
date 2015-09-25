@@ -81,7 +81,7 @@ inline float View::top()
 inline bool View::includes(const QPointF& headWorldPos)
 {
     QMutexLocker locker(&mutex);
-    constexpr float slack = 2.0f;
+    static constexpr float slack = 2.0f;
     return  (headWorldPos.x() >= left()   - slack) &&
             (headWorldPos.x() <= right()  + slack) &&
             (headWorldPos.y() >= bottom() - slack) &&
