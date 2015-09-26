@@ -15,7 +15,7 @@ static constexpr float targetFramesPerSecond = 60.0f;
 static constexpr float targetFrameDuration = 1000.0f / targetFramesPerSecond;
 
 // height of a triangle in our equilateral triangular grid if the side length is 1
-static constexpr float triangleHeight = sqrtf(3.0f / 4.0f);
+static const float triangleHeight = sqrtf(3.0f / 4.0f);
 
 VisItem::VisItem(QQuickItem* parent) :
     GLItem(parent),
@@ -55,13 +55,13 @@ void VisItem::focusOnCenterOfMass()
 
 void VisItem::initialize()
 {
-    gridTex = std::make_unique<QOpenGLTexture>(QImage(":/textures/grid.png").mirrored());
+    gridTex = std::unique_ptr<QOpenGLTexture>(new QOpenGLTexture(QImage(":/textures/grid.png").mirrored()));
     gridTex->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
     gridTex->setWrapMode(QOpenGLTexture::Repeat);
     gridTex->bind();
     gridTex->generateMipMaps();
 
-    particleTex = std::make_unique<QOpenGLTexture>(QImage(":textures/particle.png").mirrored());
+    particleTex = std::unique_ptr<QOpenGLTexture>(new QOpenGLTexture(QImage(":textures/particle.png").mirrored()));
     particleTex->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
     particleTex->bind();
     particleTex->generateMipMaps();
@@ -119,7 +119,7 @@ void VisItem::setupCamera()
 void VisItem::drawGrid()
 {
     // gridTex has the height of two triangles
-    static constexpr float gridTexHeight = 2.0f * triangleHeight;
+    static const float gridTexHeight = 2.0f * triangleHeight;
 
     // Coordinate sytem voodoo:
     // Calculates the texture coordinates of the corners of the shown part of the grid.

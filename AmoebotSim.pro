@@ -1,5 +1,5 @@
 QT      += core gui qml quick
-CONFIG  += c++14
+CONFIG  += c++11
 
 TARGET    = AmoebotSim
 TEMPLATE  = app
