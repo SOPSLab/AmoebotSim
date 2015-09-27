@@ -18,7 +18,7 @@ public:
     virtual void activate();
 
     virtual unsigned int size() const;
-    virtual const Particle& at(const int i) const;
+    virtual const Particle& at(int i) const;
 
     virtual void insert(AmoebotParticle* particle);
 

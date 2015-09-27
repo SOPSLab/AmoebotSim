@@ -31,7 +31,7 @@ unsigned int AmoebotSystem::size() const
     return particles.size();
 }
 
-const Particle& AmoebotSystem::at(const int i) const
+const Particle& AmoebotSystem::at(int i) const
 {
     return *particles.at(i);
 }
@@ -39,9 +39,7 @@ const Particle& AmoebotSystem::at(const int i) const
 void AmoebotSystem::insert(AmoebotParticle* particle)
 {
     Q_ASSERT(particleMap.find(particle->head) == particleMap.end());
-    if(particle->isExpanded()) {
-        Q_ASSERT(particleMap.find(particle->tail()) == particleMap.end());
-    }
+    Q_ASSERT(!particle->isExpanded() || particleMap.find(particle->tail()) == particleMap.end());
 
     particles.push_back(particle);
     particleMap[particle->head] = particle;

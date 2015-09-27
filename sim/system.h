@@ -34,7 +34,7 @@ public:
     virtual void activate() = 0;
 
     virtual unsigned int size() const = 0;
-    virtual const Particle& at(const int i) const = 0;
+    virtual const Particle& at(int i) const = 0;
 
     SystemIterator begin() const;
     SystemIterator end() const;
