@@ -57,8 +57,10 @@ bool System::isConnected(const ParticleContainer& particles)
 {
     std::set<Node> occupied;
     for(auto p : particles) {
+        Q_ASSERT(occupied.find(p->head) == occupied.end());
         occupied.insert(p->head);
         if(p->isExpanded()) {
+            Q_ASSERT(occupied.find(p->tail()) == occupied.end());
             occupied.insert(p->tail());
         }
     }
