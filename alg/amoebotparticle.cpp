@@ -162,7 +162,7 @@ bool AmoebotParticle::hasTailAtLabel(int label)
     }
 }
 
-void AmoebotParticle::putToken(Token* token)
+void AmoebotParticle::putToken(std::shared_ptr<Token> token)
 {
     tokens.push_back(token);
 }

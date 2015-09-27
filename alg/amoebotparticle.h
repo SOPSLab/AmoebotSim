@@ -5,6 +5,7 @@
 #include <deque>
 #include <functional>
 #include <map>
+#include <memory>
 
 #include "alg/labellednocompassparticle.h"
 #include "helper/randomnumbergenerator.h"
@@ -45,9 +46,9 @@ protected:
     template<class ParticleType>
     int labelOfFirstNeighborWithProperty(std::function<bool(const ParticleType&)> propertyCheck, int startLabel = 0) const;
 
-    void putToken(Token* token);
+    void putToken(std::shared_ptr<Token> token);
     template<class TokenType>
-    TokenType* takeToken();
+    std::shared_ptr<TokenType> takeToken();
     template<class TokenType>
     int countTokens() const;
     template<class TokenType>
@@ -55,7 +56,7 @@ protected:
 
 private:
     std::map<Node, AmoebotParticle*>& particleMap;
-    std::deque<Token*> tokens;
+    std::deque<std::shared_ptr<Token>> tokens;
 };
 
 template<class ParticleType>
@@ -75,10 +76,10 @@ int AmoebotParticle::labelOfFirstNeighborWithProperty(std::function<bool(const P
 }
 
 template<class TokenType>
-TokenType* AmoebotParticle::takeToken()
+std::shared_ptr<TokenType> AmoebotParticle::takeToken()
 {
     for(unsigned int i = 0; i < tokens.size(); i++) {
-        TokenType* token = dynamic_cast<TokenType*>(tokens[i]);
+        std::shared_ptr<TokenType> token = std::dynamic_pointer_cast<TokenType>(tokens[i]);
         if(token != nullptr) {
             std::swap(tokens[0], tokens[i]);
             tokens.pop_front();
@@ -93,7 +94,7 @@ int AmoebotParticle::countTokens() const
 {
     int count = 0;
     for(unsigned int i = 0; i < tokens.size(); i++) {
-        TokenType* token = dynamic_cast<TokenType*>(tokens[i]);
+        std::shared_ptr<TokenType> token = std::dynamic_pointer_cast<TokenType>(tokens[i]);
         if(token != nullptr) {
             count++;
         }
@@ -105,7 +106,7 @@ template<class TokenType>
 bool AmoebotParticle::hasToken() const
 {
     for(unsigned int i = 0; i < tokens.size(); i++) {
-        TokenType* token = dynamic_cast<TokenType*>(tokens[i]);
+        std::shared_ptr<TokenType> token = std::dynamic_pointer_cast<TokenType>(tokens[i]);
         if(token != nullptr) {
             return true;
         }

@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "tokendemo.h"
 
 TokenDemoParticle::TokenDemoParticle(const Node head,
@@ -8,11 +10,11 @@ TokenDemoParticle::TokenDemoParticle(const Node head,
     : HexagonParticle(head, globalTailDir, orientation, particleMap, state)
 {
     if(state == State::Seed) {
-        putToken(new RedToken());
-        putToken(new RedToken());
-        putToken(new RedToken());
-        putToken(new BlueToken());
-        putToken(new BlueToken());
+        putToken(std::make_shared<RedToken>());
+        putToken(std::make_shared<RedToken>());
+        putToken(std::make_shared<RedToken>());
+        putToken(std::make_shared<BlueToken>());
+        putToken(std::make_shared<BlueToken>());
     }
 }
 
