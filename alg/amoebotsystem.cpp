@@ -49,15 +49,3 @@ void AmoebotSystem::insert(AmoebotParticle* particle)
         particleMap[particle->tail()] = particle;
     }
 }
-
-bool AmoebotSystem::isConnected() const
-{
-    std::set<Node> occupiedNodes;
-    for(auto p : particles) {
-        occupiedNodes.insert(p->head);
-        if(p->globalTailDir != -1) {
-            occupiedNodes.insert(p->tail());
-        }
-    }
-    return System::isConnected(occupiedNodes);
-}

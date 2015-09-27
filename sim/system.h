@@ -1,6 +1,7 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
+#include <deque>
 #include <set>
 
 #include <QMutex>
@@ -44,10 +45,41 @@ public:
     virtual bool hasTerminated() const;
 
 protected:
-    static bool isConnected(std::set<Node>& occupiedNodes);
+    template<class ParticleContainer>
+    static bool isConnected(const ParticleContainer& particles);
 
 public:
     QMutex mutex;
 };
+
+template<class ParticleContainer>
+bool System::isConnected(const ParticleContainer& particles)
+{
+    std::set<Node> occupied;
+    for(auto p : particles) {
+        occupied.insert(p->head);
+        if(p->isExpanded()) {
+            occupied.insert(p->tail());
+        }
+    }
+
+    std::deque<Node> queue;
+    queue.push_back(*occupied.begin());
+
+    while(!queue.empty()) {
+        Node n = queue.front();
+        queue.pop_front();
+        for(int dir = 0; dir < 6; ++dir) {
+            Node neighbor = n.nodeInDir(dir);
+            auto nondeIt = occupied.find(neighbor);
+            if(nondeIt != occupied.end()) {
+                queue.push_back(neighbor);
+                occupied.erase(nondeIt);
+            }
+        }
+    }
+
+    return occupied.empty();
+}
 
 #endif // SYSTEM_H

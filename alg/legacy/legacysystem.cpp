@@ -21,6 +21,14 @@ LegacySystem::LegacySystem() :
     rng.seed(seed);
 }
 
+LegacySystem::~LegacySystem()
+{
+    for(auto p : particles) {
+        delete p;
+    }
+    particles.clear();
+}
+
 void LegacySystem::activate(){
     if(systemState != SystemState::Valid) {
         return;
@@ -39,7 +47,7 @@ void LegacySystem::activate(){
             attemptedActivatingEveryParticles = true;
 
             for(auto it = particles.begin(); it != particles.end(); ++it) {
-                shuffledParticles.push_back(&(*it));
+                shuffledParticles.push_back(*it);
             }
             std::shuffle(shuffledParticles.begin(), shuffledParticles.end(), rng);
         }
@@ -79,7 +87,7 @@ void LegacySystem::activate(){
     }
 
     if(hasBlockedParticles) {
-        if(particles[0].algorithmIsDeterministic()) {
+        if(particles[0]->algorithmIsDeterministic()) {
             systemState = SystemState::Deadlocked;
         } else {
             systemState = SystemState::Valid;
@@ -98,7 +106,7 @@ unsigned int LegacySystem::size() const
 
 const LegacyParticle& LegacySystem::at(const int i) const
 {
-    return particles.at(i);
+    return *particles.at(i);
 }
 
 int LegacySystem::numMovements() const
@@ -121,10 +129,11 @@ void LegacySystem::insertParticle(const LegacyParticle& p)
     Q_ASSERT(particleMap.find(p.head) == particleMap.end());
     Q_ASSERT(p.globalTailDir == -1 || particleMap.find(p.tail()) == particleMap.end());
 
-    particles.push_back(p);
-    particleMap.insert(std::pair<Node, LegacyParticle*>(p.head, &particles.back()));
+    LegacyParticle* particle = new LegacyParticle(p);
+    particles.push_back(particle);
+    particleMap.insert(std::pair<Node, LegacyParticle*>(p.head, particle));
     if(p.globalTailDir != -1) {
-        particleMap.insert(std::pair<Node, LegacyParticle*>(p.tail(), &particles.back()));
+        particleMap.insert(std::pair<Node, LegacyParticle*>(p.tail(), particle));
     }
 
     if(!p.isStatic()) {
@@ -355,14 +364,7 @@ bool LegacySystem::handleContraction(LegacyParticle& p, int label, bool isHandov
         particleMap.insert(std::pair<Node, LegacyParticle*>(handoverNode, handoverParticle));
     } else {
         // an isolated contraction is the only action that can disconnect the system
-        std::set<Node> occupiedNodes;
-        for(auto& p : particles) {
-            occupiedNodes.insert(p.head);
-            if(p.globalTailDir != -1) {
-                occupiedNodes.insert(p.tail());
-            }
-        }
-        if(!isConnected(occupiedNodes)) {
+        if(!isConnected(particles)) {
             systemState = SystemState::Disconnected;
         }
     }

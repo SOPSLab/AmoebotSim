@@ -23,6 +23,7 @@ protected:
 
 public:
     LegacySystem();
+    virtual ~LegacySystem();
 
     virtual void activate();
 
@@ -44,7 +45,7 @@ protected:
     template<int n> static int posMod(int a);
 
 protected:
-    std::deque<LegacyParticle> particles;
+    std::deque<LegacyParticle*> particles;
     std::map<Node, LegacyParticle*> particleMap;
     std::set<LegacyParticle*> activatedParticles;
     std::deque<LegacyParticle*> shuffledParticles;

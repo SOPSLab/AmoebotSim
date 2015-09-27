@@ -227,7 +227,7 @@ HexagonSystem::HexagonSystem(int numParticles, float holeProb)
 
 bool HexagonSystem::hasTerminated() const
 {
-    if(!isConnected()) {
+    if(!isConnected(particles)) {
         return true;
     }
 
