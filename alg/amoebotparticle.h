@@ -38,8 +38,10 @@ protected:
     void contractTail();
     void contract(int label);
 
+    template<class ParticleType>
+    ParticleType& neighborAtLabel(int label) const;
+
     bool hasNeighborAtLabel(int label) const;
-    virtual AmoebotParticle& neighborAtLabel(int label) const;
     bool hasHeadAtLabel(int label);
     bool hasTailAtLabel(int label);
 
@@ -60,13 +62,22 @@ private:
 };
 
 template<class ParticleType>
+ParticleType& AmoebotParticle::neighborAtLabel(int label) const
+{
+    Node neighboringNode = neighboringNodeReachedViaLabel(label);
+    auto it = particleMap.find(neighboringNode);
+    Q_ASSERT(it != particleMap.end() && dynamic_cast<ParticleType*>(it->second) != nullptr);
+    return dynamic_cast<ParticleType&>(*(it->second));
+}
+
+template<class ParticleType>
 int AmoebotParticle::labelOfFirstNeighborWithProperty(std::function<bool(const ParticleType&)> propertyCheck, int startLabel) const
 {
-    int labelLimit = isContracted() ? 6 : 10;
+    const int labelLimit = isContracted() ? 6 : 10;
     for(int labelOffset = 0; labelOffset < labelLimit; labelOffset++) {
-        int label = (startLabel + labelOffset) % labelLimit;
+        const int label = (startLabel + labelOffset) % labelLimit;
         if(hasNeighborAtLabel(label)) {
-            const ParticleType& particle = dynamic_cast<const ParticleType&>(neighborAtLabel(label));
+            const ParticleType& particle = neighborAtLabel<ParticleType>(label);
             if(propertyCheck(particle)) {
                 return label;
             }

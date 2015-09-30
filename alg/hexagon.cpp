@@ -110,7 +110,7 @@ int HexagonParticle::tailMarkColor() const
 
 HexagonParticle& HexagonParticle::neighborAtLabel(int label) const
 {
-    return dynamic_cast<HexagonParticle&>(AmoebotParticle::neighborAtLabel(label));
+    return AmoebotParticle::neighborAtLabel<HexagonParticle>(label);
 }
 
 int HexagonParticle::labelOfFirstNeighborInState(std::initializer_list<State> states, int startLabel) const

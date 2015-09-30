@@ -55,7 +55,7 @@ int TokenDemoParticle::headMarkColor() const
 
 TokenDemoParticle& TokenDemoParticle::neighborAtLabel(int label) const
 {
-    return dynamic_cast<TokenDemoParticle&>(AmoebotParticle::neighborAtLabel(label));
+    return AmoebotParticle::neighborAtLabel<TokenDemoParticle>(label);
 }
 
 TokenDemoSystem::TokenDemoSystem(int numParticles, float holeProb)

@@ -4,15 +4,15 @@ AmoebotParticle::AmoebotParticle(const Node head,
                                  const int tailDir,
                                  const int orientation,
                                  std::map<Node, AmoebotParticle*>& particleMap)
-    : LabelledNoCompassParticle(head, tailDir, orientation)
-    , particleMap(particleMap)
+    : LabelledNoCompassParticle(head, tailDir, orientation),
+      particleMap(particleMap)
 {
 
 }
 
 int AmoebotParticle::headMarkGlobalDir() const
 {
-    int dir = headMarkDir();
+    const int dir = headMarkDir();
     Q_ASSERT(-1 <= dir && dir < 6);
     if(dir == -1) {
         return -1;
@@ -23,7 +23,7 @@ int AmoebotParticle::headMarkGlobalDir() const
 
 int AmoebotParticle::tailMarkGlobalDir() const
 {
-    int dir = tailMarkDir();
+    const int dir = tailMarkDir();
     Q_ASSERT(-1 <= dir && dir < 6);
     if(dir == -1) {
         return -1;
@@ -50,13 +50,13 @@ bool AmoebotParticle::canExpand(int label)
         return false;
     }
 
-    Node newHead = neighboringNodeReachedViaLabel(label);
+    const Node newHead = neighboringNodeReachedViaLabel(label);
     auto it = particleMap.find(newHead);
 
     if(it == particleMap.end()) {
         return true;
     } else {
-        AmoebotParticle* neighbor = it->second;
+        const AmoebotParticle* neighbor = it->second;
         if(neighbor->head == newHead) {
             return false;
         } else {
@@ -73,7 +73,7 @@ bool AmoebotParticle::expand(int label)
         return false;
     }
 
-    Node newHead = neighboringNodeReachedViaLabel(label);
+    const Node newHead = neighboringNodeReachedViaLabel(label);
     auto it = particleMap.find(newHead);
 
     if(it == particleMap.end()) {
@@ -113,35 +113,23 @@ void AmoebotParticle::contractTail()
 
 void AmoebotParticle::contract(int label)
 {
+    Q_ASSERT(label == headContractionLabel() || label == tailContractionLabel());
     if(label == headContractionLabel()) {
         contractHead();
     } else if(label == tailContractionLabel()) {
         contractTail();
-    } else {
-        Q_ASSERT(false);
     }
 }
 
 bool AmoebotParticle::hasNeighborAtLabel(int label) const
 {
-    Node node = neighboringNodeReachedViaLabel(label);
-    return particleMap.find(node) != particleMap.end();
-}
-
-AmoebotParticle& AmoebotParticle::neighborAtLabel(int label) const
-{
-    Node node = neighboringNodeReachedViaLabel(label);
-    auto it = particleMap.find(node);
-    if(it == particleMap.end()) {
-        Q_ASSERT(false);
-    }
-
-    return *((*it).second);
+    const Node neighboringNode = neighboringNodeReachedViaLabel(label);
+    return particleMap.find(neighboringNode) != particleMap.end();
 }
 
 bool AmoebotParticle::hasHeadAtLabel(int label)
 {
-    return hasNeighborAtLabel(label) && neighborAtLabel(label).head == neighboringNodeReachedViaLabel(label);
+    return hasNeighborAtLabel(label) && neighborAtLabel<Particle>(label).head == neighboringNodeReachedViaLabel(label);
 }
 
 bool AmoebotParticle::hasTailAtLabel(int label)
@@ -150,7 +138,7 @@ bool AmoebotParticle::hasTailAtLabel(int label)
         return false;
     }
 
-    AmoebotParticle& neighbor = neighborAtLabel(label);
+    const auto& neighbor = neighborAtLabel<Particle>(label);
     if(neighbor.isContracted()) {
         return false;
     }

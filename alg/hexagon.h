@@ -31,7 +31,7 @@ public:
     virtual int headMarkDir() const;
     virtual int tailMarkColor() const;
 
-    virtual HexagonParticle& neighborAtLabel(int label) const;
+    HexagonParticle& neighborAtLabel(int label) const;
 
     int labelOfFirstNeighborInState(std::initializer_list<State> states, int startLabel = 0) const;
     bool hasNeighborInState(std::initializer_list<State> states) const;
