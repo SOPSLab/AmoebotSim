@@ -50,6 +50,14 @@ void Simulator::round()
     }
 }
 
+void Simulator::runUntilTermination()
+{
+    QMutexLocker locker(&system->mutex);
+    while(!system->hasTerminated()) {
+        system->activate();
+    }
+}
+
 void Simulator::start()
 {
     roundTimer.start();

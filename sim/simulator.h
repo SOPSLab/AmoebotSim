@@ -32,6 +32,7 @@ signals:
 
 public slots:
     void round();
+    void runUntilTermination();
     void start();
     void stop();
 

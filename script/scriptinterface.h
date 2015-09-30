@@ -41,6 +41,7 @@ public:
 public slots:
     // interface to simulator
     void round();
+    void runUntilTermination();
 
     void runScript(const QString scriptFilePath);
 
@@ -87,6 +88,11 @@ inline ScriptInterface::ScriptInterface(Simulator& _sim)
 inline void ScriptInterface::round()
 {
     sim.round();
+}
+
+inline void ScriptInterface::runUntilTermination()
+{
+    sim.runUntilTermination();
 }
 
 inline void ScriptInterface::runScript(const QString scriptFilePath)
