@@ -24,18 +24,16 @@ Application::Application(int argc, char *argv[])
               QMetaObject::invokeMethod(slider, "setRoundDuration", Q_ARG(QVariant, QVariant(ms)));
             }
     );
-
-//    connect(&sim,  &Simulator::numMovementsChanged,
-//            [qmlRoot](const int& num){
-//                QMetaObject::invokeMethod(qmlRoot, "setNumMovements", Q_ARG(QVariant, num));
-//            }
-//    );
-//    connect(&sim,  &Simulator::numRoundsChanged,
-//            [qmlRoot](const int& rounds){
-//                QMetaObject::invokeMethod(qmlRoot, "setNumRounds", Q_ARG(QVariant, rounds));
-//            }
-//    );
-
+    connect(vis,  &VisItem::beforeRendering,
+            [this, qmlRoot](){
+                QMetaObject::invokeMethod(qmlRoot, "setNumMovements", Q_ARG(QVariant, sim.numMovements()));
+            }
+    );
+    connect(vis,  &VisItem::beforeRendering,
+            [this, qmlRoot](){
+                QMetaObject::invokeMethod(qmlRoot, "setNumRounds", Q_ARG(QVariant, sim.numRounds()));
+            }
+    );
     connect(&sim,  &Simulator::log,
             [qmlRoot](const QString msg, const bool isError){
                 QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));

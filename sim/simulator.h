@@ -38,9 +38,9 @@ public slots:
     void executeCommand(const QString cmd);
     void runScript(const QString script);
 
-    int getNumParticles() const;
-    int getNumMovements() const;
-    int getNumRounds() const;
+    int numParticles() const;
+    int numMovements() const;
+    int numRounds() const;
 
     void setRoundDuration(int ms);
 

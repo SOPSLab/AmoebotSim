@@ -109,17 +109,17 @@ inline void ScriptInterface::runScript(const QString scriptFilePath)
 
 inline int ScriptInterface::getNumParticles()
 {
-    return sim.getNumParticles();
+    return sim.numParticles();
 }
 
 inline int ScriptInterface::getNumMovements()
 {
-    return sim.getNumMovements();
+    return sim.numMovements();
 }
 
 inline int ScriptInterface::getNumRounds()
 {
-    return sim.getNumRounds();
+    return sim.numRounds();
 }
 
 inline void ScriptInterface::setRoundDuration(int ms)

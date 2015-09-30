@@ -11,6 +11,10 @@ class GLItem : public QQuickItem
 public:
     explicit GLItem(QQuickItem* parent = 0);
 
+signals:
+    void beforeRendering();
+    void afterRendering();
+
 protected slots:
     virtual void initialize() = 0;
     virtual void paint() = 0;

@@ -40,19 +40,21 @@ void GLItem::delegatePaint()
         initialized = true;
     }
 
-    emit paint();
+    emit beforeRendering();
+    paint();
+    emit afterRendering();
 }
 
 void GLItem::delegeteDeinitialize()
 {
     initialized = false;
-    emit deinitialize();
+    deinitialize();
     glfn = nullptr;
 }
 
 void GLItem::delegateSizeChanged()
 {
-    emit sizeChanged(width(), height());
+    sizeChanged(width(), height());
 }
 
 int GLItem::width() const

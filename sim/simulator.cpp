@@ -75,19 +75,19 @@ void Simulator::runScript(const QString script)
     engine.evaluate(script);
 }
 
-int Simulator::getNumParticles() const
+int Simulator::numParticles() const
 {
     QMutexLocker locker(&system->mutex);
     return system->size();
 }
 
-int Simulator::getNumMovements() const
+int Simulator::numMovements() const
 {
     QMutexLocker locker(&system->mutex);
     return system->numMovements();
 }
 
-int Simulator::getNumRounds() const
+int Simulator::numRounds() const
 {
     QMutexLocker locker(&system->mutex);
     return system->numRounds();
