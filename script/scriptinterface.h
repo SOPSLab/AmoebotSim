@@ -44,6 +44,7 @@ public slots:
     void runUntilTermination();
 
     void runScript(const QString scriptFilePath);
+    void log(const QString msg, bool error = false);
 
     int getNumParticles();
     int getNumMovements();
@@ -111,6 +112,11 @@ inline void ScriptInterface::runScript(const QString scriptFilePath)
 
     sim.runScript(script);
     sim.log("script finished", false);
+}
+
+inline void ScriptInterface::log(const QString msg, bool error)
+{
+    sim.log(msg, error);
 }
 
 inline int ScriptInterface::getNumParticles()
