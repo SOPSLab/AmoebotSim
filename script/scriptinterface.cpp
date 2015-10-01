@@ -28,7 +28,7 @@
 ScriptInterface::ScriptInterface(ScriptEngine &engine, Simulator& sim, VisItem *vis)
     : engine(engine), sim(sim), vis(vis)
 {
-    tokenDemo();
+    hexagon();
 }
 
 void ScriptInterface::log(const QString msg, bool error)

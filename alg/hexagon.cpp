@@ -249,9 +249,11 @@ HexagonSystem::HexagonSystem(int numParticles, float holeProb)
 
 bool HexagonSystem::hasTerminated() const
 {
+#ifdef QT_DEBUG
     if(!isConnected(particles)) {
         return true;
     }
+#endif
 
     for(auto p : particles) {
         auto hp = dynamic_cast<HexagonParticle*>(p);

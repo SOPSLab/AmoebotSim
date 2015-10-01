@@ -115,5 +115,11 @@ TokenDemoSystem::TokenDemoSystem(int numParticles, float holeProb)
 
 bool TokenDemoSystem::hasTerminated() const
 {
+#ifdef QT_DEBUG
+    if(!isConnected(particles)) {
+        return true;
+    }
+#endif
+
     return false;
 }

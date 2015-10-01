@@ -80,7 +80,8 @@ SOURCES += \
     alg/hexagon.cpp \
     alg/tokendemo.cpp \
     script/scriptinterface.cpp \
-    script/scriptengine.cpp
+    script/scriptengine.cpp \
+    ui/view.cpp
 
 RESOURCES += \
     res/qml.qrc \
