@@ -2,6 +2,8 @@
 #include "amoebotsystem.h"
 
 AmoebotSystem::AmoebotSystem()
+    : _numMovements(0),
+      _numRounds(0)
 {
 
 }
@@ -24,6 +26,7 @@ void AmoebotSystem::activate()
     }
 
     shuffledParticles.front()->activate();
+    registerActivation(shuffledParticles.front());
     shuffledParticles.pop_front();
 }
 
@@ -45,6 +48,16 @@ const Particle& AmoebotSystem::at(int i) const
     return *particles.at(i);
 }
 
+int AmoebotSystem::numMovements() const
+{
+    return _numMovements;
+}
+
+int AmoebotSystem::numRounds() const
+{
+    return _numRounds;
+}
+
 void AmoebotSystem::insert(AmoebotParticle* particle)
 {
     Q_ASSERT(particleMap.find(particle->head) == particleMap.end());
@@ -54,5 +67,19 @@ void AmoebotSystem::insert(AmoebotParticle* particle)
     particleMap[particle->head] = particle;
     if(particle->isExpanded()) {
         particleMap[particle->tail()] = particle;
+    }
+}
+
+void AmoebotSystem::registerMovement(int num)
+{
+    _numMovements += num;
+}
+
+void AmoebotSystem::registerActivation(AmoebotParticle* particle)
+{
+    activatedParticles.insert(particle);
+    if(activatedParticles.size() == particles.size()) {
+        _numRounds++;
+        activatedParticles.clear();
     }
 }

@@ -55,6 +55,8 @@ void AmoebotParticle::expand(int label)
     head = head.nodeInDir(globalExpansionDir);
     globalTailDir = (globalExpansionDir + 3) % 6;
     system.particleMap[head] = this;
+
+    system.registerMovement();
 }
 
 bool AmoebotParticle::canPush(int label)
@@ -69,7 +71,7 @@ void AmoebotParticle::push(int label)
 
     const int globalExpansionDir = localToGlobalDir(label);
     const Node handoverNode = head.nodeInDir(globalExpansionDir);
-    auto& neighbor = neighborAtLabel<Particle>(label);
+    auto& neighbor = neighborAtLabel<AmoebotParticle>(label);
 
     head = handoverNode;
     globalTailDir = (globalExpansionDir + 3) % 6;
@@ -79,6 +81,9 @@ void AmoebotParticle::push(int label)
         neighbor.head = neighbor.tail();
     }
     neighbor.globalTailDir = -1;
+
+    system.registerMovement(2);
+    system.registerActivation(&neighbor);
 }
 
 void AmoebotParticle::contract(int label)
@@ -98,6 +103,8 @@ void AmoebotParticle::contractHead()
     system.particleMap.erase(tail());
     head = tail();
     globalTailDir = -1;
+
+    system.registerMovement();
 }
 
 void AmoebotParticle::contractTail()
@@ -105,6 +112,8 @@ void AmoebotParticle::contractTail()
     Q_ASSERT(isExpanded());
     system.particleMap.erase(tail());
     globalTailDir = -1;
+
+    system.registerMovement();
 }
 
 bool AmoebotParticle::canPull(int label)
@@ -129,6 +138,9 @@ void AmoebotParticle::pull(int label)
     neighbor.head = handoverNode;
     neighbor.globalTailDir = globalPullDir;
     system.particleMap[handoverNode] = &neighbor;
+
+    system.registerMovement(2);
+    system.registerActivation(&neighbor);
 }
 
 bool AmoebotParticle::hasNeighborAtLabel(int label) const
