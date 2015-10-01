@@ -19,7 +19,7 @@
 #include "alg/hexagon.h"
 #include "alg/tokendemo.h"
 
-#include "helper/universalcoatinghelper.h"
+//#include "helper/universalcoatinghelper.h"
 
 #include "script/scriptinterface.h"
 
