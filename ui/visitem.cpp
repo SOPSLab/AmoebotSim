@@ -1,5 +1,6 @@
 #include <cmath>
 
+#include <QFile>
 #include <QImage>
 #include <QMutexLocker>
 #include <QOpenGLFunctions_2_0>
@@ -51,6 +52,16 @@ void VisItem::focusOnCenterOfMass()
     }
 
     view.setFocusPos(sum / numNodes);
+}
+
+void VisItem::focusOn(Node node)
+{
+    view.setFocusPos(nodeToWorldCoord(node));
+}
+
+void VisItem::setZoom(float zoom)
+{
+    view.setZoom(zoom);
 }
 
 void VisItem::initialize()

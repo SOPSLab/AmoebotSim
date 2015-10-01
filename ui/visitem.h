@@ -5,6 +5,7 @@
 
 #include <QOpenGLTexture>
 #include <QPointF>
+#include <QString>
 #include <QTimer>
 
 #include "sim/node.h"
@@ -28,6 +29,8 @@ signals:
 public slots:
     void systemChanged(std::shared_ptr<System> _system);
     void focusOnCenterOfMass();
+    void focusOn(Node node);
+    void setZoom(float zoom);
 
 protected slots:
     virtual void initialize();

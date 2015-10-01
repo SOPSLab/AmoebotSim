@@ -3,7 +3,6 @@
 
 #include <memory>
 
-#include <QJSEngine>
 #include <QObject>
 #include <QTimer>
 
@@ -19,16 +18,12 @@ public:
     void setSystem(std::shared_ptr<System> _system);
     std::shared_ptr<System> getSystem() const;
 
-    void emitInitialSignals();
-
 signals:
     void systemChanged(std::shared_ptr<System> _system);
     void roundDurationChanged(int ms);
 
     void started();
     void stopped();
-
-    void log(const QString msg, const bool isError);
 
 public slots:
     void round();
@@ -37,9 +32,6 @@ public slots:
     void start();
     void stop();
 
-    void executeCommand(const QString cmd);
-    void runScript(const QString script);
-
     int numParticles() const;
     int numMovements() const;
     int numRounds() const;
@@ -47,7 +39,6 @@ public slots:
     void setRoundDuration(int ms);
 
 protected:
-    QJSEngine engine;
     QTimer roundTimer;
 
     std::shared_ptr<System> system;

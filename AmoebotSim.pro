@@ -46,7 +46,8 @@ HEADERS += \
     alg/amoebotsystem.h \
     helper/randomnumbergenerator.h \
     alg/hexagon.h \
-    alg/tokendemo.h
+    alg/tokendemo.h \
+    script/scriptengine.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -77,7 +78,9 @@ SOURCES += \
     alg/amoebotsystem.cpp \
     helper/randomnumbergenerator.cpp \
     alg/hexagon.cpp \
-    alg/tokendemo.cpp
+    alg/tokendemo.cpp \
+    script/scriptinterface.cpp \
+    script/scriptengine.cpp
 
 RESOURCES += \
     res/qml.qrc \
