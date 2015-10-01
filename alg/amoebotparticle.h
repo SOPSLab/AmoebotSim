@@ -32,11 +32,14 @@ protected:
     virtual int tailMarkDir() const;
 
     bool canExpand(int label);
-    bool expand(int label);
+    void expand(int label);
 
     void contractHead();
     void contractTail();
     void contract(int label);
+
+    bool canHandoverContract(int label);
+    void handoverContract(int label);
 
     template<class ParticleType>
     ParticleType& neighborAtLabel(int label) const;
