@@ -25,6 +25,7 @@ public:
 
 signals:
     void roundForParticleAt(Node node);
+    void inspectParticle(QString text);
 
 public slots:
     void systemChanged(std::shared_ptr<System> _system);

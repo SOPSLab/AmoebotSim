@@ -53,6 +53,15 @@ int TokenDemoParticle::headMarkColor() const
     }
 }
 
+QString TokenDemoParticle::inspectionText() const
+{
+    QString text = HexagonParticle::inspectionText();
+    text += "numRedTokens: " + QString::number(countTokens<RedToken>());
+    text += "\n";
+    text += "numBlueTokens: " + QString::number(countTokens<BlueToken>());
+    return text;
+}
+
 TokenDemoParticle& TokenDemoParticle::neighborAtLabel(int label) const
 {
     return AmoebotParticle::neighborAtLabel<TokenDemoParticle>(label);

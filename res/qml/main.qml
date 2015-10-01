@@ -80,35 +80,52 @@ ApplicationWindow {
         }
     }
 
-    function setFullscreen(){
-        showFullScreen()
-    }
-
-    function setWindowed(){
-        //Check link for values: http://doc.qt.io/qt-5/qwindow.html#Visibility-enum
-        if(appWindow.visibility == 5)
-            showMaximized()
+    function inspectParticle(text)
+    {
+        inspectorText.text = text
+        if(text != "") {
+            inspector.visible = true
+        } else {
+            inspector.visible = false
+        }
     }
 
     VisItem {
         id: vis
     }
 
-    RowLayout{
+    A_Inspector {
+        id: inspector
+        visible: false
+        anchors.top: vis.top
+        anchors.left: vis.left
+        anchors.margins: 10
+        height: inspectorText.height + 20
+        Text {
+            id: inspectorText
+            anchors.margins: 10
+            anchors.top: parent.top
+            anchors.left: parent.left
+            color: "#000"
+            text: ""
+        }
+    }
+
+    RowLayout {
         id: roundsRow
         anchors.right: vis.right
         anchors.top: vis.top
         anchors.rightMargin: 30
         anchors.topMargin: 10
 
-        Rectangle{
+        Rectangle {
             Layout.preferredWidth: 60
             Text{
                 anchors.right: parent.right
                 text: "Rounds: "
             }
         }
-        Rectangle{
+        Rectangle {
             Layout.preferredWidth: 20
             Text{
                 id: numRoundsText
@@ -118,21 +135,21 @@ ApplicationWindow {
         }
     }
 
-    RowLayout{
+    RowLayout {
         id: numMovementsRow
         anchors.top: roundsRow.bottom
         anchors.right: vis.right
         anchors.rightMargin: 30
         anchors.topMargin: 15
 
-        Rectangle{
+        Rectangle {
             Layout.preferredWidth: 60
             Text{
                 anchors.right: parent.right
                 text: "Movements: "
             }
         }
-        Rectangle{
+        Rectangle {
             Layout.preferredWidth: 20
             Text{
                 id: numMovementsText
@@ -353,13 +370,5 @@ ApplicationWindow {
                 round()
             }
         }
-
-//        A_Button {
-//            id: backButton
-//            text: "back"
-//            onClicked: {
-//                back()
-//            }
-//        }
     }
 }

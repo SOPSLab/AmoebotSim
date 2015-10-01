@@ -38,7 +38,7 @@ void Simulator::round()
     }
 }
 
-void Simulator::roundForParticleAt(const Node node)
+void Simulator::roundForParticleAt(Node node)
 {
     QMutexLocker locker(&system->mutex);
     system->activateParticleAt(node);

@@ -29,6 +29,11 @@ Application::Application(int argc, char *argv[])
                     QMetaObject::invokeMethod(qmlRoot, "setNumRounds", Q_ARG(QVariant, sim.numRounds()));
                 }
         );
+        connect(vis,  &VisItem::inspectParticle,
+                [qmlRoot](QString text){
+                    QMetaObject::invokeMethod(qmlRoot, "inspectParticle", Q_ARG(QVariant, text));
+                }
+        );
 
         // setup connections between GUI and Simulator
         connect(&sim, &Simulator::systemChanged, vis, &VisItem::systemChanged);

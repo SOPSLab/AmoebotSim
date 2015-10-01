@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>qml/A_Button.qml</file>
+        <file>qml/A_Inspector.qml</file>
         <file>qml/A_ResultTextField.qml</file>
         <file>qml/A_TextField.qml</file>
         <file>qml/main.qml</file>

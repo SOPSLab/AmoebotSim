@@ -59,3 +59,8 @@ std::array<int, 6> Particle::borderPointColors() const
 {
     return {{-1, -1, -1, -1, -1, -1}};
 }
+
+QString Particle::inspectionText() const
+{
+    return "Overwrite Particle::inspectionText\nto specify an inspection text.";
+}

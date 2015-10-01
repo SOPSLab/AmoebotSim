@@ -3,6 +3,8 @@
 
 #include <array>
 
+#include <QString>
+
 #include "sim/node.h"
 
 class Particle
@@ -23,6 +25,8 @@ public:
 
     virtual std::array<int, 18> borderColors() const;
     virtual std::array<int, 6> borderPointColors() const;
+
+    virtual QString inspectionText() const;
 
 public:
     Node head;

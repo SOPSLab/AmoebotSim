@@ -110,6 +110,26 @@ int HexagonParticle::tailMarkColor() const
     return headMarkColor();
 }
 
+QString HexagonParticle::inspectionText() const
+{
+    QString text;
+    text += "head: (" + QString::number(head.x) + ", " + QString::number(head.y) + ")\n";
+    text += "orientation: " + QString::number(orientation) + ")\n";
+    text += "globalTailDir: " + QString::number(globalTailDir) + ")\n";
+    text += "state: ";
+    text += [this](){
+        switch(state) {
+        case State::Seed:   return "seed";
+        case State::Idle:   return "idle";
+        case State::Follow: return "follow";
+        case State::Lead:   return "lead";
+        case State::Finish: return "finish";
+        }
+    }();
+    text += "\n";
+    return text;
+}
+
 HexagonParticle& HexagonParticle::neighborAtLabel(int label) const
 {
     return AmoebotParticle::neighborAtLabel<HexagonParticle>(label);

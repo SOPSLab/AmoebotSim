@@ -14,7 +14,7 @@ TextField {
             border.color: "#888"
             radius: 4
             color: showsError ? "#d44" : "#4d4"
-            opacity: 0.75
+            opacity: 0.9
         }
     }
 }

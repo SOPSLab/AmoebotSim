@@ -11,7 +11,7 @@ Button {
             border.color: "#888"
             radius: 4
             color: control.pressed ? "#888" : "#eee"
-            opacity: 0.75
+            opacity: 0.9
         }
     }
 }

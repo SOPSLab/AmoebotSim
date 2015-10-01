@@ -88,6 +88,7 @@ RESOURCES += \
 
 OTHER_FILES += \
     res/qml/A_Button.qml \
+    res/qml/A_Inspector.qml \
     res/qml/A_ResultTextField.qml \
     res/qml/A_TextField.qml \
     res/qml/main.qml

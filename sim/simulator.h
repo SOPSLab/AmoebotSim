@@ -27,7 +27,7 @@ signals:
 
 public slots:
     void round();
-    void roundForParticleAt(const Node node);
+    void roundForParticleAt(Node node);
     void runUntilTermination();
     void start();
     void stop();

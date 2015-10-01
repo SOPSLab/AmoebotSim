@@ -20,6 +20,8 @@ public:
 
     virtual int headMarkColor() const;
 
+    virtual QString inspectionText() const;
+
     TokenDemoParticle& neighborAtLabel(int label) const;
 };
 

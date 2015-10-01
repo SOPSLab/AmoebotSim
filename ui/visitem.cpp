@@ -276,12 +276,31 @@ void VisItem::mousePressEvent(QMouseEvent* e)
     if(e->buttons() & Qt::LeftButton) {
         if(e->modifiers() & Qt::ControlModifier) {
             translating = false;
-            auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
-            emit roundForParticleAt(node);
+            auto clickedNode = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
+            emit roundForParticleAt(clickedNode);
+        } else if(e->modifiers() & Qt::AltModifier) {
+            translating = false;
+            auto clickedNode = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
+            QString text = "";
+            for(const auto& p : *system) {
+                if(p.head == clickedNode || (p.isExpanded() && p.tail() == clickedNode)) {
+                    text = p.inspectionText();
+                    break;
+                }
+            }
+            while(text.endsWith('\n')) {
+                text.chop(1);
+            }
+            emit inspectParticle(text);
         } else {
             translating = true;
             lastMousePos = e->localPos();
         }
+
+        if(!(e->modifiers() & Qt::AltModifier)) {
+            emit inspectParticle("");
+        }
+
         e->accept();
     }
 }
