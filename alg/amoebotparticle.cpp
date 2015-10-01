@@ -1,4 +1,4 @@
-#include "amoebotparticle.h"
+#include "alg/amoebotparticle.h"
 
 AmoebotParticle::AmoebotParticle(const Node head,
                                  const int tailDir,

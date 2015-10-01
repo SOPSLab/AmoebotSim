@@ -1,6 +1,6 @@
 #include <memory>
 
-#include "tokendemo.h"
+#include "alg/tokendemo.h"
 
 TokenDemoParticle::TokenDemoParticle(const Node head,
                                      const int globalTailDir,

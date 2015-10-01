@@ -1,4 +1,4 @@
-#include "labellednocompassparticle.h"
+#include "alg/labellednocompassparticle.h"
 
 const std::vector<int> LabelledNoCompassParticle::sixLabels = {{0, 1, 2, 3, 4, 5}};
 const std::array<const std::vector<int>, 6> LabelledNoCompassParticle::labels =

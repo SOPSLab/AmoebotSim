@@ -1,4 +1,4 @@
-#include "commandhistorymanager.h"
+#include "ui/commandhistorymanager.h"
 
 CommandHistoryManager::CommandHistoryManager(QObject *parent) :
     QObject(parent),

@@ -6,7 +6,7 @@
 #include <QObject>
 #include <QTimer>
 
-#include "system.h"
+#include "sim/system.h"
 
 class Simulator : public QObject
 {

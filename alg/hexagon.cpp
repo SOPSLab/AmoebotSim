@@ -2,7 +2,7 @@
 
 #include <QtGlobal>
 
-#include "hexagon.h"
+#include "alg/hexagon.h"
 
 HexagonParticle::HexagonParticle(const Node head,
                                  const int globalTailDir,
