@@ -264,10 +264,9 @@ void VisItem::mousePressEvent(QMouseEvent* e)
 {
     if(e->buttons() & Qt::LeftButton) {
         if(e->modifiers() & Qt::ControlModifier) {
-            //Executing round for particle
             translating = false;
             auto node = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
-            emit roundForParticleAt(node.x, node.y);
+            emit roundForParticleAt(node);
         } else {
             translating = true;
             lastMousePos = e->localPos();

@@ -27,6 +27,8 @@ Application::Application(int argc, char *argv[])
         connect(qmlRoot, SIGNAL(round()), &sim, SLOT(round()));
         connect(qmlRoot, SIGNAL(executeCommand(QString)), &sim, SLOT(executeCommand(QString)));
 
+        connect(vis, &VisItem::roundForParticleAt, &sim, &Simulator::roundForParticleAt);
+
         connect(slider, SIGNAL(roundDurationChanged(int)), &sim, SLOT(setRoundDuration(int)));
         connect(&sim, &Simulator::roundDurationChanged,
                 [slider](const int& ms){

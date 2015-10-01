@@ -26,6 +26,14 @@ void AmoebotSystem::activate()
     shuffledParticles.pop_front();
 }
 
+void AmoebotSystem::activateParticleAt(Node node)
+{
+    auto it = particleMap.find(node);
+    if(it != particleMap.end()) {
+        it->second->activate();
+    }
+}
+
 unsigned int AmoebotSystem::size() const
 {
     return particles.size();

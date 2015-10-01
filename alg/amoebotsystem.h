@@ -16,6 +16,7 @@ public:
     virtual ~AmoebotSystem();
 
     virtual void activate();
+    virtual void activateParticleAt(Node node);
 
     virtual unsigned int size() const;
     virtual const Particle& at(int i) const;

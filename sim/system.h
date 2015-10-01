@@ -32,6 +32,7 @@ public:
     virtual ~System();
 
     virtual void activate() = 0;
+    virtual void activateParticleAt(Node node) = 0;
 
     virtual unsigned int size() const = 0;
     virtual const Particle& at(int i) const = 0;

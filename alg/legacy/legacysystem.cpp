@@ -95,8 +95,39 @@ void LegacySystem::activate(){
     } else {
         systemState = SystemState::Terminated;
     }
+}
 
-    return;
+void LegacySystem::activateParticleAt(Node node)
+{
+    if(systemState != SystemState::Valid) {
+        return;
+    }
+
+    if(numNonStaticParticles == 0) {
+        systemState = SystemState::Terminated;
+        return;
+    }
+
+    auto it = particleMap.find(node);
+    if(it == particleMap.end() || it->second->isStatic()) {
+        return;
+    }
+
+    LegacyParticle* p = it->second;
+    updateNumRounds(p);
+
+    auto inFlags = assembleFlags(*p);
+    Movement m = p->executeAlgorithm(inFlags);
+
+    if(m.type == MovementType::Empty) {
+        p->discard();
+    } else if(m.type == MovementType::Idle) {
+        p->apply();
+    } else if(m.type == MovementType::Expand) {
+        handleExpansion(*p, m.label);
+    } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
+        handleContraction(*p, m.label, m.type == MovementType::HandoverContract);
+    }
 }
 
 unsigned int LegacySystem::size() const
@@ -104,7 +135,7 @@ unsigned int LegacySystem::size() const
     return particles.size();
 }
 
-const LegacyParticle& LegacySystem::at(const int i) const
+const LegacyParticle& LegacySystem::at(int i) const
 {
     return *particles.at(i);
 }

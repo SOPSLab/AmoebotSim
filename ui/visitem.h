@@ -23,7 +23,7 @@ public:
     explicit VisItem(QQuickItem* parent = 0);
 
 signals:
-    void roundForParticleAt(int x, int y);
+    void roundForParticleAt(Node node);
 
 public slots:
     void systemChanged(std::shared_ptr<System> _system);

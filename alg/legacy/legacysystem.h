@@ -26,9 +26,10 @@ public:
     virtual ~LegacySystem();
 
     virtual void activate();
+    virtual void activateParticleAt(Node node);
 
     virtual unsigned int size() const;
-    virtual const LegacyParticle& at(const int i) const;
+    virtual const LegacyParticle& at(int i) const;
 
     virtual int numMovements() const;
     virtual int numRounds() const;
