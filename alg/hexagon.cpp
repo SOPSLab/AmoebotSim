@@ -58,7 +58,7 @@ void HexagonParticle::activate()
             } else if(hasTailAtLabel(followDir)) {
                 auto neighbor = neighborAtLabel(followDir);
                 int neighborContractionDir = neighborDirToDir(neighbor, (neighbor.tailDir() + 3) % 6);
-                expand(followDir);
+                push(followDir);
                 followDir = neighborContractionDir;
                 return;
             }
@@ -69,8 +69,10 @@ void HexagonParticle::activate()
                 return;
             } else {
                 updateMoveDir();
-                if(!hasNeighborAtLabel(moveDir) || hasTailAtLabel(moveDir)) {
+                if(!hasNeighborAtLabel(moveDir)) {
                     expand(moveDir);
+                } else if(hasTailAtLabel(moveDir)) {
+                    push(moveDir);
                 }
                 return;
             }

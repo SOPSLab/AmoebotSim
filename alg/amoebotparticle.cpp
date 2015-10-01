@@ -45,48 +45,51 @@ int AmoebotParticle::tailMarkDir() const
 bool AmoebotParticle::canExpand(int label)
 {
     Q_ASSERT(0 <= label && label < 6);
-
-    if(isExpanded()) {
-        return false;
-    }
-
-    const Node handoverNode = neighboringNodeReachedViaLabel(label);
-    auto it = particleMap.find(handoverNode);
-
-    if(it == particleMap.end()) {
-        // can expand into empty node
-        return true;
-    } else {
-        const AmoebotParticle* neighbor = it->second;
-        if(neighbor->isExpanded()) {
-            // can push another particle
-            return true;
-        } else {
-            // cannot expand
-            return false;
-        }
-    }
+    return (isContracted() && !hasNeighborAtLabel(label));
 }
 
 void AmoebotParticle::expand(int label)
 {
     Q_ASSERT(canExpand(label));
+    const int globalExpansionDir = localToGlobalDir(label);
+    head = head.nodeInDir(globalExpansionDir);
+    globalTailDir = (globalExpansionDir + 3) % 6;
+    particleMap[head] = this;
+}
 
-    const Node handoverNode = neighboringNodeReachedViaLabel(label);
-    globalTailDir = (labelToGlobalDir(label) + 3) % 6;
+bool AmoebotParticle::canPush(int label)
+{
+    Q_ASSERT(0 <= label && label < 6);
+    return (isContracted() && hasNeighborAtLabel(label) && neighborAtLabel<Particle>(label).isExpanded());
+}
+
+void AmoebotParticle::push(int label)
+{
+    Q_ASSERT(canPush(label));
+
+    const int globalExpansionDir = localToGlobalDir(label);
+    const Node handoverNode = head.nodeInDir(globalExpansionDir);
+    auto& neighbor = neighborAtLabel<Particle>(label);
+
     head = handoverNode;
-
-    auto it = particleMap.find(handoverNode);
-    if(it != particleMap.end()) {
-        // push
-        AmoebotParticle* neighbor = it->second;
-        if(handoverNode == neighbor->head) {
-            // head of neighbor is pushed
-            neighbor->head = neighbor->tail();
-        }
-        neighbor->globalTailDir = -1;
-    }
+    globalTailDir = (globalExpansionDir + 3) % 6;
     particleMap[handoverNode] = this;
+
+    if(handoverNode == neighbor.head) {
+        neighbor.head = neighbor.tail();
+    }
+    neighbor.globalTailDir = -1;
+}
+
+void AmoebotParticle::contract(int label)
+{
+    Q_ASSERT(0 <= label && label < 10);
+    Q_ASSERT(label == headContractionLabel() || label == tailContractionLabel());
+    if(label == headContractionLabel()) {
+        contractHead();
+    } else {
+        contractTail();
+    }
 }
 
 void AmoebotParticle::contractHead()
@@ -104,39 +107,28 @@ void AmoebotParticle::contractTail()
     globalTailDir = -1;
 }
 
-void AmoebotParticle::contract(int label)
+bool AmoebotParticle::canPull(int label)
 {
     Q_ASSERT(0 <= label && label < 10);
-    Q_ASSERT(label == headContractionLabel() || label == tailContractionLabel());
-    if(label == headContractionLabel()) {
-        contractHead();
-    } else {
-        contractTail();
-    }
+    return (isExpanded() && hasNeighborAtLabel(label) && neighborAtLabel<Particle>(label).isContracted());
 }
 
-bool AmoebotParticle::canHandoverContract(int label)
+void AmoebotParticle::pull(int label)
 {
-    Q_ASSERT(0 <= label && label < 10);
-    return (isExpanded() && neighborAtLabel<Particle>(label).isContracted());
-}
+    Q_ASSERT(canPull(label));
 
-void AmoebotParticle::handoverContract(int label)
-{
-    Q_ASSERT(canHandoverContract(label));
-
+    const int globalPullDir = labelToGlobalDir(label);
+    const Node handoverNode = isHeadLabel(label) ? head : tail();
     auto& neighbor = neighborAtLabel<AmoebotParticle>(label);
+
     if(isHeadLabel(label)) {
-        particleMap[head] = &neighbor;
-        neighbor.head = head;
         head = tail();
-    } else {
-        particleMap[tail()] = &neighbor;
-        neighbor.head = tail();
     }
 
-    neighbor.globalTailDir = labelToGlobalDir(label);
     globalTailDir = -1;
+    neighbor.head = handoverNode;
+    neighbor.globalTailDir = globalPullDir;
+    particleMap[handoverNode] = &neighbor;
 }
 
 bool AmoebotParticle::hasNeighborAtLabel(int label) const

@@ -34,12 +34,15 @@ protected:
     bool canExpand(int label);
     void expand(int label);
 
+    bool canPush(int label);
+    void push(int label);
+
+    void contract(int label);
     void contractHead();
     void contractTail();
-    void contract(int label);
 
-    bool canHandoverContract(int label);
-    void handoverContract(int label);
+    bool canPull(int label);
+    void pull(int label);
 
     template<class ParticleType>
     ParticleType& neighborAtLabel(int label) const;
