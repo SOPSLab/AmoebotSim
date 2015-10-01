@@ -35,6 +35,7 @@ void AmoebotSystem::activateParticleAt(Node node)
     auto it = particleMap.find(node);
     if(it != particleMap.end()) {
         it->second->activate();
+        registerActivation(it->second);
     }
 }
 
