@@ -114,8 +114,8 @@ QString HexagonParticle::inspectionText() const
 {
     QString text;
     text += "head: (" + QString::number(head.x) + ", " + QString::number(head.y) + ")\n";
-    text += "orientation: " + QString::number(orientation) + ")\n";
-    text += "globalTailDir: " + QString::number(globalTailDir) + ")\n";
+    text += "orientation: " + QString::number(orientation) + "\n";
+    text += "globalTailDir: " + QString::number(globalTailDir) + "\n";
     text += "state: ";
     text += [this](){
         switch(state) {
