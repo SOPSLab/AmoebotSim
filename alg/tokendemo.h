@@ -13,7 +13,7 @@ public:
     TokenDemoParticle(const Node head,
                       const int globalTailDir,
                       const int orientation,
-                      std::map<Node, AmoebotParticle*>& particleMap,
+                      AmoebotSystem& system,
                       State state);
 
     virtual void activate();

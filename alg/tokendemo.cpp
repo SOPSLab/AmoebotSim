@@ -5,9 +5,9 @@
 TokenDemoParticle::TokenDemoParticle(const Node head,
                                      const int globalTailDir,
                                      const int orientation,
-                                     std::map<Node, AmoebotParticle*>& particleMap,
+                                     AmoebotSystem& system,
                                      State state)
-    : HexagonParticle(head, globalTailDir, orientation, particleMap, state)
+    : HexagonParticle(head, globalTailDir, orientation, system, state)
 {
     if(state == State::Seed) {
         putToken(std::make_shared<RedToken>());
@@ -69,7 +69,7 @@ TokenDemoParticle& TokenDemoParticle::neighborAtLabel(int label) const
 
 TokenDemoSystem::TokenDemoSystem(int numParticles, float holeProb)
 {
-    insert(new TokenDemoParticle(Node(0, 0), -1, randDir(), particleMap, HexagonParticle::State::Seed));
+    insert(new TokenDemoParticle(Node(0, 0), -1, randDir(), *this, HexagonParticle::State::Seed));
 
     std::set<Node> occupied;
     occupied.insert(Node(0, 0));
@@ -99,7 +99,7 @@ TokenDemoSystem::TokenDemoSystem(int numParticles, float holeProb)
 
         if(randBool(1.0f - holeProb)) {
             // only add particle if not a hole
-            insert(new TokenDemoParticle(randomCandidate, -1, randDir(), particleMap, HexagonParticle::State::Idle));
+            insert(new TokenDemoParticle(randomCandidate, -1, randDir(), *this, HexagonParticle::State::Idle));
             numNonStaticParticles++;
 
             // add new candidates

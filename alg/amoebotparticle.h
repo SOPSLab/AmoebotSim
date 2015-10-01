@@ -7,6 +7,7 @@
 #include <map>
 #include <memory>
 
+#include "alg/amoebotsystem.h"
 #include "alg/labellednocompassparticle.h"
 #include "helper/randomnumbergenerator.h"
 #include "sim/node.h"
@@ -20,7 +21,7 @@ public:
     AmoebotParticle(const Node head,
                     const int globalTailDir,
                     const int orientation,
-                    std::map<Node, AmoebotParticle*>& particleMap);
+                    AmoebotSystem& system);
 
     virtual void activate() = 0;
 
@@ -63,7 +64,7 @@ protected:
     bool hasToken() const;
 
 private:
-    std::map<Node, AmoebotParticle*>& particleMap;
+    AmoebotSystem& system;
     std::deque<std::shared_ptr<Token>> tokens;
 };
 
@@ -71,8 +72,8 @@ template<class ParticleType>
 ParticleType& AmoebotParticle::neighborAtLabel(int label) const
 {
     Node neighboringNode = neighboringNodeReachedViaLabel(label);
-    auto it = particleMap.find(neighboringNode);
-    Q_ASSERT(it != particleMap.end() && dynamic_cast<ParticleType*>(it->second) != nullptr);
+    auto it = system.particleMap.find(neighboringNode);
+    Q_ASSERT(it != system.particleMap.end() && dynamic_cast<ParticleType*>(it->second) != nullptr);
     return dynamic_cast<ParticleType&>(*(it->second));
 }
 

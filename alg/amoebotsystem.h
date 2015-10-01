@@ -5,12 +5,15 @@
 #include <map>
 #include <set>
 
-#include "alg/amoebotparticle.h"
 #include "helper/randomnumbergenerator.h"
 #include "sim/system.h"
 
+class AmoebotParticle;
+
 class AmoebotSystem : public System, public RandomNumberGenerator
 {
+    friend class AmoebotParticle;
+
 public:
     AmoebotSystem();
     virtual ~AmoebotSystem();

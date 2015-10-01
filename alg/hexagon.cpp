@@ -7,9 +7,9 @@
 HexagonParticle::HexagonParticle(const Node head,
                                  const int globalTailDir,
                                  const int orientation,
-                                 std::map<Node, AmoebotParticle *> &particleMap,
+                                 AmoebotSystem& system,
                                  State state)
-    : AmoebotParticle(head, globalTailDir, orientation, particleMap),
+    : AmoebotParticle(head, globalTailDir, orientation, system),
       state(state),
       constructionDir(-1),
       moveDir(-1),
@@ -203,7 +203,7 @@ bool HexagonParticle::hasTailFollower() const
 
 HexagonSystem::HexagonSystem(int numParticles, float holeProb)
 {
-    insert(new HexagonParticle(Node(0, 0), -1, randDir(), particleMap, HexagonParticle::State::Seed));
+    insert(new HexagonParticle(Node(0, 0), -1, randDir(), *this, HexagonParticle::State::Seed));
 
     std::set<Node> occupied;
     occupied.insert(Node(0, 0));
@@ -233,7 +233,7 @@ HexagonSystem::HexagonSystem(int numParticles, float holeProb)
 
         if(randBool(1.0f - holeProb)) {
             // only add particle if not a hole
-            insert(new HexagonParticle(randomCandidate, -1, randDir(), particleMap, HexagonParticle::State::Idle));
+            insert(new HexagonParticle(randomCandidate, -1, randDir(), *this, HexagonParticle::State::Idle));
             numNonStaticParticles++;
 
             // add new candidates

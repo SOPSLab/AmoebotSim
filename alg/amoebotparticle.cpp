@@ -3,9 +3,9 @@
 AmoebotParticle::AmoebotParticle(const Node head,
                                  const int tailDir,
                                  const int orientation,
-                                 std::map<Node, AmoebotParticle*>& particleMap)
+                                 AmoebotSystem& system)
     : LabelledNoCompassParticle(head, tailDir, orientation),
-      particleMap(particleMap)
+      system(system)
 {
 
 }
@@ -54,7 +54,7 @@ void AmoebotParticle::expand(int label)
     const int globalExpansionDir = localToGlobalDir(label);
     head = head.nodeInDir(globalExpansionDir);
     globalTailDir = (globalExpansionDir + 3) % 6;
-    particleMap[head] = this;
+    system.particleMap[head] = this;
 }
 
 bool AmoebotParticle::canPush(int label)
@@ -73,7 +73,7 @@ void AmoebotParticle::push(int label)
 
     head = handoverNode;
     globalTailDir = (globalExpansionDir + 3) % 6;
-    particleMap[handoverNode] = this;
+    system.particleMap[handoverNode] = this;
 
     if(handoverNode == neighbor.head) {
         neighbor.head = neighbor.tail();
@@ -95,7 +95,7 @@ void AmoebotParticle::contract(int label)
 void AmoebotParticle::contractHead()
 {
     Q_ASSERT(isExpanded());
-    particleMap.erase(tail());
+    system.particleMap.erase(tail());
     head = tail();
     globalTailDir = -1;
 }
@@ -103,7 +103,7 @@ void AmoebotParticle::contractHead()
 void AmoebotParticle::contractTail()
 {
     Q_ASSERT(isExpanded());
-    particleMap.erase(tail());
+    system.particleMap.erase(tail());
     globalTailDir = -1;
 }
 
@@ -128,13 +128,13 @@ void AmoebotParticle::pull(int label)
     globalTailDir = -1;
     neighbor.head = handoverNode;
     neighbor.globalTailDir = globalPullDir;
-    particleMap[handoverNode] = &neighbor;
+    system.particleMap[handoverNode] = &neighbor;
 }
 
 bool AmoebotParticle::hasNeighborAtLabel(int label) const
 {
     const Node neighboringNode = neighboringNodeReachedViaLabel(label);
-    return particleMap.find(neighboringNode) != particleMap.end();
+    return system.particleMap.find(neighboringNode) != system.particleMap.end();
 }
 
 bool AmoebotParticle::hasHeadAtLabel(int label)

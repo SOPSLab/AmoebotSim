@@ -1,3 +1,4 @@
+#include "alg/amoebotparticle.h"
 #include "amoebotsystem.h"
 
 AmoebotSystem::AmoebotSystem()
