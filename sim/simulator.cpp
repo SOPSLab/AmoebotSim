@@ -2,7 +2,7 @@
 
 #include "script/scriptinterface.h"
 #include "sim/simulator.h"
-
+#include "alg/legacy/legacysystem.h"
 Simulator::Simulator()
 {
     roundTimer.setInterval(100);
@@ -81,7 +81,21 @@ int Simulator::numRounds() const
     QMutexLocker locker(&system->mutex);
     return system->numRounds();
 }
-
+int Simulator::leaderElectionRounds() const
+{
+    QMutexLocker locker(&system->mutex);
+    return system->leaderElectionRounds();
+}
+int Simulator::weakBounds() const
+{
+    QMutexLocker locker(&system->mutex);
+    return system->weakBounds();
+}
+int Simulator::strongBounds() const
+{
+    QMutexLocker locker(&system->mutex);
+    return system->strongBounds();
+}
 void Simulator::setRoundDuration(int ms)
 {
     roundTimer.setInterval(ms);

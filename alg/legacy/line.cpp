@@ -186,7 +186,10 @@ bool Line::isStatic() const
 {
     return false;
 }
-
+bool Line::isRetired() const
+{
+    return false;
+}
 int Line::isPointedAt(){
     for(int label = 0; label < 10; label++) {
         if(inFlags[label] != nullptr) {

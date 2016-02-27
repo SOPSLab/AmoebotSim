@@ -80,6 +80,21 @@ int ScriptInterface::getNumRounds()
 {
     return sim.numRounds();
 }
+int ScriptInterface::getLeaderElectionRounds()
+{
+    return sim.leaderElectionRounds();
+}
+
+int ScriptInterface::getWeakBound()
+{
+ return sim.weakBounds();
+}
+int ScriptInterface::getStrongBound()
+{
+ return sim.strongBounds();
+}
+
+
 
 void ScriptInterface::setRoundDuration(int ms)
 {

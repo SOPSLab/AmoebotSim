@@ -7,6 +7,7 @@
 #include "alg/legacy/legacysystem.h"
 #include "alg/legacy/universalcoating.h"
 #include <QDebug>
+#include "helper/universalcoatinghelper.h"
 
 
 
@@ -255,6 +256,10 @@ namespace UniversalCoating
             }
         }
 
+        int weak  = getWeakLowerBound(*system.get());
+        int strong = getStrongLowerBound(*system.get());
+        system->setWeakBound(weak);
+        system->setStrongBound(strong);
         return system;
     }
 
@@ -1551,6 +1556,13 @@ namespace UniversalCoating
     bool UniversalCoating::isStatic() const
     {
         if(phase==Phase::Static)
+            return true;
+        return false;
+    }
+
+    bool UniversalCoating::isRetired() const
+    {
+        if(phase==Phase::retiredLeader)
             return true;
         return false;
     }
@@ -3067,4 +3079,5 @@ namespace UniversalCoating
         }
         return false;
     }
+
 }

@@ -112,6 +112,11 @@ bool Ring::isStatic() const
 {
     return false;
 }
+bool Ring::isRetired() const
+{
+    return false;
+}
+
 
 Movement Ring::execute()
 {

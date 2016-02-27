@@ -247,6 +247,11 @@ bool HoleElimCompaction::isStatic() const
 {
     return false;
 }
+bool HoleElimCompaction::isRetired() const
+{
+    return false;
+}
+
 
 void HoleElimCompaction::setState(const State _state)
 {

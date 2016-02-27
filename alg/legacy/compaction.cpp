@@ -198,6 +198,10 @@ bool Compaction::isStatic() const
 {
     return false;
 }
+bool Compaction::isRetired() const
+{
+    return false;
+}
 
 void Compaction::setState(const State _state)
 {

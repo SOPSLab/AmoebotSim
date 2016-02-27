@@ -47,7 +47,8 @@ HEADERS += \
     helper/randomnumbergenerator.h \
     alg/hexagon.h \
     alg/tokendemo.h \
-    script/scriptengine.h
+    script/scriptengine.h \
+    alg/adder.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -81,7 +82,8 @@ SOURCES += \
     alg/tokendemo.cpp \
     script/scriptinterface.cpp \
     script/scriptengine.cpp \
-    ui/view.cpp
+    ui/view.cpp \
+    alg/adder.cpp
 
 RESOURCES += \
     res/qml.qrc \

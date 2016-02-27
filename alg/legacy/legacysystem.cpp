@@ -1,12 +1,13 @@
 #include <chrono>
 
 #include "legacysystem.h"
-
+#include <QDebug>
 LegacySystem::LegacySystem() :
     systemState(SystemState::Valid),
     numNonStaticParticles(0),
     _numMovements(0),
-    _numRounds(0)
+    _numRounds(0),
+    _leRounds(0)
 {
     uint32_t seed;
     std::random_device device;
@@ -149,7 +150,26 @@ int LegacySystem::numRounds() const
 {
     return _numRounds;
 }
-
+int LegacySystem::leaderElectionRounds() const
+{
+    return _leRounds;
+}
+int LegacySystem::weakBounds() const
+{
+    return weakBound;
+}
+int LegacySystem::strongBounds() const
+{
+    return strongBound;
+}
+void LegacySystem::setStrongBound(int bound)
+{
+    strongBound = bound;
+}
+void LegacySystem::setWeakBound(int bound)
+{
+    weakBound = bound;
+}
 bool LegacySystem::hasTerminated() const
 {
     return systemState != SystemState::Valid;
@@ -355,7 +375,7 @@ bool LegacySystem::handleContraction(LegacyParticle& p, int label, bool isHandov
 
             // ensure that the node p2 wants to expand into is the node p wants to contract out of
             if( ( isHeadContract && newHead != p.head) ||
-                (!isHeadContract && newHead != p.tail())) {
+                    (!isHeadContract && newHead != p.tail())) {
                 p2.discard();
                 continue;
             }
@@ -397,6 +417,7 @@ bool LegacySystem::handleContraction(LegacyParticle& p, int label, bool isHandov
         // an isolated contraction is the only action that can disconnect the system
         if(!isConnected(particles)) {
             systemState = SystemState::Disconnected;
+            qDebug()<<"disconnected";
         }
     }
     return true;
@@ -405,6 +426,10 @@ bool LegacySystem::handleContraction(LegacyParticle& p, int label, bool isHandov
 void LegacySystem::updateNumRounds(LegacyParticle *p)
 {
     activatedParticles.insert(p);
+    if(p->isRetired() && _leRounds == 0)
+    {
+        _leRounds = _numRounds;
+    }
     if(activatedParticles.size() == numNonStaticParticles) {
         _numRounds++;
         activatedParticles.clear();

@@ -32,6 +32,9 @@ public slots:
     int getNumParticles();
     int getNumMovements();
     int getNumRounds();
+    int getLeaderElectionRounds();
+    int getWeakBound();
+    int getStrongBound();
 
     void setRoundDuration(int ms); 
 
@@ -42,6 +45,7 @@ public slots:
     // algorithms
     void hexagon(int numParticles = 200, float holeProb = 0.2);
     void tokenDemo(int numParticles = 200, float holeProb = 0.2);
+
 
 //    int getUniversalCoatingWeakLowerBound();
 //    int getUniversalCoatingStrongLowerBound();

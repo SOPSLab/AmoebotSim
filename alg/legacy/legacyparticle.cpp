@@ -54,6 +54,10 @@ bool LegacyParticle::isStatic() const
 {
     return algorithm->isStatic();
 }
+bool LegacyParticle::isRetired() const
+{
+    return algorithm->isRetired();
+}
 
 int LegacyParticle::headMarkColor() const
 {

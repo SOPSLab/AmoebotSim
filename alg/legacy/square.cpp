@@ -194,6 +194,10 @@ headMarkColor = 0x000000; //dark green
     {
         return false;
     }
+    bool Square::isRetired() const
+    {
+        return false;
+    }
 
 	int Square::isPointedAt() {
 	    for(int label = 0; label < 10; label++) {

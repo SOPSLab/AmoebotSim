@@ -25,6 +25,7 @@ public:
     virtual std::shared_ptr<Algorithm> clone() = 0;
     virtual bool isDeterministic() const = 0;
     virtual bool isStatic() const = 0;
+    virtual bool isRetired() const = 0;
 
     virtual const Flag* flagAt(const int i) const = 0;
 

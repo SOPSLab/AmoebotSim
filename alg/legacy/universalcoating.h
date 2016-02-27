@@ -128,6 +128,8 @@ public:
     virtual std::shared_ptr<Algorithm> blank() const override;
     virtual std::shared_ptr<Algorithm> clone();
     virtual bool isStatic() const;
+    virtual bool isRetired() const;
+
 
 protected:
     void setPhase(const Phase _phase);

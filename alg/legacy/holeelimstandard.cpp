@@ -205,6 +205,11 @@ bool HoleElimStandard::isStatic() const
 {
     return false;
 }
+bool HoleElimStandard::isRetired() const
+{
+    return false;
+}
+
 
 void HoleElimStandard::setState(const State _state)
 {

@@ -33,6 +33,12 @@ public:
 
     virtual int numMovements() const;
     virtual int numRounds() const;
+   virtual int leaderElectionRounds() const;
+
+    virtual int weakBounds() const;
+    virtual int strongBounds() const;
+    void setWeakBound(int bound);
+    void setStrongBound(int bound);
 
     virtual bool hasTerminated() const;
 
@@ -58,6 +64,9 @@ protected:
     unsigned int numNonStaticParticles;
     int _numMovements;
     int _numRounds;
+    int _leRounds;
+    int weakBound;
+    int strongBound;
 };
 
 template<int n> int LegacySystem::posMod(int a)
