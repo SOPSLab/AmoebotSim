@@ -47,7 +47,9 @@ HEADERS += \
     helper/randomnumbergenerator.h \
     alg/hexagon.h \
     alg/tokendemo.h \
-    script/scriptengine.h
+    script/scriptengine.h \
+    alg/ising.h \
+    alg/compression.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -81,7 +83,9 @@ SOURCES += \
     alg/tokendemo.cpp \
     script/scriptinterface.cpp \
     script/scriptengine.cpp \
-    ui/view.cpp
+    ui/view.cpp \
+    alg/ising.cpp \
+    alg/compression.cpp
 
 RESOURCES += \
     res/qml.qrc \
