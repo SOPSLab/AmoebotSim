@@ -658,7 +658,10 @@ bool LeaderElection::isStatic() const
 {
     return false;
 }
-
+bool LeaderElection::isRetired() const
+{
+    return false;
+}
 void LeaderElection::setState(const State _state)
 {
     state = _state;

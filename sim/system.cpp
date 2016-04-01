@@ -52,8 +52,20 @@ int System::numRounds() const
 {
     return 0;
 }
+int System::leaderElectionRounds() const
+{
+    return 0;
+}
 
 bool System::hasTerminated() const
 {
     return false;
+}
+int System::weakBounds() const
+{
+    return 0;
+}
+int System::strongBounds() const
+{
+    return 1;
 }

@@ -35,7 +35,9 @@ public slots:
     int numParticles() const;
     int numMovements() const;
     int numRounds() const;
-
+    int leaderElectionRounds() const;
+    int weakBounds() const;
+    int strongBounds() const;
     void setRoundDuration(int ms);
 
 protected:

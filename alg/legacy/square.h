@@ -51,6 +51,7 @@ namespace Square
 		virtual std::shared_ptr<Algorithm> clone() override;
 		virtual bool isDeterministic() const;
         virtual bool isStatic() const;
+        virtual bool isRetired() const;
 
 
 	protected:

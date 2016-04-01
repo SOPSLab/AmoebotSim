@@ -735,6 +735,10 @@ bool LeaderElectionDemo::isStatic() const
 {
     return false;
 }
+bool LeaderElectionDemo::isRetired() const
+{
+    return false;
+}
 
 void LeaderElectionDemo::setPhase(const Phase _phase)
 {

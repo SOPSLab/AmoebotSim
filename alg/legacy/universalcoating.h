@@ -6,23 +6,18 @@
 
 class LegacySystem;
 
+
 namespace UniversalCoating
 {
 enum class Phase {
     Static,
-    Border,
     StaticBorder,
     Inactive,
     retiredLeader,
     Follow,
-    Lead,
-    Seed,
-    Hold,
-    Send,
-    Wait,
-    Normal,
-    Leader,
-    Finished
+    Root,
+    LayerRoot,
+    LayerFollow
 };
 
 enum class ElectionSubphase {
@@ -57,6 +52,7 @@ enum class TokenType {
     BorderTest,
     PosCandidate,
     PosCandidateClean,
+    Complaint
 };
 
 enum class SwitchVariable
@@ -71,9 +67,7 @@ enum class SwitchVariable
     createdLead,
     sawUnmatchedToken,
     testingBorder,
-    contractedFinished,
-    invalidTail
-
+    contractedFinished
 };
 
 typedef struct {
@@ -83,12 +77,13 @@ typedef struct {
 } Token;
 
 typedef struct {
-    std::array<Token, 15> forwardTokens;
-    std::array<Token, 15> backTokens;
+   Token tokens[6][16];
     std::array<int,13> switches;
     ElectionSubphase electionSubphase;
     ElectionRole electionRole;
+    int parentIndex;
 } LocData;
+
 
 class UniversalCoatingFlag : public Flag
 {
@@ -99,21 +94,21 @@ public:
     Phase phase;
     int contractDir;
     bool followIndicator;
+    bool expFollowIndicator;
+    bool contrFollowIndicator;
     int Lnumber;
     int NumFinishedNeighbors;
-    bool leadComplaint;
     bool seedBound;
-    bool block;
-
-    int tokenCurrentDir;
-    bool isSendingToken;
-    int ownTokenValue;
     bool buildBorder;
     int id;
     bool acceptPositionTokens;
+    bool onSurface;
+    bool block;
 
-    LocData contrLocData;
+   LocData contrLocData;
     LocData expLocData;
+    int expLocIndex;//since all token directions visible everywhere, which to look at
+    int contrLocIndex;
     std::string status;
 
 };
@@ -126,19 +121,38 @@ public:
     virtual ~UniversalCoating();
 
     static std::shared_ptr<LegacySystem> instance(const int numStaticParticles, const int numParticles, const float holeProb);
-
     virtual Movement execute();
     virtual Movement subExecute();
     virtual bool isDeterministic() const;
-    void paintFrontSegment(const int color);
-    void paintBackSegment(const int color);
+
     virtual std::shared_ptr<Algorithm> blank() const override;
     virtual std::shared_ptr<Algorithm> clone();
     virtual bool isStatic() const;
-    virtual bool isSemiActive() const;
+    virtual bool isRetired() const;
+
 
 protected:
     void setPhase(const Phase _phase);
+
+    bool canSendTokenForward(TokenType type) const;
+    bool canSendTokenBackward(TokenType type) const;
+    bool canSendToken(TokenType type, bool isNextDir) const;
+
+    void sendTokenForward(TokenType type, int value);
+   void sendTokenBackward(TokenType type, int value);
+   void sendToken(TokenType type, bool isNextDir,int value);
+
+    int peekAtFollowToken(TokenType type) const;
+    int peekAtParentToken(TokenType type) const;
+    int peekAtToken(TokenType type, bool isNextDir) const;
+
+    int receiveTokenFromFollow(TokenType type);
+    int receiveTokenFromParent(TokenType type);
+    Token receiveToken(TokenType type, bool isNextDir);
+
+
+    void prepLocForExpand(int parent, int expansionDir);
+    void prepLocForContract();
 
     bool neighborIsInPhase(const int label, const Phase _phase) const;
     int firstNeighborInPhase(const Phase _phase) const;
@@ -149,7 +163,7 @@ protected:
     void setNumFinishedNeighbors(const int _NumFinishedNeighbors);
     int CountFinishedSides(const int _leftDir, const int _rightDir) const;
     int countRetiredareFinished(const int _Lnumber) const;
-    void getLeftDir() ;
+    void getLeftDir();
 
     int firstNeighborInPhaseandLayer(const Phase _phase, const int L) const;
     bool neighborIsInPhaseandLayer(const int label, const Phase _phase, const int L) const;
@@ -160,36 +174,27 @@ protected:
 
     void unsetFollowIndicator();
     void setFollowIndicatorLabel(const int label);
-    bool tailReceivesFollowIndicator() const;
+    void setFollowNumIndicatorLabel(int label, bool contr);
 
+    bool tailReceivesFollowIndicator() const;
+    bool hasExpandedFollow();
     int getMoveDir() const;
     int getDownDir() const;
     bool getLnumber1() const;
     int getLnumber() const;
 
-    bool inFrontOfLeadC() const;
-    void setLeadComplaint(bool value);
-    bool isSuperLeader();
-    void setBlock();
-    void expandedSetBlock();
-    void updateParentStage();
-    bool parentActivated();
-    void updateChildStage();
-    void updateNeighborStages();
 
-    LocData handlePositionElection(LocData myData, LocData followData, LocData parentData);
-    LocData ExecuteLeaderElection(LocData myData,std::array<Token, 15> followTokens,ElectionRole followRole,ElectionSubphase followSubphase,
-                                  std::array<Token, 15>parentTokens,ElectionRole parentRole,ElectionSubphase parentSubphase);
+    void executeComplaintPassing(int parent);
 
-    void setElectionRole(ElectionRole role);
-    void setElectionSubphase(ElectionSubphase electionSubphase);
+    void executeLeaderElection(int parent,int follow);
+    void subExecuteLeaderElection(int parentDir, int followDir);
 
-    bool canSendToken(TokenType type, bool toBack) const;
-    void sendToken(TokenType type, bool toBack, int value);
-    int peekAtToken(TokenType type, bool fromBack) const;
-    Token receiveToken(TokenType type, bool fromBack);
+    void paintFrontSegment(const int color);
+    void paintBackSegment(const int color);
+
     void tokenCleanup();
-
+    void complaintTokenCleanup();
+    void electionTokenCleanup();
     void performPassiveClean(const int region);
     void performActiveClean(const int region1);
 
@@ -202,12 +207,17 @@ protected:
 
     void cleanHeadLocData();//also used to make clean initial
     void cleanTailLocData();
+    void cleanContrLocData();
 
     bool expandedOnSurface();
     bool tailOnSurface();
     int getSurfaceFollowDir();
     int getSurfaceParentDir();
 
+    int locDataParentToLabel();
+    bool hasLocationFollower();
+    bool allLocationFollowersExpanded();
+    bool locFollowFromLabel(int label);
     Phase phase;
     int followDir;
     int Lnumber;
@@ -216,19 +226,15 @@ protected:
     int rightDir;
     int NumFinishedNeighbors;
     bool reachedSeedBound;
-    bool hasComplained;
     int pullDir;
-    int holdCount;
-    bool startedOffSurface;
     int parentStage;
     int childStage;
-    int ownTokenValue;
-    bool hasLost;
     bool superLeader;
     int borderPasses;
     int id;
     bool sentBorder;
     bool startedRetired;
+    int currentExpansionDir;
 
     //leader election
 
@@ -236,10 +242,17 @@ protected:
     LocData tailLocData;
     LocData contrLocData;
 
+    LocData currentLocData;
+    LocData parentLocData;
+    LocData followLocData;
+    int parentTokensIndex;
+    int followTokensIndex;
+    int parentOutIndex;
+    int followOutIndex;
     //in execute these get set, temp used
-    LocData self;
-    std::array<Token, 15> followTokens;
-    std::array<Token, 15> parentTokens;
+  //  LocData self;
+   // std::array<Token, 16> followTokens;
+   // std::array<Token, 16> parentTokens;
 };
 }
 

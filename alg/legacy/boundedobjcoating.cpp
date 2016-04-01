@@ -340,6 +340,11 @@ bool BoundedObjCoating::isStatic() const
 {
     return phase == Phase::Static;
 }
+bool BoundedObjCoating::isRetired() const
+{
+    return phase == Phase::retiredLeader;
+}
+
 
 void BoundedObjCoating::setPhase(const Phase _phase)
 {

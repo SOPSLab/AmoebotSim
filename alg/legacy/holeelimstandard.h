@@ -43,6 +43,7 @@ public:
 
     virtual bool isDeterministic() const;
     virtual bool isStatic() const;
+    virtual bool isRetired() const;
 
 protected:
     void setState(const State _state);

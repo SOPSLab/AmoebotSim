@@ -189,7 +189,10 @@ bool InfObjCoating::isStatic() const
 {
     return phase == Phase::Static;
 }
-
+bool InfObjCoating::isRetired() const
+{
+    return false;
+}
 void InfObjCoating::setPhase(const Phase _phase)
 {
     phase = _phase;

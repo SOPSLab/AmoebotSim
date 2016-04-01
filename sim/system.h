@@ -42,6 +42,10 @@ public:
 
     virtual int numMovements() const;
     virtual int numRounds() const;
+   virtual int leaderElectionRounds() const;
+
+     virtual int weakBounds() const;
+     virtual int strongBounds() const;
 
     virtual bool hasTerminated() const;
 

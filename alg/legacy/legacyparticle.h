@@ -28,6 +28,7 @@ public:
     bool algorithmIsDeterministic() const;
 
     bool isStatic() const;
+    bool isRetired() const;
 
     virtual int headMarkColor() const;
     virtual int headMarkGlobalDir() const;
