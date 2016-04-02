@@ -6,10 +6,10 @@
 
 #include <QDebug>
 AdderParticle::AdderParticle(const Node head,
-                                 const int globalTailDir,
-                                 const int orientation,
-                                 AmoebotSystem& system,
-                                 State state)
+                             const int globalTailDir,
+                             const int orientation,
+                             AmoebotSystem& system,
+                             State state)
     : AmoebotParticle(head, globalTailDir, orientation, system),
       state(state),
       constructionDir(-1),
@@ -39,41 +39,115 @@ void AdderParticle::activate()
             Q_ASSERT(false);
         }
     } else {*/
-        if(state == State::Seed) {
-            nextLabel = labelOfFirstNeighborInState({State::Active});
-            for(int i =0; i<numChannels; i++)
-            {
-                if(inFlags[nextNeighbor]->inC[i])
-                {
-                    qDebug()<<"inflag active to seed";
-                }
-            }
+    if(state == State::Seed) {
+        qDebug()<<"seed.";
+        index = 0;
+        nextLabel = labelOfFirstNeighborInState({State::Active});
+        if(nextLabel<0 || nextLabel>=6)
             return;
-        } else if(state == State::Idle) {
+
+        for(int i =0; i<numChannels; i++)
+        {
+            if(neighborAtLabel(nextLabel).inC[i]==true)
+            {
+                outC[i] =false;
+                qDebug()<<"seed off";
+                return;
+            }
+           else if (outC[i]==false && seedSend<13)
+            {
+                outC[i] = true;
+                seedSend++;
+                qDebug()<<"send seed: "<<seedSend;
+
+            }
+            else
+            {
+                qDebug()<<"nothing: "<<seedSend;
+            }
+
+
+        }
+        return;
+    } else if(state == State::Idle) {
+
 
             if(hasNeighborInState({State::Seed}))
             {
 
-                qDebug()<<"seed neighbor";
                 prevLabel = labelOfFirstNeighborInState({State::Seed});
                 nextLabel = (prevLabel+3)%6;
                 state = State::Active;
                 followDir = nextLabel;
-
-
+                index = neighborAtLabel(prevLabel).index+1;
+                qDebug()<<"index: "<<index<< " activated: "<<prevLabel<<","<<nextLabel;
 
             }
             else if(hasNeighborInState({State::Active}))
             {
-                qDebug()<<"next Active";
                 prevLabel = labelOfFirstNeighborInState({State::Active});
                 nextLabel = (prevLabel+3)%6;
                 state = State::Active;
                 followDir = nextLabel;
+                index = neighborAtLabel(prevLabel).index+1;
+                if(!hasNeighborAtLabel(nextLabel))
+                {
+                    nextLabel = -1;
+                }
+                qDebug()<<"index: "<<index<< " activated: "<<prevLabel<<","<<nextLabel;
+
 
             }
+            for(int i = 0; i<numBits;i++)
+            {
+                inC[i] = 0;
+                outC[i] = 0;
+                bits[i] = 0;
+            }
+        }
+    else if (state == State::Active)
+{
+        qDebug()<<"index: "<<index<<" start: ";
+        if(prevLabel<0 || prevLabel>=6)
+        {
+            return;
+        }
+        for(int i =0; i<numChannels; i++)
+        {
+            if(neighborAtLabel(prevLabel).outC[i] && !inC[i])
+            {
+                qDebug()<<"out from prevlabel";
+                if(bitsOpen())
+                {
+                    qDebug()<<"bits open, add internal";
+                    addInternal();
+                    inC[i] = true;
+                }
+                else
+                {
+                    int openOut = getOpenOut();
+                    qDebug()<<"getopen out: "<<openOut;
+                    if(openOut!=-1)
+                    {
+                        outC[openOut] = true;
+                        inC[i] = true;
+                        clearInternal();
+                    }
+                }
+            }
+            else if (neighborAtLabel(prevLabel).outC[i]==false && inC[i]==true)
+            {
+                inC[i] = false;
+            }
+            if(nextLabel!=-1 && neighborAtLabel(nextLabel).inC[i] == true && outC[i] == true)
+            {
+                outC[i] = false;
+            }
+        }
 
-           /* if(hasNeighborInState({State::Seed, State::Finish})) {
+        qDebug()<<"index: "<<index<<"prev: "<<neighborAtLabel(prevLabel).index<<" in: "<<inC[0]<<" out: "<<outC[0]<<" bit: "<<bits[0];
+
+        /* if(hasNeighborInState({State::Seed, State::Finish})) {
                 state = State::Lead;
                 updateMoveDir();
                 return;
@@ -108,8 +182,58 @@ void AdderParticle::activate()
                 }
                 return;
             }*/
+    }
+    // }
+}
+int AdderParticle::getOpenOut()
+{
+    for(int i =0; i<numBits;i++)
+    {
+        if(outC[i]==false)
+        {
+            return i;
         }
-   // }
+    }
+    return -1;
+}
+
+void AdderParticle::addInternal()
+{
+    bool carry = true;
+    int index = 0;
+    while(carry && index<numBits)
+    {
+        if(bits[index] == 0)
+        {
+            bits[index] = 1;
+            carry = false;
+        }
+        else
+        {
+            bits[index] = 0;
+        }
+        index++;
+    }
+}
+
+void AdderParticle::clearInternal()
+{
+    for(int i = 0; i<numBits;i++)
+    {
+        bits[i] = 0;
+    }
+}
+
+bool AdderParticle::bitsOpen()
+{
+    for(int i =0; i<numBits;i++)
+    {
+        if(bits[i] == 0)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 int AdderParticle::headMarkColor() const
@@ -236,9 +360,16 @@ bool AdderParticle::hasTailFollower() const
 
 AdderSystem::AdderSystem(int numParticles, float holeProb)
 {
-    numParticles = 10;
-
-    insert(new AdderParticle(Node(0, 0), -1, randDir(), *this, AdderParticle::State::Seed));
+    numParticles = 5;
+    AdderParticle *newparticle = new AdderParticle(Node(0, 0), -1, randDir(), *this, AdderParticle::State::Seed);
+    newparticle->index = 0;
+    for(int i =0; i<numParticles; i++)
+    {
+        newparticle->outC[i] = false;
+        newparticle->inC[i] = false;
+        newparticle->bits[i] = 0;
+    }
+    insert(newparticle);
 
     std::set<Node> occupied;
     occupied.insert(Node(0, 0));
@@ -266,19 +397,19 @@ AdderSystem::AdderSystem(int numParticles, float holeProb)
 
         occupied.insert(randomCandidate);
 
-       // if(randBool(1.0f - holeProb)) {
-            // only add particle if not a hole
-            insert(new AdderParticle(randomCandidate, -1,1, *this, AdderParticle::State::Idle));
-            numNonStaticParticles++;
+        // if(randBool(1.0f - holeProb)) {
+        // only add particle if not a hole
+        insert(new AdderParticle(randomCandidate, -1,1, *this, AdderParticle::State::Idle));
+        numNonStaticParticles++;
 
-            // add new candidates
-            for(int i = 0; i < 6; i++) {
-                auto neighbor = randomCandidate.nodeInDir(i);
-                if(occupied.find(neighbor) == occupied.end()) {
-                    candidates.insert(neighbor);
-                }
+        // add new candidates
+        for(int i = 0; i < 6; i++) {
+            auto neighbor = randomCandidate.nodeInDir(i);
+            if(occupied.find(neighbor) == occupied.end()) {
+                candidates.insert(neighbor);
             }
-       // }
+        }
+        // }
     }
 }
 

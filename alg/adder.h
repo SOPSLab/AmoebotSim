@@ -53,13 +53,21 @@ protected:
     int constructionDir;
     int moveDir;
     int followDir;
-    static const int numBits = 3;
-   static const int numChannels = 3;
+    static const int numBits = 1;
+   static const int numChannels = numBits;
     int bits[numBits];
     bool inC[numChannels];
     bool outC[numChannels];
     int prevLabel = -1;
     int nextLabel = -1;
+    int index;
+    int seedSend = 0;
+private:
+    int getOpenOut();
+    void addInternal();
+    void clearInternal();
+    bool bitsOpen();
+
 };
 
 class AdderSystem : public AmoebotSystem
