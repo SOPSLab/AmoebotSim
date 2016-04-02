@@ -40,8 +40,39 @@ void AdderParticle::activate()
         }
     } else {*/
         if(state == State::Seed) {
+            nextLabel = labelOfFirstNeighborInState({State::Active});
+            for(int i =0; i<numChannels; i++)
+            {
+                if(inFlags[nextNeighbor]->inC[i])
+                {
+                    qDebug()<<"inflag active to seed";
+                }
+            }
             return;
         } else if(state == State::Idle) {
+
+            if(hasNeighborInState({State::Seed}))
+            {
+
+                qDebug()<<"seed neighbor";
+                prevLabel = labelOfFirstNeighborInState({State::Seed});
+                nextLabel = (prevLabel+3)%6;
+                state = State::Active;
+                followDir = nextLabel;
+
+
+
+            }
+            else if(hasNeighborInState({State::Active}))
+            {
+                qDebug()<<"next Active";
+                prevLabel = labelOfFirstNeighborInState({State::Active});
+                nextLabel = (prevLabel+3)%6;
+                state = State::Active;
+                followDir = nextLabel;
+
+            }
+
            /* if(hasNeighborInState({State::Seed, State::Finish})) {
                 state = State::Lead;
                 updateMoveDir();
@@ -89,6 +120,7 @@ int AdderParticle::headMarkColor() const
     case State::Follow: return 0x0000ff;
     case State::Lead:   return 0xff0000;
     case State::Finish: return 0x000000;
+    case State::Active: return 0x0000ff;
     }
 
     return -1;
@@ -100,7 +132,7 @@ int AdderParticle::headMarkDir() const
         return moveDir;
     } else if(state == State::Seed || state == State::Finish) {
         return constructionDir;
-    } else if(state == State::Follow) {
+    } else if(state == State::Follow || state== State::Active) {
         return followDir;
     }
     return -1;

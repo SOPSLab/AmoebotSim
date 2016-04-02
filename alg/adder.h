@@ -15,7 +15,8 @@ public:
         Idle,
         Follow,
         Lead,
-        Finish
+        Finish,
+        Active
     };
 
 public:
@@ -52,6 +53,13 @@ protected:
     int constructionDir;
     int moveDir;
     int followDir;
+    static const int numBits = 3;
+   static const int numChannels = 3;
+    int bits[numBits];
+    bool inC[numChannels];
+    bool outC[numChannels];
+    int prevLabel = -1;
+    int nextLabel = -1;
 };
 
 class AdderSystem : public AmoebotSystem

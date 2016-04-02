@@ -48,6 +48,8 @@ HEADERS += \
     alg/hexagon.h \
     alg/tokendemo.h \
     script/scriptengine.h \
+    alg/ising.h \
+    alg/compression.h \
     alg/adder.h
 
 SOURCES += \
@@ -83,6 +85,8 @@ SOURCES += \
     script/scriptinterface.cpp \
     script/scriptengine.cpp \
     ui/view.cpp \
+    alg/ising.cpp \
+    alg/compression.cpp \
     alg/adder.cpp
 
 RESOURCES += \

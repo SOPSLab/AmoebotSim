@@ -17,6 +17,7 @@
 #include "alg/legacy/universalcoating.h"
 
 #include "alg/hexagon.h"
+#include "alg/ising.h"
 #include "alg/tokendemo.h"
 #include "alg/adder.h"
 //#include "helper/universalcoatinghelper.h"
@@ -123,6 +124,10 @@ void ScriptInterface::hexagon(int numParticles, float holeProb)
 void ScriptInterface::adder(int numParticles, float holeProb)
 {
     sim.setSystem(std::make_shared<AdderSystem>(numParticles, holeProb));
+}
+void ScriptInterface::ising(int numParticles, float beta)
+{
+    sim.setSystem(std::make_shared<IsingSystem>(numParticles, beta));
 }
 
 void ScriptInterface::tokenDemo(int numParticles, float holeProb)

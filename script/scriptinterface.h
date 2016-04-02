@@ -46,6 +46,7 @@ public slots:
     void hexagon(int numParticles = 200, float holeProb = 0.2);
     void adder(int numParticles = 200, float holeProb = 0.2);
 
+    void ising(int numParticles = 200, float beta = 0.2);
     void tokenDemo(int numParticles = 200, float holeProb = 0.2);
 
 
