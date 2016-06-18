@@ -18,55 +18,27 @@ AdderParticle::AdderParticle(const Node head,
 {
     if(state == State::Seed) {
         constructionDir = 0;
+        for(int i =0; i<counterGoal; i++)
+        {
+            putToken(std::make_shared<CarryToken>());
+        }
+
+
     }
 }
 
 void AdderParticle::activate()
 {
-    /*if(isExpanded()) {
-        if(state == State::Follow) {
-            if(!hasNeighborInState({State::Idle}) && !hasTailFollower()) {
-                contractTail();
-            }
-            return;
-        } else if(state == State::Lead) {
-            if(!hasNeighborInState({State::Idle}) && !hasTailFollower()) {
-                contractTail();
-                updateMoveDir();
-            }
-            return;
-        } else {
-            Q_ASSERT(false);
-        }
-    } else {*/
+
     if(state == State::Seed) {
         qDebug()<<"seed.";
         index = 0;
         nextLabel = labelOfFirstNeighborInState({State::Active});
         if(nextLabel<0 || nextLabel>=6)
             return;
-
-        for(int i =0; i<numChannels; i++)
+        if ( neighborAtLabel(nextLabel).hasSpace() && countTokens<CarryToken>()>0)
         {
-            if(neighborAtLabel(nextLabel).inC[i]==true)
-            {
-                outC[i] =false;
-                qDebug()<<"seed off";
-                return;
-            }
-           else if (outC[i]==false && seedSend<13)
-            {
-                outC[i] = true;
-                seedSend++;
-                qDebug()<<"send seed: "<<seedSend;
-
-            }
-            else
-            {
-                qDebug()<<"nothing: "<<seedSend;
-            }
-
-
+            neighborAtLabel(nextLabel).putToken(takeToken<CarryToken>());
         }
         return;
     } else if(state == State::Idle) {
@@ -98,143 +70,42 @@ void AdderParticle::activate()
 
 
             }
-            for(int i = 0; i<numBits;i++)
-            {
-                inC[i] = 0;
-                outC[i] = 0;
-                bits[i] = 0;
-            }
+
         }
     else if (state == State::Active)
-{
+    {
         qDebug()<<"index: "<<index<<" start: ";
         if(prevLabel<0 || prevLabel>=6)
         {
             return;
         }
-        for(int i =0; i<numChannels; i++)
+
+
+         if(countTokens<CarryToken>() >1 && nextLabel>=0 && nextLabel <6)
         {
-            if(neighborAtLabel(prevLabel).outC[i] && !inC[i])
+            if(neighborAtLabel(nextLabel).hasSpace())
             {
-                qDebug()<<"out from prevlabel";
-                if(bitsOpen())
-                {
-                    qDebug()<<"bits open, add internal";
-                    addInternal();
-                    inC[i] = true;
-                }
-                else
-                {
-                    int openOut = getOpenOut();
-                    qDebug()<<"getopen out: "<<openOut;
-                    if(openOut!=-1)
-                    {
-                        outC[openOut] = true;
-                        inC[i] = true;
-                        clearInternal();
-                    }
-                }
+                neighborAtLabel(nextLabel).putToken(takeToken<CarryToken>());
+                takeToken<CarryToken>();//trash it
             }
-            else if (neighborAtLabel(prevLabel).outC[i]==false && inC[i]==true)
-            {
-                inC[i] = false;
-            }
-            if(nextLabel!=-1 && neighborAtLabel(nextLabel).inC[i] == true && outC[i] == true)
-            {
-                outC[i] = false;
-            }
+
         }
+         displayVal = countTokens<CarryToken>();
 
-        qDebug()<<"index: "<<index<<"prev: "<<neighborAtLabel(prevLabel).index<<" in: "<<inC[0]<<" out: "<<outC[0]<<" bit: "<<bits[0];
+      }
 
-        /* if(hasNeighborInState({State::Seed, State::Finish})) {
-                state = State::Lead;
-                updateMoveDir();
-                return;
-            } else if(hasNeighborInState({State::Lead, State::Follow})) {
-                state = State::Follow;
-                followDir = labelOfFirstNeighborInState({State::Lead, State::Follow});
-                return;
-            }
-        } else if(state == State::Follow) {
-            if(hasNeighborInState({State::Seed, State::Finish})) {
-                state = State::Lead;
-                updateMoveDir();
-                return;
-            } else if(hasTailAtLabel(followDir)) {
-                auto neighbor = neighborAtLabel(followDir);
-                int neighborContractionDir = neighborDirToDir(neighbor, (neighbor.tailDir() + 3) % 6);
-                push(followDir);
-                followDir = neighborContractionDir;
-                return;
-            }
-        } else if(state == State::Lead) {
-            if(canFinish()) {
-                state = State::Finish;
-                updateConstructionDir();
-                return;
-            } else {
-                updateMoveDir();
-                if(!hasNeighborAtLabel(moveDir)) {
-                    expand(moveDir);
-                } else if(hasTailAtLabel(moveDir)) {
-                    push(moveDir);
-                }
-                return;
-            }*/
-    }
-    // }
+
+
 }
-int AdderParticle::getOpenOut()
+bool AdderParticle::hasSpace()
 {
-    for(int i =0; i<numBits;i++)
-    {
-        if(outC[i]==false)
-        {
-            return i;
-        }
-    }
-    return -1;
-}
+    if(countTokens<CarryToken>()<2)
+        return true;
 
-void AdderParticle::addInternal()
-{
-    bool carry = true;
-    int index = 0;
-    while(carry && index<numBits)
-    {
-        if(bits[index] == 0)
-        {
-            bits[index] = 1;
-            carry = false;
-        }
-        else
-        {
-            bits[index] = 0;
-        }
-        index++;
-    }
-}
-
-void AdderParticle::clearInternal()
-{
-    for(int i = 0; i<numBits;i++)
-    {
-        bits[i] = 0;
-    }
-}
-
-bool AdderParticle::bitsOpen()
-{
-    for(int i =0; i<numBits;i++)
-    {
-        if(bits[i] == 0)
-        {
-            return true;
-        }
-    }
     return false;
 }
+
+
 
 int AdderParticle::headMarkColor() const
 {
@@ -272,18 +143,18 @@ QString AdderParticle::inspectionText() const
     QString text;
     text += "head: (" + QString::number(head.x) + ", " + QString::number(head.y) + ")\n";
     text += "orientation: " + QString::number(orientation) + "\n";
-    text += "globalTailDir: " + QString::number(globalTailDir) + "\n";
+    text += "prevLabel: " + QString::number(prevLabel) + "\n";
+    text += "nextLabel: " + QString::number(nextLabel) + "\n";
     text += "state: ";
     text += [this](){
         switch(state) {
         case State::Seed:   return "seed";
         case State::Idle:   return "idle";
-        case State::Follow: return "follow";
-        case State::Lead:   return "lead";
-        case State::Finish: return "finish";
+        case State::Active: return "active";
         }
     }();
-    text += "\n";
+      text += "\nnumCarryTokens: " + QString::number(countTokens<CarryToken>());
+    text += "\nDisplay: "+QString::number(displayVal)+"\n";
     return text;
 }
 
@@ -363,12 +234,6 @@ AdderSystem::AdderSystem(int numParticles, float holeProb)
     numParticles = 5;
     AdderParticle *newparticle = new AdderParticle(Node(0, 0), -1, randDir(), *this, AdderParticle::State::Seed);
     newparticle->index = 0;
-    for(int i =0; i<numParticles; i++)
-    {
-        newparticle->outC[i] = false;
-        newparticle->inC[i] = false;
-        newparticle->bits[i] = 0;
-    }
     insert(newparticle);
 
     std::set<Node> occupied;
