@@ -49,7 +49,8 @@ HEADERS += \
     alg/tokendemo.h \
     script/scriptengine.h \
     alg/ising.h \
-    alg/compression.h
+    alg/compression.h \
+    alg/adder.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -85,7 +86,8 @@ SOURCES += \
     script/scriptengine.cpp \
     ui/view.cpp \
     alg/ising.cpp \
-    alg/compression.cpp
+    alg/compression.cpp \
+    alg/adder.cpp
 
 RESOURCES += \
     res/qml.qrc \

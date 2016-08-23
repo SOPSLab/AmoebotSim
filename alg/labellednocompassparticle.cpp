@@ -27,6 +27,7 @@ LabelledNoCompassParticle::LabelledNoCompassParticle(const Node& head, int globa
     Q_ASSERT(0 <= orientation && orientation < 6);
 }
 
+// returns the local direction of the tail relative to the head
 int LabelledNoCompassParticle::tailDir() const
 {
     Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
@@ -37,6 +38,7 @@ int LabelledNoCompassParticle::tailDir() const
     }
 }
 
+// returns the local direction the edge with label 'label' points to
 int LabelledNoCompassParticle::labelToDir(int label) const
 {
     Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
@@ -49,6 +51,8 @@ int LabelledNoCompassParticle::labelToDir(int label) const
     }
 }
 
+// returns the local direction the edge with label 'label' would point to after an expansion
+// in the local direction 'expansionDir'
 int LabelledNoCompassParticle::labelToDirAfterExpansion(int label, int expansionDir) const
 {
     Q_ASSERT(isContracted());
@@ -57,6 +61,7 @@ int LabelledNoCompassParticle::labelToDirAfterExpansion(int label, int expansion
     return labelDir[(expansionDir + 3) % 6][label];
 }
 
+// returns an array of labels of edges incident to the particle's head
 const std::vector<int>& LabelledNoCompassParticle::headLabels() const
 {
     Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
@@ -67,12 +72,14 @@ const std::vector<int>& LabelledNoCompassParticle::headLabels() const
     }
 }
 
+// returns an array of labels of edges incident to the particle's tail
 const std::vector<int>& LabelledNoCompassParticle::tailLabels() const
 {
     Q_ASSERT(isExpanded());
     return labels[(tailDir() + 3) % 6];
 }
 
+// returns true if 'label' is a head label, false otherwise
 bool LabelledNoCompassParticle::isHeadLabel(int label) const
 {
     Q_ASSERT(0 <= label && label < 10);
@@ -84,6 +91,7 @@ bool LabelledNoCompassParticle::isHeadLabel(int label) const
     return false;
 }
 
+// returns true if 'label' is a tail label, false otherwise
 bool LabelledNoCompassParticle::isTailLabel(int label) const
 {
     Q_ASSERT(isExpanded());
@@ -96,6 +104,10 @@ bool LabelledNoCompassParticle::isTailLabel(int label) const
     return false;
 }
 
+// returns the head label pointing in local direction 'dir'
+// NOTE: in the case of an expanded particle with its tail in the local direction d
+//       from its head, dirToHeadLabel(d) would cause an error because the edge from
+//       head to tail does not have a label
 int LabelledNoCompassParticle::dirToHeadLabel(int dir) const
 {
     Q_ASSERT(0 <= dir && dir < 6);
@@ -108,6 +120,10 @@ int LabelledNoCompassParticle::dirToHeadLabel(int dir) const
     return 0; // avoid compiler warning
 }
 
+// returns the tail label pointing in the local direction 'dir'
+// NOTE: analagous to above, if an expanded particle has its head in the local
+//       direction d from its tail, dirToTailLabel(d) would cause an error because
+//       the edge from tail to head does not have a label
 int LabelledNoCompassParticle::dirToTailLabel(int dir) const
 {
     Q_ASSERT(isExpanded());
@@ -121,17 +137,25 @@ int LabelledNoCompassParticle::dirToTailLabel(int dir) const
     return 0; // avoid compiler warning
 }
 
+// returns label needed for AmoebotParticle::contract() to execute a head contraction
 int LabelledNoCompassParticle::headContractionLabel() const
 {
     Q_ASSERT(isExpanded());
     return contractLabels[tailDir()];
 }
 
+// returns label needed for AmoebotParticle::contract() to execute a tail contraction
 int LabelledNoCompassParticle::tailContractionLabel() const
 {
     Q_ASSERT(isExpanded());
     return contractLabels[(tailDir() + 3) % 6];
 }
+
+/*
+ * The ____AfterExpansion(int expansionDir) functions return exactly what their corresponding
+ * non-after-expansion versions would if the particle were to first expand in the local direction
+ * 'expansionDir'
+ */
 
 const std::vector<int>& LabelledNoCompassParticle::headLabelsAfterExpansion(int expansionDir) const
 {
@@ -215,12 +239,15 @@ int LabelledNoCompassParticle::tailContractionLabelAfterExpansion(int expansionD
     return contractLabels[expansionDir];
 }
 
+// returns the global direction the edge with label 'label' points to
 int LabelledNoCompassParticle::labelToGlobalDir(int label) const
 {
     Q_ASSERT(0 <= label && label < 10);
     return localToGlobalDir(labelToDir(label));
 }
 
+// returns the label of the edge that connects the particle to node 'node'
+// TODO: email said this can only be called on a contracted particle, but the code suports both
 int LabelledNoCompassParticle::labelOfNeighboringNodeInGlobalDir(const Node& node, int globalDir) const
 {
     Q_ASSERT(0 <= globalDir && globalDir < 6);
@@ -234,6 +261,7 @@ int LabelledNoCompassParticle::labelOfNeighboringNodeInGlobalDir(const Node& nod
     return 0; // avoid compiler warning
 }
 
+// returns the head node if 'label' is a head label and the tail node otherwise
 Node LabelledNoCompassParticle::occupiedNodeIncidentToLabel(int label) const
 {
     Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
@@ -250,6 +278,7 @@ Node LabelledNoCompassParticle::occupiedNodeIncidentToLabel(int label) const
     }
 }
 
+// returns the node reached by the edge with label 'label'
 Node LabelledNoCompassParticle::neighboringNodeReachedViaLabel(int label) const
 {
     Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
@@ -264,30 +293,38 @@ Node LabelledNoCompassParticle::neighboringNodeReachedViaLabel(int label) const
     }
 }
 
+// returns the global direction associated with the local direction 'dir'
 int LabelledNoCompassParticle::localToGlobalDir(int dir) const
 {
     Q_ASSERT(0 <= dir && dir < 6);
     return (orientation + dir) % 6;
 }
 
+// returns the local direction associated with the global direction 'globalDir'
 int LabelledNoCompassParticle::globalToLocalDir(int globalDir) const
 {
     Q_ASSERT(0 <= globalDir && globalDir < 6);
     return (globalDir - orientation + 6) % 6;
 }
 
+// returns the equivalent local direction from this particle's perspective of the local direction 'neighborDir'
+// from 'neighbor' particle's perspective
 int LabelledNoCompassParticle::neighborDirToDir(const LabelledNoCompassParticle& neighbor, int neighborDir) const
 {
     Q_ASSERT(0 <= neighborDir && neighborDir < 6);
     return globalToLocalDir(neighbor.localToGlobalDir(neighborDir));
 }
 
+// returns the equivalent local direction from 'neighbor' particle's perspective of the local direction 'myDir'
+// from this particle's perspective
 int LabelledNoCompassParticle::dirToNeighborDir(const LabelledNoCompassParticle& neighbor, int myDir) const
 {
     Q_ASSERT(0 <= myDir && myDir < 6);
     return neighbor.globalToLocalDir(localToGlobalDir(myDir));
 }
 
+// returns true if the 'neighbor' particle's edge with label 'neighborLabel' is incident to a node occupied by
+// this particle, false otherwise
 bool LabelledNoCompassParticle::pointsAtMe(const LabelledNoCompassParticle& neighbor, int neighborLabel) const
 {
     Q_ASSERT(0 <= neighborLabel && neighborLabel < 10);
@@ -298,12 +335,16 @@ bool LabelledNoCompassParticle::pointsAtMe(const LabelledNoCompassParticle& neig
     }
 }
 
+// returns true if the 'neighbor' particle's edge with label 'neighborLabel' is incident to the head node of this
+// particle, false otherwise
 bool LabelledNoCompassParticle::pointsAtMyHead(const LabelledNoCompassParticle& neighbor, int neighborLabel) const
 {
     Q_ASSERT(0 <= neighborLabel && neighborLabel < 10);
     return neighbor.neighboringNodeReachedViaLabel(neighborLabel) == head;
 }
 
+// returns true if the 'neighbor' particle's edge with label 'neighborLabel' is incident to the tail node of this
+// particle, false otherwise
 bool LabelledNoCompassParticle::pointsAtMyTail(const LabelledNoCompassParticle& neighbor, int neighborLabel) const
 {
     Q_ASSERT(isExpanded());

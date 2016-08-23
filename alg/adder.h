@@ -19,7 +19,6 @@ public:
         Active
     };
 
-public:
     AdderParticle(const Node head,
                     const int globalTailDir,
                     const int orientation,
@@ -54,7 +53,7 @@ protected:
     int moveDir;
     int followDir;
     static const int numBits = 1;
-   static const int numChannels = numBits;
+    static const int numChannels = numBits;
     int bits[numBits];
     bool inC[numChannels];
     bool outC[numChannels];
@@ -62,12 +61,12 @@ protected:
     int nextLabel = -1;
     int index;
     int seedSend = 0;
+
 private:
     int getOpenOut();
     void addInternal();
     void clearInternal();
     bool bitsOpen();
-
 };
 
 class AdderSystem : public AmoebotSystem

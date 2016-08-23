@@ -12,11 +12,26 @@ class LabelledNoCompassParticle : public Particle
 public:
     LabelledNoCompassParticle(const Node& head, int globalTailDir, int orientation);
 
-    // directions are by default assumed to be local
-    // global directions are marked as such
-    // labels are, of course, always local
+    /* Some notes on terminology for better understanding of these functions:
+     * Direction: # in [0,5] that represents a vector in the Euclidean plane.
+     *     Global dir: the compass version of direction; global dir 0 corresponds
+     *                 with the vector pointing right in the hexagonal grid, and
+     *                 the other global dirs increase clockwise from global dir 0.
+     *     Local dir:  the non-compass version of direction; each particle is
+     *                 assigned a (usually random) offset in [0,5], and local dir
+     *                 is calculated as: localDir = (globalDir - offset + 6) % 6.
+     * Label: # in [0,9] that represents a particle's name for an edge between it
+     *        and a neighboring node not occupied by the particle. (IMPORTANT:
+     *        edges are being labelled, not nodes). For a contracted particle,
+     *        the edge pointing in the 0 local direction gets label 0. This is
+     *        also true for an expanded particle, except there may be two edges
+     *        pointing in the 0 local direction. In this case, the edge pointing
+     *        "away" from the particle--to a node adjacent to only one of the two
+     *        nodes occupied by the particle--gets label 0. From label 0, labels
+     *        increase counter-clockwise around the particle.
+     */
 
-    // local directions and labels
+    // direction & label functions that use only local information/compasses
     int tailDir() const;
 
     int labelToDir(int label) const;
@@ -40,14 +55,13 @@ public:
     int headContractionLabelAfterExpansion(int expansionDir) const;
     int tailContractionLabelAfterExpansion(int expansionDir) const;
 
-    // these include some form of global information
+    // helper functions that include some form of global information
     int labelToGlobalDir(int label) const;
     int labelOfNeighboringNodeInGlobalDir(const Node& node, int globalDir) const;
 
     Node occupiedNodeIncidentToLabel(int label) const;
     Node neighboringNodeReachedViaLabel(int label) const;
 
-    // some helpers
     int localToGlobalDir(int dir) const;
     int globalToLocalDir(int globalDir) const;
 
@@ -59,7 +73,7 @@ public:
     bool pointsAtMyTail(const LabelledNoCompassParticle& neighbor, int neighborLabel) const;
 
 public:
-    const int orientation; // global direction
+    const int orientation; // offset from global direction
 
 private:
     static const std::vector<int> sixLabels;
