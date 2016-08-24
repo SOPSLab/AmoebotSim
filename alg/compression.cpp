@@ -17,10 +17,8 @@ CompressionParticle::CompressionParticle(const Node head,
 
 void CompressionParticle::activate()
 {
-    // select a random q in (0,1)
-    int q = randFloat(0,1);
-    // select a random neighboring location
-    int lprime = randDir();
+    int q = randFloat(0,1); // select a random q in (0,1)
+    int lprime = randDir(); // select a random neighboring location
 
     // check the size of set S
     int sizeS = 0;

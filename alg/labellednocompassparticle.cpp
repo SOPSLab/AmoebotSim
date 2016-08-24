@@ -31,7 +31,7 @@ LabelledNoCompassParticle::LabelledNoCompassParticle(const Node& head, int globa
 int LabelledNoCompassParticle::tailDir() const
 {
     Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
-    if(globalTailDir == -1) {
+    if(isContracted()) {
         return -1;
     } else {
         return globalToLocalDir(globalTailDir);
@@ -42,7 +42,7 @@ int LabelledNoCompassParticle::tailDir() const
 int LabelledNoCompassParticle::labelToDir(int label) const
 {
     Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
-    if(globalTailDir == -1) {
+    if(isContracted()) {
         Q_ASSERT(0 <= label && label < 6);
         return label;
     } else {
@@ -65,7 +65,7 @@ int LabelledNoCompassParticle::labelToDirAfterExpansion(int label, int expansion
 const std::vector<int>& LabelledNoCompassParticle::headLabels() const
 {
     Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
-    if(globalTailDir == -1) {
+    if(isContracted()) {
         return sixLabels;
     } else {
         return labels[tailDir()];
@@ -247,11 +247,10 @@ int LabelledNoCompassParticle::labelToGlobalDir(int label) const
 }
 
 // returns the label of the edge that connects the particle to node 'node'
-// TODO: email said this can only be called on a contracted particle, but the code suports both
 int LabelledNoCompassParticle::labelOfNeighboringNodeInGlobalDir(const Node& node, int globalDir) const
 {
     Q_ASSERT(0 <= globalDir && globalDir < 6);
-    const int labelLimit = (globalTailDir == -1) ? 6 : 10;
+    const int labelLimit = (isContracted()) ? 6 : 10;
     for(int label = 0; label < labelLimit; label++) {
         if(labelToGlobalDir(label) == globalDir && neighboringNodeReachedViaLabel(label) == node) {
             return label;
@@ -265,7 +264,7 @@ int LabelledNoCompassParticle::labelOfNeighboringNodeInGlobalDir(const Node& nod
 Node LabelledNoCompassParticle::occupiedNodeIncidentToLabel(int label) const
 {
     Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
-    if(globalTailDir == -1) {
+    if(isContracted()) {
         Q_ASSERT(0 <= label && label < 6);
         return head;
     } else {
@@ -282,7 +281,7 @@ Node LabelledNoCompassParticle::occupiedNodeIncidentToLabel(int label) const
 Node LabelledNoCompassParticle::neighboringNodeReachedViaLabel(int label) const
 {
     Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
-    if(globalTailDir == -1) {
+    if(isContracted()) {
         Q_ASSERT(0 <= label && label < 6);
         const int dir = (orientation + label) % 6;
         return head.nodeInDir(dir);
