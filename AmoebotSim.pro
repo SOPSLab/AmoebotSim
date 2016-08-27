@@ -50,7 +50,8 @@ HEADERS += \
     script/scriptengine.h \
     alg/ising.h \
     alg/compression.h \
-    alg/adder.h
+    alg/adder.h \
+    alg/datastruct.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \

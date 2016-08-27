@@ -2368,7 +2368,7 @@ namespace UniversalCoating
         /*  for(int i = 0; i<18; i++)
          {
          if(i!=(3 * ( headMarkDir+2)%6 + 1))
-         borderColors.at(i) = -1;
+         .at(i) = -1;
          }
          int tempDir =( headMarkDir+2)%6;
          while(tempDir != (headMarkDir + 1) % 6) {
@@ -2382,7 +2382,26 @@ namespace UniversalCoating
 
     void UniversalCoating::paintBackSegment(const int color)
     {
-        borderColors.at(3 * ( headMarkDir+2)%6 + 2) = color;
+        if(!hasNeighborInPhase(Phase::Static)) return;
+        int downdir = firstNeighborInPhase(Phase::Static);
+
+       if(neighborIsInPhase((downdir+1)%6,Phase::Static)){
+            downdir=(downdir+1)%6;
+           // while (neighborIsInPhase(downdir,Phase::Static))
+            //    downdir=(downdir+1)%6;
+        }
+        else if (neighborIsInPhase((downdir+5)%6,Phase::Static)){
+           downdir=(downdir+5)%6;
+           // while (neighborIsInPhase(downdir,Phase::Static))
+           //     downdir=(downdir+5)%6;
+        }
+
+      //  borderColors.at(3 * ( downdir+2)%6 + 2) = color;
+       for(int i =0; i<18;i++)
+           borderColors.at(i) = QColor("white").rgb();
+        borderColors.at(downdir*3+1)=color;
+
+
     }
 
     void UniversalCoating::executeComplaintPassing(int parent)
