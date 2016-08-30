@@ -13,33 +13,33 @@ public:
                         const int globalTailDir,
                         const int orientation,
                         AmoebotSystem& system,
-                        const float gamma);
+                        const float lambda);
 
     virtual void activate();
-
-    virtual int headMarkColor() const;
-    virtual int headMarkDir() const;
-    virtual int tailMarkColor() const;
 
     virtual QString inspectionText() const;
 
     CompressionParticle& neighborAtLabel(int label) const;
 
 protected:
-    // properties
-    const float gamma;
+    const float lambda;
+    float q;
+    int sizeS, numNeighbors, numTriBefore;
+    bool flag;
 
 private:
-    int neighborCount() const;
-    int triangleCount(const int tailDir) const;
-    bool checkProp1(const int S) const;
-    bool checkProp2(const int S) const;
+    bool hasExpandedNeighbor() const;
+    int neighborCount(std::vector<int> labels) const;
+    int triangleCount() const;
+    bool checkProp1() const;
+    bool checkProp2() const;
+    std::vector<int> uniqueLabels() const;
 };
 
 class CompressionSystem : public AmoebotSystem
 {
 public:
-    CompressionSystem(int numParticles = 200, float gamma = 4);
+    CompressionSystem(int numParticles = 200, float lambda = 4.0);
 
     virtual bool hasTerminated() const;
 };

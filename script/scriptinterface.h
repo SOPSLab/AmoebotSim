@@ -43,12 +43,11 @@ public slots:
     void setZoom(float zoom);
 
     // algorithms
-    void hexagon(int numParticles = 200, float holeProb = 0.2);
     void adder(int numParticles = 200, float holeProb = 0.2);
-
+    void compression(int numParticles = 100, float lambda = 4.0);
+    void hexagon(int numParticles = 200, float holeProb = 0.2);
     void ising(int numParticles = 200, float beta = 0.2);
     void tokenDemo(int numParticles = 200, float holeProb = 0.2);
-
 
 //    int getUniversalCoatingWeakLowerBound();
 //    int getUniversalCoatingStrongLowerBound();

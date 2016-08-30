@@ -16,10 +16,11 @@
 #include "alg/legacy/triangle.h"
 #include "alg/legacy/universalcoating.h"
 
+#include "alg/adder.h"
+#include "alg/compression.h"
 #include "alg/hexagon.h"
 #include "alg/ising.h"
 #include "alg/tokendemo.h"
-#include "alg/adder.h"
 //#include "helper/universalcoatinghelper.h"
 
 #include "script/scriptinterface.h"
@@ -116,15 +117,21 @@ void ScriptInterface::setZoom(float zoom)
     }
 }
 
+void ScriptInterface::adder(int numParticles, float holeProb)
+{
+    sim.setSystem(std::make_shared<AdderSystem>(numParticles, holeProb));
+}
+
+void ScriptInterface::compression(int numParticles, float lambda)
+{
+    sim.setSystem(std::make_shared<CompressionSystem>(numParticles, lambda));
+}
+
 void ScriptInterface::hexagon(int numParticles, float holeProb)
 {
     sim.setSystem(std::make_shared<HexagonSystem>(numParticles, holeProb));
 }
 
-void ScriptInterface::adder(int numParticles, float holeProb)
-{
-    sim.setSystem(std::make_shared<AdderSystem>(numParticles, holeProb));
-}
 void ScriptInterface::ising(int numParticles, float beta)
 {
     sim.setSystem(std::make_shared<IsingSystem>(numParticles, beta));
