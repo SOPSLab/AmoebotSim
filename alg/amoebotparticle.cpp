@@ -100,7 +100,7 @@ void AmoebotParticle::contract(int label)
 void AmoebotParticle::contractHead()
 {
     Q_ASSERT(isExpanded());
-    system.particleMap.erase(tail());
+    system.particleMap.erase(head);
     head = tail();
     globalTailDir = -1;
 

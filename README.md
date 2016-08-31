@@ -32,6 +32,7 @@ The following instructions should get you started working with AmoebotSim; pleas
     - __Ctrl + D__: Execute a single round of the simulation.
     - __Ctrl + F__: Focus on center of mass.
 - Clicking on a particle while holding Ctrl (Cmd) results in that particle executing a single turn, if possible.
+- Clicking on a particle while holding Alt prints the results of the particles inspectionText() function if it is implemented. This provides easier runtime debugging.
 - Clicking on an unoccupied place while holding Shift results in adding a new particle on this place. You can also hold the left mousebutton and "draw" particles along the moved cursor.
   When setting the connectivity check via __setCheckConnectivity(true)__ you can decide whether the new particle must be connected or not. By default the check is activated and new particles must be connected.
 - A command-line can be opened by pressing the return-key. The available commands are the methods of the _ScriptInterface_ class in _script/scriptinterface.h_.
