@@ -16,6 +16,10 @@ AdderParticle::AdderParticle(const Node head,
       moveDir(-1),
       followDir(-1)
 {
+
+}
+void AdderParticle::setCounterGoal(int goal){
+    counterGoal = goal;
     if(state == State::Seed) {
         constructionDir = 0;
         for(int i =0; i<counterGoal; i++)
@@ -23,10 +27,8 @@ AdderParticle::AdderParticle(const Node head,
             putToken(std::make_shared<CarryToken>());
         }
 
-
     }
 }
-
 void AdderParticle::activate()
 {
 
@@ -39,6 +41,10 @@ void AdderParticle::activate()
         if ( neighborAtLabel(nextLabel).hasSpace() && countTokens<CarryToken>()>0)
         {
             neighborAtLabel(nextLabel).putToken(takeToken<CarryToken>());
+        }
+        else if (countTokens<CarryToken>() <=0){
+           // setstate(State::Done);
+    state = State::Finish;
         }
         return;
     } else if(state == State::Idle) {
@@ -70,11 +76,15 @@ void AdderParticle::activate()
 
 
             }
+            else if (hasNeighborInState({State::Finish})){
+                    state = State::Finish;
+            }
 
         }
     else if (state == State::Active)
     {
         qDebug()<<"index: "<<index<<" start: ";
+
         if(prevLabel<0 || prevLabel>=6)
         {
             return;
@@ -92,7 +102,11 @@ void AdderParticle::activate()
         }
          displayVal = countTokens<CarryToken>();
 
+         if(hasNeighborInState({State::Finish}) && countTokens<CarryToken>()<2){
+                 state = State::Finish;
+         }
       }
+
 
 
 
@@ -114,7 +128,12 @@ int AdderParticle::headMarkColor() const
     case State::Idle:   return -1;
     case State::Follow: return 0x0000ff;
     case State::Lead:   return 0xff0000;
-    case State::Finish: return 0x000000;
+    case State::Finish:
+        if(countTokens<CarryToken>()>1)
+        return 0xff0000;
+        else if (countTokens<CarryToken>()==1)
+            return 0x999999;
+        return 0x000000;
     case State::Active: return 0x0000ff;
     }
 
@@ -140,6 +159,7 @@ int AdderParticle::tailMarkColor() const
 
 QString AdderParticle::inspectionText() const
 {
+    qDebug()<<"inspection";
     QString text;
     text += "head: (" + QString::number(head.x) + ", " + QString::number(head.y) + ")\n";
     text += "orientation: " + QString::number(orientation) + "\n";
@@ -229,10 +249,12 @@ bool AdderParticle::hasTailFollower() const
     return labelOfFirstNeighborWithProperty<AdderParticle>(propertyCheck) != -1;
 }
 
-AdderSystem::AdderSystem(int numParticles, float holeProb)
+AdderSystem::AdderSystem(int numParticles, int countValue)
 {
-    numParticles = 5;
+   // numParticles = 11;
     AdderParticle *newparticle = new AdderParticle(Node(0, 0), -1, randDir(), *this, AdderParticle::State::Seed);
+    newparticle->setCounterGoal(countValue);
+
     newparticle->index = 0;
     insert(newparticle);
 

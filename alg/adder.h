@@ -19,7 +19,6 @@ public:
         Active
     };
 
-public:
     AdderParticle(const Node head,
                     const int globalTailDir,
                     const int orientation,
@@ -47,6 +46,7 @@ public:
 
     bool hasTailFollower() const;
     bool hasSpace();
+    void setCounterGoal(int goal);
 
 protected:
     struct CarryToken : public Token { };
@@ -59,7 +59,7 @@ protected:
     int prevLabel = -1;
     int nextLabel = -1;
     int index;
-    int counterGoal = 27;
+    int counterGoal = 1;
     int displayVal=0;
 
 };
@@ -67,7 +67,7 @@ protected:
 class AdderSystem : public AmoebotSystem
 {
 public:
-    AdderSystem(int numParticles = 200, float holeProb = 0.2);
+    AdderSystem(int numParticles = 10, int countValue = 250);
 
     virtual bool hasTerminated() const;
 };

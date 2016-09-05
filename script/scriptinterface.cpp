@@ -117,9 +117,9 @@ void ScriptInterface::setZoom(float zoom)
     }
 }
 
-void ScriptInterface::adder(int numParticles, float holeProb)
+void ScriptInterface::adder(int numParticles, int countValue)
 {
-    sim.setSystem(std::make_shared<AdderSystem>(numParticles, holeProb));
+    sim.setSystem(std::make_shared<AdderSystem>(numParticles, countValue));
 }
 
 void ScriptInterface::compression(int numParticles, float lambda)
