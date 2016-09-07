@@ -19,6 +19,7 @@
 #include "alg/adder.h"
 #include "alg/compression.h"
 #include "alg/hexagon.h"
+#include "alg/rectangle.h"
 #include "alg/ising.h"
 #include "alg/tokendemo.h"
 //#include "helper/universalcoatinghelper.h"
@@ -132,6 +133,10 @@ void ScriptInterface::hexagon(int numParticles, float holeProb)
     sim.setSystem(std::make_shared<HexagonSystem>(numParticles, holeProb));
 }
 
+void ScriptInterface::rectangle(int numParticles, float holeProb)
+{
+    sim.setSystem(std::make_shared<RectangleSystem>(numParticles, holeProb));
+}
 void ScriptInterface::ising(int numParticles, float beta)
 {
     sim.setSystem(std::make_shared<IsingSystem>(numParticles, beta));
