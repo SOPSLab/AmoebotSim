@@ -52,6 +52,8 @@ protected:
     struct PC0Token : public Token { };
     struct PC1Token : public Token { };
     struct PCPrepToken : public Token { };
+    struct RoundEnd1Token : public Token { };
+    struct RoundEnd2Token : public Token { };
 
     int buildDir;
     int fillDir1;

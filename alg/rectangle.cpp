@@ -48,22 +48,30 @@ void RectangleParticle::activate()
         if(state == State::Seed) {
             //for now just build 1 direction then another, will result in rectangle indefinitely
             if (buildDir ==-1){
-                buildDir = 0;
                 putToken(std::make_shared<SToken>());
                 putToken(std::make_shared<PCPrepToken>());
+                buildDir = 1;
 
             }
-            if(hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state == State::Finish){
+
+            if(buildDir ==1 && hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state==State::Finish &&
+                    countTokens<PCPrepToken>()>0 &&  neighborAtLabel(buildDir).countTokens<PC0Token>()==0 ){
+                takeToken<PCPrepToken>();
+                neighborAtLabel(buildDir).putToken(std::make_shared<PC0Token>());//start with 0 because self took PC1
+
+            }
+            //Row corresponding to seed has been finished
+            if(countTokens<RoundEnd2Token>()>0 ){
+                buildDir = 0;
+            }
+            if(buildDir == 0 && hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state == State::Finish){
                 if(countTokens<SToken>()>0)
                     neighborAtLabel(buildDir).putToken(takeToken<SToken>());
+                if( countTokens<PCPrepToken>()>0 &&  neighborAtLabel(1).countTokens<PC0Token>()==0 ){
+                    takeToken<PCPrepToken>();
+                    neighborAtLabel(1).putToken(std::make_shared<PC0Token>());//start with 0 because self took PC1
 
-                buildDir = 1;
-            }
-            if(buildDir ==1 && hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state==State::Finish &&
-                    countTokens<PCPrepToken>()>0 &&  neighborAtLabel(buildDir).countTokens<PC1Token>()==0 ){
-                takeToken<PCPrepToken>();
-                neighborAtLabel(buildDir).putToken(std::make_shared<PC1Token>());
-
+                }
             }
             return;
         } else if(state == State::Idle) {
@@ -113,10 +121,10 @@ void RectangleParticle::activate()
 
             if(countTokens<SToken>()>0 && !hasSentPC && hasNeighborAtLabel(buildDirReverse))
             {
-
+                qDebug()<<"finished made PCPrep";
                 putToken(std::make_shared<PCPrepToken>());
                 neighborAtLabel(buildDirReverse).putToken(takeToken<PCPrepToken>());
-                buildDir=(buildDirReverse+3)%6;
+                //  buildDir=(buildDirReverse+3)%6;
                 hasSentPC = true;
 
             }
@@ -125,7 +133,8 @@ void RectangleParticle::activate()
                 neighborAtLabel(buildDirReverse).putToken(takeToken<PCPrepToken>());
 
             }
-           //handle countdown tokens as expansion indicators
+            //handle countdown tokens as expansion indicators
+            //TODO: bad ratios happening
             if(countTokens<PC1Token>()>0){
                 buildDir = (buildDirReverse+3)%6;
                 if(hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state==State::Finish
@@ -152,6 +161,7 @@ void RectangleParticle::activate()
                     if(!hasConsumedPC)
                     {
                         takeToken<PC0Token>() ;
+                        putToken(std::make_shared<RoundEnd1Token>());
                         hasConsumedPC=true;
                     }
                     else
@@ -162,12 +172,100 @@ void RectangleParticle::activate()
 
                 }
             }
-            if(buildDir>-1 && hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state==State::Finish && countTokens<SToken>()>0){
-               // neighborAtLabel(buildDir).putToken(takeToken<SToken>());
-                //TODO only pass SToken when rectangle filled in
-                qDebug()<<"Stoken passed.";
+            if(countTokens<RoundEnd1Token>()>0)
+            {
+                //send forward or backward as needed
+                //if has neigbhor at builddir
+                if(buildDir>-1 && hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state==State::Finish){
+                    neighborAtLabel(buildDir).putToken(takeToken<RoundEnd1Token>());
+                }
+
+                //else if has neighbor at fill1
+                else if(fillDir1>-1 && hasNeighborAtLabel(fillDir1) && neighborAtLabel(fillDir1).state==State::Finish){
+                    neighborAtLabel(fillDir1).putToken(takeToken<RoundEnd1Token>());
+                }
+
+                //else if @ fill2 of neighbor or end of first row, go back that way
+                else {
+                    bool foundBackDir =false;
+                    qDebug()<<"RE1 holder is fill2 end";
+                    auto fillPropCheck2 = [&](const RectangleParticle& p) {
+                        return   isContracted() &&
+                                (p.state == State::Seed || p.state == State::Finish) &&
+                                p.fillDir2>=0 &&
+                                pointsAtMe(p, (p.fillDir2));
+                    };
+                    for(int label = 0; label < 6; label++) {
+                        if(hasNeighborAtLabel(label) && neighborAtLabel(label).state==State::Finish) {
+                            RectangleParticle particle = neighborAtLabel(label);
+                            if(fillPropCheck2(particle)) {
+                                takeToken<RoundEnd1Token>();
+                                putToken(std::make_shared<RoundEnd2Token>());
+                                foundBackDir = true;
+                                qDebug()<<"made RE2";
+
+                            }
+                        }
+                    }
+                    if(!foundBackDir)//first row
+                    {
+                        qDebug()<<"end of first row.";
+                        takeToken<RoundEnd1Token>();
+                        neighborAtLabel(buildDirReverse).putToken(std::make_shared<RoundEnd2Token>());
+                    }
+                }
+            }
+            //TODO: if can go "down" again this is bad, go back
+            if(countTokens<SToken>()>0 )
+            {
+                if( countTokens<RoundEnd2Token>()>0)
+                {
+                qDebug()<<"sholder got RE2";
+                   buildDir = (buildDirReverse+3)%6;
+                   takeToken<RoundEnd2Token>();
+                }
+                else if (buildDir>-1 && hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state==State::Finish){
+                    neighborAtLabel(buildDir).putToken(takeToken<SToken>());
+                }
+
+            }
+            else if(countTokens<RoundEnd2Token>()>0)
+            {
+                qDebug()<<"has RE2x"<<countTokens<RoundEnd2Token>();
+                if( hasNeighborInState({State::Seed})){
+                    int seedLabel= labelOfFirstNeighborInState({State::Seed},0);
+                    neighborAtLabel(seedLabel).putToken( takeToken<RoundEnd2Token>());
+                }
+                else{
+
+                    auto fillPropCheck2 = [&](const RectangleParticle& p) {
+                        return   isContracted() &&
+                                (p.state == State::Seed || p.state == State::Finish) &&
+                                p.fillDir2>=0 &&
+                                pointsAtMe(p, (p.fillDir2));
+                    };
+                    for(int label = 0; label < 6; label++) {
+                        if(hasNeighborAtLabel(label)) {
+                            RectangleParticle particle = neighborAtLabel(label);
+                            if(fillPropCheck2(particle)) {
+                                qDebug()<<"fillDir2 from direction: "<<label<<"my fillDir: "<<fillDir1<<","<<fillDir2;
+                                neighborAtLabel(label).putToken(takeToken<RoundEnd2Token>());
+                                return;
+                            }
+
+                        }
+                    }
+                }
+
+
+                // neighborAtLabel(buildDir).putToken(takeToken<SToken>());
+                //TODO only pass SToken when rectangle filled in ie receive RoundEndToken, also only build then
+                //   buildDir = (buildDirReverse+3)%6;
+
+                // qDebug()<<"Stoken passed.";
             }
         }
+        return;
     }
 }
 
@@ -181,13 +279,17 @@ int RectangleParticle::headMarkColor() const
     case State::Lead:   return 0xff0000;
     case State::Finish:
         if(countTokens<SToken>()>0)
-            return 0xffaa00;
+            return 0xffaa00;//light yello
         else if (countTokens<PCPrepToken>()>0)
-            return 0xffff00;
+            return 0xffff00;//dark yellow
         else if (countTokens<PC1Token>()>0)
-            return 0x0000ff;
+            return 0x0000ff;//blue
         else if (countTokens<PC0Token>()>0)
-            return 0x9999ff;
+            return 0x9999ff;//violet
+        else if (countTokens<RoundEnd1Token>()>0)
+            return 0x999999;//grey
+        else if (countTokens<RoundEnd2Token>()>0)
+            return 0x8B008B;//dark purple
         return 0x000000;
         break;
     }
@@ -328,8 +430,8 @@ int RectangleParticle::checkFinish()
                 RectangleParticle particle = neighborAtLabel(label);
                 if(buildPropCheck(particle)) {
                     qDebug()<<"before: "<<neighborAtLabel(label).countTokens<SToken>();
-                     fillDir1= (label+2)%6;
-                     fillDir2= (label+4)%6;
+                    fillDir1= (label+2)%6;
+                    fillDir2= (label+4)%6;
                     // buildDir = (label+3)%6;
                     buildDirReverse = label;
 
