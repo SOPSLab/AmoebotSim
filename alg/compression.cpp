@@ -1,7 +1,6 @@
 #include <algorithm> // used for find()
 #include <math.h> // used for random number generation
 #include <QtGlobal>
-#include <QDebug> // used for qDebug() calls, can be taken out when done developing
 #include <set>
 
 #include "alg/compression.h"
@@ -21,34 +20,21 @@ CompressionParticle::CompressionParticle(const Node head,
 void CompressionParticle::activate()
 {
     if(isContracted()) {
-        // qDebug() << "activating contracted particle";
 
         int expandDir = randDir(); // select a random neighboring location
         q = randFloat(0,1); // select a random q in (0,1)
 
-        // qDebug() << "expandDir =" << expandDir << ", q =" << q;
-
         if(canExpand(expandDir) && !hasExpandedNeighbor()) {
-            // qDebug() << "particle can expand and does not have an expanded neighbor";
-
             // count neighbors and triangles before expansion
             numNeighbors = neighborCount(uniqueLabels());
             numTriBefore = triangleCount();
 
-            // qDebug() << "numNeighbors =" << numNeighbors << ", numTriBefore =" << numTriBefore;
-
             expand(expandDir); // expand to the unoccupied position
 
-            // qDebug() << "particle expanded to" << expandDir;
-
             flag = !hasExpandedNeighbor();
-
-            // qDebug() << "flag =" << flag;
         }
     }
     else { // is expanded
-        // qDebug() << "activating expanded particle";
-
         if(flag && numNeighbors != 5) { // can only attempt to contract to new location if flag == TRUE and original position does not have 5 neighbors
             // count triangles formed in new location
             int numTriAfter = triangleCount();
@@ -62,20 +48,15 @@ void CompressionParticle::activate()
                 ++sizeS;
             }
 
-            // qDebug() << "numTriAfter =" << numTriAfter << ", sizeS = " << sizeS << ", checkProp1() =" << checkProp1(sizeS) << ", checkProp2() =" << checkProp2(sizeS) << ", q =" << q << ", lambda^(t'-t) =" << pow(lambda, numTriAfter - numTriBefore) << ", flag =" << flag;
-
-            if((q < pow(lambda, numTriAfter - numTriBefore)) // the bias probability is satisfied
-               && (checkProp1(sizeS) || checkProp2(sizeS))) { // these occupied locations must satisfy property 1 or 2
-                // qDebug() << "contracting to new position";
+            // check if the bias probability is satisfied and the locations satisfy property 1 or 2
+            if((q < pow(lambda, numTriAfter - numTriBefore)) && (checkProp1(sizeS) || checkProp2(sizeS))) {
                 contractTail(); // contract to new location
             }
             else {
-                // qDebug() << "contracting back to old position";
                 contractHead(); // contract back to original location
             }
         }
         else {
-            // qDebug() << "contracting back to old position : flag == FALSE or numNeighbors == 5";
             contractHead(); // contract back to original location
         }
     }
