@@ -15,6 +15,9 @@ public:
                         AmoebotSystem& system,
                         const float lambda);
 
+    virtual int headMarkColor() const;
+    virtual int tailMarkColor() const;
+
     virtual void activate();
 
     virtual QString inspectionText() const;
@@ -33,7 +36,8 @@ private:
     int triangleCount() const;
     bool checkProp1() const;
     bool checkProp2() const;
-    std::vector<int> uniqueLabels() const;
+    const std::vector<int> uniqueLabels() const;
+    const std::vector<int> occupiedLabelsNoExpandedHeads() const;
 };
 
 class CompressionSystem : public AmoebotSystem
