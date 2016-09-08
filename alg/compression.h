@@ -15,9 +15,6 @@ public:
                         AmoebotSystem& system,
                         const float lambda);
 
-    virtual int headMarkColor() const;
-    virtual int tailMarkColor() const;
-
     virtual void activate();
 
     virtual QString inspectionText() const;
@@ -27,15 +24,15 @@ public:
 protected:
     const float lambda;
     float q;
-    int sizeS, numNeighbors, numTriBefore;
+    int numNeighbors, numTriBefore;
     bool flag;
 
 private:
     bool hasExpandedNeighbor() const;
     int neighborCount(std::vector<int> labels) const;
     int triangleCount() const;
-    bool checkProp1() const;
-    bool checkProp2() const;
+    bool checkProp1(const int sizeS) const;
+    bool checkProp2(const int sizeS) const;
     const std::vector<int> uniqueLabels() const;
     const std::vector<int> occupiedLabelsNoExpandedHeads() const;
 };

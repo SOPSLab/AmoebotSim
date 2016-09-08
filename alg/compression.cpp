@@ -15,7 +15,7 @@ CompressionParticle::CompressionParticle(const Node head,
     : AmoebotParticle(head, globalTailDir, orientation, system),
       lambda(lambda)
 {
-    q = 0; sizeS = 0; numNeighbors = 0; numTriBefore = 0; flag = false;
+    q = 0; numNeighbors = 0; numTriBefore = 0; flag = false;
 }
 
 void CompressionParticle::activate()
@@ -49,56 +49,38 @@ void CompressionParticle::activate()
     else { // is expanded
         // qDebug() << "activating expanded particle";
 
-        // compute the number of particles that will be in set S after expansion
-        const std::vector<int> labels = occupiedLabelsNoExpandedHeads();
-        sizeS = 0;
-        if(std::find(labels.begin(), labels.end(), headLabels()[0]) != labels.end()) {
-            ++sizeS;
-        }
-        if(std::find(labels.begin(), labels.end(), headLabels()[4]) != labels.end()) {
-            ++sizeS;
-        }
+        if(flag && numNeighbors != 5) { // can only attempt to contract to new location if flag == TRUE and original position does not have 5 neighbors
+            // count triangles formed in new location
+            int numTriAfter = triangleCount();
 
-        // qDebug() << "after counting, sizeS =" << sizeS;
+            // compute the number of particles that will be in set S after expansion
+            int sizeS = 0;
+            if(hasNeighborAtLabel(headLabels()[0]) && !(neighborAtLabel(headLabels()[0]).isExpanded() && neighborAtLabel(headLabels()[0]).pointsAtMyHead(*this, headLabels()[0]))) {
+                ++sizeS;
+            }
+            if(hasNeighborAtLabel(headLabels()[4]) && !(neighborAtLabel(headLabels()[4]).isExpanded() && neighborAtLabel(headLabels()[4]).pointsAtMyHead(*this, headLabels()[4]))) {
+                ++sizeS;
+            }
 
-        int numTriAfter = triangleCount(); // count triangles formed in new location
+            // qDebug() << "numTriAfter =" << numTriAfter << ", sizeS = " << sizeS << ", checkProp1() =" << checkProp1(sizeS) << ", checkProp2() =" << checkProp2(sizeS) << ", q =" << q << ", lambda^(t'-t) =" << pow(lambda, numTriAfter - numTriBefore) << ", flag =" << flag;
 
-        // qDebug() << "numTriAfter =" << numTriAfter << ", checkProp1() =" << checkProp1() << ", checkProp2() =" << checkProp2() << ", q =" << q << ", lambda^(t'-t) =" << pow(lambda, numTriAfter - numTriBefore) << ", flag =" << flag;
-
-        if((numNeighbors != 5) // original position cannot have five neighbors
-           && (q < pow(lambda, numTriAfter - numTriBefore)) // the bias probability is satisfied
-           && flag // its flag was set to true when it first expanded
-           && (checkProp1() || checkProp2())) { // these occupied locations must satisfy property 1 or 2
-            // qDebug() << "contracting to new position";
-            contractTail(); // contract to new location
+            if((q < pow(lambda, numTriAfter - numTriBefore)) // the bias probability is satisfied
+               && (checkProp1(sizeS) || checkProp2(sizeS))) { // these occupied locations must satisfy property 1 or 2
+                // qDebug() << "contracting to new position";
+                contractTail(); // contract to new location
+            }
+            else {
+                // qDebug() << "contracting back to old position";
+                contractHead(); // contract back to original location
+            }
         }
         else {
-            // qDebug() << "contracting back to old position";
+            // qDebug() << "contracting back to old position : flag == FALSE or numNeighbors == 5";
             contractHead(); // contract back to original location
         }
     }
 
     return;
-}
-
-int CompressionParticle::headMarkColor() const
-{
-    if(isExpanded()) {
-        return 0xff0000;
-    }
-    else {
-        return -1;
-    }
-}
-
-int CompressionParticle::tailMarkColor() const
-{
-    if(isExpanded()) {
-        return 0x0000ff;
-    }
-    else {
-        return -1;
-    }
 }
 
 QString CompressionParticle::inspectionText() const
@@ -107,7 +89,6 @@ QString CompressionParticle::inspectionText() const
     text = "Properties:\n";
     text += "    lambda = " + QString::number(lambda) + ",\n";
     text += "    q in (0,1) = " + QString::number(q) + ",\n";
-    text += "    size of S = " + QString::number(sizeS) + ",\n";
     text += "    flag = " + QString::number(flag) + ".\n";
 
     if(isContracted()) {
@@ -120,8 +101,6 @@ QString CompressionParticle::inspectionText() const
         text += "    numNeighbors in first position = " + QString::number(numNeighbors) + ",\n";
         text += "    numTriangles in first position = " + QString::number(numTriBefore) + ",\n";
         text += "    numTriangles in second position = " + QString::number(triangleCount()) + ",\n";
-        text += "    satisfies property 1? = " + QString::number(checkProp1()) + ",\n";
-        text += "    satisfies property 2? = " + QString::number(checkProp2()) + ".\n";
     }
 
     return text;
@@ -143,7 +122,6 @@ bool CompressionParticle::hasExpandedNeighbor() const
     return false;
 }
 
-// NOTE: still double counts expanded particles which are entirely contained in neighborhood
 int CompressionParticle::neighborCount(std::vector<int> labels) const
 {
     int neighbors = 0;
@@ -171,10 +149,11 @@ int CompressionParticle::triangleCount() const
     return triangles;
 }
 
-bool CompressionParticle::checkProp1() const
+bool CompressionParticle::checkProp1(const int sizeS) const
 {
     Q_ASSERT(isExpanded());
     Q_ASSERT(0 <= sizeS && sizeS <= 2);
+    Q_ASSERT(flag); // not required by algorithm, but equivalent and cleaner for our implementation
 
     if(sizeS != 0) { // S has to be nonempty for Property 1
         const std::vector<int> allLabels = uniqueLabels();
@@ -183,14 +162,8 @@ bool CompressionParticle::checkProp1() const
         // find the first position which is occupied but the previous (clockwise) is not
         int firstOccupiedIndex = -1;
         for(int i = 0; (size_t)i < allLabels.size(); ++i) {
-            if(flag) { // if this expanded particle has flag == TRUE, it needs to ignore heads of adjacent expanded particles
-                if(std::find(occLabels.begin(), occLabels.end(), allLabels[i]) != occLabels.end() &&
-                   std::find(occLabels.begin(), occLabels.end(), allLabels[(i + allLabels.size() - 1) % allLabels.size()]) == occLabels.end()) {
-                    firstOccupiedIndex = i;
-                    break;
-                }
-            }
-            else if(hasNeighborAtLabel(allLabels[i]) && !hasNeighborAtLabel(allLabels[(i + allLabels.size() - 1) % allLabels.size()])) {
+            if(std::find(occLabels.begin(), occLabels.end(), allLabels[i]) != occLabels.end() &&
+               std::find(occLabels.begin(), occLabels.end(), allLabels[(i + allLabels.size() - 1) % allLabels.size()]) == occLabels.end()) {
                 firstOccupiedIndex = i;
                 break;
             }
@@ -200,62 +173,40 @@ bool CompressionParticle::checkProp1() const
         // proceeding counter-clockwise, count the number of consecutive occupied positions
         int consecutiveCount = 0;
         for(int offset = 0; (size_t)offset < allLabels.size(); ++offset) {
-            if(flag) { // again, flag == TRUE means it needs to ignore heads of adjacent expanded particles
-                if(std::find(occLabels.begin(), occLabels.end(), allLabels[(firstOccupiedIndex + offset) % allLabels.size()]) != occLabels.end()) {
-                    ++consecutiveCount;
-                }
-                else {
-                    break;
-                }
+            if(std::find(occLabels.begin(), occLabels.end(), allLabels[(firstOccupiedIndex + offset) % allLabels.size()]) != occLabels.end()) {
+                ++consecutiveCount;
             }
             else {
-                if(hasNeighborAtLabel(allLabels[(firstOccupiedIndex + offset) % allLabels.size()])) {
-                    ++consecutiveCount;
-                }
-                else {
-                    break;
-                }
+                break;
             }
         }
 
-        const int totalNeighbors = flag ? occLabels.size() : neighborCount(uniqueLabels());
-        return consecutiveCount == totalNeighbors;
+        return (size_t)consecutiveCount == occLabels.size();
     }
     else {
         return false;
     }
 }
 
-bool CompressionParticle::checkProp2() const
+bool CompressionParticle::checkProp2(const int sizeS) const
 {
     Q_ASSERT(isExpanded());
     Q_ASSERT(0 <= sizeS && sizeS <= 2);
+    Q_ASSERT(flag); // not required by algorithm, but equivalent and cleaner for our implementation
 
     const std::vector<int> occLabels = occupiedLabelsNoExpandedHeads();
 
     if(sizeS == 0) { // S has to be empty for Property 2
         // both nodes occupied by the particle need to have at least one neighbor
         bool hasHeadNeighbor = false, hasTailNeighbor = false;
-        for(const int headLabel : headLabels()) {
-            if(flag) { // flag == TRUE means this expanded particle needs to ignore heads of adjacent expanded particles
-                if(std::find(occLabels.begin(), occLabels.end(), headLabel) != occLabels.end()) {
-                    hasHeadNeighbor = true;
-                    break;
-                }
-            }
-            else if(hasNeighborAtLabel(headLabel)) {
+        for(int i = 1; i <= 3; ++i) { // only need the head labels not in S
+            if(std::find(occLabels.begin(), occLabels.end(), headLabels()[i]) != occLabels.end()) {
                 hasHeadNeighbor = true;
                 break;
             }
         }
-        for(const int tailLabel : tailLabels()) {
-            if(flag) { // again, ignore heads of adjacent expanded particles
-                if(std::find(occLabels.begin(), occLabels.end(), tailLabel) != occLabels.end()) {
-                    hasTailNeighbor = true;
-                    break;
-                }
-            }
-            else if(hasNeighborAtLabel(tailLabel)) {
+        for(int i = 1; i <= 3; ++i) { // only need the tail labels not in S
+            if(std::find(occLabels.begin(), occLabels.end(), tailLabels()[i]) != occLabels.end()) {
                 hasTailNeighbor = true;
                 break;
             }
@@ -265,74 +216,32 @@ bool CompressionParticle::checkProp2() const
         bool hasConsecutiveHead = false;
         if(hasHeadNeighbor) {
             int firstOccupiedHeadIndex = -1;
-            for(int i = 0; (size_t)i < headLabels().size(); ++i) {
-                if(flag) { // again, ignore heads of adjacent expanded particles
-                    if(std::find(occLabels.begin(), occLabels.end(), headLabels()[i]) != occLabels.end() &&
-                       std::find(occLabels.begin(), occLabels.end(), headLabels()[(i + headLabels().size() - 1) % headLabels().size()]) == occLabels.end()) {
-                        firstOccupiedHeadIndex = i;
-                        break;
-                    }
-                }
-                else if(hasNeighborAtLabel(headLabels()[i]) && !hasNeighborAtLabel(headLabels()[(i + headLabels().size() - 1) % headLabels().size()])) {
+            for(int i = 1; i <= 3; ++i) { // again, we only care about the head labels not in S
+                if(std::find(occLabels.begin(), occLabels.end(), headLabels()[i]) != occLabels.end()) {
                     firstOccupiedHeadIndex = i;
                     break;
                 }
             }
-
-            // DEBUG: what the occLabels are and what the headLabels are to find the issue
-            if(firstOccupiedHeadIndex == -1) {
-                qDebug() << "In head portion of checkProp2()";
-                qDebug() << "Expanded particle has flag == " << QString::number(flag);
-                QString occText = "OccNoExHeads: [";
-                for(const int occLabel : occLabels) {
-                    occText += QString::number(occLabel) + ", ";
-                }
-                occText += "].";
-                qDebug() << occText;
-
-                QString headText = "HeadLabels: [";
-                for(const int hLabel : headLabels()) {
-                    if(hasNeighborAtLabel(hLabel)) {
-                        headText += "(" + QString::number(hLabel) + ")" + ", ";
-                    }
-                    else {
-                        headText += QString::number(hLabel) + ", ";
-                    }
-                }
-                headText += "].";
-                qDebug() << headText;
-            }
             Q_ASSERT(firstOccupiedHeadIndex != -1); // DEBUG: sanity check
 
             int consecutiveHeadCount = 0;
-            for(int offset = 0; (size_t)offset < headLabels().size(); ++offset) {
-                if(flag) { // again, ignore heads of adjacent expanded particles
-                    if(std::find(occLabels.begin(), occLabels.end(), headLabels()[(firstOccupiedHeadIndex + offset) % headLabels().size()]) != occLabels.end()) {
-                        ++consecutiveHeadCount;
-                    }
-                    else {
-                        break;
-                    }
+            for(int i = firstOccupiedHeadIndex; i <= 3; ++i) { // iterate from the first occupied head index to the last head label before S (headLabel[3])
+                if(std::find(occLabels.begin(), occLabels.end(), headLabels()[i]) != occLabels.end()) {
+                    ++consecutiveHeadCount;
                 }
                 else {
-                    if(hasNeighborAtLabel(headLabels()[(firstOccupiedHeadIndex + offset) % headLabels().size()])) {
-                        ++consecutiveHeadCount;
-                    }
-                    else {
-                        break;
-                    }
+                    break;
                 }
             }
 
-            // count number of head labels in occLabels
-            int occHeadNeighbors = 0;
-            for(const int occLabel : occLabels) {
-                if(isHeadLabel(occLabel)) {
-                    ++occHeadNeighbors;
+            // count number of head labels (not in S) in occLabels
+            int totalHeadNeighbors = 0;
+            for(int i = 1; i <= 3; ++i) {
+                if(std::find(occLabels.begin(), occLabels.end(), headLabels()[i]) != occLabels.end()) {
+                    ++totalHeadNeighbors;
                 }
             }
 
-            const int totalHeadNeighbors = flag ? occHeadNeighbors : neighborCount(headLabels());
             hasConsecutiveHead = consecutiveHeadCount == totalHeadNeighbors;
         }
 
@@ -340,74 +249,32 @@ bool CompressionParticle::checkProp2() const
         bool hasConsecutiveTail = false;
         if(hasTailNeighbor) {
             int firstOccupiedTailIndex = -1;
-            for(int i = 0; (size_t)i < tailLabels().size(); ++i) {
-                if(flag) { // again, ignore heads of adjacent expanded particles
-                    if(std::find(occLabels.begin(), occLabels.end(), tailLabels()[i]) != occLabels.end() &&
-                       std::find(occLabels.begin(), occLabels.end(), tailLabels()[(i + tailLabels().size() - 1) % tailLabels().size()]) == occLabels.end()) {
-                        firstOccupiedTailIndex = i;
-                        break;
-                    }
-                }
-                else if(hasNeighborAtLabel(tailLabels()[i]) && !hasNeighborAtLabel(tailLabels()[(i + tailLabels().size() - 1) % tailLabels().size()])) {
+            for(int i = 1; i <= 3; ++i) { // again, only need tail labels not in S
+                if(std::find(occLabels.begin(), occLabels.end(), tailLabels()[i]) != occLabels.end()) {
                     firstOccupiedTailIndex = i;
                     break;
                 }
             }
-
-            // DEBUG: what the occLabels are and what the tailLabels are to find the issue
-            if(firstOccupiedTailIndex == -1) {
-                qDebug() << "In tail portion of checkProp2()";
-                qDebug() << "Expanded particle has flag == " << QString::number(flag);
-                QString occText = "OccNoExHeads: [";
-                for(const int occLabel : occLabels) {
-                    occText += QString::number(occLabel) + ", ";
-                }
-                occText += "].";
-                qDebug() << occText;
-
-                QString tailText = "TailLabels: [";
-                for(const int tLabel : tailLabels()) {
-                    if(hasNeighborAtLabel(tLabel)) {
-                        tailText += "(" + QString::number(tLabel) + ")" + ", ";
-                    }
-                    else {
-                        tailText += QString::number(tLabel) + ", ";
-                    }
-                }
-                tailText += "].";
-                qDebug() << tailText;
-            }
             Q_ASSERT(firstOccupiedTailIndex != -1); // DEBUG: sanity check
 
             int consecutiveTailCount = 0;
-            for(int offset = 0; (size_t)offset < tailLabels().size(); ++offset) {
-                if(flag) { // again, ignore heads of adjacent expanded particles
-                    if(std::find(occLabels.begin(), occLabels.end(), tailLabels()[(firstOccupiedTailIndex + offset) % tailLabels().size()]) != occLabels.end()) {
-                        ++consecutiveTailCount;
-                    }
-                    else {
-                        break;
-                    }
+            for(int i = firstOccupiedTailIndex; i <= 3; ++i) { // iterate from first occupied tail label to last tail label before S (tailLabel[3])
+                if(std::find(occLabels.begin(), occLabels.end(), tailLabels()[i]) != occLabels.end()) {
+                    ++consecutiveTailCount;
                 }
                 else {
-                    if(hasNeighborAtLabel(tailLabels()[(firstOccupiedTailIndex + offset) % tailLabels().size()])) {
-                        ++consecutiveTailCount;
-                    }
-                    else {
-                        break;
-                    }
+                    break;
                 }
             }
 
-            // count number of tail labels in occLabels
-            int occTailNeighbors = 0;
-            for(const int occLabel : occLabels) {
-                if(isTailLabel(occLabel)) {
-                    ++occTailNeighbors;
+            // count number of tail labels (not in S) in occLabels
+            int totalTailNeighbors = 0;
+            for(int i = 1; i <= 3; ++i) {
+                if(std::find(occLabels.begin(), occLabels.end(), tailLabels()[i]) != occLabels.end()) {
+                    ++totalTailNeighbors;
                 }
             }
 
-            const int totalTailNeighbors = flag ? occTailNeighbors : neighborCount(tailLabels());
             hasConsecutiveTail = consecutiveTailCount == totalTailNeighbors;
         }
 
@@ -436,9 +303,10 @@ const std::vector<int> CompressionParticle::uniqueLabels() const
     }
 }
 
-// NOTE: should only be used by expanded particles with flag == TRUE, since they know that adjacent expanded particles have flag == FALSE
 const std::vector<int> CompressionParticle::occupiedLabelsNoExpandedHeads() const
 {
+    Q_ASSERT(flag); // expanded particles with flag == TRUE can ignore heads of expanded neighbors since their flag == FALSE
+
     std::vector<int> labels;
     for(const int label : uniqueLabels()) {
         // if the label points at the head of an expanded neighboring particle, do not include it
@@ -459,14 +327,6 @@ CompressionSystem::CompressionSystem(int numParticles, float lambda)
     for(int i = 0; i < numParticles; ++i) {
         insert(new CompressionParticle(Node(i, 0), -1, randDir(), *this, lambda));
     }
-
-    /*insert(new CompressionParticle(Node(0, 0), -1, randDir(), *this, lambda));
-    insert(new CompressionParticle(Node(1, 0), -1, randDir(), *this, lambda));
-    insert(new CompressionParticle(Node(-1, 0), -1, randDir(), *this, lambda));
-    insert(new CompressionParticle(Node(0, 1), -1, randDir(), *this, lambda));
-    insert(new CompressionParticle(Node(0, -1), -1, randDir(), *this, lambda));
-    insert(new CompressionParticle(Node(1, -1), -1, randDir(), *this, lambda));
-    insert(new CompressionParticle(Node(-1, 1), -1, randDir(), *this, lambda));*/
 }
 
 bool CompressionSystem::hasTerminated() const
@@ -478,6 +338,5 @@ bool CompressionSystem::hasTerminated() const
     }
 #endif
 
-    // TODO: define other termination criteria
     return false;
 }
