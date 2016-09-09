@@ -17,16 +17,16 @@ IsingParticle::IsingParticle(const Node head,
       switchProb(-1)
 {}
 
+// executes using the Metropolis-Hastings algorithm
 void IsingParticle::activate()
 {
-    int sum = sumNeighborSpins();
-    int spinValue = (spin == Spin::Pos) ? -1 : 1; // sigma'(v) is the charge in the expected (switched) configuration
-    switchProb = exp(beta * spinValue * sum) / (exp(beta * spinValue * sum) + exp(-1 * beta * spinValue * sum));
-    qDebug() << switchProb;
+    const int mySpinVal = (spin == Spin::Pos) ? 1 : -1;
+    const int H1 = hamiltonian(mySpinVal);
+    const int H2 = hamiltonian(-1 * mySpinVal);
 
-    if(randFloat(0,1) < switchProb) {
+    // flip spin if new energy is less than current or if new energy is more but probability is satisfied
+    if((H2 < H1) || randFloat(0,1) < exp(-1 * beta * (H2 - H1))) {
         spin = (spin == Spin::Pos) ? Spin::Neg : Spin::Pos;
-        qDebug() << "switched!";
     }
 
     return;
@@ -40,11 +40,6 @@ int IsingParticle::headMarkColor() const
     }
 
     return -1;
-}
-
-int IsingParticle::headMarkDir() const
-{
-    return -1; // no head is used in this algorithm
 }
 
 int IsingParticle::tailMarkColor() const
@@ -64,6 +59,7 @@ QString IsingParticle::inspectionText() const
         case Spin::Neg:   return "-1";
         case Spin::Pos:   return "+1";
         }
+        return "?"; // silence compiler warning
     }();
     text += "\n";
     return text;
@@ -74,16 +70,14 @@ IsingParticle& IsingParticle::neighborAtLabel(int label) const
     return AmoebotParticle::neighborAtLabel<IsingParticle>(label);
 }
 
-int IsingParticle::sumNeighborSpins()
+int IsingParticle::hamiltonian(const int mySpin) const
 {
     int sum = 0;
 
     for(int i = 0; i < 6; ++i) {
         if(hasNeighborAtLabel(i)) {
-            sum = (neighborAtLabel(i).spin == Spin::Pos) ? sum + 1 : sum - 1;
-        }
-        else {
-            sum -= 1; // empty holes should be treated as -1 spin particles
+            const int neighborSpin = (neighborAtLabel(i).spin == Spin::Pos) ? 1 : -1;
+            sum += mySpin * neighborSpin;
         }
     }
 

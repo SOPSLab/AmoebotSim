@@ -26,7 +26,6 @@ public:
     virtual void activate();
 
     virtual int headMarkColor() const;
-    virtual int headMarkDir() const;
     virtual int tailMarkColor() const;
 
     virtual QString inspectionText() const;
@@ -39,7 +38,7 @@ protected:
     float switchProb;
 
 private:
-    int sumNeighborSpins();
+    int hamiltonian(const int mySpin) const;
 };
 
 class IsingSystem : public AmoebotSystem
