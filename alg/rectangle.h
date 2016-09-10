@@ -43,17 +43,26 @@ public:
     int checkFinish();
     void updateConstructionDir();
     void updateMoveDir();
-
+    int countPCwithValue(int value);
+    int getPCValue();
+    void setPCValue(int value);
     bool hasTailFollower() const;
 
 protected:
     State state;
+    int width = 3;
     struct SToken : public Token { };
-    struct PC0Token : public Token { };
+    struct PC0Token : public Token {
+        int value=3;
+    };
+    struct PCToken : public Token {
+        int value=3;//width
+    };
     struct PC1Token : public Token { };
     struct PCPrepToken : public Token { };
     struct RoundEnd1Token : public Token { };
     struct RoundEnd2Token : public Token { };
+    struct RoundEndBToken : public Token { };
 
     int buildDir;
     int fillDir1;
