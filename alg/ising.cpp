@@ -25,7 +25,7 @@ void IsingParticle::activate()
     const int H2 = hamiltonian(-1 * mySpinVal);
 
     // flip spin if new energy is less than current or if new energy is more but probability is satisfied
-    if((H2 < H1) || randFloat(0,1) < exp(-1 * beta * (H2 - H1))) {
+    if((H2 > H1) || randFloat(0,1) < exp(beta * (H2 - H1))) {
         spin = (spin == Spin::Pos) ? Spin::Neg : Spin::Pos;
     }
 
@@ -117,24 +117,6 @@ IsingSystem::IsingSystem(int numParticles, float beta)
 
 bool IsingSystem::hasTerminated() const
 {
-#ifdef QT_DEBUG
-    if(!isConnected(particles)) {
-        return true;
-    }
-#endif
-
-    IsingParticle::Spin spin;
-    bool isFirstParticle = true;
-    for(auto p : particles) {
-        auto hp = dynamic_cast<IsingParticle*>(p);
-        if(isFirstParticle) {
-            spin = hp->spin;
-            isFirstParticle = false;
-        }
-        else if(spin != hp->spin) {
-            return false; // causes the system to terminate when all particles have the same spin
-        }
-    }
-
-    return true;
+    // movements are nonexistent (and thus always safe) and sim never terminates
+    return false;
 }
