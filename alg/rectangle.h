@@ -44,6 +44,7 @@ public:
     void updateConstructionDir();
     void updateMoveDir();
     int countPCwithValue(int value);
+    int countPCwithPosValue();
     int getPCValue();
     void setPCValue(int value);
     bool hasTailFollower() const;
@@ -51,18 +52,20 @@ public:
 protected:
     State state;
     int width = 3;
-    struct SToken : public Token { };
-    struct PC0Token : public Token {
-        int value=3;
+    int height = 1;
+    struct SToken : public Token {
+    int value = -1;
     };
     struct PCToken : public Token {
-        int value=3;//width
+        int value=-1;//width-1
     };
-    struct PC1Token : public Token { };
-    struct PCPrepToken : public Token { };
+    struct PCPrepToken : public Token {
+        bool ontoken = false;
+    };
     struct RoundEnd1Token : public Token { };
     struct RoundEnd2Token : public Token { };
     struct RoundEndBToken : public Token { };
+    std::shared_ptr<Token> makePCWithValue(int value);
 
     int buildDir;
     int fillDir1;

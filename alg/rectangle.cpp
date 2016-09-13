@@ -46,24 +46,25 @@ void RectangleParticle::activate()
         }
     } else {
         if(state == State::Seed) {
-            //for now just build 1 direction then another, will result in rectangle indefinitely
             if (buildDir ==-1){
-                putToken(std::make_shared<SToken>());
-                putToken(std::make_shared<PCPrepToken>());
-
-                putToken(std::make_shared<PCToken>());
-                qDebug()<<"count with value 3: "<<countPCwithValue(3)<<"count value 2: "<<countPCwithValue(2)<<" get val: "<<getPCValue();
-                setPCValue(2);
-                qDebug()<<"count with value 3: "<<countPCwithValue(3)<<"count value 2: "<<countPCwithValue(2)<<" get val: "<<getPCValue();
+                std::shared_ptr<SToken> stoken= std::make_shared<SToken>();
+                stoken->value= height;
+                putToken(stoken);
+                std::shared_ptr<PCPrepToken> pcprep= std::make_shared<PCPrepToken>();
+                pcprep->ontoken = true;
+                putToken(pcprep);
 
                 buildDir = 1;
 
             }
 
             if(buildDir ==1 && hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state==State::Finish &&
-                    countTokens<PCPrepToken>()>0 &&  neighborAtLabel(buildDir).countTokens<PC0Token>()==0 ){
-                takeToken<PCPrepToken>();
-                neighborAtLabel(buildDir).putToken(std::make_shared<PC0Token>());//start with 0 because self took PC1
+                    countTokens<PCPrepToken>()>0 &&  neighborAtLabel(buildDir).countPCwithValue(0)==0 ){
+                std::shared_ptr<PCPrepToken> pcprep = takeToken<PCPrepToken>();
+                //first row- will be on automatically
+                neighborAtLabel(buildDir).putToken(makePCWithValue(width-1));//start with 0 because self took PC1
+
+
 
             }
             //Row corresponding to seed has been finished
@@ -72,12 +73,27 @@ void RectangleParticle::activate()
             }
             if(buildDir == 0 && hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state == State::Finish){
                 if(countTokens<SToken>()>0)
-                    neighborAtLabel(buildDir).putToken(takeToken<SToken>());
+                {
+                    std::shared_ptr<SToken> stoken = takeToken<SToken>();
+                    int oldvalue = stoken->value;
+                    stoken->value = oldvalue -1;
+                    if(stoken->value <0)
+                        stoken->value = height;
+                    neighborAtLabel(buildDir).putToken(stoken);
+                }
                 if(countTokens<PCPrepToken>()>0)
                 {
-                   if( neighborAtLabel(1).countTokens<PC1Token>()==0 ){
-                        takeToken<PCPrepToken>();
-                        neighborAtLabel(1).putToken(std::make_shared<PC1Token>()); //from further down so start as PC1's
+                    if( neighborAtLabel(1).countPCwithValue(width)==0 ){
+                        std::shared_ptr<PCPrepToken> pcprep = takeToken<PCPrepToken>();
+                        if(pcprep->ontoken){
+                            qDebug()<<"PC prep is on";
+                            neighborAtLabel(1).putToken(makePCWithValue(width)); //from further down so start as PC1's
+                        }
+                        else
+                        {
+                            neighborAtLabel(1).putToken(makePCWithValue(-1));
+                        }
+
                     }
                 }
             }
@@ -129,11 +145,27 @@ void RectangleParticle::activate()
 
             if(countTokens<SToken>()>0 && !hasSentPC && hasNeighborAtLabel(buildDirReverse))
             {
-                qDebug()<<"finished made PCPrep";
-                putToken(std::make_shared<PCPrepToken>());
+                std::shared_ptr<SToken> stoken = takeToken<SToken>();
+
+                //look at stoken value, decrement
+                int oldvalue = stoken->value;
+                stoken->value = oldvalue -1;
+                if(stoken->value <0){
+                    stoken->value = height;
+                }
+                putToken(stoken);
+
+                std::shared_ptr<PCPrepToken> pctoken = std::make_shared<PCPrepToken>();
+                if(oldvalue ==height)
+                {//is off unless at a 0 height
+                    pctoken->ontoken = true;
+                }
+                putToken(pctoken);
+                qDebug()<<"finished made PCPrep: "<<pctoken->ontoken;
                 neighborAtLabel(buildDirReverse).putToken(takeToken<PCPrepToken>());
-                //  buildDir=(buildDirReverse+3)%6;
                 hasSentPC = true;
+
+
 
             }
             if(countTokens<PCPrepToken>()>0 && neighborAtLabel(buildDirReverse).countTokens<PCPrepToken>()==0)
@@ -142,38 +174,54 @@ void RectangleParticle::activate()
 
             }
             //handle countdown tokens as expansion indicators
-            if(countTokens<PC1Token>()>0){
+            if(countPCwithPosValue()>0){
                 buildDir = (buildDirReverse+3)%6;
                 if(hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state==State::Finish
-                        && neighborAtLabel(buildDir).countTokens<PC0Token>()==0)
+                        && neighborAtLabel(buildDir).countPCwithValue(0)==0)
                 {
                     if(!hasConsumedPC)
                     {
-                        takeToken<PC1Token>() ;
-                        neighborAtLabel(buildDir).putToken(std::make_shared<PC0Token>());
+                        int currentTokenValue = getPCValue();
+                        takeToken<PCToken>() ;
+                        neighborAtLabel(buildDir).putToken(makePCWithValue(currentTokenValue-1));
                         hasConsumedPC=true;
                     }
                     else
                     {
-                        neighborAtLabel(buildDir).putToken(takeToken<PC1Token>());
+                        //transfer token of value 1
+                        neighborAtLabel(buildDir).putToken(takeToken<PCToken>());
 
                     }
 
                 }
             }
-            if(countTokens<PC0Token>()>0){
+            if(countPCwithValue(0)>0){
 
-                    if(!hasConsumedPC)
-                    {
-                       takeToken<PC0Token>();
-                        putToken(std::make_shared<RoundEnd1Token>());
-                        hasConsumedPC=true;
-                    }
-                    else
-                    {
-                        neighborAtLabel(buildDir).putToken(takeToken<PC0Token>());
+                if(!hasConsumedPC)
+                {
+                    takeToken<PCToken>();
+                    putToken(std::make_shared<RoundEnd1Token>());
+                    hasConsumedPC=true;
+                }
+                else
+                {
+                    //move pc0
+                    neighborAtLabel(buildDir).putToken(takeToken<PCToken>());
 
-                    }
+                }
+
+            }
+            if (countPCwithValue(-1)>0){
+                qDebug()<<"Has PC-1";
+                if( buildDir>-1 && hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state==State::Finish){
+                    neighborAtLabel(buildDir).putToken(takeToken<PCToken>());
+                }
+                else//must be end of row
+                {
+                    takeToken<PCToken>();
+                    //TODO: problem when height>0
+                    putToken(std::make_shared<RoundEnd1Token>());
+                }
 
             }
             //purple wants to go toward 2 received, if it sees it can go down, reset by becoming grey, going out
@@ -240,28 +288,26 @@ void RectangleParticle::activate()
             }
             else if(countTokens<RoundEnd2Token>()>0)
             {
-               // qDebug()<<"has RE2x"<<countTokens<RoundEnd2Token>();
+                qDebug()<<"has RE2x"<<countTokens<RoundEnd2Token>();
                 if( hasNeighborInState({State::Seed})){
                     int seedLabel= labelOfFirstNeighborInState({State::Seed},0);
                     neighborAtLabel(seedLabel).putToken( takeToken<RoundEnd2Token>());
                 }
                 else{
                     //If can go down furhter, send a back back up to restart
-                   /* if(buildDir>-1 && hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state == State::Finish){
+                    /* if(buildDir>-1 && hasNeighborAtLabel(buildDir) && neighborAtLabel(buildDir).state == State::Finish){
                         takeToken<RoundEnd2Token>();
                        neighborAtLabel(buildDir).putToken(std::make_shared<RoundEnd1Token>());
                        return;
                     }*/
                     if(fillDir1>-1 && hasNeighborAtLabel(fillDir1) && neighborAtLabel(fillDir1).state==State::Finish){
-                    //  takeToken<RoundEnd2Token>();
-                      //  neighborAtLabel(fillDir1).putToken(std::make_shared<RoundEnd1Token>());
+                        //  takeToken<RoundEnd2Token>();
+                        //  neighborAtLabel(fillDir1).putToken(std::make_shared<RoundEnd1Token>());
                         takeToken<RoundEnd2Token>();
-                       putToken(std::make_shared<RoundEnd1Token>());
+                        putToken(std::make_shared<RoundEnd1Token>());
                         return;
                     }
 
-
-                    //TODO: if 1 can go out further don't send something down!
 
                     auto fillPropCheck2 = [&](const RectangleParticle& p) {
                         return   isContracted() &&
@@ -275,13 +321,20 @@ void RectangleParticle::activate()
                                 p.fillDir1>=0 &&
                                 pointsAtMe(p, (p.fillDir1));
                     };
+                    //if nothing at own fill dirs go backward- only col this wouldn't work on is last, but there is always a RE1
+                    if(  (fillDir1<0 || !hasNeighborAtLabel(fillDir1) || neighborAtLabel(fillDir1).state!=State::Finish) &&
+                         (fillDir2<0 || !hasNeighborAtLabel(fillDir2) || neighborAtLabel(fillDir2).state!=State::Finish) &&
+                         labelOfFirstNeighborWithProperty<RectangleParticle>(fillPropCheck1) ==-1 &&
+                         labelOfFirstNeighborWithProperty<RectangleParticle>(fillPropCheck2) ==-1){
+                        neighborAtLabel(buildDirReverse).putToken(takeToken<RoundEnd2Token>());
+                        return;
+                    }
 
                     //normal sending RE2 across
                     for(int label = 0; label < 6; label++) {
                         if(hasNeighborAtLabel(label)) {
                             RectangleParticle particle = neighborAtLabel(label);
                             if(fillPropCheck2(particle)) {
-                                qDebug()<<"fillDir2 from direction: "<<label<<"my fillDir: "<<fillDir1<<","<<fillDir2;
                                 neighborAtLabel(label).putToken(takeToken<RoundEnd2Token>());
                                 return;
                             }
@@ -315,16 +368,16 @@ int RectangleParticle::headMarkColor() const
             return 0xffaa00;//light yello
         else if (countTokens<PCPrepToken>()>0)
             return 0xffff00;//dark yellow
-        else if (countTokens<PC1Token>()>0)
-            return 0x0000ff;//blue
-        else if (countTokens<PC0Token>()>0)
-            return 0x9999ff;//violet
+        //else if (countPCwithValue(1)>0)
+        //   return 0x0000ff;//blue
+        // else if (countPCwithValue(0)>0)
+        //     return 0x9999ff;//violet
         else if (countTokens<RoundEnd1Token>()>0)
             return 0x999999;//grey
         else if (countTokens<RoundEnd2Token>()>0)
             return 0x8B008B;//dark purple
         else if (countTokens<RoundEndBToken>()>0)
-               return 0xff8888;
+            return 0xff8888;
         return 0x000000;
         break;
     }
@@ -459,12 +512,10 @@ int RectangleParticle::checkFinish()
     }
     if (buildCount>0 )
     {
-        qDebug()<<"count: "<<countTokens<SToken>();
         for(int label = 0; label < 6; label++) {
             if(hasNeighborAtLabel(label)) {
                 RectangleParticle particle = neighborAtLabel(label);
                 if(buildPropCheck(particle)) {
-                    qDebug()<<"before: "<<neighborAtLabel(label).countTokens<SToken>();
                     fillDir1= (label+2)%6;
                     fillDir2= (label+4)%6;
                     // buildDir = (label+3)%6;
@@ -515,10 +566,23 @@ int RectangleParticle::countPCwithValue(int value) {
     std::shared_ptr<PCToken> pc  =takeToken<PCToken>();
     int pcvalue = pc->value;
     putToken(pc);
-   if (pcvalue == value){
-       return 1;
-   }
-   return 0;
+    if (pcvalue == value){
+        return 1;
+    }
+    return 0;
+}
+int RectangleParticle::countPCwithPosValue() {
+    //assumes only have 1 PCToken at a time, so that one would/would not have value
+    if(countTokens<PCToken>() == 0){
+        return 0;
+    }
+    std::shared_ptr<PCToken> pc  =takeToken<PCToken>();
+    int pcvalue = pc->value;
+    putToken(pc);
+    if (pcvalue > 0){
+        return 1;
+    }
+    return 0;
 }
 void RectangleParticle::setPCValue(int value) {
     //assumes only have 1 PCToken at a time, so that one would/would not have value
@@ -539,6 +603,12 @@ int RectangleParticle::getPCValue() {
     putToken(pc);
     return pcvalue;
 
+}
+std::shared_ptr<RectangleParticle::Token> RectangleParticle::makePCWithValue(int value)
+{
+    std::shared_ptr<PCToken> pc  =std::make_shared<PCToken>();
+    pc->value = value;
+    return pc;
 }
 
 
