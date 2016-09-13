@@ -19,6 +19,7 @@
 #include "alg/adder.h"
 #include "alg/compression.h"
 #include "alg/hexagon.h"
+#include "alg/sierpinski.h"
 #include "alg/rectangle.h"
 #include "alg/ising.h"
 #include "alg/tokendemo.h"
@@ -132,7 +133,10 @@ void ScriptInterface::hexagon(int numParticles, float holeProb)
 {
     sim.setSystem(std::make_shared<HexagonSystem>(numParticles, holeProb));
 }
-
+void ScriptInterface::sierpinski(int numParticles, float holeProb)
+{
+    sim.setSystem(std::make_shared<SierpinskiSystem>(numParticles, holeProb));
+}
 void ScriptInterface::rectangle(int numParticles, float holeProb)
 {
     sim.setSystem(std::make_shared<RectangleSystem>(numParticles, holeProb));
