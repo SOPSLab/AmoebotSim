@@ -17,6 +17,7 @@
 #include "alg/legacy/universalcoating.h"
 
 #include "alg/adder.h"
+#include "alg/matrix.h"
 #include "alg/compression.h"
 #include "alg/hexagon.h"
 #include "alg/sierpinski.h"
@@ -122,6 +123,10 @@ void ScriptInterface::setZoom(float zoom)
 void ScriptInterface::adder(int numParticles, int countValue)
 {
     sim.setSystem(std::make_shared<AdderSystem>(numParticles, countValue));
+}
+void ScriptInterface::matrix(int numParticles, int countValue)
+{
+    sim.setSystem(std::make_shared<MatrixSystem>(numParticles, countValue));
 }
 
 void ScriptInterface::compression(int numParticles, float lambda)

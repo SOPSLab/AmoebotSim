@@ -54,7 +54,8 @@ HEADERS += \
     alg/adder.h \
     alg/datastruct.h \
     alg/rectangle.h \
-    alg/sierpinski.h
+    alg/sierpinski.h \
+    alg/matrix.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -93,7 +94,8 @@ SOURCES += \
     alg/compression.cpp \
     alg/adder.cpp \
     alg/rectangle.cpp \
-    alg/sierpinski.cpp
+    alg/sierpinski.cpp \
+    alg/matrix.cpp
 
 RESOURCES += \
     res/qml.qrc \
