@@ -1,7 +1,5 @@
 QT      += core gui qml quick
 CONFIG  += c++11
-
-
 TARGET    = AmoebotSim
 TEMPLATE  = app
 
@@ -55,7 +53,8 @@ HEADERS += \
     alg/datastruct.h \
     alg/rectangle.h \
     alg/sierpinski.h \
-    alg/matrix.h
+    alg/matrix.h \
+    alg/linesort.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -95,7 +94,8 @@ SOURCES += \
     alg/adder.cpp \
     alg/rectangle.cpp \
     alg/sierpinski.cpp \
-    alg/matrix.cpp
+    alg/matrix.cpp \
+    alg/linesort.cpp
 
 RESOURCES += \
     res/qml.qrc \

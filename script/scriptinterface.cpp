@@ -21,6 +21,7 @@
 #include "alg/compression.h"
 #include "alg/hexagon.h"
 #include "alg/sierpinski.h"
+#include "alg/linesort.h"
 #include "alg/rectangle.h"
 #include "alg/ising.h"
 #include "alg/tokendemo.h"
@@ -141,6 +142,10 @@ void ScriptInterface::hexagon(int numParticles, float holeProb)
 void ScriptInterface::sierpinski(int numParticles, float holeProb)
 {
     sim.setSystem(std::make_shared<SierpinskiSystem>(numParticles, holeProb));
+}
+void ScriptInterface::linesort(int numParticles, float holeProb)
+{
+    sim.setSystem(std::make_shared<LineSortSystem>(numParticles, holeProb));
 }
 void ScriptInterface::rectangle(int numParticles, float holeProb)
 {
