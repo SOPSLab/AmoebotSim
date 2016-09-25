@@ -16,7 +16,9 @@ MatrixParticle::MatrixParticle(const Node head,
       moveDir(-1),
       followDir(-1),
       locationValue(0),
-      setlocValue(false)
+      setlocValue(false),
+      resultValue(-1),
+      sentProduct(false)
 {
 
 }
@@ -27,7 +29,6 @@ void MatrixParticle::activate()
 {
 
     if(state == State::Seed) {
-
         return;
     } else if(state == State::Vector) {
         if(!setlocValue){
@@ -37,52 +38,96 @@ void MatrixParticle::activate()
             vtoken->value = locationValue;
             followDir = labelOfFirstNeighborInState({State::Matrix},0);
             neighborAtLabel(followDir).putToken(vtoken);
+            state=State::Finish;
+
         }
 
 
     }
     else if(state == State::Matrix) {
-            if(!setlocValue){
-                locationValue = rand() % 10 + 1;
-                setlocValue = true;
-            }
-            if(followDir<0)
+        if(!setlocValue){
+            locationValue = rand() % 10 + 1;
+            setlocValue = true;
+        }
+        if(followDir<0)
+        {
+            auto propertyCheck = [&](const MatrixParticle& p) {
+                return  p.followDir!=-1&&  pointsAtMe(p, p.followDir);
+            };
+            int followPoint = labelOfFirstNeighborWithProperty<MatrixParticle>(propertyCheck);
+            if(followPoint!= -1)
             {
-                auto propertyCheck = [&](const MatrixParticle& p) {
-                    return  p.followDir!=-1&&  pointsAtMe(p, p.followDir);
-                };
-                int followPoint = labelOfFirstNeighborWithProperty<MatrixParticle>(propertyCheck);
-                if(followPoint!= -1)
-                {
-                    followDir =(followPoint+3)%6;
-                }
+                followDir =(followPoint+3)%6;
             }
-            if(followDir!=-1 && countTokens<VectorToken>()>0)//require follow dir here so handling tokens done in 1 step, no waiting
+        }
+        if(followDir!=-1 && countTokens<VectorToken>()>0)//require follow dir here so handling tokens done in 1 step, no waiting
+        {
+            //do multiplication
+            std::shared_ptr<VectorToken> vtoken = takeToken<VectorToken>();
+
+            //make product
+            std::shared_ptr<ProductToken> ptoken = std::make_shared<ProductToken>();
+            ptoken->value = locationValue*vtoken->value;
+            //TODO: not if neighbor alread has a ptoken!
+            neighborAtLabel((followDir+5)%6).putToken(ptoken);
+            sentProduct = true;
+
+            //send forward if possible
+            if( hasNeighborAtLabel(followDir))
             {
-                //do multiplication
-                std::shared_ptr<VectorToken> vtoken = takeToken<VectorToken>();
+                neighborAtLabel(followDir).putToken(vtoken);
 
-                //make product
-                std::shared_ptr<ResultToken> rtoken = std::make_shared<ResultToken>();
-                rtoken->value = locationValue*vtoken->value;
-                neighborAtLabel((followDir+5)%6).putToken(rtoken);
-                //send forward if possible
-                if( hasNeighborAtLabel(followDir))
-                {
-                    neighborAtLabel(followDir).putToken(vtoken);
-
-                }
-                else if(!hasNeighborAtLabel((followDir+1)%6)){
-                    //send bottom corner acknowledgement?
-                }
             }
-            //combine, pass along results
-            if(countTokens<ResultToken>()>0){
-                neighborAtLabel((followDir+5)%6).putToken(takeToken<ResultToken>());
-            }
-
 
         }
+        //combine, pass along results
+        if(countTokens<ProductToken>()>0){
+            neighborAtLabel((followDir+5)%6).putToken(takeToken<ProductToken>());
+        }
+        if(followDir!=-1&& !hasNeighborAtLabel((followDir+1)%6) && !hasNeighborAtLabel((followDir+2)%6) && sentProduct){
+            state = State::Finish;
+        }
+        else if(followDir!=-1 && hasNeighborAtLabel((followDir+2)%6)  && neighborAtLabel((followDir+2)%6).state==State::Finish){
+            state=State::Finish;
+        }
+    }
+
+    else if (state == State::Result){
+        if(followDir<0)
+        {
+
+            auto propertyCheck = [&](const MatrixParticle& p) {
+                return  (p.followDir!=-1&&  pointsAtMe(p, p.followDir)) || p.state==State::Matrix;
+            };
+            int followPoint = labelOfFirstNeighborWithProperty<MatrixParticle>(propertyCheck);
+            qDebug()<<"followPoint: "<<followPoint;
+            if(followPoint!= -1)
+            {
+                //if there are two matrix neighbors, actually go from second.
+                if(neighborAtLabel(followPoint).state==State::Matrix &&
+                        hasNeighborAtLabel((followPoint+1)%6) && neighborAtLabel((followPoint+1)%6).state==State::Matrix)
+                    followPoint = (followPoint+1)%6;
+                followDir =(followPoint+3)%6;
+            }
+
+        }
+        if(countTokens<ProductToken>()>0){
+            std::shared_ptr<ProductToken> ptoken = takeToken<ProductToken>();
+            int moveAmount = std::min(ptoken->value,MaxValue - resultValue);
+            ptoken->value = ptoken->value - moveAmount;
+            resultValue = resultValue + moveAmount;
+            if(ptoken->value>0){
+                neighborAtLabel(followDir).putToken(ptoken);
+            }
+
+        }
+        if(followDir!=-1 && hasNeighborAtLabel((followDir+3)%6)  && neighborAtLabel((followDir+3)%6).state==State::Finish){
+                   state=State::Finish;
+               }
+    }
+    else{
+        state=State::Finish;
+    }
 
 
 
@@ -106,12 +151,12 @@ int MatrixParticle::headMarkColor() const
     case State::Follow: return 0x0000ff;
     case State::Lead:   return 0xff0000;
     case State::Finish:
-  return 0x999999;
+        return 0x999999;
     case State::Active: return 0x0000ff;
     case State::Matrix:
         if(countTokens<VectorToken>()>0)
             return 0x006400;
-        else if (countTokens<ResultToken>()>0)
+        else if (countTokens<ProductToken>()>0)
             return 0x002d00;
         return 0x00ff00;
     case State::Result:
@@ -129,7 +174,7 @@ int MatrixParticle::headMarkDir() const
         return moveDir;
     } else if(state == State::Seed || state == State::Finish) {
         return constructionDir;
-    } else if(state == State::Follow || state== State::Active || state ==State::Matrix || state == State::Vector) {
+    } else if(state == State::Follow || state== State::Active || state ==State::Matrix || state == State::Vector || state == State::Result) {
         return followDir;
     }
     return -1;
@@ -317,7 +362,7 @@ MatrixSystem::MatrixSystem(int numParticles, int countValue)
 
 
     // add inactive particles
-     numNonStaticParticles = 0;
+    numNonStaticParticles = 0;
     while(numNonStaticParticles < numParticles && !candidates.empty()) {
         // pick random candidate
         int randIndex = 1;//randInt(0, candidates.size());

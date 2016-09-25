@@ -56,7 +56,8 @@ protected:
     struct VectorToken : public Token {
         int value = -1;
     };
-    struct ResultToken : public Token {
+
+    struct ProductToken : public Token {
         int value = -1;
     };
 
@@ -73,6 +74,9 @@ protected:
     int displayVal=0;
     int locationValue = 0;
     bool setlocValue  =false;
+    int resultValue= -1;
+    const int MaxValue = 100;
+    bool sentProduct = false;
 
 };
 
