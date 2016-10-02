@@ -45,7 +45,7 @@ public:
     int constructionReceiveDir2() const;
 
     bool canWait() const;
-    bool canInsert() const;
+    bool canInsert() ;
 
     void updateConstructionDir();
 

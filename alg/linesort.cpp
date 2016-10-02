@@ -28,6 +28,7 @@ LineSortParticle::LineSortParticle(const Node head,
 
 void LineSortParticle::activate()
 {
+    qDebug()<<"state: "<<(int)state<<" expanded? "<<isExpanded();
     if(value ==-1)
     {
         value = rand() % maxValue + 1;
@@ -40,12 +41,24 @@ void LineSortParticle::activate()
             }
             return;
         } else if(state == State::Lead) {
+            if(insertDir!=-1){
+                insertDir = -1;
+                contractTail();
+                return;
+            }
             if(!hasNeighborInState({State::Idle}) && !hasTailFollower()) {
                 contractTail();
                 updateMoveDir();
             }
             return;
-        } else {
+        }
+        else if(state==State::Wait){
+           /* if(insertDir!=-1){
+                insertDir = -1;
+                contractTail();
+            }*/
+        }
+        else {
             Q_ASSERT(false);
         }
     } else {
@@ -76,28 +89,84 @@ void LineSortParticle::activate()
                 return;
             }
         } else if(state == State::Lead) {
+
+             if(insertDir!=-1 && neighborAtLabel(insertDir).isExpanded()){
+                qDebug()<<"insert Dir: "<<insertDir;
+
+                followDir = insertDir;
+                push(followDir);
+                return;
+            }
+            qDebug()<<"contracted lead.";
             if(canWait()) {
+                qDebug()<<"can wait";
                 state = State::Wait;
                 updateConstructionDir();
                 return;
             }
             else if (canInsert())
             {
-                state = State::Wait;
+                qDebug()<<"can insert";
+             //   state = State::Wait;
                 return;
             }
             else {
+                qDebug()<<"else";
                 updateMoveDir();
+                qDebug()<<"new movedir.";
+
                 if(!hasNeighborAtLabel(moveDir)) {
                     expand(moveDir);
                 } else if(hasTailAtLabel(moveDir)) {
                     push(moveDir);
                 }
+
                 return;
             }
         }
         else if (state == State::Wait){
+            if(countTokens<ComplaintToken>()>0)
+            {
 
+                moveDir = -1;
+                if(constructionDir!=-1 )
+                {
+                    if( hasNeighborAtLabel(constructionDir) && neighborAtLabel(constructionDir).state==State::Wait
+                            && neighborAtLabel(constructionDir).countTokens<ComplaintToken>()==0)
+                    {
+                        neighborAtLabel(constructionDir).putToken(takeToken<ComplaintToken>());
+                    }
+                    else
+                    {
+                        moveDir=constructionDir;
+                    }
+                }
+                else if(constructionDir2!=-1 )
+                {
+                    if( hasNeighborAtLabel(constructionDir2)&& neighborAtLabel(constructionDir2).state==State::Wait
+                            && neighborAtLabel(constructionDir2).countTokens<ComplaintToken>()==0)
+                    {
+                        neighborAtLabel(constructionDir2).putToken(takeToken<ComplaintToken>());
+                    }
+                    else
+                    {
+                        moveDir=constructionDir2;
+                    }
+                }
+                if(moveDir!=-1 && canExpand(moveDir))
+                {
+                    expand(moveDir);
+                    takeToken<ComplaintToken>();
+
+                }
+            }
+
+           /* else if(insertDir!=-1 && neighborAtLabel(insertDir).isExpanded()){
+                qDebug()<<"insert Dir: "<<insertDir;
+
+                followDir = insertDir;
+                push(followDir);
+            }*/
         }
     }
 }
@@ -120,7 +189,7 @@ int LineSortParticle::headMarkColor() const
     case State::Lead:   return 0xff0000;
     case State::Wait:
         if(countTokens<ComplaintToken>()>0)
-                return 0x0000ff;
+            return 0x00ff00;
         return valueToHex(value);
 
 
@@ -232,7 +301,7 @@ bool LineSortParticle::canWait() const
     }
     return false;
 }
-bool LineSortParticle::canInsert() const
+bool LineSortParticle::canInsert()
 {
     //otherwise see if stopping on line between to wait for an opening
     int firstNeighbor = labelOfFirstNeighborInState({State::Seed, State::Wait});
@@ -276,6 +345,7 @@ bool LineSortParticle::canInsert() const
                         if(complaintRecepient!=-1)
                         {
                             neighborAtLabel(complaintRecepient).putToken(ctoken);
+                            insertDir = complaintRecepient;
                         }
                         else
                         {
@@ -307,8 +377,11 @@ void LineSortParticle::updateConstructionDir()
 
 void LineSortParticle::updateMoveDir()
 {
+    qDebug()<<"update move Dir";
     // qDebug()<<"my value: "<<value;
     moveDir = labelOfFirstNeighborInState({State::Seed, State::Wait});
+    qDebug()<<"movedir: "<<moveDir;
+
     /* if(moveDir>=0){
         qDebug()<<"neighbor1 value: "<<neighborAtLabel(moveDir).value;
     }
