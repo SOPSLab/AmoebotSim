@@ -18,6 +18,7 @@
 
 #include "alg/adder.h"
 #include "alg/matrix.h"
+#include "alg/matrix2.h"
 #include "alg/compression.h"
 #include "alg/hexagon.h"
 #include "alg/sierpinski.h"
@@ -125,9 +126,12 @@ void ScriptInterface::adder(int numParticles, int countValue)
 {
     sim.setSystem(std::make_shared<AdderSystem>(numParticles, countValue));
 }
-void ScriptInterface::matrix(int numParticles, int countValue)
+void ScriptInterface::matrix(int numParticles, int countValue, int mode)
 {
+    if(mode==0)
     sim.setSystem(std::make_shared<MatrixSystem>(numParticles, countValue));
+    if(mode ==1)
+        sim.setSystem(std::make_shared<Matrix2System>(numParticles, countValue));
 }
 
 void ScriptInterface::compression(int numParticles, float lambda)

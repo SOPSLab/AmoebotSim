@@ -54,7 +54,8 @@ HEADERS += \
     alg/rectangle.h \
     alg/sierpinski.h \
     alg/matrix.h \
-    alg/linesort.h
+    alg/linesort.h \
+    alg/matrix2.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -95,7 +96,8 @@ SOURCES += \
     alg/rectangle.cpp \
     alg/sierpinski.cpp \
     alg/matrix.cpp \
-    alg/linesort.cpp
+    alg/linesort.cpp \
+    alg/matrix2.cpp
 
 RESOURCES += \
     res/qml.qrc \
