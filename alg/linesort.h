@@ -46,6 +46,8 @@ public:
 
     bool canWait() const;
     bool canInsert() ;
+    int findExpandedWaitNeighbor();
+    bool insertsAvailable(int expandedWaitDir);
 
     void updateConstructionDir();
 
@@ -64,6 +66,7 @@ protected:
     int value;
     int maxValue = 100;
     int insertDir;
+
     struct ComplaintToken : public Token {    };
 
 
