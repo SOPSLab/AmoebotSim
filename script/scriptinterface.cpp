@@ -16,15 +16,16 @@
 #include "alg/legacy/triangle.h"
 #include "alg/legacy/universalcoating.h"
 
+#include "alg/2sitecbridge.h"
 #include "alg/adder.h"
-#include "alg/matrix.h"
-#include "alg/matrix2.h"
 #include "alg/compression.h"
 #include "alg/hexagon.h"
-#include "alg/sierpinski.h"
-#include "alg/linesort.h"
-#include "alg/rectangle.h"
 #include "alg/ising.h"
+#include "alg/linesort.h"
+#include "alg/matrix.h"
+#include "alg/matrix2.h"
+#include "alg/rectangle.h"
+#include "alg/sierpinski.h"
 #include "alg/tokendemo.h"
 //#include "helper/universalcoatinghelper.h"
 
@@ -122,44 +123,47 @@ void ScriptInterface::setZoom(float zoom)
     }
 }
 
+void ScriptInterface::twositecbridge(int numParticles, float lambda)
+{
+    sim.setSystem(std::make_shared<TwoSiteCBridgeSystem>(numParticles, lambda));
+}
 void ScriptInterface::adder(int numParticles, int countValue)
 {
     sim.setSystem(std::make_shared<AdderSystem>(numParticles, countValue));
 }
-void ScriptInterface::matrix(int numParticles, int countValue, int mode)
-{
-    if(mode==0)
-    sim.setSystem(std::make_shared<MatrixSystem>(numParticles, countValue));
-    if(mode ==1)
-        sim.setSystem(std::make_shared<Matrix2System>(numParticles, countValue));
-}
-
 void ScriptInterface::compression(int numParticles, float lambda)
 {
     sim.setSystem(std::make_shared<CompressionSystem>(numParticles, lambda));
 }
-
 void ScriptInterface::hexagon(int numParticles, float holeProb)
 {
     sim.setSystem(std::make_shared<HexagonSystem>(numParticles, holeProb));
-}
-void ScriptInterface::sierpinski(int numParticles, float holeProb)
-{
-    sim.setSystem(std::make_shared<SierpinskiSystem>(numParticles, holeProb));
-}
-void ScriptInterface::linesort(int numParticles, float holeProb)
-{
-    sim.setSystem(std::make_shared<LineSortSystem>(numParticles, holeProb));
-}
-void ScriptInterface::rectangle(int numParticles, float holeProb)
-{
-    sim.setSystem(std::make_shared<RectangleSystem>(numParticles, holeProb));
 }
 void ScriptInterface::ising(int numParticles, float beta)
 {
     sim.setSystem(std::make_shared<IsingSystem>(numParticles, beta));
 }
-
+void ScriptInterface::linesort(int numParticles, float holeProb)
+{
+    sim.setSystem(std::make_shared<LineSortSystem>(numParticles, holeProb));
+}
+void ScriptInterface::matrix(int numParticles, int countValue, int mode)
+{
+    if(mode == 0) {
+        sim.setSystem(std::make_shared<MatrixSystem>(numParticles, countValue));
+    }
+    else if(mode == 1) {
+        sim.setSystem(std::make_shared<Matrix2System>(numParticles, countValue));
+    }
+}
+void ScriptInterface::rectangle(int numParticles, float holeProb)
+{
+    sim.setSystem(std::make_shared<RectangleSystem>(numParticles, holeProb));
+}
+void ScriptInterface::sierpinski(int numParticles, float holeProb)
+{
+    sim.setSystem(std::make_shared<SierpinskiSystem>(numParticles, holeProb));
+}
 void ScriptInterface::tokenDemo(int numParticles, float holeProb)
 {
     sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));

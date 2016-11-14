@@ -43,14 +43,15 @@ public slots:
     void setZoom(float zoom);
 
     // algorithms
+    void twositecbridge(int numParticles = 100, float lambda = 4.0);
     void adder(int numParticles = 10, int countValue = 250);
-    void matrix(int numParticles = 10, int countValue = 250, int mode = 0);
     void compression(int numParticles = 100, float lambda = 4.0);
     void hexagon(int numParticles = 200, float holeProb = 0.2);
-    void sierpinski(int numParticles = 200, float holeProb = 0.2);
-    void linesort(int numParticles = 200, float holeProb = 0.2);
-    void rectangle(int numParticles = 200, float holeProb = 0.2);
     void ising(int numParticles = 200, float beta = 0.2);
+    void linesort(int numParticles = 200, float holeProb = 0.2);
+    void matrix(int numParticles = 10, int countValue = 250, int mode = 0);
+    void rectangle(int numParticles = 200, float holeProb = 0.2);
+    void sierpinski(int numParticles = 200, float holeProb = 0.2);
     void tokenDemo(int numParticles = 200, float holeProb = 0.2);
 
 //    int getUniversalCoatingWeakLowerBound();

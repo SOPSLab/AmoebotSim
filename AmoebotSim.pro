@@ -55,7 +55,8 @@ HEADERS += \
     alg/sierpinski.h \
     alg/matrix.h \
     alg/linesort.h \
-    alg/matrix2.h
+    alg/matrix2.h \
+    alg/2sitecbridge.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -97,7 +98,8 @@ SOURCES += \
     alg/sierpinski.cpp \
     alg/matrix.cpp \
     alg/linesort.cpp \
-    alg/matrix2.cpp
+    alg/matrix2.cpp \
+    alg/2sitecbridge.cpp
 
 RESOURCES += \
     res/qml.qrc \
