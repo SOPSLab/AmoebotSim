@@ -123,9 +123,22 @@ void ScriptInterface::setZoom(float zoom)
     }
 }
 
-void ScriptInterface::twositecbridge(int numParticles, float lambda)
+void ScriptInterface::twositecbridge(int numParticles, float lambda, float alpha)
 {
-    sim.setSystem(std::make_shared<TwoSiteCBridgeSystem>(numParticles, lambda));
+    if(numParticles < 5) {
+        log("numParticles >= 5 required", true);
+        return;
+    }
+    else if(lambda <= 1) {
+        log("lambda > 1 required", true);
+        return;
+    }
+    else if(alpha < 1) {
+        log("alpha >= 1 required", true);
+        return;
+    }
+
+    sim.setSystem(std::make_shared<TwoSiteCBridgeSystem>(numParticles, lambda, alpha));
 }
 void ScriptInterface::adder(int numParticles, int countValue)
 {

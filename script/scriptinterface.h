@@ -43,7 +43,7 @@ public slots:
     void setZoom(float zoom);
 
     // algorithms
-    void twositecbridge(int numParticles = 100, float lambda = 4.0);
+    void twositecbridge(int numParticles = 100, float lambda = 4.0, float alpha = 1.0);
     void adder(int numParticles = 10, int countValue = 250);
     void compression(int numParticles = 100, float lambda = 4.0);
     void hexagon(int numParticles = 200, float holeProb = 0.2);

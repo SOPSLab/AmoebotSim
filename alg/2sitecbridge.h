@@ -11,7 +11,8 @@ class TwoSiteCBridgeParticle : public AmoebotParticle
 public:
     enum class Role {
         Particle,
-        Object
+        Site,
+        All
     };
 
     TwoSiteCBridgeParticle(const Node head,
@@ -19,7 +20,8 @@ public:
                         const int orientation,
                         AmoebotSystem& system,
                         Role role,
-                        const float lambda);
+                        const float lambda,
+                        const float alpha);
 
     virtual void activate();
     virtual int headMarkColor() const;
@@ -29,24 +31,24 @@ public:
 
 protected:
     const Role role;
-    const float lambda;
+    const float lambda, alpha;
     float q;
-    int numNbrsBefore;
+    int numParticleNbrs1, numSiteNbrs1;
     bool flag;
 
 private:
     bool hasExpandedNeighbor() const;
-    int neighborCount(std::vector<int> labels) const;
-    bool checkProp1(const int sizeS) const;
-    bool checkProp2(const int sizeS) const;
+    int neighborCount(std::vector<int> labels, const Role r) const;
+    bool checkProp1(const Role r) const;
+    bool checkProp2(const Role r) const;
     const std::vector<int> uniqueLabels() const;
-    const std::vector<int> occupiedLabelsNoExpandedHeads(std::vector<int> labels) const;
+    const std::vector<int> occupiedLabelsNoExpandedHeads(std::vector<int> labels, const Role r) const;
 };
 
 class TwoSiteCBridgeSystem : public AmoebotSystem
 {
 public:
-    TwoSiteCBridgeSystem(int numParticles = 200, float lambda = 4.0);
+    TwoSiteCBridgeSystem(int numParticles = 200, float lambda = 4.0, float alpha = 1.0);
 
     virtual bool hasTerminated() const;
 };

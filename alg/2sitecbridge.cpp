@@ -11,53 +11,53 @@ TwoSiteCBridgeParticle::TwoSiteCBridgeParticle(const Node head,
                                                const int orientation,
                                                AmoebotSystem& system,
                                                Role role,
-                                               const float lambda)
+                                               const float lambda,
+                                               const float alpha)
     : AmoebotParticle(head, globalTailDir, orientation, system),
       role(role),
-      lambda(lambda)
+      lambda(lambda),
+      alpha(alpha)
 {
-    q = 0; numNbrsBefore = 0; flag = false;
+    q = 0; numParticleNbrs1 = 0; numSiteNbrs1 = 0; flag = false;
 }
 
 void TwoSiteCBridgeParticle::activate()
 {
-    if(isContracted()) {
-        int expandDir = randDir(); // select a random neighboring location
-        q = randFloat(0,1); // select a random q in (0,1)
+    if(role == Role::Particle) { // only particles perform movements; sites remain stationary
+        if(isContracted()) {
+            int expandDir = randDir(); // select a random neighboring location
+            q = randFloat(0,1); // select a random q in (0,1)
 
-        if(canExpand(expandDir) && !hasExpandedNeighbor()) {
-            // count neighbors before expansion
-            numNbrsBefore = neighborCount(uniqueLabels());
+            if(canExpand(expandDir) && !hasExpandedNeighbor()) {
+                // count neighbors before expansion
+                numParticleNbrs1 = neighborCount(uniqueLabels(), Role::Particle);
+                numSiteNbrs1 = neighborCount(uniqueLabels(), Role::Site);
 
-            expand(expandDir); // expand to the unoccupied position
+                expand(expandDir); // expand to the unoccupied position
 
-            flag = !hasExpandedNeighbor();
+                flag = !hasExpandedNeighbor();
+            }
         }
-    }
-    else { // is expanded
-        if(flag && numNbrsBefore != 5) { // can only attempt to contract to new location if flag == TRUE and original position does not have 5 neighbors
-            // count neighbors in new location
-            int numNbrsAfter = neighborCount(occupiedLabelsNoExpandedHeads(headLabels()));
+        else { // is expanded
+            // can only attempt to contract to new location if flag == TRUE and original position does not have 5 neighbors
+            if(flag && (numParticleNbrs1 + numSiteNbrs1) != 5) {
+                // count neighbors in new location
+                int numParticleNbrs2 = occupiedLabelsNoExpandedHeads(headLabels(), Role::Particle).size();
+                int numSiteNbrs2 = occupiedLabelsNoExpandedHeads(headLabels(), Role::Site).size();
 
-            // compute the number of particles that will be in set S after expansion
-            int sizeS = 0;
-            if(hasNeighborAtLabel(headLabels()[0]) && !(neighborAtLabel(headLabels()[0]).isExpanded() && neighborAtLabel(headLabels()[0]).pointsAtMyHead(*this, headLabels()[0]))) {
-                ++sizeS;
-            }
-            if(hasNeighborAtLabel(headLabels()[4]) && !(neighborAtLabel(headLabels()[4]).isExpanded() && neighborAtLabel(headLabels()[4]).pointsAtMyHead(*this, headLabels()[4]))) {
-                ++sizeS;
-            }
-
-            // check if the bias probability is satisfied and the locations satisfy property 1 or 2
-            if((q < pow(lambda, numNbrsAfter - numNbrsBefore)) && (checkProp1(sizeS) || checkProp2(sizeS))) {
-                contractTail(); // contract to new location
+                // check if the bias probability is satisfied and the locations satisfy property 1 or 2
+                if((q < pow(lambda, numParticleNbrs2 - numParticleNbrs1 + alpha * (numSiteNbrs2 - numSiteNbrs1)))
+                        && (checkProp1(Role::Particle) || checkProp2(Role::Particle))
+                        && (checkProp1(Role::All) || checkProp2(Role::All))) {
+                    contractTail(); // contract to new location
+                }
+                else {
+                    contractHead(); // contract back to original location
+                }
             }
             else {
                 contractHead(); // contract back to original location
             }
-        }
-        else {
-            contractHead(); // contract back to original location
         }
     }
 
@@ -66,14 +66,15 @@ void TwoSiteCBridgeParticle::activate()
 
 int TwoSiteCBridgeParticle::headMarkColor() const
 {
-    switch(role) {
-    case Role::Object: return 0x000000;
-    case Role::Particle: return -1;
+    if(role == Role::Site) {
+        return 0x000000;
     }
-
-    return -1;
+    else {
+        return -1;
+    }
 }
 
+// TODO: update when finished making changes
 QString TwoSiteCBridgeParticle::inspectionText() const
 {
     QString text;
@@ -84,12 +85,12 @@ QString TwoSiteCBridgeParticle::inspectionText() const
 
     if(isContracted()) {
         text += "Contracted properties:\n";
-        text += "    #neighbors in first position = " + QString::number(numNbrsBefore) + ",\n";
+        //text += "    #neighbors in first position = " + QString::number(numNbrsBefore) + ",\n";
     }
     else { // is expanded
         text += "Expanded properties:\n";
-        text += "    #neighbors in first position = " + QString::number(numNbrsBefore) + ",\n";
-        text += "    #neighbors in second position = " + QString::number(neighborCount(occupiedLabelsNoExpandedHeads(headLabels()))) + ",\n";
+        //text += "    #neighbors in first position = " + QString::number(numNbrsBefore) + ",\n";
+        //text += "    #neighbors in second position = " + QString::number(neighborCount(occupiedLabelsNoExpandedHeads(headLabels()))) + ",\n";
     }
 
     return text;
@@ -111,12 +112,12 @@ bool TwoSiteCBridgeParticle::hasExpandedNeighbor() const
     return false;
 }
 
-int TwoSiteCBridgeParticle::neighborCount(std::vector<int> labels) const
+int TwoSiteCBridgeParticle::neighborCount(std::vector<int> labels, const Role r) const
 {
     int neighbors = 0;
 
     for(const int label : labels) {
-        if(hasNeighborAtLabel(label)) {
+        if(hasNeighborAtLabel(label) && (r == Role::All || neighborAtLabel(label).role == r)) {
             ++neighbors;
         }
     }
@@ -124,16 +125,23 @@ int TwoSiteCBridgeParticle::neighborCount(std::vector<int> labels) const
     return neighbors;
 }
 
-bool TwoSiteCBridgeParticle::checkProp1(const int sizeS) const
+bool TwoSiteCBridgeParticle::checkProp1(const Role r) const
 {
     Q_ASSERT(isExpanded());
-    Q_ASSERT(0 <= sizeS && sizeS <= 2);
     Q_ASSERT(flag); // not required by algorithm, but equivalent and cleaner for our implementation
 
-    if(sizeS != 0) { // S has to be nonempty for Property 1
-        const std::vector<int> allLabels = uniqueLabels();
-        const std::vector<int> occLabels = occupiedLabelsNoExpandedHeads(allLabels);
+    const std::vector<int> allLabels = uniqueLabels();
+    const std::vector<int> occLabels = occupiedLabelsNoExpandedHeads(allLabels, r);
 
+    // find the size of S
+    int sizeS = 0;
+    for(int label : {tailLabels()[4], headLabels()[4]}) {
+        if(std::find(occLabels.begin(), occLabels.end(), label) != occLabels.end()) {
+            ++sizeS;
+        }
+    }
+
+    if(sizeS != 0) { // S has to be nonempty for Property 1
         // find the first position which is occupied but the previous (clockwise) is not
         int firstOccupiedIndex = -1;
         for(int i = 0; (size_t)i < allLabels.size(); ++i) {
@@ -163,13 +171,20 @@ bool TwoSiteCBridgeParticle::checkProp1(const int sizeS) const
     }
 }
 
-bool TwoSiteCBridgeParticle::checkProp2(const int sizeS) const
+bool TwoSiteCBridgeParticle::checkProp2(const Role r) const
 {
     Q_ASSERT(isExpanded());
-    Q_ASSERT(0 <= sizeS && sizeS <= 2);
     Q_ASSERT(flag); // not required by algorithm, but equivalent and cleaner for our implementation
 
-    const std::vector<int> occLabels = occupiedLabelsNoExpandedHeads(uniqueLabels());
+    const std::vector<int> occLabels = occupiedLabelsNoExpandedHeads(uniqueLabels(), r);
+
+    // find the size of S
+    int sizeS = 0;
+    for(int label : {tailLabels()[4], headLabels()[4]}) {
+        if(std::find(occLabels.begin(), occLabels.end(), label) != occLabels.end()) {
+            ++sizeS;
+        }
+    }
 
     if(sizeS == 0) { // S has to be empty for Property 2
         // both nodes occupied by the particle need to have at least one neighbor
@@ -278,14 +293,15 @@ const std::vector<int> TwoSiteCBridgeParticle::uniqueLabels() const
     }
 }
 
-const std::vector<int> TwoSiteCBridgeParticle::occupiedLabelsNoExpandedHeads(std::vector<int> labels) const
+const std::vector<int> TwoSiteCBridgeParticle::occupiedLabelsNoExpandedHeads(std::vector<int> labels, const Role r) const
 {
     Q_ASSERT(flag); // expanded particles with flag == TRUE can ignore heads of expanded neighbors since their flag == FALSE
 
     std::vector<int> occNoExpHeadLabels;
     for(const int label : labels) {
         // if the label points at the head of an expanded neighboring particle, do not include it
-        if(hasNeighborAtLabel(label) && !(neighborAtLabel(label).isExpanded() && neighborAtLabel(label).pointsAtMyHead(*this, label)))
+        if(hasNeighborAtLabel(label) && (r == Role::All || neighborAtLabel(label).role == r)
+                && !(neighborAtLabel(label).isExpanded() && neighborAtLabel(label).pointsAtMyHead(*this, label)))
         {
             occNoExpHeadLabels.push_back(label);
         }
@@ -295,14 +311,18 @@ const std::vector<int> TwoSiteCBridgeParticle::occupiedLabelsNoExpandedHeads(std
 }
 
 // TODO: update initialization
-TwoSiteCBridgeSystem::TwoSiteCBridgeSystem(int numParticles, float lambda)
+TwoSiteCBridgeSystem::TwoSiteCBridgeSystem(int numParticles, float lambda, float alpha)
 {
     Q_ASSERT(lambda > 1);
+    Q_ASSERT(alpha >= 1);
 
     // generate a straight line of particles
     for(int i = 0; i < numParticles; ++i) {
-        insert(new TwoSiteCBridgeParticle(Node(i, 0), -1, randDir(), *this, TwoSiteCBridgeParticle::Role::Particle, lambda));
+        insert(new TwoSiteCBridgeParticle(Node(i, 0), -1, randDir(), *this, TwoSiteCBridgeParticle::Role::Particle, lambda, alpha));
     }
+    // generate two sites at distance 2n/5 and 3n/5 along the line
+    insert(new TwoSiteCBridgeParticle(Node(2*numParticles/5, -1), -1, randDir(), *this, TwoSiteCBridgeParticle::Role::Site, lambda, alpha));
+    insert(new TwoSiteCBridgeParticle(Node(3*numParticles/5, -1), -1, randDir(), *this, TwoSiteCBridgeParticle::Role::Site, lambda, alpha));
 }
 
 bool TwoSiteCBridgeSystem::hasTerminated() const
