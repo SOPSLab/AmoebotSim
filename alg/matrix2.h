@@ -3,7 +3,9 @@
 
 #include "alg/amoebotparticle.h"
 #include "alg/amoebotsystem.h"
-
+#include <iostream>
+#include <fstream>
+#include <string>
 class Matrix2Particle : public AmoebotParticle
 {
     friend class Matrix2System;
@@ -44,6 +46,10 @@ public:
 
     int constructionReceiveDir() const;
     bool canFinish() const;
+    int tryVectorStop() const;
+    int tryMatrixStop() const;
+    int tryResultStop() const;
+    bool noTokensAtLabel(int label);
     void updateConstructionDir();
 
     void updateMoveDir();
@@ -56,7 +62,12 @@ protected:
     struct VectorToken : public Token {
         int value = -1;
     };
-
+    struct MatrixToken : public Token {
+        int value = -1;
+    };
+    struct EndOfColumnToken : public Token {};
+    struct EndOfVectorToken : public Token {};
+    struct StartMultToken : public Token {};
     struct ProductToken : public Token {
         int value = -1;
     };
@@ -79,8 +90,16 @@ protected:
     int resultValue= -1;
     const int MaxValue = 100;
     bool sentProduct = false;
-    const int tokenMax = 2;//=counter base
-
+    const int tokenMax = 10;//=counter base
+    int vectorFlag;
+    int matrixFlag;
+    int resultFlag;
+    //seed variables
+    int streamIter = 0;
+    int sMode = 0; // 0 = matrix, 1 = vector, 2 = none
+    int stopReceiveDir=-1;
+    bool columnFinished = false;
+    std::vector<std::string> valueStream;
 };
 
 class Matrix2System : public AmoebotSystem

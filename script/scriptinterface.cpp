@@ -163,10 +163,10 @@ void ScriptInterface::linesort(int numParticles, float holeProb)
 void ScriptInterface::matrix(int numParticles, int countValue, int mode)
 {
     if(mode == 0) {
-        sim.setSystem(std::make_shared<MatrixSystem>(numParticles, countValue));
+        sim.setSystem(std::make_shared<Matrix2System>(numParticles, countValue));
     }
     else if(mode == 1) {
-        sim.setSystem(std::make_shared<Matrix2System>(numParticles, countValue));
+        sim.setSystem(std::make_shared<MatrixSystem>(numParticles, countValue));
     }
 }
 void ScriptInterface::rectangle(int numParticles, float holeProb)
