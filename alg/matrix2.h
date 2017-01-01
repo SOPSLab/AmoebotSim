@@ -16,12 +16,12 @@ public:
         Seed,
         Idle,
         Follow,
-        Lead,
+        Lead,//3
         Finish,
         Active,
-        Matrix,
+        Matrix,//6
         Vector,
-        Result
+        Result//8
 
     };
 
@@ -90,15 +90,19 @@ protected:
     int resultValue= -1;
     const int MaxValue = 100;
     bool sentProduct = false;
-    const int tokenMax = 10;//=counter base
+    bool lastCol = false;
+    const int tokenMax = 2;//=counter base
     int vectorFlag;
     int matrixFlag;
     int resultFlag;
     //seed variables
     int streamIter = 0;
     int sMode = 0; // 0 = matrix, 1 = vector, 2 = none
+    int resultRound=0;
     int stopReceiveDir=-1;
     bool columnFinished = false;
+    int numcountsgenerated = 0;
+    int vectorLeftover = -1;
     std::vector<std::string> valueStream;
 };
 

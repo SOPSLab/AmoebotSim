@@ -25,7 +25,10 @@ Matrix2Particle::Matrix2Particle(const Node head,
       vectorFlag(-1),
       resultFlag(-1),
       stopReceiveDir(-1),
-      columnFinished(false)
+      columnFinished(false),
+      lastCol(false),
+      resultRound(0),
+      vectorLeftover(-1)
 {
 
 }
@@ -53,230 +56,255 @@ void Matrix2Particle::activate()
     } else {
 
 
-    if(state == State::Seed) {
-        if(countTokens<MatrixToken>() ==0 &&
-                countTokens<VectorToken>() ==0 &&
-                countTokens<EndOfColumnToken>() ==0 &&
-                countTokens<EndOfVectorToken>() ==0 && streamIter<26 )
-        {
-            if(streamIter==0)
+        if(state == State::Seed) {
+            if(countTokens<MatrixToken>() ==0 &&
+                    countTokens<VectorToken>() ==0 &&
+                    countTokens<EndOfColumnToken>() ==0 &&
+                    countTokens<EndOfVectorToken>() ==0 && (valueStream.size()==0 || streamIter<valueStream.size() ))
             {
-            std::ifstream myfile("/Users/Alex/amoebotsim/alg/matrixstream.txt");
-            std::string line;
-
-              if (myfile.is_open())
-              {
-                while ( getline (myfile,line) )
+                if(streamIter==0)
                 {
-                  valueStream.push_back(line);
+                    std::ifstream myfile("/Users/Alex/amoebotsim/alg/matrixstream.txt");
+                    std::string line;
+
+                    if (myfile.is_open())
+                    {
+                        while ( getline (myfile,line) )
+                        {
+                            valueStream.push_back(line);
+                        }
+                        myfile.close();
+                    }
                 }
-                myfile.close();
-              }
-            }
-              if(valueStream[streamIter].compare("eoc")==0)
-              {
+                if(valueStream[streamIter].compare("eoc")==0)
+                {
                     qDebug()<<"End of column";
                     std::shared_ptr<EndOfColumnToken> eocToken= std::make_shared<EndOfColumnToken>();
                     putToken(eocToken);
 
-              }
-              else if(valueStream[streamIter].compare("eov")==0)
-              {
-                  sMode = 2;
+                }
+                else if(valueStream[streamIter].compare("eov")==0)
+                {
+                    sMode = 2;
                     qDebug()<<"end of vector";
-                   //  std::shared_ptr<StartMultToken> startmult= std::make_shared<StartMultToken>();
-                   //    putToken(startmult);
-              }
-              else if(valueStream[streamIter].compare("eom")==0)
-              {
-                  sMode = 1;
+                    std::shared_ptr<StartMultToken> startmult= std::make_shared<StartMultToken>();
+                    putToken(startmult);
+                }
+                else if(valueStream[streamIter].compare("eom")==0)
+                {
+                    sMode = 1;
                     qDebug()<<"end of matrix";
-              }
-              else
-              {
-                 int newValue = std::stoi(valueStream[streamIter]);
-                 qDebug()<<"new value: "<<newValue;
-                 if(sMode ==0)//matrix
-                 {
-                    std::shared_ptr<MatrixToken> mvToken= std::make_shared<MatrixToken>();
-                    mvToken->value = newValue;
-                    putToken(mvToken);
-                     vectorFlag = 0;
-
-                 }
-                 else if (sMode ==1)//vector
-                 {
-                     std::shared_ptr<VectorToken> vvToken= std::make_shared<VectorToken>();
-                     vvToken->value = newValue;
-                     putToken(vvToken);
-
-                 }
-
-              }
-              streamIter++;
-
-
-        }
-        else if (countTokens<MatrixToken>()>0)
-        {
-            //continue trying to recruit or if had to wait for space to open up
-            if(hasNeighborAtLabel(0) && neighborAtLabel(0).state == State::Vector && noTokensAtLabel(0))
-            {
-
-                neighborAtLabel(0).putToken(takeToken<MatrixToken>());
-                qDebug()<<"put neighbor matrix token";
-            }
-        }
-        if(countTokens<VectorToken>()>0)
-        {
-            if(hasNeighborAtLabel(0) && neighborAtLabel(0).state == State::Vector && noTokensAtLabel(0))
-            {
-
-                neighborAtLabel(0).putToken(takeToken<VectorToken>());
-                qDebug()<<"put neighbor vector token";
-            }
-        }
-        if(countTokens<EndOfColumnToken>()>0 && noTokensAtLabel(0))
-        {
-            neighborAtLabel(0).putToken(takeToken<EndOfColumnToken>());
-            qDebug()<<"put neighbor eoc token";
-        }
-
-        return;
-    }
-    else if(state == State::Idle) {
-               if(hasNeighborInState({State::Seed, State::Matrix,State::Vector,State::Result})) {
-                   state = State::Lead;
-                   updateMoveDir();
-                   return;
-               } else if(hasNeighborInState({State::Lead, State::Follow})) {
-                   state = State::Follow;
-                   followDir = labelOfFirstNeighborInState({State::Lead, State::Follow});
-                   return;
-               }
-           }
-    else if(state == State::Follow) {
-               if(hasNeighborInState({State::Seed, State::Matrix,State::Vector,State::Result})) {
-                   state = State::Lead;
-                   updateMoveDir();
-                   return;
-               } else if(hasTailAtLabel(followDir)) {
-                   Matrix2Particle neighbor = neighborAtLabel(followDir);
-                   int neighborContractionDir = neighborDirToDir(neighbor, (neighbor.tailDir() + 3) % 6);
-                   push(followDir);
-                   followDir = neighborContractionDir;
-                   return;
-               }
-           }
-    else if(state == State::Lead) {
-    int vectorStop = tryVectorStop();
-    int matrixStop = tryMatrixStop();
-    int resultStop = tryResultStop();
-               if(vectorStop !=-1) {
-                   qDebug()<<"vector stop";
-                   state = State::Vector;
-                   stopReceiveDir = vectorStop;
-                   return;
-               }
-               else if (matrixStop!=-1){
-                   state = State::Matrix;
-                   stopReceiveDir = matrixStop;
-                   return;
-               }
-               else if (resultStop!=-1){
-                   state = State::Result;
-                   stopReceiveDir = resultStop;
-                   return;
-               }else {
-                   updateMoveDir();
-                   if(!hasNeighborAtLabel(moveDir)) {
-                       expand(moveDir);
-                   } else if(hasTailAtLabel(moveDir)) {
-                       push(moveDir);
-                   }
-                   return;
-              }
-           }
-    else if(state == State::Vector) {
-
-        if(countTokens<VectorToken>()>0){
-            if(!setlocValue)
-            {
-                std::shared_ptr<VectorToken> vtoken= takeToken<VectorToken>();
-                locationValue = vtoken->value;
-                setlocValue = true;
-                //pass down column- trigger multiplication
-                int matrixDir = (stopReceiveDir+1)%6;
-                neighborAtLabel(matrixDir).putToken(vtoken);
-            }
-            else
-            {
-                int vectorDir = (stopReceiveDir+3)%6;
-                if(noTokensAtLabel(vectorDir))
+                }
+                else
                 {
-                    neighborAtLabel(vectorDir).putToken(takeToken<VectorToken>());
+                    int newValue = std::stoi(valueStream[streamIter]);
+                    qDebug()<<"new value: "<<newValue;
+                    if(sMode ==0)//matrix
+                    {
+                        std::shared_ptr<MatrixToken> mvToken= std::make_shared<MatrixToken>();
+                        mvToken->value = newValue;
+                        putToken(mvToken);
+                        vectorFlag = 0;
+
+                    }
+                    else if (sMode ==1)//vector
+                    {
+                        std::shared_ptr<VectorToken> vvToken= std::make_shared<VectorToken>();
+                        vvToken->value = newValue;
+                        putToken(vvToken);
+
+                    }
+
+                }
+                streamIter++;
+
+
+            }
+            else if (countTokens<MatrixToken>()>0)
+            {
+                //continue trying to recruit or if had to wait for space to open up
+                if(hasNeighborAtLabel(0) && neighborAtLabel(0).state == State::Vector && noTokensAtLabel(0))
+                {
+
+                    neighborAtLabel(0).putToken(takeToken<MatrixToken>());
+                    qDebug()<<"put neighbor matrix token";
                 }
             }
-        }
-        if(countTokens<EndOfColumnToken>()>0)
-        {
-            if(!columnFinished)
+            if(countTokens<VectorToken>()>0)
             {
-              columnFinished = true;
-              takeToken<EndOfColumnToken>();
-              qDebug()<<"column finished";
-            }
-            else
-            {
-                int vectorDir = (stopReceiveDir+3)%6;
-                if(noTokensAtLabel(vectorDir))
+                if(hasNeighborAtLabel(0) && neighborAtLabel(0).state == State::Vector && noTokensAtLabel(0))
                 {
-                    neighborAtLabel(vectorDir).putToken(takeToken<EndOfColumnToken>());
+
+                    neighborAtLabel(0).putToken(takeToken<VectorToken>());
+                    qDebug()<<"put neighbor vector token";
                 }
             }
-        }
-        if( countTokens<MatrixToken>()>0)
-        {
-            if(!columnFinished)
+            if(countTokens<EndOfColumnToken>()>0 && noTokensAtLabel(0))
             {
-                int matrixDir = (stopReceiveDir+1)%6;
+                neighborAtLabel(0).putToken(takeToken<EndOfColumnToken>());
+                qDebug()<<"put neighbor eoc token";
+            }
+            if(countTokens<StartMultToken>()>0)
+            {
+                if(hasNeighborAtLabel(0) && neighborAtLabel(0).state == State::Vector && noTokensAtLabel(0))
+                {
+                    neighborAtLabel(0).putToken(takeToken<StartMultToken>());
+                }
+            }
+
+            return;
+        }
+        else if(state == State::Idle) {
+            if(hasNeighborInState({State::Seed, State::Matrix,State::Vector,State::Result})) {
+                state = State::Lead;
+                updateMoveDir();
+                return;
+            } else if(hasNeighborInState({State::Lead, State::Follow})) {
+                state = State::Follow;
+                followDir = labelOfFirstNeighborInState({State::Lead, State::Follow});
+                return;
+            }
+        }
+        else if(state == State::Follow) {
+            if(hasNeighborInState({State::Seed, State::Matrix,State::Vector,State::Result})) {
+                state = State::Lead;
+                updateMoveDir();
+                return;
+            } else if(hasTailAtLabel(followDir)) {
+                Matrix2Particle neighbor = neighborAtLabel(followDir);
+                int neighborContractionDir = neighborDirToDir(neighbor, (neighbor.tailDir() + 3) % 6);
+                push(followDir);
+                followDir = neighborContractionDir;
+                return;
+            }
+        }
+        else if(state == State::Lead) {
+            int vectorStop = tryVectorStop();
+            int matrixStop = tryMatrixStop();
+            int resultStop = tryResultStop();
+            if(vectorStop !=-1) {
+                qDebug()<<"vector stop";
+                state = State::Vector;
+                stopReceiveDir = vectorStop;
+                //  return;
+            }
+            else if (matrixStop!=-1){
+                state = State::Matrix;
+                stopReceiveDir = matrixStop;
+                int matrixDir = (stopReceiveDir+3)%6;
                 followDir = matrixDir;
-                 if(hasNeighborAtLabel(matrixDir) && neighborAtLabel(matrixDir).state == State::Matrix
-                    && noTokensAtLabel(matrixDir))
-                 {
-                      neighborAtLabel(matrixDir).putToken(takeToken<MatrixToken>());
+                // return;
+            }
+            else if (resultStop!=-1){
+                state = State::Result;
+                stopReceiveDir = resultStop;
+                //   return;
+            }else {
+                updateMoveDir();
+                if(!hasNeighborAtLabel(moveDir)) {
+                    expand(moveDir);
+                } else if(hasTailAtLabel(moveDir)) {
+                    push(moveDir);
+                }
+                //return;
+            }
+        }
+        else if(state == State::Vector) {
+
+            if(countTokens<VectorToken>()>0){
+                if(!setlocValue)
+                {
+                    std::shared_ptr<VectorToken> vtoken= takeToken<VectorToken>();
+                    locationValue = vtoken->value;
+                    setlocValue = true;
+                    //pass down column- trigger multiplication
+                    int matrixDir = (stopReceiveDir+1)%6;
+                    neighborAtLabel(matrixDir).putToken(vtoken);
                 }
                 else
                 {
-                    matrixFlag = matrixDir;
-                 }
+                    int vectorDir = (stopReceiveDir+3)%6;
+                    if(noTokensAtLabel(vectorDir))
+                    {
+                        neighborAtLabel(vectorDir).putToken(takeToken<VectorToken>());
+                    }
+                }
             }
-            else//recruit or pass to new vector
+            if(countTokens<EndOfColumnToken>()>0)
+            {
+                if(!columnFinished)
+                {
+                    columnFinished = true;
+                    takeToken<EndOfColumnToken>();
+                    qDebug()<<"column finished";
+                }
+                else
+                {
+                    int vectorDir = (stopReceiveDir+3)%6;
+                    if(noTokensAtLabel(vectorDir))
+                    {
+                        neighborAtLabel(vectorDir).putToken(takeToken<EndOfColumnToken>());
+                    }
+                }
+            }
+            if( countTokens<MatrixToken>()>0)
+            {
+                if(!columnFinished)
+                {
+                    int matrixDir = (stopReceiveDir+1)%6;
+                    followDir = matrixDir;
+                    if(hasNeighborAtLabel(matrixDir) && neighborAtLabel(matrixDir).state == State::Matrix
+                            && noTokensAtLabel(matrixDir))
+                    {
+                        neighborAtLabel(matrixDir).putToken(takeToken<MatrixToken>());
+                    }
+                    else
+                    {
+                        matrixFlag = matrixDir;
+                    }
+                }
+                else//recruit or pass to new vector
+                {
+                    int vectorDir = (stopReceiveDir+3)%6;
+                    if(hasNeighborAtLabel(vectorDir) && neighborAtLabel(vectorDir).state == State::Vector
+                            && noTokensAtLabel(vectorDir))
+                    {
+                        neighborAtLabel(vectorDir).putToken(takeToken<MatrixToken>());
+                    }
+                    else
+                    {
+                        vectorFlag = vectorDir;
+                    }
+
+                }
+            }
+            if (countTokens<StartMultToken>()>0)
             {
                 int vectorDir = (stopReceiveDir+3)%6;
-                if(hasNeighborAtLabel(vectorDir) && neighborAtLabel(vectorDir).state == State::Vector
-                        && noTokensAtLabel(vectorDir))
+                int matrixDir = (stopReceiveDir+1)%6;
+                if (vectorDir>=0 && hasNeighborAtLabel(vectorDir) && neighborAtLabel(vectorDir).state == State::Vector )
                 {
-                    neighborAtLabel(vectorDir).putToken(takeToken<MatrixToken>());
+                    if(  noTokensAtLabel(vectorDir))
+                    {
+                        neighborAtLabel(vectorDir).putToken(takeToken<StartMultToken>());
+                    }
                 }
                 else
                 {
-                    vectorFlag = vectorDir;
+                    neighborAtLabel(matrixDir).putToken(takeToken<StartMultToken>());
                 }
-
             }
-        }
 
 
-    }
-    else if(state == State::Matrix) {
-        if(!setlocValue && countTokens<MatrixToken>()>0){
-            std::shared_ptr<MatrixToken> mvToken = takeToken<MatrixToken>();
-            locationValue = mvToken->value;
-            setlocValue = true;
         }
-        if(setlocValue && countTokens<MatrixToken>()>0)
-        {
+        else if(state == State::Matrix) {
+            if(!setlocValue && countTokens<MatrixToken>()>0){
+                std::shared_ptr<MatrixToken> mvToken = takeToken<MatrixToken>();
+                locationValue = mvToken->value;
+                setlocValue = true;
+            }
+            if(setlocValue && countTokens<MatrixToken>()>0)
+            {
 
                 int matrixDir = (stopReceiveDir+3)%6;
                 followDir = matrixDir;
@@ -287,53 +315,138 @@ void Matrix2Particle::activate()
                 }
                 else
                 {
-                        matrixFlag = matrixDir;
+                    matrixFlag = matrixDir;
                 }
-
-        }
-
-        if(setlocValue && countTokens<VectorToken>()>0)//require follow dir here so handling tokens done in 1 step, no waiting
-        {
-            //do multiplication
-            std::shared_ptr<VectorToken> vtoken = takeToken<VectorToken>();
-            int product = locationValue*vtoken->value;
-            for(int i =0; i<product; i++)
-            {
-                putToken(std::make_shared<SumToken>());
-            }
-            sentProduct = true;
-
-            //send forward if possible
-            int matrixDir = (stopReceiveDir+3)%6;
-            if(hasNeighborAtLabel(matrixDir))
-            {
-                qDebug()<<"Pass vtoken";
-                neighborAtLabel(matrixDir).putToken(vtoken);
 
             }
 
-        }
+            if(setlocValue && (countTokens<VectorToken>()>0||vectorLeftover>0) )//require follow dir here so handling tokens done in 1 step, no waiting
+            {
+                //new version: do as much as possible:
+                //ifvectorLeftover ==-1 && has vector token
+                     //vectorLeftover = vector value
+                // while 1xown value fits && vectorLeftover>0 (it must be definition, at some point)
+                    //make tokens
+                    //vectorLeftover--
+                 if(vectorLeftover ==-1 && countTokens<VectorToken>()>0)
+                 {
+                     int matrixDir = (stopReceiveDir+3)%6;
+                     int acrossDir = (matrixDir+2)%6;
+                     if(!(hasNeighborAtLabel(matrixDir) && neighborAtLabel(matrixDir).state == State::Matrix) && hasNeighborAtLabel(acrossDir))
+                     {
+                         qDebug()<<"Last row: "<<(int)(neighborAtLabel(acrossDir).state)<<"vtokens: "<<countTokens<VectorToken>();
+                     }
+                       std::shared_ptr<VectorToken> vtoken = takeToken<VectorToken>();
+                       vectorLeftover = vtoken->value;
+                       sentProduct = true;
 
-        //pass as much as possible
-      if(setlocValue)
-      {
-          int matrixDir = (stopReceiveDir+3)%6;
-          int acrossDir = (matrixDir+2)%6;
-          if(countTokens<SumToken>()>0)
-          {
-                if(hasNeighborAtLabel(acrossDir) && (neighborAtLabel(acrossDir).state== State::Matrix || neighborAtLabel(acrossDir).state==State::Result))
+                       //send forward if possible
+                       if(hasNeighborAtLabel(matrixDir) && neighborAtLabel(matrixDir).state==State::Matrix && neighborAtLabel(matrixDir).setlocValue)
+                       {
+                           qDebug()<<"Pass vtoken: "<<vtoken->value;
+                           neighborAtLabel(matrixDir).putToken(vtoken);
+
+                       }
+                       else if(matrixFlag==-1)
+                       {
+                           vtoken = NULL;
+                           qDebug()<<"delete vtoken";
+                       }
+                       else
+                       {
+                           putToken(vtoken);
+                           vectorLeftover = -1;
+                           sentProduct = false;
+                       }
+                 }
+                  while(countTokens<SumToken>()+locationValue<=tokenMax && vectorLeftover>0)//while can fit another round
+                  {
+                      for(int i =0; i<locationValue; i++)
+                      {
+                              putToken(std::make_shared<SumToken>());
+                      }
+                       vectorLeftover--;
+                  }
+
+                //do multiplication
+            /*
+                int product = locationValue*vtoken->value;
+                qDebug()<<"taken vector token: "<<vtoken->value<<" product: "<<product<<" potential total: "<<product+countTokens<SumToken>();
+                       std::shared_ptr<VectorToken> vtoken = takeToken<VectorToken>();
+
+                //only do mult if space, otherwise wait
+                if(product+countTokens<SumToken>()<=tokenMax)
                 {
-                    /* while(neighborAtLabel(acrossDir).countTokens<SumToken>()<tokenMax && countTokens<SumToken>()>0){
-                        neighborAtLabel(acrossDir).putToken(takeToken<SumToken>());
-                     }*/
+                    for(int i =0; i<product; i++)
+                    {
+                        putToken(std::make_shared<SumToken>());
+
+                    }
+                    numcountsgenerated++;
+
+                    qDebug()<<"Make sum token, vector tokens left:"<<countTokens<VectorToken>()<<" Num generated: "<<numcountsgenerated;
+                    if(countTokens<VectorToken>()>0)
+                        qDebug()<<"left over: "<<takeToken<VectorToken>()->value;
+                    sentProduct = true;
+
+                    //send forward if possible
+                    int matrixDir = (stopReceiveDir+3)%6;
+                    if(hasNeighborAtLabel(matrixDir) && neighborAtLabel(matrixDir).state==State::Matrix)
+                    {
+                        qDebug()<<"Pass vtoken: "<<vtoken->value;
+                        neighborAtLabel(matrixDir).putToken(vtoken);
+
+                    }
+                    else
+                    {
+                        vtoken = NULL;
+                        qDebug()<<"delete vtoken";
+                    }
                 }
-                else
+                else//keep vtoken
                 {
-                    resultFlag = acrossDir;
+                    qDebug()<<"Postpone multiplication";
+                    putToken(vtoken);
+                }*/
+
+            }
+
+            //pass as much as possible
+            if(setlocValue)
+            {
+                int matrixDir = (stopReceiveDir+3)%6;
+                int acrossDir = (matrixDir+2)%6;
+                if(!(hasNeighborAtLabel(matrixDir) && neighborAtLabel(matrixDir).state == State::Matrix) && hasNeighborAtLabel(acrossDir))
+                {
+                    qDebug()<<"Last row: "<<(int)(neighborAtLabel(acrossDir).state)<<"sum tokens: "<<countTokens<SumToken>();
                 }
-          }
-        }
-        /*if(followDir!=-1&& !hasNeighborAtLabel((followDir+1)%6) && !hasNeighborAtLabel((followDir+2)%6)
+                if(countTokens<SumToken>()>0)
+                {
+                    if(hasNeighborAtLabel(acrossDir) &&
+                            ((neighborAtLabel(acrossDir).state== State::Matrix&&neighborAtLabel(acrossDir).setlocValue)
+                             || neighborAtLabel(acrossDir).state==State::Result) &&
+                            neighborAtLabel(acrossDir).countTokens<VectorToken>()==0)
+                    {
+                        while(neighborAtLabel(acrossDir).countTokens<SumToken>()<tokenMax && countTokens<SumToken>()>0){
+                            neighborAtLabel(acrossDir).putToken(takeToken<SumToken>());
+                        }
+                    }
+                    else if(lastCol)
+                    {
+                        qDebug()<<"result flagged";
+                        resultFlag = acrossDir;
+                    }
+                }
+                if(countTokens<StartMultToken>()>0)
+                {
+                    lastCol = true;
+                    if(hasNeighborAtLabel(matrixDir) && neighborAtLabel(matrixDir).state==State::Matrix )
+                    {
+                        neighborAtLabel(matrixDir).putToken(takeToken<StartMultToken>());
+                    }
+                }
+            }
+            /*if(followDir!=-1&& !hasNeighborAtLabel((followDir+1)%6) && !hasNeighborAtLabel((followDir+2)%6)
                 && countTokens<SumToken>()==0 && sentProduct){
             state = State::Finish;
         }
@@ -341,11 +454,39 @@ void Matrix2Particle::activate()
                 && countTokens<SumToken>()==0){
             state=State::Finish;
         }*/
-    }
+        }
 
-    else if (state == State::Result){
-        followDir = stopReceiveDir;
-        /*if(followDir<0)
+        else if (state == State::Result){
+            followDir = stopReceiveDir;
+            int acrossDir = (stopReceiveDir+3)%6;
+           // qDebug()<<"result sum: "<<countTokens<SumToken>() << "after " <<neighborAtLabel(stopReceiveDir).countTokens<SumToken>() <<" in : "<<(int)neighborAtLabel(stopReceiveDir).state <<"result round: "<<resultRound;
+            if(countTokens<SumToken>()==tokenMax )
+            {
+                if(hasNeighborAtLabel(acrossDir) && neighborAtLabel(acrossDir).state==State::Result)
+                {
+
+                    if(  neighborAtLabel(acrossDir).countTokens<SumToken>()<tokenMax )
+                    {
+                      //  qDebug()<<"results carryover: "<<countTokens<SumToken>();
+                        //pass 1 (carryover)
+                        neighborAtLabel(acrossDir).putToken(takeToken<SumToken>());
+                        //discard the rest
+                        int discardcount = 0;
+                        while(countTokens<SumToken>()>0){
+                            discardcount ++;
+                            takeToken<SumToken>();
+                        }
+                      //  qDebug()<<"discarded: "<<discardcount;
+                    }
+
+                }
+                else
+                {
+                   // qDebug()<<"result flagged";
+                    resultFlag = acrossDir;
+                }
+            }
+            /*if(followDir<0)
         {
 
             auto propertyCheck = [&](const Matrix2Particle& p) {
@@ -385,12 +526,12 @@ void Matrix2Particle::activate()
                 && countTokens<SumToken>()<tokenMax){
                    state=State::Finish;
                }*/
-    }
-    else{
-        state=State::Finish;
-    }
+        }
+        else{
+            state=State::Finish;
+        }
 
-}
+    }
 
 
 }
@@ -413,27 +554,39 @@ int Matrix2Particle::headMarkColor() const
     case State::Lead:   return 0xff0000;
     case State::Finish:
         if(countTokens<SumToken>()>=tokenMax)
-        return 0xff0000;
+            return 0xff0000;
         else if (countTokens<SumToken>()>0)
             return 0x999999;
         return 0x000000;
     case State::Active: return 0x0000ff;
     case State::Matrix:
+        if (numcountsgenerated>1)
+            return 0xff0000;
         if(countTokens<VectorToken>()>0)
-            return 0x006400;
-        else if (countTokens<SumToken>()>0)
-            return 0x002d00;
-        else if (setlocValue)
-            return 0x006600;
+            return 0xe5ffe5;//light green
+        else if (countTokens<SumToken>()==1)
+            return 0x99c199;//light green
+        else if (countTokens<SumToken>()==2)
+            return 0x001900;//even darker green
+        else if (countTokens<SumToken>()==3)
+            return 0x000000;
+        else if (setlocValue && countTokens<SumToken>()==0)
+            return 0x006600;//medum green
+        qDebug()<<"regular green set loc?"<<(int)setlocValue;
         return 0x00ff00;
     case State::Result:
-        if (countTokens<SumToken>()>0)
-                    return 0xff0000;
-        return 0x0000ff;
+        if (countTokens<SumToken>()==1)
+              return 0xD6C19B;//lightest brown
+        if (countTokens<SumToken>()==2)
+            return 0x9a6605;//light brown
+        if (countTokens<SumToken>()==3)
+            return 0x2b1d0e;//dark brown
+
+        return 0xFFA500;//orange-ish
     case State::Vector:
         if(setlocValue)
             return 0x221448;
-         return  0x551A8B;
+        return  0x551A8B;
     }
 
     return -1;
@@ -525,7 +678,7 @@ int Matrix2Particle::tryVectorStop() const
                 pointsAtMe(p, p.vectorFlag);
     };
 
-   return labelOfFirstNeighborWithProperty<Matrix2Particle>(propertyCheck);
+    return labelOfFirstNeighborWithProperty<Matrix2Particle>(propertyCheck);
 }
 int Matrix2Particle::tryMatrixStop() const
 {
@@ -547,7 +700,7 @@ int Matrix2Particle::tryResultStop() const
                 pointsAtMe(p, p.resultFlag);
     };
 
-   return labelOfFirstNeighborWithProperty<Matrix2Particle>(propertyCheck);
+    return labelOfFirstNeighborWithProperty<Matrix2Particle>(propertyCheck);
 }
 
 bool Matrix2Particle::canFinish() const
@@ -594,7 +747,7 @@ Matrix2System::Matrix2System(int numParticles, int countValue)
     double holeProb = 0.0;
     // numParticles = 11;
 
-      insert(new Matrix2Particle(Node(0, 0), -1, randDir(), *this, Matrix2Particle::State::Seed));
+    insert(new Matrix2Particle(Node(0, 0), -1, randDir(), *this, Matrix2Particle::State::Seed));
 
 
     std::set<Node> occupied;
@@ -637,7 +790,7 @@ Matrix2System::Matrix2System(int numParticles, int countValue)
             }
         }
     }
-  /* Setup for pre-configured matrix
+    /* Setup for pre-configured matrix
    *
     Matrix2Particle *newparticle = new Matrix2Particle(Node(0, 0), -1, randDir(), *this, Matrix2Particle::State::Seed);
     newparticle->setCounterGoal(countValue);
