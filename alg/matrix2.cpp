@@ -368,46 +368,6 @@ void Matrix2Particle::activate()
                        vectorLeftover--;
                   }
 
-                //do multiplication
-            /*
-                int product = locationValue*vtoken->value;
-                qDebug()<<"taken vector token: "<<vtoken->value<<" product: "<<product<<" potential total: "<<product+countTokens<SumToken>();
-                       std::shared_ptr<VectorToken> vtoken = takeToken<VectorToken>();
-
-                //only do mult if space, otherwise wait
-                if(product+countTokens<SumToken>()<=tokenMax)
-                {
-                    for(int i =0; i<product; i++)
-                    {
-                        putToken(std::make_shared<SumToken>());
-
-                    }
-                    numcountsgenerated++;
-
-                    qDebug()<<"Make sum token, vector tokens left:"<<countTokens<VectorToken>()<<" Num generated: "<<numcountsgenerated;
-                    if(countTokens<VectorToken>()>0)
-                        qDebug()<<"left over: "<<takeToken<VectorToken>()->value;
-                    sentProduct = true;
-
-                    //send forward if possible
-                    int matrixDir = (stopReceiveDir+3)%6;
-                    if(hasNeighborAtLabel(matrixDir) && neighborAtLabel(matrixDir).state==State::Matrix)
-                    {
-                        qDebug()<<"Pass vtoken: "<<vtoken->value;
-                        neighborAtLabel(matrixDir).putToken(vtoken);
-
-                    }
-                    else
-                    {
-                        vtoken = NULL;
-                        qDebug()<<"delete vtoken";
-                    }
-                }
-                else//keep vtoken
-                {
-                    qDebug()<<"Postpone multiplication";
-                    putToken(vtoken);
-                }*/
 
             }
 
@@ -446,20 +406,12 @@ void Matrix2Particle::activate()
                     }
                 }
             }
-            /*if(followDir!=-1&& !hasNeighborAtLabel((followDir+1)%6) && !hasNeighborAtLabel((followDir+2)%6)
-                && countTokens<SumToken>()==0 && sentProduct){
-            state = State::Finish;
-        }
-        else if(followDir!=-1 && hasNeighborAtLabel((followDir+2)%6)  && neighborAtLabel((followDir+2)%6).state==State::Finish
-                && countTokens<SumToken>()==0){
-            state=State::Finish;
-        }*/
+
         }
 
         else if (state == State::Result){
             followDir = stopReceiveDir;
             int acrossDir = (stopReceiveDir+3)%6;
-           // qDebug()<<"result sum: "<<countTokens<SumToken>() << "after " <<neighborAtLabel(stopReceiveDir).countTokens<SumToken>() <<" in : "<<(int)neighborAtLabel(stopReceiveDir).state <<"result round: "<<resultRound;
             if(countTokens<SumToken>()==tokenMax )
             {
                 if(hasNeighborAtLabel(acrossDir) && neighborAtLabel(acrossDir).state==State::Result)
@@ -486,46 +438,7 @@ void Matrix2Particle::activate()
                     resultFlag = acrossDir;
                 }
             }
-            /*if(followDir<0)
-        {
 
-            auto propertyCheck = [&](const Matrix2Particle& p) {
-                return  (p.followDir!=-1&&  pointsAtMe(p, p.followDir)) || p.state==State::Matrix;
-            };
-            int followPoint = labelOfFirstNeighborWithProperty<Matrix2Particle>(propertyCheck);
-          //  qDebug()<<"followPoint: "<<followPoint;
-            if(followPoint!= -1)
-            {
-                //if there are two matrix neighbors, actually go from second.
-                if(neighborAtLabel(followPoint).state==State::Matrix &&
-                        hasNeighborAtLabel((followPoint+1)%6) && neighborAtLabel((followPoint+1)%6).state==State::Matrix)
-                    followPoint = (followPoint+1)%6;
-                followDir =(followPoint+3)%6;
-            }
-
-        }
-        if(followDir!=-1)
-        {
-            //carryover if needed
-            if(countTokens<SumToken>() ==tokenMax && neighborAtLabel(followDir).countTokens<SumToken>()<tokenMax)
-            {
-                qDebug()<<"results carryover: "<<countTokens<SumToken>();
-                //pass 1 (carryover)
-                neighborAtLabel(followDir).putToken(takeToken<SumToken>());
-                //discard the rest
-                int discardcount = 0;
-                while(countTokens<SumToken>()>0){
-                    discardcount ++;
-                    takeToken<SumToken>();
-                }
-                qDebug()<<"discarded: "<<discardcount;
-            }
-        }
-
-        if(followDir!=-1 && hasNeighborAtLabel((followDir+3)%6)  && neighborAtLabel((followDir+3)%6).state==State::Finish
-                && countTokens<SumToken>()<tokenMax){
-                   state=State::Finish;
-               }*/
         }
         else{
             state=State::Finish;
@@ -790,157 +703,7 @@ Matrix2System::Matrix2System(int numParticles, int countValue)
             }
         }
     }
-    /* Setup for pre-configured matrix
-   *
-    Matrix2Particle *newparticle = new Matrix2Particle(Node(0, 0), -1, randDir(), *this, Matrix2Particle::State::Seed);
-    newparticle->setCounterGoal(countValue);
 
-    newparticle->index = 0;
-    insert(newparticle);
-
-    std::set<Node> occupied;
-    occupied.insert(Node(0, 0));
-
-    std::set<Node> candidates;
-    for(int i = 0; i < 6; i++) {
-        candidates.insert(Node(0, 0).nodeInDir(i));
-    }
-
-    // add inactive particles
-    int numNonStaticParticles = 0;
-    while(numNonStaticParticles < numParticles && !candidates.empty()) {
-        // pick random candidate
-        int randIndex = 1;//randInt(0, candidates.size());
-        Node randomCandidate;
-        for(auto it = candidates.begin(); it != candidates.end(); ++it) {
-            if(randIndex == 0) {
-                randomCandidate = *it;
-                candidates.erase(it);
-                break;
-            } else {
-                randIndex--;
-            }
-        }
-
-        occupied.insert(randomCandidate);
-
-        // if(randBool(1.0f - holeProb)) {
-        // only add particle if not a hole
-        insert(new Matrix2Particle(randomCandidate, -1,1, *this, Matrix2Particle::State::Vector));
-        numNonStaticParticles++;
-
-        // add new candidates
-        for(int i = 0; i < 6; i++) {
-            auto neighbor = randomCandidate.nodeInDir(i);
-            if(occupied.find(neighbor) == occupied.end()) {
-                candidates.insert(neighbor);
-            }
-        }
-        //matrix body
-        randIndex = 0;//randInt(0, candidates.size());
-        Node randomCandidate2;
-        std::set<Node> candidates2;
-        candidates2 = candidates;
-        int numNonStaticParticles2 = 0;
-        while(numNonStaticParticles2 < numParticles && !candidates2.empty()) {
-            for(auto it = candidates2.begin(); it != candidates2.end(); ++it) {
-                if(randIndex == 0) {
-                    randomCandidate2 = *it;
-                    candidates2.erase(it);
-                    break;
-                } else {
-                    randIndex--;
-                }
-            }
-
-            occupied.insert(randomCandidate2);
-
-            // if(randBool(1.0f - holeProb)) {
-            // only add particle if not a hole
-            insert(new Matrix2Particle(randomCandidate2, -1,2, *this, Matrix2Particle::State::Matrix));
-            numNonStaticParticles2++;
-
-            // add new candidates
-            for(int i = 0; i < 6; i++) {
-                auto neighbor = randomCandidate2.nodeInDir(i);
-                if(occupied.find(neighbor) == occupied.end()) {
-                    candidates2.insert(neighbor);
-                }
-            }
-        }
-
-
-    }
-
-
-    // add inactive particles
-    numNonStaticParticles = 0;
-    while(numNonStaticParticles < numParticles && !candidates.empty()) {
-        // pick random candidate
-        int randIndex = 1;//randInt(0, candidates.size());
-        Node randomCandidate;
-        for(auto it = candidates.begin(); it != candidates.end(); ++it) {
-            if(randIndex == 0) {
-                randomCandidate = *it;
-                candidates.erase(it);
-                break;
-            } else {
-                randIndex--;
-            }
-        }
-
-        occupied.insert(randomCandidate);
-
-        // if(randBool(1.0f - holeProb)) {
-        // only add particle if not a hole
-        insert(new Matrix2Particle(randomCandidate, -1,1, *this, Matrix2Particle::State::Idle));
-        numNonStaticParticles++;
-
-        // add new candidates
-        for(int i = 0; i < 6; i++) {
-            auto neighbor = randomCandidate.nodeInDir(i);
-            if(occupied.find(neighbor) == occupied.end()) {
-                candidates.insert(neighbor);
-            }
-        }
-        //matrix body
-        randIndex = 0;//randInt(0, candidates.size());
-        Node randomCandidate2;
-        std::set<Node> candidates2;
-        candidates2 = candidates;
-        int numNonStaticParticles2 = 0;
-        while(numNonStaticParticles2 < numParticles && !candidates2.empty()) {
-            for(auto it = candidates2.begin(); it != candidates2.end(); ++it) {
-                if(randIndex == 0) {
-                    randomCandidate2 = *it;
-                    candidates2.erase(it);
-                    break;
-                } else {
-                    randIndex--;
-                }
-            }
-
-            occupied.insert(randomCandidate2);
-
-            // if(randBool(1.0f - holeProb)) {
-            // only add particle if not a hole
-            insert(new Matrix2Particle(randomCandidate2, -1,2, *this, Matrix2Particle::State::Result));
-            numNonStaticParticles2++;
-
-            // add new candidates
-            for(int i = 0; i < 6; i++) {
-                auto neighbor = randomCandidate2.nodeInDir(i);
-                if(occupied.find(neighbor) == occupied.end()) {
-                    candidates2.insert(neighbor);
-                }
-            }
-        }
-
-
-    }
-
-    // }
-*/
 
 }
 

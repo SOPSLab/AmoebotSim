@@ -104,7 +104,10 @@ protected:
     int numcountsgenerated = 0;
     int vectorLeftover = -1;
     std::vector<std::string> valueStream;
+    std::shared_ptr<Token> firsttoken;
+    std::shared_ptr<Token> secondtoken;
 };
+
 
 class Matrix2System : public AmoebotSystem
 {
