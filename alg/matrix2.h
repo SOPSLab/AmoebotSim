@@ -21,8 +21,16 @@ public:
         Active,
         Matrix,//6
         Vector,
-        Result//8
+        Result,//8
+        Prestop
 
+    };
+    enum class TokenType
+    {
+        MatrixToken,
+        VectorToken,
+        EndOfColumnToken,
+        EndOfVectorToken
     };
 
     Matrix2Particle(const Node head,
@@ -45,6 +53,7 @@ public:
     bool hasNeighborInState(std::initializer_list<State> states) const;
 
     int constructionReceiveDir() const;
+    bool stopFlagReceived() const;
     bool canFinish() const;
     int tryVectorStop() const;
     int tryMatrixStop() const;
@@ -55,11 +64,12 @@ public:
     void updateMoveDir();
 
     bool hasTailFollower() const;
-    bool hasSpace();
     void setCounterGoal(int goal);
+    bool shouldStop() const;
+    bool tunnelCheck() const;
 
 protected:
-    struct VectorToken : public Token {
+  /*  struct VectorToken : public Token {
         int value = -1;
     };
     struct MatrixToken : public Token {
@@ -67,6 +77,12 @@ protected:
     };
     struct EndOfColumnToken : public Token {};
     struct EndOfVectorToken : public Token {};
+    */
+    struct StreamToken : public Token {
+        int value = -1;
+        TokenType type;
+
+    };
     struct StartMultToken : public Token {};
     struct ProductToken : public Token {
         int value = -1;
@@ -91,10 +107,11 @@ protected:
     const int MaxValue = 100;
     bool sentProduct = false;
     bool lastCol = false;
-    const int tokenMax = 2;//=counter base
+    const int tokenMax =4 ;//=counter base
     int vectorFlag;
     int matrixFlag;
     int resultFlag;
+    int stopFlag;
     //seed variables
     int streamIter = 0;
     int sMode = 0; // 0 = matrix, 1 = vector, 2 = none
