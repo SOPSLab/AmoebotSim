@@ -59,6 +59,9 @@ protected:
     template<class TokenType>
     std::shared_ptr<TokenType> takeToken();
     template<class TokenType>
+    std::shared_ptr<TokenType> peekAtToken();
+
+    template<class TokenType>
     int countTokens() const;
     template<class TokenType>
     bool hasToken() const;
@@ -101,6 +104,19 @@ std::shared_ptr<TokenType> AmoebotParticle::takeToken()
         if(token != nullptr) {
             std::swap(tokens[0], tokens[i]);
             tokens.pop_front();
+            return token;
+        }
+    }
+    Q_ASSERT(false);
+}
+template<class TokenType>
+std::shared_ptr<TokenType> AmoebotParticle::peekAtToken()
+{
+    for(unsigned int i = 0; i < tokens.size(); i++) {
+        std::shared_ptr<TokenType> token = std::dynamic_pointer_cast<TokenType>(tokens[i]);
+        if(token != nullptr) {
+            //std::swap(tokens[0], tokens[i]);
+            //tokens.pop_front();
             return token;
         }
     }
