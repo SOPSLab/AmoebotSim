@@ -304,9 +304,39 @@ CompressionSystem::CompressionSystem(int numParticles, float lambda)
 {
     Q_ASSERT(lambda > 1);
 
-    // generate a straight line of particles
-    for(int i = 0; i < numParticles; ++i) {
-        insert(new CompressionParticle(Node(i, 0), -1, randDir(), *this, lambda));
+    if(lambda <= 2.17) { // expansion
+        // generate a hexagon
+        int posx, posy;
+        for(int i = 1; i <= numParticles; ++i) {
+            int layer = 1;
+            int position = i - 1;
+            while(position - (6 * layer) >= 0) {
+                position -= 6 * layer;
+                ++layer;
+            }
+
+            switch(position / layer) {
+                case 0: {
+                    posx = layer;
+                    posy = (position % layer) - layer;
+                    if(position % layer == 0) {posx -= 1; posy += 1;} // addresses a corner case
+                    break;
+                }
+                case 1: {posx = layer - (position % layer); posy = position % layer; break;}
+                case 2: {posx = -1 * (position % layer); posy = layer; break;}
+                case 3: {posx = -1 * layer; posy = layer - (position % layer); break;}
+                case 4: {posx = (position % layer) - layer; posy = -1 * (position % layer); break;}
+                case 5: {posx = (position % layer); posy = -1 * layer; break;}
+            }
+
+            insert(new CompressionParticle(Node(posx, posy), -1, randDir(), *this, lambda));
+        }
+    }
+    else { // lambda is in unknown zone, attempt compression
+        // generate a straight line of particles
+        for(int i = 0; i < numParticles; ++i) {
+            insert(new CompressionParticle(Node(i, 0), -1, randDir(), *this, lambda));
+        }
     }
 }
 
