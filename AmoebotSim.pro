@@ -50,7 +50,6 @@ HEADERS += \
     alg/ising.h \
     alg/compression.h \
     alg/adder.h \
-    alg/datastruct.h \
     alg/rectangle.h \
     alg/sierpinski.h \
     alg/matrix.h \

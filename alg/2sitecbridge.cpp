@@ -74,23 +74,32 @@ int TwoSiteCBridgeParticle::headMarkColor() const
     }
 }
 
-// TODO: update when finished making changes
 QString TwoSiteCBridgeParticle::inspectionText() const
 {
     QString text;
     text = "Properties:\n";
-    text += "    lambda = " + QString::number(lambda) + ",\n";
-    text += "    q in (0,1) = " + QString::number(q) + ",\n";
-    text += "    flag = " + QString::number(flag) + ".\n";
-
-    if(isContracted()) {
-        text += "Contracted properties:\n";
-        //text += "    #neighbors in first position = " + QString::number(numNbrsBefore) + ",\n";
+    if(role == Role::Site) {
+        text += "    role = Site.";
     }
-    else { // is expanded
-        text += "Expanded properties:\n";
-        //text += "    #neighbors in first position = " + QString::number(numNbrsBefore) + ",\n";
-        //text += "    #neighbors in second position = " + QString::number(neighborCount(occupiedLabelsNoExpandedHeads(headLabels()))) + ",\n";
+    else { // role == Role::Particle
+        text += "    role = Particle,\n";
+        text += "    lambda = " + QString::number(lambda) + ",\n";
+        text += "    alpha = " + QString::number(alpha) + ",\n";
+        text += "    q in (0,1) = " + QString::number(q) + ",\n";
+        text += "    flag = " + QString::number(flag) + ".\n";
+
+        if(isContracted()) {
+            text += "Contracted properties:\n";
+            text += "    #particle neighbors in first position = " + QString::number(numParticleNbrs1) + ",\n";
+            text += "    #site neighbors in first position = " + QString::number(numSiteNbrs1) + ".";
+        }
+        else { // is expanded
+            text += "Expanded properties:\n";
+            text += "    #particle neighbors in first position = " + QString::number(numParticleNbrs1) + ",\n";
+            text += "    #particle neighbors in second position = " + QString::number(occupiedLabelsNoExpandedHeads(headLabels(), Role::Particle).size()) + ",\n";
+            text += "    #site neighbors in first position = " + QString::number(numSiteNbrs1) + ",\n";
+            text += "    #site neighbors in second position = " + QString::number(occupiedLabelsNoExpandedHeads(headLabels(), Role::Site).size()) + ".";
+        }
     }
 
     return text;
