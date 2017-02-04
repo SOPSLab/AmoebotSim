@@ -345,4 +345,3 @@ bool TwoSiteCBridgeSystem::hasTerminated() const
 
     return false;
 }
-

@@ -27,11 +27,15 @@
 #include "alg/rectangle.h"
 #include "alg/sierpinski.h"
 #include "alg/tokendemo.h"
+#include "alg/twositeebridge.h"
+
 //#include "helper/universalcoatinghelper.h"
 
 #include "script/scriptinterface.h"
 
 #include "sim/node.h"
+
+// constructor
 
 ScriptInterface::ScriptInterface(ScriptEngine &engine, Simulator& sim, VisItem *vis)
     : engine(engine), sim(sim), vis(vis)
@@ -39,16 +43,16 @@ ScriptInterface::ScriptInterface(ScriptEngine &engine, Simulator& sim, VisItem *
     hexagon();
 }
 
+
+// script commands
 void ScriptInterface::log(const QString msg, bool error)
 {
     emit engine.log(msg, error);
 }
-
 void ScriptInterface::runScript(const QString scriptFilePath)
 {
     engine.runScript(scriptFilePath);
 }
-
 void ScriptInterface::writeToFile(const QString filePath, const QString text)
 {
     QFile file(filePath);
@@ -64,26 +68,24 @@ void ScriptInterface::writeToFile(const QString filePath, const QString text)
     file.close();
 }
 
+
+// simulation flow controls
 void ScriptInterface::round()
 {
     sim.round();
 }
-
 void ScriptInterface::runUntilTermination()
 {
     sim.runUntilTermination();
 }
-
 int ScriptInterface::getNumParticles()
 {
     return sim.numParticles();
 }
-
 int ScriptInterface::getNumMovements()
 {
     return sim.numMovements();
 }
-
 int ScriptInterface::getNumRounds()
 {
     return sim.numRounds();
@@ -92,30 +94,26 @@ int ScriptInterface::getLeaderElectionRounds()
 {
     return sim.leaderElectionRounds();
 }
-
 int ScriptInterface::getWeakBound()
 {
- return sim.weakBounds();
+    return sim.weakBounds();
 }
 int ScriptInterface::getStrongBound()
 {
- return sim.strongBounds();
+    return sim.strongBounds();
 }
-
-
-
 void ScriptInterface::setRoundDuration(int ms)
 {
     sim.setRoundDuration(ms);
 }
 
+// visualization interface
 void ScriptInterface::focusOn(int x, int y)
 {
     if(vis != nullptr) {
         vis->focusOn(Node(x, y));
     }
 }
-
 void ScriptInterface::setZoom(float zoom)
 {
     if(vis != nullptr) {
@@ -123,23 +121,7 @@ void ScriptInterface::setZoom(float zoom)
     }
 }
 
-void ScriptInterface::twositecbridge(int numParticles, float lambda, float alpha)
-{
-    if(numParticles < 5) {
-        log("numParticles >= 5 required", true);
-        return;
-    }
-    else if(lambda <= 1) {
-        log("lambda > 1 required", true);
-        return;
-    }
-    else if(alpha < 1) {
-        log("alpha >= 1 required", true);
-        return;
-    }
-
-    sim.setSystem(std::make_shared<TwoSiteCBridgeSystem>(numParticles, lambda, alpha));
-}
+// algorithms
 void ScriptInterface::adder(int numParticles, int countValue)
 {
     sim.setSystem(std::make_shared<AdderSystem>(numParticles, countValue));
@@ -181,32 +163,47 @@ void ScriptInterface::tokenDemo(int numParticles, float holeProb)
 {
     sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
 }
-
-//int ScriptInterface::getUniversalCoatingWeakLowerBound()
-//{
-//    return UniversalCoating::getWeakLowerBound(*sim.getSystem());
-//}
-
-//int ScriptInterface::getUniversalCoatingStrongLowerBound()
-//{
-//    return UniversalCoating::getStrongLowerBound(*sim.getSystem());
-//}
-
-void ScriptInterface::infObjCoating(const int numParticles, const float holeProb)
+void ScriptInterface::twositecbridge(int numParticles, float lambda, float alpha)
 {
-    if(numParticles < 0) {
-        log("numParticles >= 0 required", true);
+    if(numParticles < 5) {
+        log("# particles >= 5 required", true);
+        return;
+    }
+    else if(lambda <= 1) {
+        log("lambda > 1 required", true);
+        return;
+    }
+    else if(alpha < 1) {
+        log("alpha >= 1 required", true);
         return;
     }
 
-    if(holeProb < 0.0f || holeProb > 1.0f) {
-        log("holeProb in [0.0, 1.0] required", true);
+    sim.setSystem(std::make_shared<TwoSiteCBridgeSystem>(numParticles, lambda, alpha));
+}
+void ScriptInterface::twositeebridge(int numParticles, float explambda, float complambda, float alpha)
+{
+    if(numParticles < 5) {
+        log("# particles >= 5 required", true);
+        return;
+    }
+    else if(explambda <= 0 || explambda >= 2.17) {
+        log("expansion lambda must be > 0 and < 2.17", true);
+        return;
+    }
+    else if(complambda <= 3.42) {
+        log("compression lambda must be > 3.42", true);
+        return;
+    }
+    else if(alpha < 1) {
+        log("alpha >= 1 required", true);
         return;
     }
 
-    sim.setSystem(InfObjCoating::InfObjCoating::instance(numParticles, holeProb));
+    sim.setSystem(std::make_shared<TwoSiteEBridgeSystem>(numParticles, explambda, complambda, alpha));
 }
 
+
+// legacy algorithms
 void ScriptInterface::boundedObjCoating(const int numStaticParticles, const int numParticles, const float holeProb)
 {
     if(numParticles < 0) {
@@ -221,7 +218,40 @@ void ScriptInterface::boundedObjCoating(const int numStaticParticles, const int 
 
     sim.setSystem(BoundedObjCoating::BoundedObjCoating::instance(numStaticParticles, numParticles, holeProb));
 }
+void ScriptInterface::compaction(const unsigned int numParticles)
+{
+    sim.setSystem(Compaction::Compaction::instance(numParticles));
+}
+void ScriptInterface::holeelimcompaction(const unsigned int numParticles)
+{
+    sim.setSystem(HoleElimCompaction::HoleElimCompaction::instance(numParticles));
+}
+void ScriptInterface::holeelimstandard(const unsigned int numParticles)
+{
+    sim.setSystem(HoleElimStandard::HoleElimStandard::instance(numParticles));
+}
+void ScriptInterface::infObjCoating(const int numParticles, const float holeProb)
+{
+    if(numParticles < 0) {
+        log("numParticles >= 0 required", true);
+        return;
+    }
 
+    if(holeProb < 0.0f || holeProb > 1.0f) {
+        log("holeProb in [0.0, 1.0] required", true);
+        return;
+    }
+
+    sim.setSystem(InfObjCoating::InfObjCoating::instance(numParticles, holeProb));
+}
+void ScriptInterface::leaderelection(const unsigned int numParticles)
+{
+    sim.setSystem(LeaderElection::LeaderElection::instance(numParticles));
+}
+void ScriptInterface::leaderelectiondemo()
+{
+    sim.setSystem(LeaderElectionDemo::LeaderElectionDemo::instance());
+}
 void ScriptInterface::line(const unsigned int numParticles, const float holeProb)
 {
     if(holeProb < 0.0f || holeProb > 1.0f) {
@@ -231,17 +261,6 @@ void ScriptInterface::line(const unsigned int numParticles, const float holeProb
 
     sim.setSystem(Line::Line::instance(numParticles, holeProb));
 }
-
-void ScriptInterface::triangle(const unsigned int numParticles, const float holeProb)
-{
-    if(holeProb < 0.0f || holeProb > 1.0f) {
-        log("holeProb in [0.0, 1.0] required", true);
-        return;
-    }
-
-    sim.setSystem(Triangle::Triangle::instance(numParticles, holeProb));
-}
-
 void ScriptInterface::ring(const unsigned int numParticles, const float holeProb)
 {
     if(holeProb < 0.0f || holeProb > 1.0f) {
@@ -251,7 +270,6 @@ void ScriptInterface::ring(const unsigned int numParticles, const float holeProb
 
     sim.setSystem(Ring::Ring::instance(numParticles, holeProb));
 }
-
 void ScriptInterface::square(const unsigned int numParticles, const float holeProb)
 {
     if(holeProb < 0.0f || holeProb > 1.0f) {
@@ -261,32 +279,15 @@ void ScriptInterface::square(const unsigned int numParticles, const float holePr
 
     sim.setSystem(Square::Square::instance(numParticles, holeProb));
 }
-
-void ScriptInterface::compaction(const unsigned int numParticles)
+void ScriptInterface::triangle(const unsigned int numParticles, const float holeProb)
 {
-    sim.setSystem(Compaction::Compaction::instance(numParticles));
-}
+    if(holeProb < 0.0f || holeProb > 1.0f) {
+        log("holeProb in [0.0, 1.0] required", true);
+        return;
+    }
 
-void ScriptInterface::holeelimstandard(const unsigned int numParticles)
-{
-    sim.setSystem(HoleElimStandard::HoleElimStandard::instance(numParticles));
+    sim.setSystem(Triangle::Triangle::instance(numParticles, holeProb));
 }
-
-void ScriptInterface::holeelimcompaction(const unsigned int numParticles)
-{
-    sim.setSystem(HoleElimCompaction::HoleElimCompaction::instance(numParticles));
-}
-
-void ScriptInterface::leaderelection(const unsigned int numParticles)
-{
-    sim.setSystem(LeaderElection::LeaderElection::instance(numParticles));
-}
-
-void ScriptInterface::leaderelectiondemo()
-{
-    sim.setSystem(LeaderElectionDemo::LeaderElectionDemo::instance());
-}
-
 void ScriptInterface::universalcoating(const  int staticParticlesRadius, const int numParticles, const float holeProb)
 {
     if(holeProb < 0.0f || holeProb > 1.0f) {
@@ -295,3 +296,14 @@ void ScriptInterface::universalcoating(const  int staticParticlesRadius, const i
     }
     sim.setSystem(UniversalCoating::UniversalCoating::instance(staticParticlesRadius, numParticles, holeProb));
 }
+
+
+// universal coating competitive analysis
+/*int ScriptInterface::getUniversalCoatingWeakLowerBound()
+{
+    return UniversalCoating::getWeakLowerBound(*sim.getSystem());
+}
+int ScriptInterface::getUniversalCoatingStrongLowerBound()
+{
+    return UniversalCoating::getStrongLowerBound(*sim.getSystem());
+}*/

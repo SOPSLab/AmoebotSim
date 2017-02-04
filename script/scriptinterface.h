@@ -20,12 +20,12 @@ public:
     explicit ScriptInterface(ScriptEngine& engine, Simulator& sim, VisItem* vis);
     
 public slots:
-    // scripting stuff
+    // script commands
     void log(const QString msg, bool error = false);
     void runScript(const QString scriptFilePath);
     void writeToFile(const QString filePath, const QString text);
 
-    // interface to simulator
+    // simulator flow controls
     void round();
     void runUntilTermination();
 
@@ -38,12 +38,11 @@ public slots:
 
     void setRoundDuration(int ms); 
 
-    // interface to visualization
+    // visualization interface
     void focusOn(int x, int y);
     void setZoom(float zoom);
 
     // algorithms
-    void twositecbridge(int numParticles = 100, float lambda = 4.0, float alpha = 1.0);
     void adder(int numParticles = 10, int countValue = 250);
     void compression(int numParticles = 100, float lambda = 4.0);
     void hexagon(int numParticles = 200, float holeProb = 0.2);
@@ -53,23 +52,26 @@ public slots:
     void rectangle(int numParticles = 200, float holeProb = 0.2);
     void sierpinski(int numParticles = 200, float holeProb = 0.2);
     void tokenDemo(int numParticles = 200, float holeProb = 0.2);
-
-//    int getUniversalCoatingWeakLowerBound();
-//    int getUniversalCoatingStrongLowerBound();
+    void twositecbridge(int numParticles = 100, float lambda = 4.0, float alpha = 1.0);
+    void twositeebridge(int numParticles = 200, float explambda = 2.0, float complambda = 4.0, float alpha = 1.0);
 
     // legacy algorithms
-    void infObjCoating(const int numParticles, const float holeProb = 0.2);
-    void line(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void boundedObjCoating(const int numStaticParticles, const int numParticles, const float holeProb = 0.2);
-    void triangle(const unsigned int numParticles = 100, const float holeProb = 0.0);
+    void compaction(const unsigned int numParticles = 100);
+    void holeelimcompaction(const unsigned int numParticles = 100);
+    void holeelimstandard(const unsigned int numParticles = 100);
+    void infObjCoating(const int numParticles, const float holeProb = 0.2);
+    void leaderelection(const unsigned int numParticles = 100);
+    void leaderelectiondemo();
+    void line(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void ring(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void square(const unsigned int numParticles = 100, const float holeProb = 0.0);
-    void compaction(const unsigned int numParticles = 100);
-    void holeelimstandard(const unsigned int numParticles = 100);
-    void holeelimcompaction(const unsigned int numParticles = 100);
-    void leaderelection(const unsigned int numParticles = 100);
+    void triangle(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void universalcoating(const int staticParticlesRadius = 5, const int numParticles = 50, const float holeProb = 0.2);
-    void leaderelectiondemo();
+
+    // universal coating competitive analysis
+    // int getUniversalCoatingWeakLowerBound();
+    // int getUniversalCoatingStrongLowerBound();
 
 private:
     ScriptEngine& engine;
