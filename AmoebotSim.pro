@@ -50,7 +50,6 @@ HEADERS += \
     alg/ising.h \
     alg/compression.h \
     alg/adder.h \
-    alg/datastruct.h \
     alg/rectangle.h \
     alg/sierpinski.h \
     alg/matrix.h \
@@ -58,6 +57,7 @@ HEADERS += \
     alg/matrix2.h \
     alg/2sitecbridge.h \
     alg/edgedetect.h
+    alg/twositeebridge.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -102,6 +102,7 @@ SOURCES += \
     alg/matrix2.cpp \
     alg/2sitecbridge.cpp \
     alg/edgedetect.cpp
+    alg/twositeebridge.cpp
 
 RESOURCES += \
     res/qml.qrc \
