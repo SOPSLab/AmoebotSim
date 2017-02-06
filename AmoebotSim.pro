@@ -56,7 +56,7 @@ HEADERS += \
     alg/linesort.h \
     alg/matrix2.h \
     alg/2sitecbridge.h \
-    alg/edgedetect.h
+    alg/edgedetect.h \
     alg/twositeebridge.h
 
 SOURCES += \
@@ -101,7 +101,7 @@ SOURCES += \
     alg/linesort.cpp \
     alg/matrix2.cpp \
     alg/2sitecbridge.cpp \
-    alg/edgedetect.cpp
+    alg/edgedetect.cpp \
     alg/twositeebridge.cpp
 
 RESOURCES += \
