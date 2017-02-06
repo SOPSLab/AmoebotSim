@@ -24,6 +24,7 @@
 #include "alg/linesort.h"
 #include "alg/matrix.h"
 #include "alg/matrix2.h"
+#include "alg/edgedetect.h"
 #include "alg/rectangle.h"
 #include "alg/sierpinski.h"
 #include "alg/tokendemo.h"
@@ -168,6 +169,11 @@ void ScriptInterface::matrix(int numParticles, int countValue, int mode)
     else if(mode == 1) {
         sim.setSystem(std::make_shared<MatrixSystem>(numParticles, countValue));
     }
+}
+void ScriptInterface::edgedetect(int numParticles, int countValue, int mode)
+{
+        sim.setSystem(std::make_shared<EdgeDetectSystem>(numParticles, countValue));
+
 }
 void ScriptInterface::rectangle(int numParticles, float holeProb)
 {

@@ -56,7 +56,8 @@ HEADERS += \
     alg/matrix.h \
     alg/linesort.h \
     alg/matrix2.h \
-    alg/2sitecbridge.h
+    alg/2sitecbridge.h \
+    alg/edgedetect.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -99,7 +100,8 @@ SOURCES += \
     alg/matrix.cpp \
     alg/linesort.cpp \
     alg/matrix2.cpp \
-    alg/2sitecbridge.cpp
+    alg/2sitecbridge.cpp \
+    alg/edgedetect.cpp
 
 RESOURCES += \
     res/qml.qrc \

@@ -50,6 +50,7 @@ public slots:
     void ising(int numParticles = 200, float beta = 0.2);
     void linesort(int numParticles = 200, float holeProb = 0.2);
     void matrix(int numParticles = 10, int countValue = 250, int mode = 0);
+    void edgedetect(int numParticles = 10, int countValue = 250, int mode = 0);
     void rectangle(int numParticles = 200, float holeProb = 0.2);
     void sierpinski(int numParticles = 200, float holeProb = 0.2);
     void tokenDemo(int numParticles = 200, float holeProb = 0.2);
