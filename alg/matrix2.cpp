@@ -210,9 +210,14 @@ void Matrix2Particle::activate()
             else if (resultStop!=-1){
                 state = State::Result;
                 stopReceiveDir = resultStop;
-                //   return;
+              /*  if(stopFlagReceived() )//this is for that last row barrier, same as with the vector
+                {
+                    stopFlag = (stopReceiveDir+3)%6;//in this case we know stop flag and stop receive dir are the same direction
+                }*/
+
+                    //   return;
             }
-            else if (shouldStop())
+            else if (shouldStop() )
             {
 
                 state = State::Prestop;
@@ -266,15 +271,12 @@ void Matrix2Particle::activate()
             else if (resultStop!=-1){
                 state = State::Result;
                 stopReceiveDir = resultStop;
+
                 //   return;
             }
         }
         else if(state == State::Vector) {
-            //turn of stop flags once the vector is finished
-            if(hasNeighborInState({State::Result}))
-            {
-                stopFlag = (stopFlag+5)%6;
-            }
+
             if(countTokens<StreamToken>()>0)
             {
                 //take first stream token (FIFO)- can only really act on one, holding two is just for efficiency
@@ -354,6 +356,8 @@ void Matrix2Particle::activate()
             }
             else if (neighborAtLabel(stopReceiveDir).state==State::Finish && countTokens<StartMultToken>()==0)//no more tokens, next to finished neighbor
             {
+
+                    stopFlag = (stopFlag+5)%6;//this is really just for the last one but the rest won't matter
                 state =State::Finish;
             }
 
@@ -552,6 +556,7 @@ void Matrix2Particle::activate()
                 }
             }
 
+
         }
         else{
             state=State::Finish;
@@ -703,8 +708,21 @@ bool Matrix2Particle::stopFlagReceived() const
 {
     auto propertyCheck = [&](const Matrix2Particle& p) {
         return  isContracted() &&
-                (p.state == State::Vector) && p.stopFlag!=-1 &&
+                (p.state == State::Vector || p.state==State::Finish ||p.state == State::Result) && p.stopFlag!=-1 &&
                 pointsAtMe(p, p.stopFlag);
+    };
+    if ( labelOfFirstNeighborWithProperty<Matrix2Particle>(propertyCheck)!=-1)
+    {
+        return true;
+    }
+     return false;
+
+}
+bool Matrix2Particle::hasLastRowNeighbor() const
+{
+    auto propertyCheck = [&](const Matrix2Particle& p) {
+        return  isContracted() &&
+                ((p.state == State::Matrix || p.state==State::Finish) &&p.lastCol);
     };
     if ( labelOfFirstNeighborWithProperty<Matrix2Particle>(propertyCheck)!=-1)
     {
@@ -863,7 +881,10 @@ bool Matrix2Particle::shouldStop() const
      {
         return true;
     }
-
+     /*if(firstLabel!=-1 && hasNeighborAtLabel((firstLabel+1)%6) && neighborAtLabel((firstLabel+1)%6).state==State::Vector &&
+             ( hasNeighborAtLabel((firstLabel+2)%6) && neighborAtLabel((firstLabel+2)%6).state==State::Matrix ||
+               hasNeighborAtLabel((firstLabel+2)%6) && neighborAtLabel((firstLabel+2)%6).state==State::Prestop))
+*/
    //     return true;
    // if(hasNeighborInState({State::Vector}) && hasNeighborInState({State::Matrix}))
    //     return true;

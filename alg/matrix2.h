@@ -60,7 +60,7 @@ public:
     int tryResultStop() const;
     bool noTokensAtLabel(int label);
     void updateConstructionDir();
-
+    bool hasLastRowNeighbor() const;
     void updateMoveDir();
 
     bool hasTailFollower() const;
