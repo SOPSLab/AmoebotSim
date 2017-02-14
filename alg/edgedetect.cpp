@@ -3,13 +3,14 @@
 #include <QtGlobal>
 
 #include "alg/EdgeDetect.h"
+#include <cmath>        // std::abs
 
 #include <QDebug>
 EdgeDetectParticle::EdgeDetectParticle(const Node head,
-                                 const int globalTailDir,
-                                 const int orientation,
-                                 AmoebotSystem& system,
-                                 State state)
+                                       const int globalTailDir,
+                                       const int orientation,
+                                       AmoebotSystem& system,
+                                       State state)
     : AmoebotParticle(head, globalTailDir, orientation, system),
       state(state),
       constructionDir(-1),
@@ -32,12 +33,21 @@ EdgeDetectParticle::EdgeDetectParticle(const Node head,
       vectorLeftover(-1),
       pixelVal(-1),
       gradientMagnitude(-1),
-      gradientDir(-10)
+      gradientDir(-10),
+      pixelVal2(-1),
+      pixelVal3(-1),
+      noiseFinished(false),
+      sobelFinished(false),
+      nonmaxFinished(false),
+      certainty(-1),
+      supressedMagnitude(-1)
 {
-   for(int i =0;i<8;i++)
-   {
-       gridvals[i]=-1;
-   }
+    for(int i =0;i<8;i++)
+    {
+        gridvals[i]=-1;
+        gridvals2[i] = -1;
+        gridvals3[i]=-1;
+    }
 }
 void EdgeDetectParticle::setCounterGoal(int goal){
 
@@ -65,11 +75,11 @@ void EdgeDetectParticle::activate()
 
         if(state == State::Seed) {
             if(countTokens<StreamToken>() ==0 &&
-                 (valueStream.size()==0 || streamIter<valueStream.size() ))
+                    (valueStream.size()==0 || streamIter<valueStream.size() ))
             {
                 if(streamIter==0)
                 {
-                    std::ifstream myfile("/Users/Alex/amoebotsim/alg/matrixstream_image.txt");
+                    std::ifstream myfile("/Users/Alex/amoebotsim/alg/matrixstream_image_tinysquare.txt");
                     std::string line;
 
                     if (myfile.is_open())
@@ -130,33 +140,33 @@ void EdgeDetectParticle::activate()
             }
             else if (countTokens<StreamToken>()>0)
             {
-                 std::shared_ptr<StreamToken> stoken = peekAtToken<StreamToken>();//TODO: replace with peek so no put backs
-                 if(stoken->type == TokenType::MatrixToken)
-                 {
-                     //continue trying to recruit or if had to wait for space to open up
-                     if(hasNeighborAtLabel(0) && neighborAtLabel(0).state == State::Vector && noTokensAtLabel(0))
-                     {
+                std::shared_ptr<StreamToken> stoken = peekAtToken<StreamToken>();//TODO: replace with peek so no put backs
+                if(stoken->type == TokenType::MatrixToken)
+                {
+                    //continue trying to recruit or if had to wait for space to open up
+                    if(hasNeighborAtLabel(0) && neighborAtLabel(0).state == State::Vector && noTokensAtLabel(0))
+                    {
 
-                         neighborAtLabel(0).putToken(takeToken<StreamToken>());
-                         qDebug()<<"put neighbor matrix token";
-                     }
+                        neighborAtLabel(0).putToken(takeToken<StreamToken>());
+                        qDebug()<<"put neighbor matrix token";
+                    }
 
-                 }
-                 else if (stoken->type == TokenType::VectorToken)
-                 {
-                     if(hasNeighborAtLabel(0) && neighborAtLabel(0).state == State::Vector && noTokensAtLabel(0))
-                     {
+                }
+                else if (stoken->type == TokenType::VectorToken)
+                {
+                    if(hasNeighborAtLabel(0) && neighborAtLabel(0).state == State::Vector && noTokensAtLabel(0))
+                    {
 
-                         neighborAtLabel(0).putToken(takeToken<StreamToken>());
-                         qDebug()<<"put neighbor vector token";
-                     }
+                        neighborAtLabel(0).putToken(takeToken<StreamToken>());
+                        qDebug()<<"put neighbor vector token";
+                    }
 
-                 }
-                 else if(stoken->type ==TokenType::EndOfColumnToken && noTokensAtLabel(0))
-                 {
-                     neighborAtLabel(0).putToken(takeToken<StreamToken>());
-                     qDebug()<<"put neighbor eoc token";
-                 }
+                }
+                else if(stoken->type ==TokenType::EndOfColumnToken && noTokensAtLabel(0))
+                {
+                    neighborAtLabel(0).putToken(takeToken<StreamToken>());
+                    qDebug()<<"put neighbor eoc token";
+                }
 
             }
             if(countTokens<StartMultToken>()>0)
@@ -398,37 +408,147 @@ void EdgeDetectParticle::activate()
             }
             if(completeNeighborhood())
             {
-                //get neighbors first time
+                if(!noiseFinished)
+                {
+                    //get neighbors first time
                     if(gridvals[1]==-1)
                     {
-                       gridvals[5] = neighborAtLabel(followDir).pixelVal;
+                        gridvals[5] = neighborAtLabel(followDir).pixelVal;
                         gridvals[6] = neighborAtLabel((followDir+1)%6).pixelVal;
-                      gridvals[7] = neighborAtLabel((followDir+2)%6).pixelVal;
-                      gridvals[1] = (int)neighborAtLabel((followDir+3)%6).pixelVal;
-                      gridvals[2] = (int)neighborAtLabel((followDir+4)%6).pixelVal;
-                      gridvals[3] = (int)neighborAtLabel((followDir+5)%6).pixelVal;
-                }
+                        gridvals[7] = neighborAtLabel((followDir+2)%6).pixelVal;
+                        gridvals[1] = (int)neighborAtLabel((followDir+3)%6).pixelVal;
+                        gridvals[2] = (int)neighborAtLabel((followDir+4)%6).pixelVal;
+                        gridvals[3] = (int)neighborAtLabel((followDir+5)%6).pixelVal;
+                    }
 
-                //subsequently try to acquire 2-hop
-                if(gridvals[0]==-1)
-                {
-                       gridvals[0] = getTwoHopVal((followDir+3)%6,2);
-                }
-                if(gridvals[4]==-1)
-                {
+                    //subsequently try to acquire 2-hop
+                    if(gridvals[0]==-1)
+                    {
+                        gridvals[0] = getTwoHopVal((followDir+3)%6,2,0);
+                    }
+                    if(gridvals[4]==-1)
+                    {
 
-                    gridvals[4] = getTwoHopVal(followDir,2);
+                        gridvals[4] = getTwoHopVal(followDir,2,0);
 
+                    }
+                    //all good->do calc for gaussian noise reduction
+                    if(!missingGridVal(0))
+                    {
+                        qDebug()<<"has all grid0: "<<pixelVal<<" 0-7: "<<gridvals[0]<<gridvals[1]<<gridvals[2]<<gridvals[3]<<gridvals[4]<<gridvals[5]<<gridvals[6]<<gridvals[7];
+                        //calculate pixelVal2
+
+                        pixelVal2 =gaussianKernel[6]*gridvals[2]+gaussianKernel[5]*gridvals[1]+gaussianKernel[4]*gridvals[0]+
+                                gaussianKernel[7]*gridvals[3]+gaussianKernel[8]*pixelVal+gaussianKernel[3]*gridvals[7]+
+                                gaussianKernel[0]*gridvals[4]+gaussianKernel[1]*gridvals[5]+gaussianKernel[2]*gridvals[6];
+                        noiseFinished = true;
+                        qDebug()<<"spot: "<<pixelVal<<"has pval2: "<<pixelVal2;
+                    }
+                    else if(isSystemEdge())
+                    {
+                        pixelVal2 = pixelVal;
+                        noiseFinished = true;
+                    }
                 }
-                //all good->do calc
-                if(!missingGridVal())
+                else if (!sobelFinished)
                 {
-                    qDebug()<<"has all: "<<pixelVal<<" 0-7: "<<gridvals[0]<<gridvals[1]<<gridvals[2]<<gridvals[3]<<gridvals[4]<<gridvals[5]<<gridvals[6]<<gridvals[7];
-                  double  Gx = gridvals[6]*-1+gridvals[4]+gridvals[7]*-2+gridvals[3]*2+gridvals[2]+gridvals[0]*-1;
-                   double  Gy = gridvals[6]+gridvals[5]*2+gridvals[4]+gridvals[0]*-1+gridvals[1]*-2+gridvals[2]*-1;
-                    gradientMagnitude = sqrt(Gx*Gx+Gy*Gy);
-                    gradientDir = atan(Gx/Gy);
-                    qDebug()<<"magnitude: "<<gradientMagnitude<<" angle: "<<gradientDir;
+                    //this one might have some delay so try to get all the neighbors every time
+                    //check if actually done because we copy the original value for edges which cannot be filtered
+                   gridvals2[5] = neighborAtLabel(followDir).pixelVal2;
+                   gridvals2[6] = neighborAtLabel((followDir+1)%6).pixelVal2;
+                  gridvals2[7] = neighborAtLabel((followDir+2)%6).pixelVal2;
+                    gridvals2[1] = (int)neighborAtLabel((followDir+3)%6).pixelVal2;
+                     gridvals2[2] = (int)neighborAtLabel((followDir+4)%6).pixelVal2;
+                    gridvals2[3] = (int)neighborAtLabel((followDir+5)%6).pixelVal2;
+
+                    qDebug()<<"val "<<pixelVal<<" try to get sobel: "<<gridvals2[0]<<gridvals2[1]<<gridvals2[2]<<gridvals2[3]<<gridvals2[4]<<gridvals2[5]<<gridvals2[6]<<gridvals2[7]<<endl;
+                    //subsequently try to acquire 2-hop
+                    if(gridvals2[0]==-1)
+                    {
+                        gridvals2[0] = getTwoHopVal((followDir+3)%6,2,1);
+                    }
+                    if(gridvals2[4]==-1)
+                    {
+
+                        gridvals2[4] = getTwoHopVal(followDir,2,1);
+
+                    }
+                    //all good->do calc
+                    if(!missingGridVal(1))
+                    {
+                        qDebug()<<"has all grid1: "<<pixelVal<<" 0-7: "<<gridvals2[0]<<gridvals2[1]<<gridvals2[2]<<gridvals2[3]<<gridvals2[4]<<gridvals2[5]<<gridvals2[6]<<gridvals2[7];
+                        double  Gx = gridvals2[6]*-1+gridvals2[4]+gridvals2[7]*-2+gridvals2[3]*2+gridvals2[2]+gridvals2[0]*-1;
+                        double  Gy = gridvals2[6]+gridvals2[5]*2+gridvals2[4]+gridvals2[0]*-1+gridvals2[1]*-2+gridvals2[2]*-1;
+                        gradientMagnitude = sqrt(Gx*Gx+Gy*Gy);
+                        if(Gy==0)
+                        {
+                           if(Gx<0) gradientDir = 3.1415926535;
+                           else gradientDir = 0;
+                        }
+                        else{
+                          gradientDir = atan(Gx/Gy);
+                        }
+                        qDebug()<<"Gx: "<<Gx<<"Gy: "<<Gy<<"magnitude: "<<gradientMagnitude<<" angle: "<<gradientDir<<"stop dir: "<<stopReceiveDir<<"head: "<<calculateGradientGridDir(gradientDir);
+                        sobelFinished = true;
+
+                    }
+                    else if (isSystemEdge())
+                    {
+                        gradientMagnitude = pixelVal;//todo: for now ignore an edge @ each iteration of convolution
+                        sobelFinished =true;
+                    }
+                }
+                else if(!nonmaxFinished)
+                {
+                    gridvals3[5] = neighborAtLabel(followDir).gradientMagnitude;
+                    gridvals3[6] = neighborAtLabel((followDir+1)%6).gradientMagnitude;
+                    gridvals3[7] = neighborAtLabel((followDir+2)%6).gradientMagnitude;
+                    gridvals3[1] = (int)neighborAtLabel((followDir+3)%6).gradientMagnitude;
+                    gridvals3[2] = (int)neighborAtLabel((followDir+4)%6).gradientMagnitude;
+                    gridvals3[3] = (int)neighborAtLabel((followDir+5)%6).gradientMagnitude;
+
+                    //subsequently try to acquire 2-hop
+                    if(gridvals3[0]==-1)
+                    {
+                        gridvals3[0] = getTwoHopVal((followDir+3)%6,2,2);
+                    }
+                    if(gridvals3[4]==-1)
+                    {
+
+                        gridvals3[4] = getTwoHopVal(followDir,2,2);
+
+                    }
+                    //all good->do calc
+                    if(!missingGridVal(2))
+                    {
+                        qDebug()<<"has all grid2: "<<gradientMagnitude<<" 0-7: "<<gridvals3[0]<<gridvals3[1]<<gridvals3[2]<<gridvals3[3]<<gridvals3[4]<<gridvals3[5]<<gridvals3[6]<<gridvals3[7];
+                        //determine if max on gradientDirection
+                        int gridpointdir = calculateGradientGridDir(gradientDir);
+                        if(gridpointdir!=-1)
+                        {
+                            double neighbor1val =neighborAtLabel(gridpointdir).gradientMagnitude;
+                            double neighbor2val = neighborAtLabel((gridpointdir+3)%6).gradientMagnitude;
+                            if(neighbor1val!=-1 && neighbor2val!=-1)
+                            {
+                                qDebug()<<"is max? "<<neighbor1val<<neighbor2val<<gradientMagnitude;
+                                supressedMagnitude = 0;
+                                if(gradientMagnitude >= neighbor1val && gradientMagnitude>=neighbor2val)
+                                {
+                                    supressedMagnitude = gradientMagnitude;
+                                }
+                                nonmaxFinished= true;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if(certainty = -1)
+                    {
+                        //if new gradientMagnitude between thresholds, certainty = 2
+                        //else certainty = 0
+                    }
+                    //if neighborcertainty = 2, certainty = 1, else set certainty = 0 even though should already be 0
                 }
             }
 
@@ -444,7 +564,7 @@ void EdgeDetectParticle::activate()
 
                     if(  neighborAtLabel(acrossDir).countTokens<SumToken>()<tokenMax )
                     {
-                      //  qDebug()<<"results carryover: "<<countTokens<SumToken>();
+                        //  qDebug()<<"results carryover: "<<countTokens<SumToken>();
                         //pass 1 (carryover)
                         neighborAtLabel(acrossDir).putToken(takeToken<SumToken>());
                         //discard the rest
@@ -453,13 +573,13 @@ void EdgeDetectParticle::activate()
                             discardcount ++;
                             takeToken<SumToken>();
                         }
-                      //  qDebug()<<"discarded: "<<discardcount;
+                        //  qDebug()<<"discarded: "<<discardcount;
                     }
 
                 }
                 else
                 {
-                   // qDebug()<<"result flagged";
+                    // qDebug()<<"result flagged";
                     resultFlag = acrossDir;
                 }
             }
@@ -493,26 +613,30 @@ int EdgeDetectParticle::headMarkColor() const
         return 0x000000;
     case State::Active: return 0x0000ff;
     case State::Matrix:
+        if(supressedMagnitude>0)
+        {
+            return 0x00ff00;
+        }
         if(gradientMagnitude>-1)
         {
-            int r = (int)((double)gradientMagnitude/500.0*255);
-           int g =0;
-           int b=  0;
+            int r = (int)((double)gradientMagnitude/50.0*255);
+            int g =0;
+            int b=  0;
             return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
         }
         if(setlocValue)
         {
             int colorvalue = locationValue*1;
-          //  if (colorvalue>255)colorvalue =255;
+            //  if (colorvalue>255)colorvalue =255;
             return colorvalue;
         }
-       /* if (setlocValue && locationValue>200)
+        /* if (setlocValue && locationValue>200)
              return 0x0000ff;
         else
             return 0xffffff;*/
     case State::Result:
         if (countTokens<SumToken>()==1)
-              return 0xD6C19B;//lightest brown
+            return 0xD6C19B;//lightest brown
         if (countTokens<SumToken>()==2)
             return 0x9a6605;//light brown
         if (countTokens<SumToken>()==3)
@@ -524,7 +648,7 @@ int EdgeDetectParticle::headMarkColor() const
             return 0x221448;
         return  0x551A8B;
     case State::Prestop:
-          return 0xAD0101;
+        return 0xAD0101;
 
     }
 
@@ -533,9 +657,9 @@ int EdgeDetectParticle::headMarkColor() const
 bool EdgeDetectParticle::noTokensAtLabel(int label)
 {
     return neighborAtLabel(label).countTokens<StreamToken>()<1;
-        //(neighborAtLabel(label).countTokens<MatrixToken>() ==0 && neighborAtLabel(label).countTokens<VectorToken>() ==0&&
-          //  neighborAtLabel(label).countTokens<EndOfColumnToken>() ==0 && neighborAtLabel(label).countTokens<EndOfVectorToken>() == 0
-          //  &&neighborAtLabel(label).countTokens<StartMultToken>()==0);
+    //(neighborAtLabel(label).countTokens<MatrixToken>() ==0 && neighborAtLabel(label).countTokens<VectorToken>() ==0&&
+    //  neighborAtLabel(label).countTokens<EndOfColumnToken>() ==0 && neighborAtLabel(label).countTokens<EndOfVectorToken>() == 0
+    //  &&neighborAtLabel(label).countTokens<StartMultToken>()==0);
 }
 
 int EdgeDetectParticle::headMarkDir() const
@@ -545,7 +669,8 @@ int EdgeDetectParticle::headMarkDir() const
     } else if(state == State::Seed || state == State::Finish) {
         return constructionDir;
     } else if(state == State::Follow || state== State::Active || state ==State::Matrix || state == State::Vector || state == State::Result) {
-        if(gradientDir>-10)
+         return calculateGradientGridDir(gradientDir);
+        /* if(gradientDir>-10)
         {
             double twopi =  2*3.1415926535;
             double posdir = gradientDir+twopi;
@@ -553,10 +678,32 @@ int EdgeDetectParticle::headMarkDir() const
             int offset = (int)(ratio*6.0);
             return (followDir+offset)%6;
         }
-        return followDir;
+        return followDir;*/
     }
     return -1;
 }
+
+int EdgeDetectParticle::calculateGradientGridDir(double gradientVal) const
+{
+    if(gradientVal>-10)
+    {
+        //since we divide for sign
+        if(gradientVal == 0)
+                return (stopReceiveDir+4)%6;
+
+
+        double twopi =  2*3.1415926535;
+      //  double posdir = gradientVal+twopi;
+        double ratio = gradientVal/twopi;
+        int offset = (int)(ratio*6.0+(ratio/std::abs(ratio)*0.5));
+        int returnvalue = (stopReceiveDir+5+offset+6)%6;
+        qDebug()<<"making head angle: "<<gradientVal<<" ratio: "<<ratio<<"offset: "<<offset<<"stop rec: "<<stopReceiveDir<<" final: "<<returnvalue;
+        return returnvalue;
+
+    }
+    return followDir;
+}
+
 
 int EdgeDetectParticle::tailMarkColor() const
 {
@@ -629,7 +776,7 @@ bool EdgeDetectParticle::stopFlagReceived() const
     {
         return true;
     }
-     return false;
+    return false;
 
 }
 
@@ -677,8 +824,10 @@ bool EdgeDetectParticle::completeNeighborhood() const
     }
     return (count == 6);
 }
-bool EdgeDetectParticle::missingGridVal() const
+bool EdgeDetectParticle::missingGridVal(int whichGrid) const
 {
+    if(whichGrid==0)
+    {
         for (int i =0; i<8;i++)
         {
             if(gridvals[i]==-1)
@@ -686,19 +835,71 @@ bool EdgeDetectParticle::missingGridVal() const
                 return true;
             }
         }
-        return false;
-}
-int EdgeDetectParticle::getTwoHopVal(int sourceNeighbor,int offset) const
-{
-    for(int i =0; i<6;i++)
+    }
+    else if (whichGrid ==1)
     {
-        if(pointsAtMe(neighborAtLabel(sourceNeighbor),i))
-         {
+        for (int i =0; i<8;i++)
+        {
+            if(gridvals2[i]==-1)
+            {
+                return true;
+            }
+        }
+    }
+    else if (whichGrid ==2)
+    {
+        for (int i =0; i<8;i++)
+        {
+            if(gridvals3[i]==-1)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+int EdgeDetectParticle::getTwoHopVal(int sourceNeighbor,int offset,int whichGrid) const
+{
+
+    if(whichGrid ==0)
+    {
+        for(int i =0; i<6;i++)
+        {
+            if(pointsAtMe(neighborAtLabel(sourceNeighbor),i))
+            {
                 int myID = i;
                 int targetDir = (myID+offset)%6;
                 return neighborAtLabel(sourceNeighbor).neighborAtLabel(targetDir).pixelVal;//gridvals[targetDir];
-        }
+            }
 
+        }
+    }
+    else if (whichGrid==1)
+    {
+
+        for(int i =0; i<6;i++)
+        {
+            if(pointsAtMe(neighborAtLabel(sourceNeighbor),i))
+            {
+                int myID = i;
+                int targetDir = (myID+offset)%6;
+                return neighborAtLabel(sourceNeighbor).neighborAtLabel(targetDir).pixelVal2;//gridvals2[targetDir];
+            }
+
+        }
+    }
+    else if(whichGrid ==2)
+    {
+        for(int i =0; i<6;i++)
+        {
+            if(pointsAtMe(neighborAtLabel(sourceNeighbor),i))
+            {
+                int myID = i;
+                int targetDir = (myID+offset)%6;
+                return neighborAtLabel(sourceNeighbor).neighborAtLabel(targetDir).gradientMagnitude;//gridvals2[targetDir];
+            }
+
+        }
     }
     return -1;
 }
@@ -732,7 +933,7 @@ void EdgeDetectParticle::updateMoveDir()
                                           || neighborAtLabel(moveDir).state == State::Vector
                                           || neighborAtLabel(moveDir).state == State::Result
                                           || neighborAtLabel(moveDir).state == State::Prestop
-                                         )) {
+                                          )) {
         moveDir = (moveDir + 5) % 6;
     }
 }
@@ -765,6 +966,12 @@ bool EdgeDetectParticle::tunnelCheck() const
     }
     return false;
 }
+bool EdgeDetectParticle::isSystemEdge() const
+{
+   //todo: for now let edges creep in at each filter iteration
+
+    return false;
+}
 bool EdgeDetectParticle::shouldStop() const
 {
     int firstLabel = labelOfFirstNeighborInState({State::Vector});
@@ -779,7 +986,7 @@ bool EdgeDetectParticle::shouldStop() const
         return true;
 
     }
-     firstLabel = labelOfFirstNeighborInState({State::Matrix});
+    firstLabel = labelOfFirstNeighborInState({State::Matrix});
 
     if(hasNeighborInState({State::Prestop}) && firstLabel!=-1 && hasNeighborAtLabel((firstLabel+1)%6) && neighborAtLabel((firstLabel+1)%6).state==State::Matrix && hasNeighborInState({State::Matrix}))
     {
@@ -792,39 +999,39 @@ bool EdgeDetectParticle::shouldStop() const
 
     }
 
-     if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+1)%6) && neighborAtLabel((firstLabel+1)%6).state==State::Matrix
+    if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+1)%6) && neighborAtLabel((firstLabel+1)%6).state==State::Matrix
             &&hasNeighborAtLabel((firstLabel+2)%6) && neighborAtLabel((firstLabel+2)%6).state==State::Matrix )
     {
         return true;
     }
-     if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+5)%6) && neighborAtLabel((firstLabel+5)%6).state==State::Matrix
+    if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+5)%6) && neighborAtLabel((firstLabel+5)%6).state==State::Matrix
             &&hasNeighborAtLabel((firstLabel+4)%6) && neighborAtLabel((firstLabel+4)%6).state==State::Matrix )
     {
         return true;
     }
-     if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+5)%6) && neighborAtLabel((firstLabel+5)%6).state==State::Matrix
+    if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+5)%6) && neighborAtLabel((firstLabel+5)%6).state==State::Matrix
             &&hasNeighborAtLabel((firstLabel+1)%6) && neighborAtLabel((firstLabel+1)%6).state==State::Matrix )
     {
         return true;
     }
-     firstLabel = labelOfFirstNeighborInState({State::Prestop});
-     if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+5)%6) && neighborAtLabel((firstLabel+5)%6).state==State::Prestop
+    firstLabel = labelOfFirstNeighborInState({State::Prestop});
+    if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+5)%6) && neighborAtLabel((firstLabel+5)%6).state==State::Prestop
             &&hasNeighborAtLabel((firstLabel+1)%6) && neighborAtLabel((firstLabel+1)%6).state==State::Prestop )
     {
         return true;
     }
-     if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+2)%6) && neighborAtLabel((firstLabel+2)%6).state==State::Prestop)
-     {
+    if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+2)%6) && neighborAtLabel((firstLabel+2)%6).state==State::Prestop)
+    {
         return true;
     }
-     if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+4)%6) && neighborAtLabel((firstLabel+4)%6).state==State::Prestop)
-     {
+    if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+4)%6) && neighborAtLabel((firstLabel+4)%6).state==State::Prestop)
+    {
         return true;
     }
 
-   //     return true;
-   // if(hasNeighborInState({State::Vector}) && hasNeighborInState({State::Matrix}))
-   //     return true;
+    //     return true;
+    // if(hasNeighborInState({State::Vector}) && hasNeighborInState({State::Matrix}))
+    //     return true;
 
     return false;
 }

@@ -59,9 +59,9 @@ public:
     int tryMatrixStop() const;
     int tryResultStop() const;
     bool completeNeighborhood() const;
-    bool missingGridVal() const;
+    bool missingGridVal(int whichGrid) const;//whichGrid == 0--> original gridvals; whichGrid == 1-->gaussian done, gridvals2
     bool noTokensAtLabel(int label);
-    int getTwoHopVal(int sourceNeighbor,int offset) const;
+    int getTwoHopVal(int sourceNeighbor,int offset, int whichGrid) const;
     void updateConstructionDir();
 
     void updateMoveDir();
@@ -70,6 +70,8 @@ public:
     void setCounterGoal(int goal);
     bool shouldStop() const;
     bool tunnelCheck() const;
+    bool isSystemEdge() const;
+    int calculateGradientGridDir(double gradientVal) const;
 
 protected:
   /*  struct VectorToken : public Token {
@@ -119,14 +121,32 @@ protected:
     int streamIter = 0;
     int sMode = 0; // 0 = matrix, 1 = vector, 2 = none
     int resultRound=0;
-    int gridvals[8];
     int stopReceiveDir=-1;
     bool columnFinished = false;
     int numcountsgenerated = 0;
     int vectorLeftover = -1;
+
+    //to start Gaussian
     int pixelVal;
+    int gridvals[8];
+    double gaussianKernel[9] ={0.0625,0.125,0.0625,0.125,0.0625,0.125,0.0625,0.125,0.25};
+
+    //to start sobel
+    bool noiseFinished;
+    int pixelVal2;
+    int gridvals2[8];
+    bool sobelFinished;
+    //out of sobel, into nonmax supression
     double gradientMagnitude;
     double gradientDir;
+    int gridvals3[8];
+    double supressedMagnitude;
+    bool nonmaxFinished;
+    int pixelVal3;
+    //connected lines
+    int certainty=-1;
+    //into connectivity
+
     std::vector<std::string> valueStream;
     std::shared_ptr<Token> firsttoken;
     std::shared_ptr<Token> secondtoken;
