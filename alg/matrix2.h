@@ -90,6 +90,9 @@ protected:
     struct SumToken: public Token{
     };
 
+    struct ResultCounterToken: public Token{
+    };
+
 
     State state;
 
@@ -120,6 +123,7 @@ protected:
     bool columnFinished = false;
     int numcountsgenerated = 0;
     int vectorLeftover = -1;
+    bool resultEndRow;
     std::vector<std::string> valueStream;
     std::shared_ptr<Token> firsttoken;
     std::shared_ptr<Token> secondtoken;
