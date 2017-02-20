@@ -49,7 +49,7 @@ private:
 class TwoSiteEBridgeSystem : public AmoebotSystem
 {
 public:
-    TwoSiteEBridgeSystem(int numParticles = 100, float explambda = 2.0, float complambda = 4.0);
+    TwoSiteEBridgeSystem(int numParticles = 100, float explambda = 2.0, float complambda = 4.0, float siteDistance = 1.25);
 
     virtual bool hasTerminated() const;
 };

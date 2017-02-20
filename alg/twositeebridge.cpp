@@ -352,7 +352,7 @@ const std::vector<int> TwoSiteEBridgeParticle::occupiedLabelsNoExpandedHeads(std
     return occNoExpHeadLabels;
 }
 
-TwoSiteEBridgeSystem::TwoSiteEBridgeSystem(int numParticles, float explambda, float complambda)
+TwoSiteEBridgeSystem::TwoSiteEBridgeSystem(int numParticles, float explambda, float complambda, float siteDistance)
 {
     // first insert the anchor site at the center of the hexagon
     insert(new TwoSiteEBridgeParticle(Node(0,0), -1, randDir(), *this, TwoSiteEBridgeParticle::Role::Site, 0, 0, true));
@@ -385,7 +385,7 @@ TwoSiteEBridgeSystem::TwoSiteEBridgeSystem(int numParticles, float explambda, fl
     }
 
     // lastly, insert the site the system is exploring and bridging to
-    insert(new TwoSiteEBridgeParticle(Node(floor(1.3*sqrt(numParticles)), 0), -1, randDir(), *this, TwoSiteEBridgeParticle::Role::Site, 0, 0, false));
+    insert(new TwoSiteEBridgeParticle(Node(floor(siteDistance*sqrt(numParticles)), 0), -1, randDir(), *this, TwoSiteEBridgeParticle::Role::Site, 0, 0, false));
 }
 
 bool TwoSiteEBridgeSystem::hasTerminated() const

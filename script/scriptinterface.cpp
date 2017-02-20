@@ -1,5 +1,6 @@
 #include <QFile>
 #include <QTextStream>
+#include <math.h>
 
 #include "alg/legacy/legacysystem.h"
 #include "alg/legacy/boundedobjcoating.h"
@@ -186,7 +187,7 @@ void ScriptInterface::twositecbridge(int numParticles, float lambda, float alpha
 
     sim.setSystem(std::make_shared<TwoSiteCBridgeSystem>(numParticles, lambda, alpha));
 }
-void ScriptInterface::twositeebridge(int numParticles, float explambda, float complambda)
+void ScriptInterface::twositeebridge(int numParticles, float explambda, float complambda, float siteDistance)
 {
     if(numParticles < 5) {
         log("# particles >= 5 required", true);
@@ -200,8 +201,12 @@ void ScriptInterface::twositeebridge(int numParticles, float explambda, float co
         log("compression lambda must be > 3.42", true);
         return;
     }
+    else if(siteDistance <= 1 || siteDistance > sqrt(numParticles)) {
+        log("site distance factor must be > 1 and < sqrt(#particles)", true);
+        return;
+    }
 
-    sim.setSystem(std::make_shared<TwoSiteEBridgeSystem>(numParticles, explambda, complambda));
+    sim.setSystem(std::make_shared<TwoSiteEBridgeSystem>(numParticles, explambda, complambda, siteDistance));
 }
 
 
