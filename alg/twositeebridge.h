@@ -38,6 +38,7 @@ protected:
 
 private:
     bool hasExpandedNeighbor() const;
+    bool hasNeighborWithLambda(const int val) const;
     int neighborCount(std::vector<int> labels, const Role r, const bool countNewSites) const;
     bool checkProp1(const Role r) const;
     bool checkProp2(const Role r) const;

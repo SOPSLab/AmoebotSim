@@ -30,6 +30,11 @@ void TwoSiteEBridgeParticle::activate()
             int expandDir = randDir(); // select a random neighboring location
             q = randFloat(0,1); // select a random q in (0,1)
 
+            // check for particles in neighborhood with updated lambdas (expansion -> compression)
+            if(hasNeighborWithLambda(complambda)) {
+                lambda = complambda;
+            }
+
             if(canExpand(expandDir) && !hasExpandedNeighbor()) {
                 // count neighbors before expansion
                 numNbrs1 = neighborCount(uniqueLabels(), Role::All, true);
@@ -50,6 +55,14 @@ void TwoSiteEBridgeParticle::activate()
                         && (checkProp1(Role::Particle) || checkProp2(Role::Particle))
                         && (checkProp1(Role::All) || checkProp2(Role::All))) {
                     contractTail(); // contract to new location
+
+                    // if there is a new site in the neighborhood, set its flag to TRUE and update this particle's lambda
+                    for(const int label : uniqueLabels()) {
+                        if(hasNeighborAtLabel(label) && neighborAtLabel(label).role == Role::Site && !neighborAtLabel(label).flag) {
+                            neighborAtLabel(label).flag = true;
+                            lambda = complambda;
+                        }
+                    }
                 }
                 else {
                     contractHead(); // contract back to original location
@@ -89,7 +102,8 @@ QString TwoSiteEBridgeParticle::inspectionText() const
     QString text;
     text = "Properties:\n";
     if(role == Role::Site) {
-        text += "    role = Site.";
+        text += "    role = Site,\n";
+        text += "    flag = " + QString::number(flag) + ".";
     }
     else { // role == Role::Particle
         text += "    role = Particle,\n";
@@ -120,6 +134,17 @@ bool TwoSiteEBridgeParticle::hasExpandedNeighbor() const
 {
     for(const int label: uniqueLabels()) {
         if(hasNeighborAtLabel(label) && neighborAtLabel(label).isExpanded()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool TwoSiteEBridgeParticle::hasNeighborWithLambda(const int val) const
+{
+    for(const int label : uniqueLabels()) {
+        if(hasNeighborAtLabel(label) && neighborAtLabel(label).lambda == val) {
             return true;
         }
     }
@@ -330,7 +355,7 @@ const std::vector<int> TwoSiteEBridgeParticle::occupiedLabelsNoExpandedHeads(std
 TwoSiteEBridgeSystem::TwoSiteEBridgeSystem(int numParticles, float explambda, float complambda)
 {
     // first insert the anchor site at the center of the hexagon
-    insert(new TwoSiteEBridgeParticle(Node(0,0), -1, randDir(), *this, TwoSiteEBridgeParticle::Role::Site, explambda, complambda, true));
+    insert(new TwoSiteEBridgeParticle(Node(0,0), -1, randDir(), *this, TwoSiteEBridgeParticle::Role::Site, 0, 0, true));
 
     // generate a hexagon
     int posx, posy;
@@ -360,7 +385,7 @@ TwoSiteEBridgeSystem::TwoSiteEBridgeSystem(int numParticles, float explambda, fl
     }
 
     // lastly, insert the site the system is exploring and bridging to
-    insert(new TwoSiteEBridgeParticle(Node(floor(2*sqrt(numParticles)), 0), -1, randDir(), *this, TwoSiteEBridgeParticle::Role::Site, explambda, complambda, false));
+    insert(new TwoSiteEBridgeParticle(Node(floor(1.3*sqrt(numParticles)), 0), -1, randDir(), *this, TwoSiteEBridgeParticle::Role::Site, 0, 0, false));
 }
 
 bool TwoSiteEBridgeSystem::hasTerminated() const
