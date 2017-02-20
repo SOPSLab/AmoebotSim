@@ -46,7 +46,9 @@ void TwoSiteEBridgeParticle::activate()
                 int numNbrs2 = occupiedLabelsNoExpandedHeads(headLabels(), Role::All, true).size();
 
                 // check if the bias probability is satisfied and the locations satisfy property 1 or 2
-                if((q < pow(lambda, numNbrs2 - numNbrs1)) && (checkProp1(Role::All) || checkProp2(Role::All))) {
+                if((q < pow(lambda, numNbrs2 - numNbrs1))
+                        && (checkProp1(Role::Particle) || checkProp2(Role::Particle))
+                        && (checkProp1(Role::All) || checkProp2(Role::All))) {
                     contractTail(); // contract to new location
                 }
                 else {
@@ -332,7 +334,7 @@ TwoSiteEBridgeSystem::TwoSiteEBridgeSystem(int numParticles, float explambda, fl
 
     // generate a hexagon
     int posx, posy;
-    for(int i = 1; i <= numParticles; ++i) {
+    for(int i = 2; i <= numParticles; ++i) {
         int layer = 1;
         int position = i - 1;
         while(position - (6 * layer) >= 0) {
