@@ -13,14 +13,14 @@ TwoSiteEBridgeParticle::TwoSiteEBridgeParticle(const Node head,
                                                Role role,
                                                const float explambda,
                                                const float complambda,
-                                               const float alpha)
+                                               const bool flag)
     : AmoebotParticle(head, globalTailDir, orientation, system),
       role(role),
       explambda(explambda),
       complambda(complambda),
-      alpha(alpha)
+      flag(flag)
 {
-    lambda = explambda; q = 0; numParticleNbrs1 = 0; numSiteNbrs1 = 0; flag = false;
+    lambda = explambda; q = 0; numNbrs1 = 0;
 }
 
 void TwoSiteEBridgeParticle::activate()
@@ -32,8 +32,7 @@ void TwoSiteEBridgeParticle::activate()
 
             if(canExpand(expandDir) && !hasExpandedNeighbor()) {
                 // count neighbors before expansion
-                numParticleNbrs1 = neighborCount(uniqueLabels(), Role::Particle);
-                numSiteNbrs1 = neighborCount(uniqueLabels(), Role::Site);
+                numNbrs1 = neighborCount(uniqueLabels(), Role::All, true);
 
                 expand(expandDir); // expand to the unoccupied position
 
@@ -42,15 +41,12 @@ void TwoSiteEBridgeParticle::activate()
         }
         else { // is expanded
             // can only attempt to contract to new location if flag == TRUE and original position does not have 5 neighbors
-            if(flag && (numParticleNbrs1 + numSiteNbrs1) != 5) {
+            if(flag && numNbrs1 != 5) {
                 // count neighbors in new location
-                int numParticleNbrs2 = occupiedLabelsNoExpandedHeads(headLabels(), Role::Particle).size();
-                int numSiteNbrs2 = occupiedLabelsNoExpandedHeads(headLabels(), Role::Site).size();
+                int numNbrs2 = occupiedLabelsNoExpandedHeads(headLabels(), Role::All, true).size();
 
                 // check if the bias probability is satisfied and the locations satisfy property 1 or 2
-                if((q < pow(lambda, numParticleNbrs2 - numParticleNbrs1 + alpha * (numSiteNbrs2 - numSiteNbrs1)))
-                        && (checkProp1(Role::Particle) || checkProp2(Role::Particle))
-                        && (checkProp1(Role::All) || checkProp2(Role::All))) {
+                if((q < pow(lambda, numNbrs2 - numNbrs1)) && (checkProp1(Role::All) || checkProp2(Role::All))) {
                     contractTail(); // contract to new location
                 }
                 else {
@@ -81,6 +77,11 @@ int TwoSiteEBridgeParticle::headMarkColor() const
     }
 }
 
+int TwoSiteEBridgeParticle::tailMarkColor() const
+{
+    return headMarkColor();
+}
+
 QString TwoSiteEBridgeParticle::inspectionText() const
 {
     QString text;
@@ -91,21 +92,17 @@ QString TwoSiteEBridgeParticle::inspectionText() const
     else { // role == Role::Particle
         text += "    role = Particle,\n";
         text += "    lambda = " + QString::number(lambda) + ",\n";
-        text += "    alpha = " + QString::number(alpha) + ",\n";
         text += "    q in (0,1) = " + QString::number(q) + ",\n";
         text += "    flag = " + QString::number(flag) + ".\n";
 
         if(isContracted()) {
             text += "Contracted properties:\n";
-            text += "    #particle neighbors in first position = " + QString::number(numParticleNbrs1) + ",\n";
-            text += "    #site neighbors in first position = " + QString::number(numSiteNbrs1) + ".";
+            text += "    #neighbors in first position = " + QString::number(numNbrs1) + ".";
         }
         else { // is expanded
             text += "Expanded properties:\n";
-            text += "    #particle neighbors in first position = " + QString::number(numParticleNbrs1) + ",\n";
-            text += "    #particle neighbors in second position = " + QString::number(occupiedLabelsNoExpandedHeads(headLabels(), Role::Particle).size()) + ",\n";
-            text += "    #site neighbors in first position = " + QString::number(numSiteNbrs1) + ",\n";
-            text += "    #site neighbors in second position = " + QString::number(occupiedLabelsNoExpandedHeads(headLabels(), Role::Site).size()) + ".";
+            text += "    #neighbors in first position = " + QString::number(numNbrs1) + ",\n";
+            text += "    #neighbors in second position = " + QString::number(occupiedLabelsNoExpandedHeads(headLabels(), Role::All, true).size()) + ".";
         }
     }
 
@@ -128,12 +125,13 @@ bool TwoSiteEBridgeParticle::hasExpandedNeighbor() const
     return false;
 }
 
-int TwoSiteEBridgeParticle::neighborCount(std::vector<int> labels, const Role r) const
+int TwoSiteEBridgeParticle::neighborCount(std::vector<int> labels, const Role r, const bool countNewSites) const
 {
     int neighbors = 0;
 
     for(const int label : labels) {
-        if(hasNeighborAtLabel(label) && (r == Role::All || neighborAtLabel(label).role == r)) {
+        if(hasNeighborAtLabel(label) && (r == Role::All || neighborAtLabel(label).role == r)
+                && !(neighborAtLabel(label).role == Role::Site && !countNewSites && !neighborAtLabel(label).flag)) {
             ++neighbors;
         }
     }
@@ -147,7 +145,7 @@ bool TwoSiteEBridgeParticle::checkProp1(const Role r) const
     Q_ASSERT(flag); // not required by algorithm, but equivalent and cleaner for our implementation
 
     const std::vector<int> allLabels = uniqueLabels();
-    const std::vector<int> occLabels = occupiedLabelsNoExpandedHeads(allLabels, r);
+    const std::vector<int> occLabels = occupiedLabelsNoExpandedHeads(allLabels, r, false);
 
     // find the size of S
     int sizeS = 0;
@@ -192,7 +190,7 @@ bool TwoSiteEBridgeParticle::checkProp2(const Role r) const
     Q_ASSERT(isExpanded());
     Q_ASSERT(flag); // not required by algorithm, but equivalent and cleaner for our implementation
 
-    const std::vector<int> occLabels = occupiedLabelsNoExpandedHeads(uniqueLabels(), r);
+    const std::vector<int> occLabels = occupiedLabelsNoExpandedHeads(uniqueLabels(), r, false);
 
     // find the size of S
     int sizeS = 0;
@@ -309,7 +307,7 @@ const std::vector<int> TwoSiteEBridgeParticle::uniqueLabels() const
     }
 }
 
-const std::vector<int> TwoSiteEBridgeParticle::occupiedLabelsNoExpandedHeads(std::vector<int> labels, const Role r) const
+const std::vector<int> TwoSiteEBridgeParticle::occupiedLabelsNoExpandedHeads(std::vector<int> labels, const Role r, const bool countNewSites) const
 {
     Q_ASSERT(flag); // expanded particles with flag == TRUE can ignore heads of expanded neighbors since their flag == FALSE
 
@@ -317,6 +315,7 @@ const std::vector<int> TwoSiteEBridgeParticle::occupiedLabelsNoExpandedHeads(std
     for(const int label : labels) {
         // if the label points at the head of an expanded neighboring particle, do not include it
         if(hasNeighborAtLabel(label) && (r == Role::All || neighborAtLabel(label).role == r)
+                && !(neighborAtLabel(label).role == Role::Site && !countNewSites && !neighborAtLabel(label).flag)
                 && !(neighborAtLabel(label).isExpanded() && neighborAtLabel(label).pointsAtMyHead(*this, label)))
         {
             occNoExpHeadLabels.push_back(label);
@@ -326,11 +325,13 @@ const std::vector<int> TwoSiteEBridgeParticle::occupiedLabelsNoExpandedHeads(std
     return occNoExpHeadLabels;
 }
 
-// TODO: update initialization
-TwoSiteEBridgeSystem::TwoSiteEBridgeSystem(int numParticles, float explambda, float complambda, float alpha)
+TwoSiteEBridgeSystem::TwoSiteEBridgeSystem(int numParticles, float explambda, float complambda)
 {
+    // first insert the anchor site at the center of the hexagon
+    insert(new TwoSiteEBridgeParticle(Node(0,0), -1, randDir(), *this, TwoSiteEBridgeParticle::Role::Site, explambda, complambda, true));
+
     // generate a hexagon
-    int posx = 0, posy = 0;
+    int posx, posy;
     for(int i = 1; i <= numParticles; ++i) {
         int layer = 1;
         int position = i - 1;
@@ -353,28 +354,15 @@ TwoSiteEBridgeSystem::TwoSiteEBridgeSystem(int numParticles, float explambda, fl
             case 5: {posx = (position % layer); posy = -1 * layer; break;}
         }
 
-        TwoSiteEBridgeParticle::Role role;
-        if(posx == 0 && posy == 0) { // anchor site
-            role = TwoSiteEBridgeParticle::Role::Site;
-        }
-        else { // all others are particles
-            role = TwoSiteEBridgeParticle::Role::Particle;
-        }
-        insert(new TwoSiteEBridgeParticle(Node(posx, posy), -1, randDir(), *this, role, explambda, complambda, alpha));
+        insert(new TwoSiteEBridgeParticle(Node(posx, posy), -1, randDir(), *this, TwoSiteEBridgeParticle::Role::Particle, explambda, complambda, false));
     }
 
     // lastly, insert the site the system is exploring and bridging to
-    insert(new TwoSiteEBridgeParticle(Node(floor(2*sqrt(numParticles)), 0), -1, randDir(), *this, TwoSiteEBridgeParticle::Role::Site, explambda, complambda, alpha));
+    insert(new TwoSiteEBridgeParticle(Node(floor(2*sqrt(numParticles)), 0), -1, randDir(), *this, TwoSiteEBridgeParticle::Role::Site, explambda, complambda, false));
 }
 
 bool TwoSiteEBridgeSystem::hasTerminated() const
 {
-#ifdef QT_DEBUG
-    // terminates on disconnection
-    if(!isConnected(particles)) {
-        return true;
-    }
-#endif
-
+    // this simulation shouldn't terminate on disconnection, since the site to be explored is always initially disconnected
     return false;
 }

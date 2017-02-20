@@ -186,7 +186,7 @@ void ScriptInterface::twositecbridge(int numParticles, float lambda, float alpha
 
     sim.setSystem(std::make_shared<TwoSiteCBridgeSystem>(numParticles, lambda, alpha));
 }
-void ScriptInterface::twositeebridge(int numParticles, float explambda, float complambda, float alpha)
+void ScriptInterface::twositeebridge(int numParticles, float explambda, float complambda)
 {
     if(numParticles < 5) {
         log("# particles >= 5 required", true);
@@ -200,12 +200,8 @@ void ScriptInterface::twositeebridge(int numParticles, float explambda, float co
         log("compression lambda must be > 3.42", true);
         return;
     }
-    else if(alpha < 1) {
-        log("alpha >= 1 required", true);
-        return;
-    }
 
-    sim.setSystem(std::make_shared<TwoSiteEBridgeSystem>(numParticles, explambda, complambda, alpha));
+    sim.setSystem(std::make_shared<TwoSiteEBridgeSystem>(numParticles, explambda, complambda));
 }
 
 
