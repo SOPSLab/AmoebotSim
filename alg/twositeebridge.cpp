@@ -80,7 +80,12 @@ void TwoSiteEBridgeParticle::activate()
 int TwoSiteEBridgeParticle::headMarkColor() const
 {
     if(role == Role::Site) {
-        return 0x000000;
+        if(flag) {
+            return 0x00ff00;
+        }
+        else {
+            return 0x000000;
+        }
     }
     else { // role == Role::Particle
         if(lambda == explambda) { // in expansion mode
