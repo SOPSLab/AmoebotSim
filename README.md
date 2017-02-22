@@ -16,11 +16,11 @@ The following instructions should get you started working with AmoebotSim; pleas
 
 ###Development###
 
-- It is advisable to enable building using multiple threads. This can be achieved in Qt Creator by adding the parameter _"-j"_ in _Projects_ in the bar on the left, then _Build Steps_, _Make_, _Make arguments_. However, note that building with this option might considerably increase memory usage.
+- It is advisable to enable building using multiple threads. This can be achieved in Qt Creator by adding the parameter _"-j"_  to _Projects_ (left side-bar) > _Build Steps_ > _Make_ > _Make arguments_. Note that this might considerably increase memory usage.
 
-- Also, it is advisable to disable QML debugging as leaving this enabled might pose a security risk. It can be disabled with a checkbox under _Projects_, _Build Steps_, _qmake_.
+- Leaving QML debugging enabled might pose a security risk. It can be disabled by unchecking the checkbox under _Projects_ > _Build Steps_ > _qmake_ > _Details_.
 
-- If you are new to developing algorithms in AmoebotSim, the best way to start is looking at the example algorithm in the "alg" directory. Changes on the remaining code should not be required.
+- If you are new to developing algorithms in AmoebotSim, _hexagon.cpp_ in the "alg" directory serves as a self-contained example. For an example which includes token passing, see _tokendemo.cpp_.
 
 ###User Interface###
 
@@ -32,32 +32,25 @@ The following instructions should get you started working with AmoebotSim; pleas
     - __Ctrl + D__: Execute a single round of the simulation.
     - __Ctrl + F__: Focus on center of mass.
 - Clicking on a particle while holding Ctrl (Cmd) results in that particle executing a single turn, if possible.
-- Clicking on a particle while holding Alt prints the results of the particles inspectionText() function if it is implemented. This provides easier runtime debugging.
-- Clicking on an unoccupied place while holding Shift results in adding a new particle on this place. You can also hold the left mousebutton and "draw" particles along the moved cursor.
-  When setting the connectivity check via __setCheckConnectivity(true)__ you can decide whether the new particle must be connected or not. By default the check is activated and new particles must be connected.
+- Clicking on a particle while holding Alt prints its __inspectionText()__ results, if it is implemented. This provides easier runtime debugging.
 - A command-line can be opened by pressing the return-key. The available commands are the methods of the _ScriptInterface_ class in _script/scriptinterface.h_.
-    - __round()__: Executes one round in the simulation
-    - __runScript(path)__: Executes the scriptfile found in __path__. It must be written in Javascript.
-    - __writeToFile(path, text)__: Writes the given __text__ to the file stated in __path__.
-    - __saveScreenshot(filepath)__: Saves a screenshot of the current window in __filepath__. If __filepath__ is not provided a screenshot will be generated in the build folder.
-    - __isValid()__: Returns true when the algorithm is valid, otherwise false.
-    - __isDisconnected()__: Returns true when the algorithm is disconnected, otherwise false.
-    - __isTerminated()__: Returns true when the algorithm is terminated, otherwise false.
-    - __isDeadlocked()__: Returns true when the algorithm is deadlocked, otherwise false.
-    - __getNumParticles()__: Returns the amount of particles in the simulation.
-    - __getNumNonStaticParticles()__: Returns the amount of non static particles in the simulation.
-    - __getNumMovements()__: Returns the amount of already made movements by the particles in the simulation.
-    - __getNumRounds()__: Returns the amount of finished rounds in the simulation.
-    - __setCheckConnectivity(check)__: When __check__ is true newly created particles must be connected, otherwise they don't need to. Default value is true.
-    - __setRoundDuration(ms)__: Sets the duration for a round to __ms__ milliseconds.
-    - __moveCameraTo(nodeX, nodeY)__: Moves center of the camera to the __(nodeX, nodeY)__ coordinate in the node coordinate system.
-    - __setZoom(factor)__: Sets the zoomfactor. The value ranges between 4 and 128.
-    - __setResolution(width, height)__: Sets the resolution of the simulator. 
-    - __setFullscreen()__: Runs the simulator in fullscreen mode.
-    - __setWindowed()__: Runs the simulator in windowed mode. 
+    - __log(msg, error)__: Emits the message __msg__ to the console, and can be denoted as an error message by setting __error__ to true.
+    - __runScript(path)__: Executes the script found at __path__. It must be written in Javascript.
+    - __writeToFile(path, text)__: Writes the given __text__ to the file at __path__.
+    - __round()__: Executes one round of the simulation (see __Ctrl + D__ above).
+    - __runUntilTermination()__: Runs the given simulation until the system's __hasTerminated()__ function signals true.
+    - __getNumParticles()__: Returns the number of particles in the system.
+    - __getNumMovements()__: Returns the current total number of expansions and contractions executed by the particles in the simulation.
+    - __getNumRounds()__: Returns the current number of asynchronous rounds completed in the simulation.
+    - __setRoundDuration(ms)__: Sets the duration of a round of simulation to __ms__ milliseconds. Setting __ms__ to 0 will push the simulation as fast as possible.
+    - __focusOn(x, y)__: Centers the camera on the coordinate __(x,y)__.
+    - __setZoom(factor)__: Sets the zoom to __factor__, which must be between 4 and 128.
+    - __saveScreenshot(path)__: Saves a screenshot of the current window tp __path__. If __path__ is not provided, a screenshot will be generated in the build folder. (__NOTE__: this function is currently deprecated, but may be reimplemented soon.)
 
 ###Video capturing###
-Amoebot does not provide direct video export. But with the following script it is possible to capture every frame and save it on the HDD/SDD. 
+__NOTE__: Currently inoperable, and will remain so until __saveScreenshot__ is reimplemented.
+
+AmoebotSim does not provide direct video export. But with the following script it is possible to capture every frame and save it on the HDD/SDD. 
 
 ```
     function pad(number, length)
@@ -89,7 +82,7 @@ One method is using the ffmpeg library. When installed properly you only need to
 ffmpeg -framerate 90 -pattern_type glob -i '*.png' -c:v libx264 -pix_fmt yuv420p -r 30 out.mov
 ```
 
-Another method is using virtualdub (http://www.virtualdub.org/ ). Just open the application, drag the first screenshot in and then select all the other screenshots. While holding __CTRL__ drag all the other screenshots also into the application.
+Another method is using virtualdub (http://www.virtualdub.org/ ). Just open the application, drag the first screenshot in and then select all the other screenshots. While holding Ctrl (Cmd) drag all the other screenshots also into the application.
 Under __Video__ you select the framerate and adjust the compression settings. Afterwards you can export the file via File -> Save as AVI .
 
 [1] http://qt-project.org/downloads
