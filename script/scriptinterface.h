@@ -41,6 +41,8 @@ public slots:
     // visualization interface
     void focusOn(int x, int y);
     void setZoom(float zoom);
+    void saveScreenshot(QString filePath = "");
+    void filmSimulation(QString filePath, const int iterLimit);
 
     // algorithms
     void adder(int numParticles = 10, int countValue = 250);
@@ -78,6 +80,8 @@ private:
     ScriptEngine& engine;
     Simulator& sim;
     VisItem* vis;
+
+    QString pad(const int number, const int length);
 };
 
 #endif // SCRIPTINTERFACE_H

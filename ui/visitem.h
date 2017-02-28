@@ -32,6 +32,7 @@ public slots:
     void focusOnCenterOfMass();
     void focusOn(Node node);
     void setZoom(float zoom);
+    void saveScreenshot(QString filePath);
 
 protected slots:
     virtual void initialize();

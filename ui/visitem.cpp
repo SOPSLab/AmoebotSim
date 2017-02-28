@@ -64,6 +64,11 @@ void VisItem::setZoom(float zoom)
     view.setZoom(zoom);
 }
 
+void VisItem::saveScreenshot(QString filePath)
+{
+    window()->grabWindow().save(filePath);
+}
+
 void VisItem::initialize()
 {
     gridTex = std::unique_ptr<QOpenGLTexture>(new QOpenGLTexture(QImage(":/textures/grid.png").mirrored()));

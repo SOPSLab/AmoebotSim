@@ -37,6 +37,7 @@ Application::Application(int argc, char *argv[])
 
         // setup connections between GUI and Simulator
         connect(&sim, &Simulator::systemChanged, vis, &VisItem::systemChanged);
+        connect(&sim, &Simulator::saveScreenshot, vis, &VisItem::saveScreenshot);
         connect(qmlRoot, SIGNAL(start()), &sim, SLOT(start()));
         connect(qmlRoot, SIGNAL(stop() ), &sim, SLOT(stop() ));
         connect(qmlRoot, SIGNAL(round()), &sim, SLOT(round()));

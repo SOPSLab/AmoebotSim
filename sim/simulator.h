@@ -21,6 +21,7 @@ public:
 signals:
     void systemChanged(std::shared_ptr<System> _system);
     void roundDurationChanged(int ms);
+    void saveScreenshot(const QString filePath);
 
     void started();
     void stopped();
@@ -31,6 +32,7 @@ public slots:
     void runUntilTermination();
     void start();
     void stop();
+    void saveScreenshotSetup(const QString filePath);
 
     int numParticles() const;
     int numMovements() const;

@@ -1,5 +1,6 @@
 #include <QFile>
 #include <QTextStream>
+#include <QTime>
 #include <math.h>
 
 #include "alg/legacy/legacysystem.h"
@@ -70,7 +71,6 @@ void ScriptInterface::writeToFile(const QString filePath, const QString text)
     file.close();
 }
 
-
 // simulation flow controls
 void ScriptInterface::round()
 {
@@ -122,6 +122,32 @@ void ScriptInterface::setZoom(float zoom)
         vis->setZoom(zoom);
     }
 }
+void ScriptInterface::saveScreenshot(QString filePath)
+{
+    if(filePath == "") {
+        filePath = QString("amoebotsim_") + QString::number(QTime::currentTime().msecsSinceStartOfDay()) + QString(".png");
+    }
+    sim.saveScreenshotSetup(filePath);
+}
+void ScriptInterface::filmSimulation(QString filePath, const int iterLimit)
+{
+    const int filenameLength = 10;
+    int i = 0;
+
+    while(!sim.getSystem()->hasTerminated() && i < iterLimit && i < 10 * filenameLength) {
+        saveScreenshot(filePath + pad(i,filenameLength) + QString(".png"));
+        round();
+        ++i;
+    }
+}
+QString ScriptInterface::pad(const int number, const int length)
+{
+    QString str = "" + QString::number(number);
+    while(str.length() < length) {
+        str = QString("0") + str;
+    }
+    return str;
+}
 
 // algorithms
 void ScriptInterface::adder(int numParticles, int countValue)
@@ -155,8 +181,7 @@ void ScriptInterface::matrix(int numParticles, int countValue, int mode)
 }
 void ScriptInterface::edgedetect(int numParticles, int countValue, int mode)
 {
-        sim.setSystem(std::make_shared<EdgeDetectSystem>(numParticles, countValue));
-
+    sim.setSystem(std::make_shared<EdgeDetectSystem>(numParticles, countValue));
 }
 void ScriptInterface::rectangle(int numParticles, float holeProb)
 {

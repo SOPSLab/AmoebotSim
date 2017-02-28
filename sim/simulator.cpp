@@ -64,6 +64,12 @@ void Simulator::stop()
     emit stopped();
 }
 
+void Simulator::saveScreenshotSetup(const QString filePath)
+{
+    emit systemChanged(system);
+    emit saveScreenshot(filePath);
+}
+
 int Simulator::numParticles() const
 {
     QMutexLocker locker(&system->mutex);
