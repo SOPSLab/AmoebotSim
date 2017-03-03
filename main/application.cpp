@@ -19,17 +19,17 @@ Application::Application(int argc, char *argv[])
         auto qmlRoot = engine.rootObjects().first();
         auto vis = qmlRoot->findChild<VisItem*>();
         auto slider = qmlRoot->findChild<QObject*>("roundDurationSlider");
-        connect(vis,  &VisItem::beforeRendering,
+        connect(vis, &VisItem::beforeRendering,
                 [this, qmlRoot](){
                     QMetaObject::invokeMethod(qmlRoot, "setNumMovements", Q_ARG(QVariant, sim.numMovements()));
                 }
         );
-        connect(vis,  &VisItem::beforeRendering,
+        connect(vis, &VisItem::beforeRendering,
                 [this, qmlRoot](){
                     QMetaObject::invokeMethod(qmlRoot, "setNumRounds", Q_ARG(QVariant, sim.numRounds()));
                 }
         );
-        connect(vis,  &VisItem::inspectParticle,
+        connect(vis, &VisItem::inspectParticle,
                 [qmlRoot](QString text){
                     QMetaObject::invokeMethod(qmlRoot, "inspectParticle", Q_ARG(QVariant, text));
                 }

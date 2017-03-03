@@ -258,10 +258,10 @@ ApplicationWindow {
             focus: true
             Keys.onPressed: {
                 if(event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
+                    visible = false
                     if(text != "") {
                         executeCommand(text)
                     }
-                    visible = false
                     text = ""
                     buttonRow.forceActiveFocus()
                     event.accepted = true
@@ -316,22 +316,31 @@ ApplicationWindow {
                 event.accepted = true
             } else if(event.key === Qt.Key_B && (event.modifiers & Qt.ControlModifier)) {
                 ui_state++
-                if (ui_state >= 3)
+                if(ui_state > 3) {
                     ui_state = 0
+                }
 
-                if (ui_state == 0){
+                if(ui_state == 0) { // all ui elements visible
                     startStopButton.visible = true
                     roundButton.visible = true
                     roundDurationSlider.visible = true
                     roundsRow.visible = true
                     numMovementsRow.visible = true
-                }else if (ui_state == 1){
+                }
+                else if(ui_state == 1) { // only start/stop and round buttons
                     roundDurationSlider.visible = false
                     roundsRow.visible = false
                     numMovementsRow.visible = false
-                }else if (ui_state == 2){
+                }
+                else if(ui_state == 2) { // only #rounds and #movement labels
                     startStopButton.visible = false
                     roundButton.visible = false
+                    roundsRow.visible = true
+                    numMovementsRow.visible = true
+                }
+                else if(ui_state == 3) { // none
+                    roundsRow.visible = false
+                    numMovementsRow.visible = false
                 }
                 event.accepted = true
             } else if(event.key === Qt.Key_E && (event.modifiers & Qt.ControlModifier)) {

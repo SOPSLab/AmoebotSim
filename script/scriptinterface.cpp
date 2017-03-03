@@ -135,6 +135,7 @@ void ScriptInterface::filmSimulation(QString filePath, const int iterLimit)
     int i = 0;
 
     while(!sim.getSystem()->hasTerminated() && i < iterLimit && i < 10 * filenameLength) {
+        emit vis->beforeRendering(); // updates GUI #rounds and #movements labels
         saveScreenshot(filePath + pad(i,filenameLength) + QString(".png"));
         round();
         ++i;
