@@ -107,7 +107,7 @@ protected:
     int locationValue = 0;
     bool setlocValue  =false;
     int resultValue= -1;
-    const int MaxValue = 100;
+    const int MaxValue = 10;
     bool sentProduct = false;
     bool lastCol = false;
     const int tokenMax =4 ;//=counter base
@@ -124,6 +124,8 @@ protected:
     int numcountsgenerated = 0;
     int vectorLeftover = -1;
     bool resultEndRow;
+    bool wasMatrix;
+    int acrossDir;
     std::vector<std::string> valueStream;
     std::shared_ptr<Token> firsttoken;
     std::shared_ptr<Token> secondtoken;
