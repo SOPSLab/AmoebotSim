@@ -37,7 +37,8 @@ public:
                     const int globalTailDir,
                     const int orientation,
                     AmoebotSystem& system,
-                    State state);
+                    State state,
+                    int whichStream);
 
     virtual void activate();
 
@@ -95,7 +96,7 @@ protected:
 
 
     State state;
-
+    int streamDim;
     int constructionDir;
     int moveDir;
     int followDir;
@@ -125,7 +126,9 @@ protected:
     int vectorLeftover = -1;
     bool resultEndRow;
     bool wasMatrix;
+    bool wasSeed;
     int acrossDir;
+
     std::vector<std::string> valueStream;
     std::shared_ptr<Token> firsttoken;
     std::shared_ptr<Token> secondtoken;
@@ -135,7 +138,7 @@ protected:
 class Matrix2System : public AmoebotSystem
 {
 public:
-    Matrix2System(int numParticles = 10, int countValue = 250);
+    Matrix2System(int numParticles = 10, int countValue = 250, int whichStream=3);
 
     virtual bool hasTerminated() const;
 };

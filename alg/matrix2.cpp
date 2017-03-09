@@ -9,7 +9,8 @@ Matrix2Particle::Matrix2Particle(const Node head,
                                  const int globalTailDir,
                                  const int orientation,
                                  AmoebotSystem& system,
-                                 State state)
+                                 State state,
+                                 int whichStream)
     : AmoebotParticle(head, globalTailDir, orientation, system),
       state(state),
       constructionDir(-1),
@@ -32,9 +33,11 @@ Matrix2Particle::Matrix2Particle(const Node head,
       vectorLeftover(-1),
       resultEndRow(false),
       wasMatrix(false),
-      acrossDir(-1)
+      acrossDir(-1),
+      wasSeed(false),
+      streamDim(3)
 {
-
+    streamDim = whichStream;
 }
 void Matrix2Particle::setCounterGoal(int goal){
 
@@ -61,12 +64,16 @@ void Matrix2Particle::activate()
 
 
         if(state == State::Seed) {
+            wasSeed=true;
             if(countTokens<StreamToken>() ==0 &&
                     (valueStream.size()==0 || streamIter<valueStream.size() ))
             {
                 if(streamIter==0)
                 {
-                    std::ifstream myfile("/Users/Alex/amoebotsim/alg/matrixstream_10.txt");
+                    std::string firstpath =  "/Users/Alex/amoebotsim/alg/matrixstream_";
+                    std::string endpath = ".txt";
+                    std::string streamfilename =firstpath+std::to_string(streamDim)+endpath;
+                    std::ifstream myfile(streamfilename);
                     std::string line;
 
                     if (myfile.is_open())
@@ -88,6 +95,7 @@ void Matrix2Particle::activate()
                 }
                 else if(valueStream[streamIter].compare("eov")==0)
                 {
+
                     sMode = 2;
                     qDebug()<<"end of vector";
                     std::shared_ptr<StartMultToken> startmult= std::make_shared<StartMultToken>();
@@ -219,7 +227,7 @@ void Matrix2Particle::activate()
                     resultEndRow =true;
                     stopFlag = (stopReceiveDir+3)%6;//in this case we know stop flag and stop receive dir are the same direction
                 }
-               /* int*/ acrossDir = (stopReceiveDir+5)%6;
+                 acrossDir = (stopReceiveDir+5)%6;
                 if(stopFlagReceived() )//this is for that last row barrier, same as with the vector
                 {
                     if(hasLastRowNeighbor()||hasNeighborInState({State::Matrix}))
@@ -245,22 +253,7 @@ void Matrix2Particle::activate()
                 state = State::Prestop;
                 qDebug()<<"Is prestop";
             }
-            /*else if (tunnelCheck())
-            {
-                for(int i =0; i<6;i++)
-                {
-                    if(!hasNeighborAtLabel(i))
-                    {
-                        qDebug()<<"tunnel move dir";
-                        moveDir = i;
-                        if(!hasNeighborAtLabel(moveDir)) {
-                            expand(moveDir);
-                        } else if(hasTailAtLabel(moveDir)) {
-                            push(moveDir);
-                        }
-                    }
-                }
-            }*/
+
             else if(!stopFlagReceived()) {
                 updateMoveDir();
                 if(!hasNeighborAtLabel(moveDir)) {
@@ -652,8 +645,10 @@ void Matrix2Particle::activate()
                 }*/
             }
             //row is done up to this particle, so will not get any more sum tokens and doesn't need to carry one over
-            if(neighborAtLabel(stopReceiveDir).state==State::Finish && countTokens<SumToken>()<tokenMax  && countTokens<ResultCounterToken>()==0 )
+            //also make sure others in col for result are in place
+            if(!resultEndRow && neighborAtLabel((acrossDir+3)%6).state==State::Finish && countTokens<SumToken>()<tokenMax  && countTokens<ResultCounterToken>()==0 )
             {
+
                 if(resultFlag!=-1 && hasNeighborAtLabel(resultFlag) && neighborAtLabel(resultFlag).state==State::Result)
                 {
                     state =State::Finish;
@@ -681,8 +676,7 @@ void Matrix2Particle::activate()
 
 int Matrix2Particle::headMarkColor() const
 {
-    //if(resultEndRow)// if(countTokens<ResultCounterToken>()>0)
-    //     return 0xffffff;
+
     switch(state) {
     case State::Seed:   return 0x00ff00;
     case State::Idle:   return -1;
@@ -868,7 +862,7 @@ int Matrix2Particle::tryResultStop() const
 
     auto propertyCheck = [&](const Matrix2Particle& p) {
         return  isContracted() &&
-                (p.state == State::Seed || p.state == State::Matrix || p.state == State::Vector || p.state==State::Result) && p.resultFlag>=0 &&
+                (p.state == State::Seed || p.state == State::Matrix || p.state == State::Vector || p.state==State::Result || p.state==State::Finish) && p.resultFlag>=0 &&
                 pointsAtMe(p, p.resultFlag);
     };
     int firstResultFlag = labelOfFirstNeighborWithProperty<Matrix2Particle>(propertyCheck);
@@ -879,8 +873,8 @@ int Matrix2Particle::tryResultStop() const
 
     }
 
-    int firstresult=  labelOfFirstNeighborInState({State::Result});
-    if(firstresult!=-1)
+    int firstresult=  labelOfFirstNeighborInState({State::Result,State::Finish});
+    if(firstresult!=-1 && !neighborAtLabel(firstresult).wasSeed)
     {
         if(hasNeighborAtLabel((firstresult+1)%6) && hasNeighborAtLabel((firstresult+2)%6) &&
                 (  neighborAtLabel((firstresult+1)%6).wasMatrix) &&
@@ -889,24 +883,31 @@ int Matrix2Particle::tryResultStop() const
             return firstresult;
         }
         if(hasNeighborAtLabel((firstresult+1)%6) && hasNeighborAtLabel((firstresult+2)%6) &&
-                neighborAtLabel((firstresult+1)%6).state==State::Result &&
-                neighborAtLabel((firstresult+2)%6).state==State::Result )
+                (!neighborAtLabel((firstresult+1)%6).wasSeed && !neighborAtLabel((firstresult+2)%6).wasSeed)&&
+                (neighborAtLabel((firstresult+1)%6).state==State::Result|| neighborAtLabel((firstresult+1)%6).state==State::Finish) &&
+              (  neighborAtLabel((firstresult+2)%6).state==State::Result||  neighborAtLabel((firstresult+2)%6).state==State::Finish) )
         {
             return firstresult;
         }
         if(hasNeighborAtLabel((firstresult+1)%6) && hasNeighborAtLabel((firstresult+5)%6) &&
-                neighborAtLabel((firstresult+1)%6).state==State::Result &&
-                neighborAtLabel((firstresult+5)%6).state==State::Result )
+                 (!neighborAtLabel((firstresult+1)%6).wasSeed && !neighborAtLabel((firstresult+5)%6).wasSeed) &&
+                (neighborAtLabel((firstresult+1)%6).state==State::Result|| neighborAtLabel((firstresult+1)%6).state==State::Finish) &&
+              (  neighborAtLabel((firstresult+5)%6).state==State::Result||  neighborAtLabel((firstresult+5)%6).state==State::Finish) )
         {
             return (firstresult+5)%6;
         }
         if(hasNeighborAtLabel((firstresult+4)%6) && hasNeighborAtLabel((firstresult+5)%6) &&
-                neighborAtLabel((firstresult+4)%6).state==State::Result &&
-                neighborAtLabel((firstresult+5)%6).state==State::Result )
+                (!neighborAtLabel((firstresult+4)%6).wasSeed && !neighborAtLabel((firstresult+5)%6).wasSeed) &&
+                (neighborAtLabel((firstresult+4)%6).state==State::Result|| neighborAtLabel((firstresult+4)%6).state==State::Finish) &&
+              (  neighborAtLabel((firstresult+5)%6).state==State::Result||  neighborAtLabel((firstresult+5)%6).state==State::Finish) )
         {
             return (firstresult+4)%6;
         }
+
     }
+  //  int firstFinish=  labelOfFirstNeighborInState({State::Finish});
+
+
 
     return -1;
 }
@@ -1038,12 +1039,11 @@ bool Matrix2Particle::shouldStop() const
     return false;
 }
 
-Matrix2System::Matrix2System(int numParticles, int countValue)
+Matrix2System::Matrix2System(int numParticles, int countValue, int whichStream)
 {
     double holeProb = 0.0;
     // numParticles = 11;
-
-    insert(new Matrix2Particle(Node(0, 0), -1, randDir(), *this, Matrix2Particle::State::Seed));
+    insert(new Matrix2Particle(Node(0, 0), -1, randDir(), *this, Matrix2Particle::State::Seed, whichStream));
 
 
     std::set<Node> occupied;
@@ -1074,7 +1074,7 @@ Matrix2System::Matrix2System(int numParticles, int countValue)
 
         if(randBool(1.0f - holeProb)) {
             // only add particle if not a hole
-            insert(new Matrix2Particle(randomCandidate, -1, randDir(), *this, Matrix2Particle::State::Idle));
+            insert(new Matrix2Particle(randomCandidate, -1, randDir(), *this, Matrix2Particle::State::Idle, whichStream));
             numNonStaticParticles++;
 
             // add new candidates
@@ -1100,7 +1100,7 @@ bool Matrix2System::hasTerminated() const
 
     for(auto p : particles) {
         auto hp = dynamic_cast<Matrix2Particle*>(p);
-        if(hp->state != Matrix2Particle::State::Seed && hp->state != Matrix2Particle::State::Finish) {
+        if(hp->state != Matrix2Particle::State::Seed && hp->state != Matrix2Particle::State::Finish && hp->state!=Matrix2Particle::State::Vector&& !hp->resultEndRow) {
             return false;
         }
     }
