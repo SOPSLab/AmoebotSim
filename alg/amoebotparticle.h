@@ -12,63 +12,60 @@
 #include "helper/randomnumbergenerator.h"
 #include "sim/node.h"
 
-class AmoebotParticle : public LabelledNoCompassParticle, public RandomNumberGenerator
-{
-protected:
-    struct Token { virtual ~Token(){ } };
+class AmoebotParticle : public LabelledNoCompassParticle,
+                        public RandomNumberGenerator {
+ public:
+  AmoebotParticle(const Node head, const int globalTailDir,
+                  const int orientation, AmoebotSystem& system);
 
-public:
-    AmoebotParticle(const Node head,
-                    const int globalTailDir,
-                    const int orientation,
-                    AmoebotSystem& system);
+  virtual void activate() = 0;
 
-    virtual void activate() = 0;
+  virtual int headMarkGlobalDir() const final;
+  virtual int tailMarkGlobalDir() const final;
 
-    virtual int headMarkGlobalDir() const final;
-    virtual int tailMarkGlobalDir() const final;
+ protected:
+  struct Token { virtual ~Token(){ } };
 
-protected:
-    virtual int headMarkDir() const;
-    virtual int tailMarkDir() const;
+  virtual int headMarkDir() const;
+  virtual int tailMarkDir() const;
 
-    bool canExpand(int label);
-    void expand(int label);
+  bool canExpand(int label);
+  void expand(int label);
 
-    bool canPush(int label);
-    void push(int label);
+  bool canPush(int label);
+  void push(int label);
 
-    void contract(int label);
-    void contractHead();
-    void contractTail();
+  void contract(int label);
+  void contractHead();
+  void contractTail();
 
-    bool canPull(int label);
-    void pull(int label);
+  bool canPull(int label);
+  void pull(int label);
 
-    template<class ParticleType>
-    ParticleType& neighborAtLabel(int label) const;
+  template<class ParticleType>
+  ParticleType& neighborAtLabel(int label) const;
 
-    bool hasNeighborAtLabel(int label) const;
-    bool hasHeadAtLabel(int label);
-    bool hasTailAtLabel(int label);
+  bool hasNeighborAtLabel(int label) const;
+  bool hasHeadAtLabel(int label);
+  bool hasTailAtLabel(int label);
 
-    template<class ParticleType>
-    int labelOfFirstNeighborWithProperty(std::function<bool(const ParticleType&)> propertyCheck, int startLabel = 0) const;
+  template<class ParticleType>
+  int labelOfFirstNeighborWithProperty(std::function<bool(const ParticleType&)> propertyCheck, int startLabel = 0) const;
 
-    void putToken(std::shared_ptr<Token> token);
-    template<class TokenType>
-    std::shared_ptr<TokenType> takeToken();
-    template<class TokenType>
-    std::shared_ptr<TokenType> peekAtToken();
+  void putToken(std::shared_ptr<Token> token);
+  template<class TokenType>
+  std::shared_ptr<TokenType> takeToken();
+  template<class TokenType>
+  std::shared_ptr<TokenType> peekAtToken();
 
-    template<class TokenType>
-    int countTokens() const;
-    template<class TokenType>
-    bool hasToken() const;
+  template<class TokenType>
+  int countTokens() const;
+  template<class TokenType>
+  bool hasToken() const;
 
-private:
-    AmoebotSystem& system;
-    std::deque<std::shared_ptr<Token>> tokens;
+ private:
+  AmoebotSystem& system;
+  std::deque<std::shared_ptr<Token>> tokens;
 };
 
 template<class ParticleType>
