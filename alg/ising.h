@@ -30,7 +30,7 @@ public:
 
     virtual QString inspectionText() const;
 
-    IsingParticle& neighborAtLabel(int label) const;
+    IsingParticle& nbrAtLabel(int label) const;
 
 protected:
     Spin spin;

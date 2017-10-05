@@ -6,9 +6,9 @@
 
 #include "alg/legacy/algorithm.h"
 #include "alg/legacy/movement.h"
-#include "alg/labellednocompassparticle.h"
+#include "alg/localparticle.h"
 
-class LegacyParticle : public LabelledNoCompassParticle
+class LegacyParticle : public LocalParticle
 {
 public:
     LegacyParticle(std::shared_ptr<Algorithm> _algorithm,

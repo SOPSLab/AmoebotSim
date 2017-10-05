@@ -4,7 +4,7 @@ LegacyParticle::LegacyParticle(std::shared_ptr<Algorithm> _algorithm,
                                const int _orientation,
                                const Node head,
                                const int tailDir)
-    : LabelledNoCompassParticle(head, tailDir, _orientation)
+    : LocalParticle(head, tailDir, _orientation)
     , algorithm(_algorithm)
 {
     Q_ASSERT(_algorithm != nullptr);
@@ -38,7 +38,7 @@ void LegacyParticle::discard()
 
 const Flag* LegacyParticle::getFlagForNodeInDir(const Node node, const int dir)
 {
-    return algorithm->flagAt(labelOfNeighboringNodeInGlobalDir(node, dir));
+    return algorithm->flagAt(labelOfNbrNodeInGlobalDir(node, dir));
 }
 
 std::shared_ptr<const Algorithm> LegacyParticle::getAlgorithm() const{

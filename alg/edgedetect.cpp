@@ -144,36 +144,36 @@ void EdgeDetectParticle::activate()
                 if(stoken->type == TokenType::MatrixToken)
                 {
                     //continue trying to recruit or if had to wait for space to open up
-                    if(hasNeighborAtLabel(0) && neighborAtLabel(0).state == State::Vector && noTokensAtLabel(0))
+                    if(hasNbrAtLabel(0) && nbrAtLabel(0).state == State::Vector && noTokensAtLabel(0))
                     {
 
-                        neighborAtLabel(0).putToken(takeToken<StreamToken>());
+                        nbrAtLabel(0).putToken(takeToken<StreamToken>());
                         qDebug()<<"put neighbor matrix token";
                     }
 
                 }
                 else if (stoken->type == TokenType::VectorToken)
                 {
-                    if(hasNeighborAtLabel(0) && neighborAtLabel(0).state == State::Vector && noTokensAtLabel(0))
+                    if(hasNbrAtLabel(0) && nbrAtLabel(0).state == State::Vector && noTokensAtLabel(0))
                     {
 
-                        neighborAtLabel(0).putToken(takeToken<StreamToken>());
+                        nbrAtLabel(0).putToken(takeToken<StreamToken>());
                         qDebug()<<"put neighbor vector token";
                     }
 
                 }
                 else if(stoken->type ==TokenType::EndOfColumnToken && noTokensAtLabel(0))
                 {
-                    neighborAtLabel(0).putToken(takeToken<StreamToken>());
+                    nbrAtLabel(0).putToken(takeToken<StreamToken>());
                     qDebug()<<"put neighbor eoc token";
                 }
 
             }
             if(countTokens<StartMultToken>()>0)
             {
-                if(hasNeighborAtLabel(0) && neighborAtLabel(0).state == State::Vector && noTokensAtLabel(0))
+                if(hasNbrAtLabel(0) && nbrAtLabel(0).state == State::Vector && noTokensAtLabel(0))
                 {
-                    neighborAtLabel(0).putToken(takeToken<StartMultToken>());
+                    nbrAtLabel(0).putToken(takeToken<StartMultToken>());
                 }
             }
 
@@ -196,8 +196,8 @@ void EdgeDetectParticle::activate()
                 updateMoveDir();
                 return;
             } else if(hasTailAtLabel(followDir)) {
-                EdgeDetectParticle neighbor = neighborAtLabel(followDir);
-                int neighborContractionDir = neighborDirToDir(neighbor, (neighbor.tailDir() + 3) % 6);
+                EdgeDetectParticle neighbor = nbrAtLabel(followDir);
+                int neighborContractionDir = nbrDirToDir(neighbor, (neighbor.tailDir() + 3) % 6);
                 push(followDir);
                 followDir = neighborContractionDir;
                 return;
@@ -236,11 +236,11 @@ void EdgeDetectParticle::activate()
             {
                 for(int i =0; i<6;i++)
                 {
-                    if(!hasNeighborAtLabel(i))
+                    if(!hasNbrAtLabel(i))
                     {
                         qDebug()<<"tunnel move dir";
                         moveDir = i;
-                        if(!hasNeighborAtLabel(moveDir)) {
+                        if(!hasNbrAtLabel(moveDir)) {
                             expand(moveDir);
                         } else if(hasTailAtLabel(moveDir)) {
                             push(moveDir);
@@ -250,7 +250,7 @@ void EdgeDetectParticle::activate()
             }
             else if(!stopFlagReceived()) {
                 updateMoveDir();
-                if(!hasNeighborAtLabel(moveDir)) {
+                if(!hasNbrAtLabel(moveDir)) {
                     expand(moveDir);
                 } else if(hasTailAtLabel(moveDir)) {
                     push(moveDir);
@@ -302,7 +302,7 @@ void EdgeDetectParticle::activate()
                         int vectorDir = (stopReceiveDir+3)%6;
                         if(noTokensAtLabel(vectorDir))
                         {
-                            neighborAtLabel(vectorDir).putToken(takeToken<StreamToken>());
+                            nbrAtLabel(vectorDir).putToken(takeToken<StreamToken>());
                         }
 
                     }
@@ -322,7 +322,7 @@ void EdgeDetectParticle::activate()
                         int vectorDir = (stopReceiveDir+3)%6;
                         if(noTokensAtLabel(vectorDir))
                         {
-                            neighborAtLabel(vectorDir).putToken(takeToken<StreamToken>());
+                            nbrAtLabel(vectorDir).putToken(takeToken<StreamToken>());
                         }
 
                     }
@@ -333,10 +333,10 @@ void EdgeDetectParticle::activate()
                     {
                         int matrixDir = (stopReceiveDir+1)%6;
                         followDir = matrixDir;
-                        if(hasNeighborAtLabel(matrixDir) && neighborAtLabel(matrixDir).state == State::Matrix
+                        if(hasNbrAtLabel(matrixDir) && nbrAtLabel(matrixDir).state == State::Matrix
                                 && noTokensAtLabel(matrixDir))
                         {
-                            neighborAtLabel(matrixDir).putToken(takeToken<StreamToken>());
+                            nbrAtLabel(matrixDir).putToken(takeToken<StreamToken>());
                         }
                         else
                         {
@@ -346,10 +346,10 @@ void EdgeDetectParticle::activate()
                     else//recruit or pass to new vector
                     {
                         int vectorDir = (stopReceiveDir+3)%6;
-                        if(hasNeighborAtLabel(vectorDir) && neighborAtLabel(vectorDir).state == State::Vector
+                        if(hasNbrAtLabel(vectorDir) && nbrAtLabel(vectorDir).state == State::Vector
                                 && noTokensAtLabel(vectorDir))
                         {
-                            neighborAtLabel(vectorDir).putToken(takeToken<StreamToken>());
+                            nbrAtLabel(vectorDir).putToken(takeToken<StreamToken>());
                         }
                         else
                         {
@@ -364,16 +364,16 @@ void EdgeDetectParticle::activate()
             {
                 int vectorDir = (stopReceiveDir+3)%6;
                 int matrixDir = (stopReceiveDir+1)%6;
-                if (vectorDir>=0 && hasNeighborAtLabel(vectorDir) && neighborAtLabel(vectorDir).state == State::Vector )
+                if (vectorDir>=0 && hasNbrAtLabel(vectorDir) && nbrAtLabel(vectorDir).state == State::Vector )
                 {
-                    if(  neighborAtLabel(vectorDir).countTokens<StreamToken>()==0)
+                    if(  nbrAtLabel(vectorDir).countTokens<StreamToken>()==0)
                     {
-                        neighborAtLabel(vectorDir).putToken(takeToken<StartMultToken>());
+                        nbrAtLabel(vectorDir).putToken(takeToken<StartMultToken>());
                     }
                 }
                 else
                 {
-                    neighborAtLabel(matrixDir).putToken(takeToken<StartMultToken>());
+                    nbrAtLabel(matrixDir).putToken(takeToken<StartMultToken>());
                 }
             }
 
@@ -395,10 +395,10 @@ void EdgeDetectParticle::activate()
 
                     int matrixDir = (stopReceiveDir+3)%6;
                     followDir = matrixDir;
-                    if(hasNeighborAtLabel(matrixDir) && neighborAtLabel(matrixDir).state == State::Matrix
+                    if(hasNbrAtLabel(matrixDir) && nbrAtLabel(matrixDir).state == State::Matrix
                             && noTokensAtLabel(matrixDir))
                     {
-                        neighborAtLabel(matrixDir).putToken(takeToken<StreamToken>());
+                        nbrAtLabel(matrixDir).putToken(takeToken<StreamToken>());
                     }
                     else
                     {
@@ -413,12 +413,12 @@ void EdgeDetectParticle::activate()
                     //get neighbors first time
                     if(gridvals[1]==-1)
                     {
-                        gridvals[5] = neighborAtLabel(followDir).pixelVal;
-                        gridvals[6] = neighborAtLabel((followDir+1)%6).pixelVal;
-                        gridvals[7] = neighborAtLabel((followDir+2)%6).pixelVal;
-                        gridvals[1] = (int)neighborAtLabel((followDir+3)%6).pixelVal;
-                        gridvals[2] = (int)neighborAtLabel((followDir+4)%6).pixelVal;
-                        gridvals[3] = (int)neighborAtLabel((followDir+5)%6).pixelVal;
+                        gridvals[5] = nbrAtLabel(followDir).pixelVal;
+                        gridvals[6] = nbrAtLabel((followDir+1)%6).pixelVal;
+                        gridvals[7] = nbrAtLabel((followDir+2)%6).pixelVal;
+                        gridvals[1] = (int)nbrAtLabel((followDir+3)%6).pixelVal;
+                        gridvals[2] = (int)nbrAtLabel((followDir+4)%6).pixelVal;
+                        gridvals[3] = (int)nbrAtLabel((followDir+5)%6).pixelVal;
                     }
 
                     //subsequently try to acquire 2-hop
@@ -454,12 +454,12 @@ void EdgeDetectParticle::activate()
                 {
                     //this one might have some delay so try to get all the neighbors every time
                     //check if actually done because we copy the original value for edges which cannot be filtered
-                   gridvals2[5] = neighborAtLabel(followDir).pixelVal2;
-                   gridvals2[6] = neighborAtLabel((followDir+1)%6).pixelVal2;
-                  gridvals2[7] = neighborAtLabel((followDir+2)%6).pixelVal2;
-                    gridvals2[1] = (int)neighborAtLabel((followDir+3)%6).pixelVal2;
-                     gridvals2[2] = (int)neighborAtLabel((followDir+4)%6).pixelVal2;
-                    gridvals2[3] = (int)neighborAtLabel((followDir+5)%6).pixelVal2;
+                   gridvals2[5] = nbrAtLabel(followDir).pixelVal2;
+                   gridvals2[6] = nbrAtLabel((followDir+1)%6).pixelVal2;
+                  gridvals2[7] = nbrAtLabel((followDir+2)%6).pixelVal2;
+                    gridvals2[1] = (int)nbrAtLabel((followDir+3)%6).pixelVal2;
+                     gridvals2[2] = (int)nbrAtLabel((followDir+4)%6).pixelVal2;
+                    gridvals2[3] = (int)nbrAtLabel((followDir+5)%6).pixelVal2;
 
                     qDebug()<<"val "<<pixelVal<<" try to get sobel: "<<gridvals2[0]<<gridvals2[1]<<gridvals2[2]<<gridvals2[3]<<gridvals2[4]<<gridvals2[5]<<gridvals2[6]<<gridvals2[7]<<endl;
                     //subsequently try to acquire 2-hop
@@ -500,12 +500,12 @@ void EdgeDetectParticle::activate()
                 }
                 else if(!nonmaxFinished)
                 {
-                    gridvals3[5] = neighborAtLabel(followDir).gradientMagnitude;
-                    gridvals3[6] = neighborAtLabel((followDir+1)%6).gradientMagnitude;
-                    gridvals3[7] = neighborAtLabel((followDir+2)%6).gradientMagnitude;
-                    gridvals3[1] = (int)neighborAtLabel((followDir+3)%6).gradientMagnitude;
-                    gridvals3[2] = (int)neighborAtLabel((followDir+4)%6).gradientMagnitude;
-                    gridvals3[3] = (int)neighborAtLabel((followDir+5)%6).gradientMagnitude;
+                    gridvals3[5] = nbrAtLabel(followDir).gradientMagnitude;
+                    gridvals3[6] = nbrAtLabel((followDir+1)%6).gradientMagnitude;
+                    gridvals3[7] = nbrAtLabel((followDir+2)%6).gradientMagnitude;
+                    gridvals3[1] = (int)nbrAtLabel((followDir+3)%6).gradientMagnitude;
+                    gridvals3[2] = (int)nbrAtLabel((followDir+4)%6).gradientMagnitude;
+                    gridvals3[3] = (int)nbrAtLabel((followDir+5)%6).gradientMagnitude;
 
                     //subsequently try to acquire 2-hop
                     if(gridvals3[0]==-1)
@@ -526,8 +526,8 @@ void EdgeDetectParticle::activate()
                         int gridpointdir = calculateGradientGridDir(gradientDir);
                         if(gridpointdir!=-1)
                         {
-                            double neighbor1val =neighborAtLabel(gridpointdir).gradientMagnitude;
-                            double neighbor2val = neighborAtLabel((gridpointdir+3)%6).gradientMagnitude;
+                            double neighbor1val =nbrAtLabel(gridpointdir).gradientMagnitude;
+                            double neighbor2val = nbrAtLabel((gridpointdir+3)%6).gradientMagnitude;
                             if(neighbor1val!=-1 && neighbor2val!=-1)
                             {
                                 qDebug()<<"is max? "<<neighbor1val<<neighbor2val<<gradientMagnitude;
@@ -559,14 +559,14 @@ void EdgeDetectParticle::activate()
             int acrossDir = (stopReceiveDir+3)%6;
             if(countTokens<SumToken>()==tokenMax )
             {
-                if(hasNeighborAtLabel(acrossDir) && neighborAtLabel(acrossDir).state==State::Result)
+                if(hasNbrAtLabel(acrossDir) && nbrAtLabel(acrossDir).state==State::Result)
                 {
 
-                    if(  neighborAtLabel(acrossDir).countTokens<SumToken>()<tokenMax )
+                    if(  nbrAtLabel(acrossDir).countTokens<SumToken>()<tokenMax )
                     {
                         //  qDebug()<<"results carryover: "<<countTokens<SumToken>();
                         //pass 1 (carryover)
-                        neighborAtLabel(acrossDir).putToken(takeToken<SumToken>());
+                        nbrAtLabel(acrossDir).putToken(takeToken<SumToken>());
                         //discard the rest
                         int discardcount = 0;
                         while(countTokens<SumToken>()>0){
@@ -656,7 +656,7 @@ int EdgeDetectParticle::headMarkColor() const
 }
 bool EdgeDetectParticle::noTokensAtLabel(int label)
 {
-    return neighborAtLabel(label).countTokens<StreamToken>()<1;
+    return nbrAtLabel(label).countTokens<StreamToken>()<1;
     //(neighborAtLabel(label).countTokens<MatrixToken>() ==0 && neighborAtLabel(label).countTokens<VectorToken>() ==0&&
     //  neighborAtLabel(label).countTokens<EndOfColumnToken>() ==0 && neighborAtLabel(label).countTokens<EndOfVectorToken>() == 0
     //  &&neighborAtLabel(label).countTokens<StartMultToken>()==0);
@@ -731,9 +731,9 @@ QString EdgeDetectParticle::inspectionText() const
     return text;
 }
 
-EdgeDetectParticle& EdgeDetectParticle::neighborAtLabel(int label) const
+EdgeDetectParticle& EdgeDetectParticle::nbrAtLabel(int label) const
 {
-    return AmoebotParticle::neighborAtLabel<EdgeDetectParticle>(label);
+    return AmoebotParticle::nbrAtLabel<EdgeDetectParticle>(label);
 }
 
 int EdgeDetectParticle::labelOfFirstNeighborInState(std::initializer_list<State> states, int startLabel) const
@@ -747,7 +747,7 @@ int EdgeDetectParticle::labelOfFirstNeighborInState(std::initializer_list<State>
         return false;
     };
 
-    return labelOfFirstNeighborWithProperty<EdgeDetectParticle>(propertyCheck, startLabel);
+    return labelOfFirstNbrWithProperty<EdgeDetectParticle>(propertyCheck, startLabel);
 }
 
 bool EdgeDetectParticle::hasNeighborInState(std::initializer_list<State> states) const
@@ -763,7 +763,7 @@ int EdgeDetectParticle::constructionReceiveDir() const
                 pointsAtMe(p, p.constructionDir);
     };
 
-    return labelOfFirstNeighborWithProperty<EdgeDetectParticle>(propertyCheck);
+    return labelOfFirstNbrWithProperty<EdgeDetectParticle>(propertyCheck);
 }
 bool EdgeDetectParticle::stopFlagReceived() const
 {
@@ -772,7 +772,7 @@ bool EdgeDetectParticle::stopFlagReceived() const
                 (p.state == State::Vector) &&
                 pointsAtMe(p, p.stopFlag);
     };
-    if ( labelOfFirstNeighborWithProperty<EdgeDetectParticle>(propertyCheck)!=-1)
+    if ( labelOfFirstNbrWithProperty<EdgeDetectParticle>(propertyCheck)!=-1)
     {
         return true;
     }
@@ -788,7 +788,7 @@ int EdgeDetectParticle::tryVectorStop() const
                 pointsAtMe(p, p.vectorFlag);
     };
 
-    return labelOfFirstNeighborWithProperty<EdgeDetectParticle>(propertyCheck);
+    return labelOfFirstNbrWithProperty<EdgeDetectParticle>(propertyCheck);
 }
 int EdgeDetectParticle::tryMatrixStop() const
 {
@@ -799,7 +799,7 @@ int EdgeDetectParticle::tryMatrixStop() const
                 pointsAtMe(p, p.matrixFlag);
     };
 
-    return labelOfFirstNeighborWithProperty<EdgeDetectParticle>(propertyCheck);
+    return labelOfFirstNbrWithProperty<EdgeDetectParticle>(propertyCheck);
 }
 int EdgeDetectParticle::tryResultStop() const
 {
@@ -810,14 +810,14 @@ int EdgeDetectParticle::tryResultStop() const
                 pointsAtMe(p, p.resultFlag);
     };
 
-    return labelOfFirstNeighborWithProperty<EdgeDetectParticle>(propertyCheck);
+    return labelOfFirstNbrWithProperty<EdgeDetectParticle>(propertyCheck);
 }
 bool EdgeDetectParticle::completeNeighborhood() const
 {
     int count = 0;
     for(int i =0; i<6; i++)
     {
-        if(hasNeighborAtLabel(i) && neighborAtLabel(i).state==State::Matrix && neighborAtLabel(i).pixelVal>-1)
+        if(hasNbrAtLabel(i) && nbrAtLabel(i).state==State::Matrix && nbrAtLabel(i).pixelVal>-1)
         {
             count++;
         }
@@ -865,11 +865,11 @@ int EdgeDetectParticle::getTwoHopVal(int sourceNeighbor,int offset,int whichGrid
     {
         for(int i =0; i<6;i++)
         {
-            if(pointsAtMe(neighborAtLabel(sourceNeighbor),i))
+            if(pointsAtMe(nbrAtLabel(sourceNeighbor),i))
             {
                 int myID = i;
                 int targetDir = (myID+offset)%6;
-                return neighborAtLabel(sourceNeighbor).neighborAtLabel(targetDir).pixelVal;//gridvals[targetDir];
+                return nbrAtLabel(sourceNeighbor).nbrAtLabel(targetDir).pixelVal;//gridvals[targetDir];
             }
 
         }
@@ -879,11 +879,11 @@ int EdgeDetectParticle::getTwoHopVal(int sourceNeighbor,int offset,int whichGrid
 
         for(int i =0; i<6;i++)
         {
-            if(pointsAtMe(neighborAtLabel(sourceNeighbor),i))
+            if(pointsAtMe(nbrAtLabel(sourceNeighbor),i))
             {
                 int myID = i;
                 int targetDir = (myID+offset)%6;
-                return neighborAtLabel(sourceNeighbor).neighborAtLabel(targetDir).pixelVal2;//gridvals2[targetDir];
+                return nbrAtLabel(sourceNeighbor).nbrAtLabel(targetDir).pixelVal2;//gridvals2[targetDir];
             }
 
         }
@@ -892,11 +892,11 @@ int EdgeDetectParticle::getTwoHopVal(int sourceNeighbor,int offset,int whichGrid
     {
         for(int i =0; i<6;i++)
         {
-            if(pointsAtMe(neighborAtLabel(sourceNeighbor),i))
+            if(pointsAtMe(nbrAtLabel(sourceNeighbor),i))
             {
                 int myID = i;
                 int targetDir = (myID+offset)%6;
-                return neighborAtLabel(sourceNeighbor).neighborAtLabel(targetDir).gradientMagnitude;//gridvals2[targetDir];
+                return nbrAtLabel(sourceNeighbor).nbrAtLabel(targetDir).gradientMagnitude;//gridvals2[targetDir];
             }
 
         }
@@ -914,13 +914,13 @@ bool EdgeDetectParticle::canFinish() const
 void EdgeDetectParticle::updateConstructionDir()
 {
     constructionDir = constructionReceiveDir();
-    if(neighborAtLabel(constructionDir).state == State::Seed) {
+    if(nbrAtLabel(constructionDir).state == State::Seed) {
         constructionDir = (constructionDir + 1) % 6;
     } else {
         constructionDir = (constructionDir + 2) % 6;
     }
 
-    if(hasNeighborAtLabel(constructionDir) && neighborAtLabel(constructionDir).state == State::Finish) {
+    if(hasNbrAtLabel(constructionDir) && nbrAtLabel(constructionDir).state == State::Finish) {
         constructionDir = (constructionDir + 1) % 6;
     }
 }
@@ -928,11 +928,11 @@ void EdgeDetectParticle::updateConstructionDir()
 void EdgeDetectParticle::updateMoveDir()
 {
     moveDir = labelOfFirstNeighborInState({State::Seed, State::Finish,State::Matrix,State::Vector,State::Result,State::Prestop});
-    while(hasNeighborAtLabel(moveDir) && (neighborAtLabel(moveDir).state == State::Seed || neighborAtLabel(moveDir).state == State::Finish
-                                          || neighborAtLabel(moveDir).state == State::Matrix
-                                          || neighborAtLabel(moveDir).state == State::Vector
-                                          || neighborAtLabel(moveDir).state == State::Result
-                                          || neighborAtLabel(moveDir).state == State::Prestop
+    while(hasNbrAtLabel(moveDir) && (nbrAtLabel(moveDir).state == State::Seed || nbrAtLabel(moveDir).state == State::Finish
+                                          || nbrAtLabel(moveDir).state == State::Matrix
+                                          || nbrAtLabel(moveDir).state == State::Vector
+                                          || nbrAtLabel(moveDir).state == State::Result
+                                          || nbrAtLabel(moveDir).state == State::Prestop
                                           )) {
         moveDir = (moveDir + 5) % 6;
     }
@@ -944,21 +944,21 @@ bool EdgeDetectParticle::hasTailFollower() const
         return  p.state == State::Follow &&
                 pointsAtMyTail(p, p.dirToHeadLabel(p.followDir));
     };
-    return labelOfFirstNeighborWithProperty<EdgeDetectParticle>(propertyCheck) != -1;
+    return labelOfFirstNbrWithProperty<EdgeDetectParticle>(propertyCheck) != -1;
 }
 bool EdgeDetectParticle::tunnelCheck() const
 {
     int firstLabel = labelOfFirstNeighborInState({State::Lead});
-    if(firstLabel!=-1 && hasNeighborAtLabel((firstLabel+1)%6) && neighborAtLabel((firstLabel+1)%6).state==State::Lead &&
-            hasNeighborAtLabel((firstLabel+2)%6) && neighborAtLabel((firstLabel+2)%6).state==State::Result &&
-            hasNeighborAtLabel((firstLabel+5)%6) && neighborAtLabel((firstLabel+5)%6).state==State::Result)
+    if(firstLabel!=-1 && hasNbrAtLabel((firstLabel+1)%6) && nbrAtLabel((firstLabel+1)%6).state==State::Lead &&
+            hasNbrAtLabel((firstLabel+2)%6) && nbrAtLabel((firstLabel+2)%6).state==State::Result &&
+            hasNbrAtLabel((firstLabel+5)%6) && nbrAtLabel((firstLabel+5)%6).state==State::Result)
     {
         qDebug()<<"fix tunnel";
         return true;
     }
-    if(firstLabel!=-1 && hasNeighborAtLabel((firstLabel+5)%6) && neighborAtLabel((firstLabel+5)%6).state==State::Lead &&
-            hasNeighborAtLabel((firstLabel+1)%6) && neighborAtLabel((firstLabel+1)%6).state==State::Result &&
-            hasNeighborAtLabel((firstLabel+4)%6) && neighborAtLabel((firstLabel+4)%6).state==State::Result)
+    if(firstLabel!=-1 && hasNbrAtLabel((firstLabel+5)%6) && nbrAtLabel((firstLabel+5)%6).state==State::Lead &&
+            hasNbrAtLabel((firstLabel+1)%6) && nbrAtLabel((firstLabel+1)%6).state==State::Result &&
+            hasNbrAtLabel((firstLabel+4)%6) && nbrAtLabel((firstLabel+4)%6).state==State::Result)
     {
         qDebug()<<"fix tunnel";
 
@@ -976,55 +976,55 @@ bool EdgeDetectParticle::shouldStop() const
 {
     int firstLabel = labelOfFirstNeighborInState({State::Vector});
 
-    if(firstLabel!=-1 && hasNeighborAtLabel((firstLabel+1)%6) && neighborAtLabel((firstLabel+1)%6).state==State::Vector && hasNeighborInState({State::Matrix}))
+    if(firstLabel!=-1 && hasNbrAtLabel((firstLabel+1)%6) && nbrAtLabel((firstLabel+1)%6).state==State::Vector && hasNeighborInState({State::Matrix}))
     {
         return true;
 
     }
-    if(firstLabel!=-1 && hasNeighborAtLabel((firstLabel+5)%6) && neighborAtLabel((firstLabel+5)%6).state==State::Vector && hasNeighborInState({State::Matrix}))
+    if(firstLabel!=-1 && hasNbrAtLabel((firstLabel+5)%6) && nbrAtLabel((firstLabel+5)%6).state==State::Vector && hasNeighborInState({State::Matrix}))
     {
         return true;
 
     }
     firstLabel = labelOfFirstNeighborInState({State::Matrix});
 
-    if(hasNeighborInState({State::Prestop}) && firstLabel!=-1 && hasNeighborAtLabel((firstLabel+1)%6) && neighborAtLabel((firstLabel+1)%6).state==State::Matrix && hasNeighborInState({State::Matrix}))
+    if(hasNeighborInState({State::Prestop}) && firstLabel!=-1 && hasNbrAtLabel((firstLabel+1)%6) && nbrAtLabel((firstLabel+1)%6).state==State::Matrix && hasNeighborInState({State::Matrix}))
     {
         return true;
 
     }
-    if(hasNeighborInState({State::Prestop}) && firstLabel!=-1 && hasNeighborAtLabel((firstLabel+5)%6) && neighborAtLabel((firstLabel+5)%6).state==State::Matrix && hasNeighborInState({State::Matrix}))
+    if(hasNeighborInState({State::Prestop}) && firstLabel!=-1 && hasNbrAtLabel((firstLabel+5)%6) && nbrAtLabel((firstLabel+5)%6).state==State::Matrix && hasNeighborInState({State::Matrix}))
     {
         return true;
 
     }
 
-    if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+1)%6) && neighborAtLabel((firstLabel+1)%6).state==State::Matrix
-            &&hasNeighborAtLabel((firstLabel+2)%6) && neighborAtLabel((firstLabel+2)%6).state==State::Matrix )
+    if( firstLabel!=-1 && hasNbrAtLabel((firstLabel+1)%6) && nbrAtLabel((firstLabel+1)%6).state==State::Matrix
+            &&hasNbrAtLabel((firstLabel+2)%6) && nbrAtLabel((firstLabel+2)%6).state==State::Matrix )
     {
         return true;
     }
-    if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+5)%6) && neighborAtLabel((firstLabel+5)%6).state==State::Matrix
-            &&hasNeighborAtLabel((firstLabel+4)%6) && neighborAtLabel((firstLabel+4)%6).state==State::Matrix )
+    if( firstLabel!=-1 && hasNbrAtLabel((firstLabel+5)%6) && nbrAtLabel((firstLabel+5)%6).state==State::Matrix
+            &&hasNbrAtLabel((firstLabel+4)%6) && nbrAtLabel((firstLabel+4)%6).state==State::Matrix )
     {
         return true;
     }
-    if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+5)%6) && neighborAtLabel((firstLabel+5)%6).state==State::Matrix
-            &&hasNeighborAtLabel((firstLabel+1)%6) && neighborAtLabel((firstLabel+1)%6).state==State::Matrix )
+    if( firstLabel!=-1 && hasNbrAtLabel((firstLabel+5)%6) && nbrAtLabel((firstLabel+5)%6).state==State::Matrix
+            &&hasNbrAtLabel((firstLabel+1)%6) && nbrAtLabel((firstLabel+1)%6).state==State::Matrix )
     {
         return true;
     }
     firstLabel = labelOfFirstNeighborInState({State::Prestop});
-    if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+5)%6) && neighborAtLabel((firstLabel+5)%6).state==State::Prestop
-            &&hasNeighborAtLabel((firstLabel+1)%6) && neighborAtLabel((firstLabel+1)%6).state==State::Prestop )
+    if( firstLabel!=-1 && hasNbrAtLabel((firstLabel+5)%6) && nbrAtLabel((firstLabel+5)%6).state==State::Prestop
+            &&hasNbrAtLabel((firstLabel+1)%6) && nbrAtLabel((firstLabel+1)%6).state==State::Prestop )
     {
         return true;
     }
-    if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+2)%6) && neighborAtLabel((firstLabel+2)%6).state==State::Prestop)
+    if( firstLabel!=-1 && hasNbrAtLabel((firstLabel+2)%6) && nbrAtLabel((firstLabel+2)%6).state==State::Prestop)
     {
         return true;
     }
-    if( firstLabel!=-1 && hasNeighborAtLabel((firstLabel+4)%6) && neighborAtLabel((firstLabel+4)%6).state==State::Prestop)
+    if( firstLabel!=-1 && hasNbrAtLabel((firstLabel+4)%6) && nbrAtLabel((firstLabel+4)%6).state==State::Prestop)
     {
         return true;
     }

@@ -1,71 +1,54 @@
 #include "sim/system.h"
 
 SystemIterator::SystemIterator(const System* system, int pos)
-    : _pos(pos)
-    , system(system)
-{
+  : _pos(pos)
+  , system(system) {}
 
+bool SystemIterator::operator!=(const SystemIterator& other) const {
+  return _pos != other._pos;
 }
 
-bool SystemIterator::operator!=(const SystemIterator& other) const
-{
-    return _pos != other._pos;
+const Particle& SystemIterator::operator*() const {
+  return system->at(_pos);
 }
 
-const SystemIterator& SystemIterator::operator++()
-{
-    ++_pos;
-    return *this;
+const SystemIterator& SystemIterator::operator++() {
+  ++_pos;
+  return *this;
 }
 
-const Particle& SystemIterator::operator*() const
-{
-    return system->at(_pos);
+// TODO: remove?
+System::System() {}
+System::~System() {}
+
+SystemIterator System::begin() const {
+  return SystemIterator(this, 0);
 }
 
-System::System()
-{
-
+SystemIterator System::end() const {
+  return SystemIterator(this, size());
 }
 
-System::~System()
-{
-
+unsigned int System::numMovements() const {
+  return 0;
 }
 
-SystemIterator System::begin() const
-{
-    return SystemIterator(this, 0);
+unsigned int System::numRounds() const {
+  return 0;
 }
 
-SystemIterator System::end() const
-{
-    return SystemIterator(this, size());
+unsigned int System::leaderElectionRounds() const {
+  return 0;
 }
 
-int System::numMovements() const
-{
-    return 0;
+unsigned int System::weakBounds() const {
+  return 0;
 }
 
-int System::numRounds() const
-{
-    return 0;
-}
-int System::leaderElectionRounds() const
-{
-    return 0;
+unsigned int System::strongBounds() const {
+  return 1;
 }
 
-bool System::hasTerminated() const
-{
-    return false;
-}
-int System::weakBounds() const
-{
-    return 0;
-}
-int System::strongBounds() const
-{
-    return 1;
+bool System::hasTerminated() const {
+  return false;
 }

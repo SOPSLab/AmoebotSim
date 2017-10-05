@@ -90,8 +90,8 @@ void LineSortParticle::activate()
                 updateMoveDir();
                 return;
             } else if(hasTailAtLabel(followDir)) {
-                auto neighbor = neighborAtLabel(followDir);
-                int neighborContractionDir = neighborDirToDir(neighbor, (neighbor.tailDir() + 3) % 6);
+                auto neighbor = nbrAtLabel(followDir);
+                int neighborContractionDir = nbrDirToDir(neighbor, (neighbor.tailDir() + 3) % 6);
                 qDebug()<<"Follow push";
                 push(followDir);
                 followDir = neighborContractionDir;
@@ -100,8 +100,8 @@ void LineSortParticle::activate()
         } else if(state == State::Lead) {
             qDebug()<<"insert dir: "<<insertDir;
             if(insertDir!=-1)
-                qDebug()<<" has neighbor: "<<hasNeighborAtLabel(insertDir);
-            if(insertDir!=-1 && hasNeighborAtLabel(insertDir) &&  neighborAtLabel(insertDir).isExpanded() ){
+                qDebug()<<" has neighbor: "<<hasNbrAtLabel(insertDir);
+            if(insertDir!=-1 && hasNbrAtLabel(insertDir) &&  nbrAtLabel(insertDir).isExpanded() ){
                 qDebug()<<"insert Dir: "<<insertDir;
 
                 followDir = insertDir;
@@ -131,7 +131,7 @@ void LineSortParticle::activate()
                 updateMoveDir();
                 qDebug()<<"new movedir.";
 
-                if(!hasNeighborAtLabel(moveDir)) {
+                if(!hasNbrAtLabel(moveDir)) {
                     expand(moveDir);
                 } else if(hasTailAtLabel(moveDir) ) {
                     push(moveDir);
@@ -147,11 +147,11 @@ void LineSortParticle::activate()
                 moveDir = -1;
                 if(constructionDir!=-1 )
                 {
-                    if( hasNeighborAtLabel(constructionDir) && neighborAtLabel(constructionDir).state==State::Wait
-                            && neighborAtLabel(constructionDir).countTokens<ComplaintToken>()==0)
+                    if( hasNbrAtLabel(constructionDir) && nbrAtLabel(constructionDir).state==State::Wait
+                            && nbrAtLabel(constructionDir).countTokens<ComplaintToken>()==0)
                     {
                         std::shared_ptr<ComplaintToken> ctoken = takeToken<ComplaintToken>();
-                        neighborAtLabel(constructionDir).putToken(ctoken);
+                        nbrAtLabel(constructionDir).putToken(ctoken);
                     }
                     else
                     {
@@ -160,11 +160,11 @@ void LineSortParticle::activate()
                 }
                 else if(constructionDir2!=-1 )
                 {
-                    if( hasNeighborAtLabel(constructionDir2)&& neighborAtLabel(constructionDir2).state==State::Wait
-                            && neighborAtLabel(constructionDir2).countTokens<ComplaintToken>()==0)
+                    if( hasNbrAtLabel(constructionDir2)&& nbrAtLabel(constructionDir2).state==State::Wait
+                            && nbrAtLabel(constructionDir2).countTokens<ComplaintToken>()==0)
                     {
                         std::shared_ptr<ComplaintToken> ctoken = takeToken<ComplaintToken>();
-                        neighborAtLabel(constructionDir2).putToken(ctoken);
+                        nbrAtLabel(constructionDir2).putToken(ctoken);
                     }
                     else
 
@@ -264,9 +264,9 @@ QString LineSortParticle::inspectionText() const
     return text;
 }
 
-LineSortParticle& LineSortParticle::neighborAtLabel(int label) const
+LineSortParticle& LineSortParticle::nbrAtLabel(int label) const
 {
-    return AmoebotParticle::neighborAtLabel<LineSortParticle>(label);
+    return AmoebotParticle::nbrAtLabel<LineSortParticle>(label);
 }
 
 int LineSortParticle::labelOfFirstNeighborInState(std::initializer_list<State> states, int startLabel) const
@@ -280,7 +280,7 @@ int LineSortParticle::labelOfFirstNeighborInState(std::initializer_list<State> s
         return false;
     };
 
-    return labelOfFirstNeighborWithProperty<LineSortParticle>(propertyCheck, startLabel);
+    return labelOfFirstNbrWithProperty<LineSortParticle>(propertyCheck, startLabel);
 }
 
 bool LineSortParticle::hasNeighborInState(std::initializer_list<State> states) const
@@ -296,7 +296,7 @@ int LineSortParticle::constructionReceiveDir1() const
                 (p.constructionDir>-1 && (pointsAtMe(p, p.constructionDir)));
     };
 
-    return labelOfFirstNeighborWithProperty<LineSortParticle>(propertyCheck);
+    return labelOfFirstNbrWithProperty<LineSortParticle>(propertyCheck);
 }
 
 int LineSortParticle::constructionReceiveDir2() const
@@ -307,21 +307,21 @@ int LineSortParticle::constructionReceiveDir2() const
                 (p.constructionDir2>-1 &&  pointsAtMe(p,p.constructionDir2));
     };
 
-    return labelOfFirstNeighborWithProperty<LineSortParticle>(propertyCheck);
+    return labelOfFirstNbrWithProperty<LineSortParticle>(propertyCheck);
 }
 
 bool LineSortParticle::canWait() const
 {
     int  constructionRecDir1 = constructionReceiveDir1();
-    if(constructionRecDir1!=-1 && !neighborAtLabel(constructionRecDir1).isExpanded() )
+    if(constructionRecDir1!=-1 && !nbrAtLabel(constructionRecDir1).isExpanded() )
     {
-        if(value>neighborAtLabel(constructionRecDir1).value)
+        if(value>nbrAtLabel(constructionRecDir1).value)
             return true;
     }
     int constructionRecDir2 = constructionReceiveDir2();
-    if(constructionRecDir2!=-1 && !neighborAtLabel(constructionRecDir2).isExpanded())
+    if(constructionRecDir2!=-1 && !nbrAtLabel(constructionRecDir2).isExpanded())
     {
-        if(value<neighborAtLabel(constructionRecDir2).value)
+        if(value<nbrAtLabel(constructionRecDir2).value)
             return true;
     }
     return false;
@@ -329,15 +329,15 @@ bool LineSortParticle::canWait() const
 int LineSortParticle::findExpandedWaitNeighbor()
 {
     if(constructionDir!=-1){
-        if(hasNeighborAtLabel(constructionDir) && neighborAtLabel(constructionDir).state==State::Wait &&
-                neighborAtLabel(constructionDir).isExpanded())
+        if(hasNbrAtLabel(constructionDir) && nbrAtLabel(constructionDir).state==State::Wait &&
+                nbrAtLabel(constructionDir).isExpanded())
         {
                 return constructionDir;
         }
     }
     if(constructionDir2!=-1){
-        if(hasNeighborAtLabel(constructionDir2) && neighborAtLabel(constructionDir2).state==State::Wait &&
-                neighborAtLabel(constructionDir2).isExpanded())
+        if(hasNbrAtLabel(constructionDir2) && nbrAtLabel(constructionDir2).state==State::Wait &&
+                nbrAtLabel(constructionDir2).isExpanded())
         {
             return constructionDir2;
         }
@@ -351,11 +351,11 @@ bool LineSortParticle::insertsAvailable(int expandedWaitDir)
     // eWD points to a neighbor on the wait line who is expanded
     int checkDir1 = (expandedWaitDir+1)%6;
     int checkDir2 = (expandedWaitDir+5)%6;
-    if(hasNeighborAtLabel(checkDir1) && neighborAtLabel(checkDir1).state == State::Lead && neighborAtLabel(checkDir1).insertDir!=-1)
+    if(hasNbrAtLabel(checkDir1) && nbrAtLabel(checkDir1).state == State::Lead && nbrAtLabel(checkDir1).insertDir!=-1)
     {
         return true;
     }
-    if(hasNeighborAtLabel(checkDir2) && neighborAtLabel(checkDir2).state == State::Lead && neighborAtLabel(checkDir2).insertDir!=-1)
+    if(hasNbrAtLabel(checkDir2) && nbrAtLabel(checkDir2).state == State::Lead && nbrAtLabel(checkDir2).insertDir!=-1)
     {
         return true;
     }
@@ -369,15 +369,15 @@ bool LineSortParticle::canInsert()
     int firstNeighbor = labelOfFirstNeighborInState({State::Seed, State::Wait});
     if(firstNeighbor>=0)
     {
-        int neighbor1Value = neighborAtLabel(firstNeighbor).value;
+        int neighbor1Value = nbrAtLabel(firstNeighbor).value;
         int secondNeighbor=-1;
         for(int i =1; i<6; i++)//check other 5 directions
         {
-            if(hasNeighborAtLabel((firstNeighbor+i)%6) && (neighborAtLabel((firstNeighbor+i)%6).state==State::Seed
-                                                           || neighborAtLabel((firstNeighbor+i)%6).state==State::Wait))
+            if(hasNbrAtLabel((firstNeighbor+i)%6) && (nbrAtLabel((firstNeighbor+i)%6).state==State::Seed
+                                                           || nbrAtLabel((firstNeighbor+i)%6).state==State::Wait))
             {
                 secondNeighbor=(firstNeighbor+i)%6;
-                int neighbor2Value = neighborAtLabel(secondNeighbor).value;
+                int neighbor2Value = nbrAtLabel(secondNeighbor).value;
 
                 //somehow between neighbors- save as bool for later use
                 bool n2HigherBetween = (value>=neighbor1Value && value<=neighbor2Value);
@@ -385,29 +385,29 @@ bool LineSortParticle::canInsert()
                 if(n1HigherBetween || n2HigherBetween)
                 {
                     //check if both neighbors actually on line
-                    if((neighborAtLabel(firstNeighbor).constructionDir!=-1 || neighborAtLabel(firstNeighbor).constructionDir2!=-1)&&
-                            (neighborAtLabel(secondNeighbor).constructionDir!=-1 || neighborAtLabel(secondNeighbor).constructionDir2!=-1))
+                    if((nbrAtLabel(firstNeighbor).constructionDir!=-1 || nbrAtLabel(firstNeighbor).constructionDir2!=-1)&&
+                            (nbrAtLabel(secondNeighbor).constructionDir!=-1 || nbrAtLabel(secondNeighbor).constructionDir2!=-1))
                     {
                         std::shared_ptr<ComplaintToken> ctoken= std::make_shared<ComplaintToken>();
                         int complaintRecepient = -1;
                         qDebug()<<"complaint put token";
                         //case 0: one is a seed, complain to the wait
-                        if(neighborAtLabel(firstNeighbor).state==State::Seed){ complaintRecepient = secondNeighbor;}
-                        else if(neighborAtLabel(secondNeighbor).state==State::Seed){ complaintRecepient = firstNeighbor;}
+                        if(nbrAtLabel(firstNeighbor).state==State::Seed){ complaintRecepient = secondNeighbor;}
+                        else if(nbrAtLabel(secondNeighbor).state==State::Seed){ complaintRecepient = firstNeighbor;}
 
                         //case 1: both have constructionDir2, so complain to the lower value to make space
-                        else if(neighborAtLabel(firstNeighbor).constructionDir2!=-1 && neighborAtLabel(secondNeighbor).constructionDir2!=-1){
+                        else if(nbrAtLabel(firstNeighbor).constructionDir2!=-1 && nbrAtLabel(secondNeighbor).constructionDir2!=-1){
                             if(n1HigherBetween){ complaintRecepient = secondNeighbor;}
                             else if(n2HigherBetween){ complaintRecepient = firstNeighbor;}
                         }
                         //case 2: both have constructionDir2 so complain to upper value to make space
-                        else if(neighborAtLabel(firstNeighbor).constructionDir!=-1 && neighborAtLabel(secondNeighbor).constructionDir!=-1){
+                        else if(nbrAtLabel(firstNeighbor).constructionDir!=-1 && nbrAtLabel(secondNeighbor).constructionDir!=-1){
                             if(n1HigherBetween){ complaintRecepient = firstNeighbor;}
                             else if(n2HigherBetween){ complaintRecepient = secondNeighbor;}
                         }
                         if(complaintRecepient!=-1)
                         {
-                            neighborAtLabel(complaintRecepient).putToken(ctoken);
+                            nbrAtLabel(complaintRecepient).putToken(ctoken);
                             insertDir = complaintRecepient;
                         }
                         else
@@ -454,7 +454,7 @@ void LineSortParticle::updateMoveDir()
             qDebug()<<"neighbor 2 value: "<<neighborAtLabel((moveDir+i)%6).value;
         }
     }*/
-    while(hasNeighborAtLabel(moveDir) && (neighborAtLabel(moveDir).state == State::Seed || neighborAtLabel(moveDir).state == State::Wait)) {
+    while(hasNbrAtLabel(moveDir) && (nbrAtLabel(moveDir).state == State::Seed || nbrAtLabel(moveDir).state == State::Wait)) {
         moveDir = (moveDir + 5) % 6;
     }
 }
@@ -465,7 +465,7 @@ bool LineSortParticle::hasTailFollower() const
         return  p.state == State::Follow &&
                 pointsAtMyTail(p, p.dirToHeadLabel(p.followDir));
     };
-    return labelOfFirstNeighborWithProperty<LineSortParticle>(propertyCheck) != -1;
+    return labelOfFirstNbrWithProperty<LineSortParticle>(propertyCheck) != -1;
 }
 
 LineSortSystem::LineSortSystem(int numParticles, float holeProb)

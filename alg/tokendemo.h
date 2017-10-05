@@ -22,7 +22,7 @@ public:
 
     virtual QString inspectionText() const;
 
-    TokenDemoParticle& neighborAtLabel(int label) const;
+    TokenDemoParticle& nbrAtLabel(int label) const;
 };
 
 class TokenDemoSystem : public AmoebotSystem

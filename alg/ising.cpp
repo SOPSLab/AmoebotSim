@@ -65,9 +65,9 @@ QString IsingParticle::inspectionText() const
     return text;
 }
 
-IsingParticle& IsingParticle::neighborAtLabel(int label) const
+IsingParticle& IsingParticle::nbrAtLabel(int label) const
 {
-    return AmoebotParticle::neighborAtLabel<IsingParticle>(label);
+    return AmoebotParticle::nbrAtLabel<IsingParticle>(label);
 }
 
 int IsingParticle::hamiltonian(const int mySpin) const
@@ -75,8 +75,8 @@ int IsingParticle::hamiltonian(const int mySpin) const
     int sum = 0;
 
     for(int i = 0; i < 6; ++i) {
-        if(hasNeighborAtLabel(i)) {
-            const int neighborSpin = (neighborAtLabel(i).spin == Spin::Pos) ? 1 : -1;
+        if(hasNbrAtLabel(i)) {
+            const int neighborSpin = (nbrAtLabel(i).spin == Spin::Pos) ? 1 : -1;
             sum += mySpin * neighborSpin;
         }
     }

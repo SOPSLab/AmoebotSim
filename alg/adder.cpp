@@ -38,9 +38,9 @@ void AdderParticle::activate()
         nextLabel = labelOfFirstNeighborInState({State::Active});
         if(nextLabel<0 || nextLabel>=6)
             return;
-        if ( neighborAtLabel(nextLabel).hasSpace() && countTokens<CarryToken>()>0)
+        if ( nbrAtLabel(nextLabel).hasSpace() && countTokens<CarryToken>()>0)
         {
-            neighborAtLabel(nextLabel).putToken(takeToken<CarryToken>());
+            nbrAtLabel(nextLabel).putToken(takeToken<CarryToken>());
         }
         else if (countTokens<CarryToken>() <=0){
            // setstate(State::Done);
@@ -57,7 +57,7 @@ void AdderParticle::activate()
                 nextLabel = (prevLabel+3)%6;
                 state = State::Active;
                 followDir = nextLabel;
-                index = neighborAtLabel(prevLabel).index+1;
+                index = nbrAtLabel(prevLabel).index+1;
                 qDebug()<<"index: "<<index<< " activated: "<<prevLabel<<","<<nextLabel;
 
             }
@@ -67,8 +67,8 @@ void AdderParticle::activate()
                 nextLabel = (prevLabel+3)%6;
                 state = State::Active;
                 followDir = nextLabel;
-                index = neighborAtLabel(prevLabel).index+1;
-                if(!hasNeighborAtLabel(nextLabel))
+                index = nbrAtLabel(prevLabel).index+1;
+                if(!hasNbrAtLabel(nextLabel))
                 {
                     nextLabel = -1;
                 }
@@ -93,9 +93,9 @@ void AdderParticle::activate()
 
          if(countTokens<CarryToken>() >1 && nextLabel>=0 && nextLabel <6)
         {
-            if(neighborAtLabel(nextLabel).hasSpace())
+            if(nbrAtLabel(nextLabel).hasSpace())
             {
-                neighborAtLabel(nextLabel).putToken(takeToken<CarryToken>());
+                nbrAtLabel(nextLabel).putToken(takeToken<CarryToken>());
                 takeToken<CarryToken>();//trash it
             }
 
@@ -178,9 +178,9 @@ QString AdderParticle::inspectionText() const
     return text;
 }
 
-AdderParticle& AdderParticle::neighborAtLabel(int label) const
+AdderParticle& AdderParticle::nbrAtLabel(int label) const
 {
-    return AmoebotParticle::neighborAtLabel<AdderParticle>(label);
+    return AmoebotParticle::nbrAtLabel<AdderParticle>(label);
 }
 
 int AdderParticle::labelOfFirstNeighborInState(std::initializer_list<State> states, int startLabel) const
@@ -194,7 +194,7 @@ int AdderParticle::labelOfFirstNeighborInState(std::initializer_list<State> stat
         return false;
     };
 
-    return labelOfFirstNeighborWithProperty<AdderParticle>(propertyCheck, startLabel);
+    return labelOfFirstNbrWithProperty<AdderParticle>(propertyCheck, startLabel);
 }
 
 bool AdderParticle::hasNeighborInState(std::initializer_list<State> states) const
@@ -210,7 +210,7 @@ int AdderParticle::constructionReceiveDir() const
                 pointsAtMe(p, p.constructionDir);
     };
 
-    return labelOfFirstNeighborWithProperty<AdderParticle>(propertyCheck);
+    return labelOfFirstNbrWithProperty<AdderParticle>(propertyCheck);
 }
 
 bool AdderParticle::canFinish() const
@@ -221,13 +221,13 @@ bool AdderParticle::canFinish() const
 void AdderParticle::updateConstructionDir()
 {
     constructionDir = constructionReceiveDir();
-    if(neighborAtLabel(constructionDir).state == State::Seed) {
+    if(nbrAtLabel(constructionDir).state == State::Seed) {
         constructionDir = (constructionDir + 1) % 6;
     } else {
         constructionDir = (constructionDir + 2) % 6;
     }
 
-    if(hasNeighborAtLabel(constructionDir) && neighborAtLabel(constructionDir).state == State::Finish) {
+    if(hasNbrAtLabel(constructionDir) && nbrAtLabel(constructionDir).state == State::Finish) {
         constructionDir = (constructionDir + 1) % 6;
     }
 }
@@ -235,7 +235,7 @@ void AdderParticle::updateConstructionDir()
 void AdderParticle::updateMoveDir()
 {
     moveDir = labelOfFirstNeighborInState({State::Seed, State::Finish});
-    while(hasNeighborAtLabel(moveDir) && (neighborAtLabel(moveDir).state == State::Seed || neighborAtLabel(moveDir).state == State::Finish)) {
+    while(hasNbrAtLabel(moveDir) && (nbrAtLabel(moveDir).state == State::Seed || nbrAtLabel(moveDir).state == State::Finish)) {
         moveDir = (moveDir + 5) % 6;
     }
 }
@@ -246,7 +246,7 @@ bool AdderParticle::hasTailFollower() const
         return  p.state == State::Follow &&
                 pointsAtMyTail(p, p.dirToHeadLabel(p.followDir));
     };
-    return labelOfFirstNeighborWithProperty<AdderParticle>(propertyCheck) != -1;
+    return labelOfFirstNbrWithProperty<AdderParticle>(propertyCheck) != -1;
 }
 
 AdderSystem::AdderSystem(int numParticles, int countValue)

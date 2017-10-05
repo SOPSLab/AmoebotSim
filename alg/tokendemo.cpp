@@ -26,7 +26,7 @@ void TokenDemoParticle::activate()
         if(isContracted() && (state == State::Seed || state == State::Finish)) {
             int label = labelOfFirstNeighborInState({State::Seed, State::Finish}, randDir());
             if(label != -1) {
-                neighborAtLabel(label).putToken(takeToken<Token>());
+                nbrAtLabel(label).putToken(takeToken<Token>());
             }
         }
     }
@@ -62,9 +62,9 @@ QString TokenDemoParticle::inspectionText() const
     return text;
 }
 
-TokenDemoParticle& TokenDemoParticle::neighborAtLabel(int label) const
+TokenDemoParticle& TokenDemoParticle::nbrAtLabel(int label) const
 {
-    return AmoebotParticle::neighborAtLabel<TokenDemoParticle>(label);
+    return AmoebotParticle::nbrAtLabel<TokenDemoParticle>(label);
 }
 
 TokenDemoSystem::TokenDemoSystem(int numParticles, float holeProb)

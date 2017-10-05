@@ -4,7 +4,7 @@
 #include <set>
 
 #include "alg/compression.h"
-#include "alg/labellednocompassparticle.h"
+#include "alg/localparticle.h"
 
 CompressionParticle::CompressionParticle(const Node head,
                                          const int globalTailDir,
@@ -41,10 +41,10 @@ void CompressionParticle::activate()
 
             // compute the number of particles that will be in set S after expansion
             int sizeS = 0;
-            if(hasNeighborAtLabel(headLabels()[0]) && !(neighborAtLabel(headLabels()[0]).isExpanded() && neighborAtLabel(headLabels()[0]).pointsAtMyHead(*this, headLabels()[0]))) {
+            if(hasNbrAtLabel(headLabels()[0]) && !(nbrAtLabel(headLabels()[0]).isExpanded() && nbrAtLabel(headLabels()[0]).pointsAtMyHead(*this, headLabels()[0]))) {
                 ++sizeS;
             }
-            if(hasNeighborAtLabel(headLabels()[4]) && !(neighborAtLabel(headLabels()[4]).isExpanded() && neighborAtLabel(headLabels()[4]).pointsAtMyHead(*this, headLabels()[4]))) {
+            if(hasNbrAtLabel(headLabels()[4]) && !(nbrAtLabel(headLabels()[4]).isExpanded() && nbrAtLabel(headLabels()[4]).pointsAtMyHead(*this, headLabels()[4]))) {
                 ++sizeS;
             }
 
@@ -87,15 +87,15 @@ QString CompressionParticle::inspectionText() const
     return text;
 }
 
-CompressionParticle& CompressionParticle::neighborAtLabel(int label) const
+CompressionParticle& CompressionParticle::nbrAtLabel(int label) const
 {
-    return AmoebotParticle::neighborAtLabel<CompressionParticle>(label);
+    return AmoebotParticle::nbrAtLabel<CompressionParticle>(label);
 }
 
 bool CompressionParticle::hasExpandedNeighbor() const
 {
     for(const int label: uniqueLabels()) {
-        if(hasNeighborAtLabel(label) && neighborAtLabel(label).isExpanded()) {
+        if(hasNbrAtLabel(label) && nbrAtLabel(label).isExpanded()) {
             return true;
         }
     }
@@ -108,7 +108,7 @@ int CompressionParticle::neighborCount(std::vector<int> labels) const
     int neighbors = 0;
 
     for(const int label : labels) {
-        if(hasNeighborAtLabel(label)) {
+        if(hasNbrAtLabel(label)) {
             ++neighbors;
         }
     }
@@ -122,7 +122,7 @@ int CompressionParticle::triangleCount() const
     int limit = (isContracted()) ? 6 : 4; // contracted could have six triangles, expanded should at most four
 
     for(int i = 0; i < limit; ++i) {
-        if(hasNeighborAtLabel(headLabels()[i]) && hasNeighborAtLabel(headLabels()[(i + 1) % headLabels().size()])) {
+        if(hasNbrAtLabel(headLabels()[i]) && hasNbrAtLabel(headLabels()[(i + 1) % headLabels().size()])) {
             ++triangles;
         }
     }
@@ -274,7 +274,7 @@ const std::vector<int> CompressionParticle::uniqueLabels() const
     else { // is expanded
         std::vector<int> labels;
         for(int label = 0; label < 10; ++label) {
-            if(neighboringNodeReachedViaLabel(label) != neighboringNodeReachedViaLabel((label + 9) % 10)) {
+            if(nbrNodeReachedViaLabel(label) != nbrNodeReachedViaLabel((label + 9) % 10)) {
                 labels.push_back(label);
             }
         }
@@ -291,7 +291,7 @@ const std::vector<int> CompressionParticle::occupiedLabelsNoExpandedHeads() cons
     std::vector<int> labels;
     for(const int label : uniqueLabels()) {
         // if the label points at the head of an expanded neighboring particle, do not include it
-        if(hasNeighborAtLabel(label) && !(neighborAtLabel(label).isExpanded() && neighborAtLabel(label).pointsAtMyHead(*this, label)))
+        if(hasNbrAtLabel(label) && !(nbrAtLabel(label).isExpanded() && nbrAtLabel(label).pointsAtMyHead(*this, label)))
         {
             labels.push_back(label);
         }

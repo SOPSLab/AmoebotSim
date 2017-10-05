@@ -37,7 +37,7 @@ void MatrixParticle::activate()
             std::shared_ptr<VectorToken> vtoken= std::make_shared<VectorToken>();
             vtoken->value = locationValue;
             followDir = labelOfFirstNeighborInState({State::Matrix},0);
-            neighborAtLabel(followDir).putToken(vtoken);
+            nbrAtLabel(followDir).putToken(vtoken);
             state=State::Finish;
 
         }
@@ -54,7 +54,7 @@ void MatrixParticle::activate()
             auto propertyCheck = [&](const MatrixParticle& p) {
                 return  p.followDir!=-1&&  pointsAtMe(p, p.followDir);
             };
-            int followPoint = labelOfFirstNeighborWithProperty<MatrixParticle>(propertyCheck);
+            int followPoint = labelOfFirstNbrWithProperty<MatrixParticle>(propertyCheck);
             if(followPoint!= -1)
             {
                 followDir =(followPoint+3)%6;
@@ -69,25 +69,25 @@ void MatrixParticle::activate()
             std::shared_ptr<ProductToken> ptoken = std::make_shared<ProductToken>();
             ptoken->value = locationValue*vtoken->value;
             //TODO: not if neighbor alread has a ptoken!
-            neighborAtLabel((followDir+5)%6).putToken(ptoken);
+            nbrAtLabel((followDir+5)%6).putToken(ptoken);
             sentProduct = true;
 
             //send forward if possible
-            if( hasNeighborAtLabel(followDir))
+            if( hasNbrAtLabel(followDir))
             {
-                neighborAtLabel(followDir).putToken(vtoken);
+                nbrAtLabel(followDir).putToken(vtoken);
 
             }
 
         }
         //combine, pass along results
         if(countTokens<ProductToken>()>0){
-            neighborAtLabel((followDir+5)%6).putToken(takeToken<ProductToken>());
+            nbrAtLabel((followDir+5)%6).putToken(takeToken<ProductToken>());
         }
-        if(followDir!=-1&& !hasNeighborAtLabel((followDir+1)%6) && !hasNeighborAtLabel((followDir+2)%6) && sentProduct){
+        if(followDir!=-1&& !hasNbrAtLabel((followDir+1)%6) && !hasNbrAtLabel((followDir+2)%6) && sentProduct){
             state = State::Finish;
         }
-        else if(followDir!=-1 && hasNeighborAtLabel((followDir+2)%6)  && neighborAtLabel((followDir+2)%6).state==State::Finish){
+        else if(followDir!=-1 && hasNbrAtLabel((followDir+2)%6)  && nbrAtLabel((followDir+2)%6).state==State::Finish){
             state=State::Finish;
         }
     }
@@ -99,13 +99,13 @@ void MatrixParticle::activate()
             auto propertyCheck = [&](const MatrixParticle& p) {
                 return  (p.followDir!=-1&&  pointsAtMe(p, p.followDir)) || p.state==State::Matrix;
             };
-            int followPoint = labelOfFirstNeighborWithProperty<MatrixParticle>(propertyCheck);
+            int followPoint = labelOfFirstNbrWithProperty<MatrixParticle>(propertyCheck);
             qDebug()<<"followPoint: "<<followPoint;
             if(followPoint!= -1)
             {
                 //if there are two matrix neighbors, actually go from second.
-                if(neighborAtLabel(followPoint).state==State::Matrix &&
-                        hasNeighborAtLabel((followPoint+1)%6) && neighborAtLabel((followPoint+1)%6).state==State::Matrix)
+                if(nbrAtLabel(followPoint).state==State::Matrix &&
+                        hasNbrAtLabel((followPoint+1)%6) && nbrAtLabel((followPoint+1)%6).state==State::Matrix)
                     followPoint = (followPoint+1)%6;
                 followDir =(followPoint+3)%6;
             }
@@ -117,11 +117,11 @@ void MatrixParticle::activate()
             ptoken->value = ptoken->value - moveAmount;
             resultValue = resultValue + moveAmount;
             if(ptoken->value>0){
-                neighborAtLabel(followDir).putToken(ptoken);
+                nbrAtLabel(followDir).putToken(ptoken);
             }
 
         }
-        if(followDir!=-1 && hasNeighborAtLabel((followDir+3)%6)  && neighborAtLabel((followDir+3)%6).state==State::Finish){
+        if(followDir!=-1 && hasNbrAtLabel((followDir+3)%6)  && nbrAtLabel((followDir+3)%6).state==State::Finish){
                    state=State::Finish;
                }
     }
@@ -206,9 +206,9 @@ QString MatrixParticle::inspectionText() const
     return text;
 }
 
-MatrixParticle& MatrixParticle::neighborAtLabel(int label) const
+MatrixParticle& MatrixParticle::nbrAtLabel(int label) const
 {
-    return AmoebotParticle::neighborAtLabel<MatrixParticle>(label);
+    return AmoebotParticle::nbrAtLabel<MatrixParticle>(label);
 }
 
 int MatrixParticle::labelOfFirstNeighborInState(std::initializer_list<State> states, int startLabel) const
@@ -222,7 +222,7 @@ int MatrixParticle::labelOfFirstNeighborInState(std::initializer_list<State> sta
         return false;
     };
 
-    return labelOfFirstNeighborWithProperty<MatrixParticle>(propertyCheck, startLabel);
+    return labelOfFirstNbrWithProperty<MatrixParticle>(propertyCheck, startLabel);
 }
 
 bool MatrixParticle::hasNeighborInState(std::initializer_list<State> states) const
@@ -238,7 +238,7 @@ int MatrixParticle::constructionReceiveDir() const
                 pointsAtMe(p, p.constructionDir);
     };
 
-    return labelOfFirstNeighborWithProperty<MatrixParticle>(propertyCheck);
+    return labelOfFirstNbrWithProperty<MatrixParticle>(propertyCheck);
 }
 
 bool MatrixParticle::canFinish() const
@@ -249,13 +249,13 @@ bool MatrixParticle::canFinish() const
 void MatrixParticle::updateConstructionDir()
 {
     constructionDir = constructionReceiveDir();
-    if(neighborAtLabel(constructionDir).state == State::Seed) {
+    if(nbrAtLabel(constructionDir).state == State::Seed) {
         constructionDir = (constructionDir + 1) % 6;
     } else {
         constructionDir = (constructionDir + 2) % 6;
     }
 
-    if(hasNeighborAtLabel(constructionDir) && neighborAtLabel(constructionDir).state == State::Finish) {
+    if(hasNbrAtLabel(constructionDir) && nbrAtLabel(constructionDir).state == State::Finish) {
         constructionDir = (constructionDir + 1) % 6;
     }
 }
@@ -263,7 +263,7 @@ void MatrixParticle::updateConstructionDir()
 void MatrixParticle::updateMoveDir()
 {
     moveDir = labelOfFirstNeighborInState({State::Seed, State::Finish});
-    while(hasNeighborAtLabel(moveDir) && (neighborAtLabel(moveDir).state == State::Seed || neighborAtLabel(moveDir).state == State::Finish)) {
+    while(hasNbrAtLabel(moveDir) && (nbrAtLabel(moveDir).state == State::Seed || nbrAtLabel(moveDir).state == State::Finish)) {
         moveDir = (moveDir + 5) % 6;
     }
 }
@@ -274,7 +274,7 @@ bool MatrixParticle::hasTailFollower() const
         return  p.state == State::Follow &&
                 pointsAtMyTail(p, p.dirToHeadLabel(p.followDir));
     };
-    return labelOfFirstNeighborWithProperty<MatrixParticle>(propertyCheck) != -1;
+    return labelOfFirstNbrWithProperty<MatrixParticle>(propertyCheck) != -1;
 }
 
 MatrixSystem::MatrixSystem(int numParticles, int countValue)

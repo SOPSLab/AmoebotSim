@@ -4,7 +4,7 @@
 #include <set>
 
 #include "alg/twositeebridge.h"
-#include "alg/labellednocompassparticle.h"
+#include "alg/localparticle.h"
 
 TwoSiteEBridgeParticle::TwoSiteEBridgeParticle(const Node head,
                                                const int globalTailDir,
@@ -58,8 +58,8 @@ void TwoSiteEBridgeParticle::activate()
 
                     // if there is a new site in the neighborhood, set its flag to TRUE and update this particle's lambda
                     for(const int label : uniqueLabels()) {
-                        if(hasNeighborAtLabel(label) && neighborAtLabel(label).role == Role::Site && !neighborAtLabel(label).flag) {
-                            neighborAtLabel(label).flag = true;
+                        if(hasNbrAtLabel(label) && nbrAtLabel(label).role == Role::Site && !nbrAtLabel(label).flag) {
+                            nbrAtLabel(label).flag = true;
                             lambda = complambda;
                         }
                     }
@@ -130,15 +130,15 @@ QString TwoSiteEBridgeParticle::inspectionText() const
     return text;
 }
 
-TwoSiteEBridgeParticle& TwoSiteEBridgeParticle::neighborAtLabel(int label) const
+TwoSiteEBridgeParticle& TwoSiteEBridgeParticle::nbrAtLabel(int label) const
 {
-    return AmoebotParticle::neighborAtLabel<TwoSiteEBridgeParticle>(label);
+    return AmoebotParticle::nbrAtLabel<TwoSiteEBridgeParticle>(label);
 }
 
 bool TwoSiteEBridgeParticle::hasExpandedNeighbor() const
 {
     for(const int label: uniqueLabels()) {
-        if(hasNeighborAtLabel(label) && neighborAtLabel(label).isExpanded()) {
+        if(hasNbrAtLabel(label) && nbrAtLabel(label).isExpanded()) {
             return true;
         }
     }
@@ -149,7 +149,7 @@ bool TwoSiteEBridgeParticle::hasExpandedNeighbor() const
 bool TwoSiteEBridgeParticle::hasNeighborWithLambda(const int val) const
 {
     for(const int label : uniqueLabels()) {
-        if(hasNeighborAtLabel(label) && neighborAtLabel(label).lambda == val) {
+        if(hasNbrAtLabel(label) && nbrAtLabel(label).lambda == val) {
             return true;
         }
     }
@@ -162,8 +162,8 @@ int TwoSiteEBridgeParticle::neighborCount(std::vector<int> labels, const Role r,
     int neighbors = 0;
 
     for(const int label : labels) {
-        if(hasNeighborAtLabel(label) && (r == Role::All || neighborAtLabel(label).role == r)
-                && !(neighborAtLabel(label).role == Role::Site && !countNewSites && !neighborAtLabel(label).flag)) {
+        if(hasNbrAtLabel(label) && (r == Role::All || nbrAtLabel(label).role == r)
+                && !(nbrAtLabel(label).role == Role::Site && !countNewSites && !nbrAtLabel(label).flag)) {
             ++neighbors;
         }
     }
@@ -329,7 +329,7 @@ const std::vector<int> TwoSiteEBridgeParticle::uniqueLabels() const
     else { // is expanded
         std::vector<int> labels;
         for(int label = 0; label < 10; ++label) {
-            if(neighboringNodeReachedViaLabel(label) != neighboringNodeReachedViaLabel((label + 9) % 10)) {
+            if(nbrNodeReachedViaLabel(label) != nbrNodeReachedViaLabel((label + 9) % 10)) {
                 labels.push_back(label);
             }
         }
@@ -346,9 +346,9 @@ const std::vector<int> TwoSiteEBridgeParticle::occupiedLabelsNoExpandedHeads(std
     std::vector<int> occNoExpHeadLabels;
     for(const int label : labels) {
         // if the label points at the head of an expanded neighboring particle, do not include it
-        if(hasNeighborAtLabel(label) && (r == Role::All || neighborAtLabel(label).role == r)
-                && !(neighborAtLabel(label).role == Role::Site && !countNewSites && !neighborAtLabel(label).flag)
-                && !(neighborAtLabel(label).isExpanded() && neighborAtLabel(label).pointsAtMyHead(*this, label)))
+        if(hasNbrAtLabel(label) && (r == Role::All || nbrAtLabel(label).role == r)
+                && !(nbrAtLabel(label).role == Role::Site && !countNewSites && !nbrAtLabel(label).flag)
+                && !(nbrAtLabel(label).isExpanded() && nbrAtLabel(label).pointsAtMyHead(*this, label)))
         {
             occNoExpHeadLabels.push_back(label);
         }

@@ -48,7 +48,7 @@ public:
 
     virtual QString inspectionText() const;
 
-    Matrix2Particle& neighborAtLabel(int label) const;
+    Matrix2Particle& nbrAtLabel(int label) const;
 
     int labelOfFirstNeighborInState(std::initializer_list<State> states, int startLabel = 0) const;
     bool hasNeighborInState(std::initializer_list<State> states) const;

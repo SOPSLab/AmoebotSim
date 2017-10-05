@@ -27,7 +27,7 @@ public:
     virtual int tailMarkColor() const;
     virtual QString inspectionText() const;
 
-    TwoSiteEBridgeParticle& neighborAtLabel(int label) const;
+    TwoSiteEBridgeParticle& nbrAtLabel(int label) const;
 
 protected:
     const Role role;

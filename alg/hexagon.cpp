@@ -53,9 +53,9 @@ void HexagonParticle::activate() {
         updateMoveDir();
         return;
       } else if (hasTailAtLabel(followDir)) {
-        auto neighbor = neighborAtLabel(followDir);
+        auto neighbor = nbrAtLabel(followDir);
         int neighborContractionDir =
-          neighborDirToDir(neighbor, (neighbor.tailDir() + 3) % 6);
+          nbrDirToDir(neighbor, (neighbor.tailDir() + 3) % 6);
         push(followDir);
         followDir = neighborContractionDir;
         return;
@@ -67,7 +67,7 @@ void HexagonParticle::activate() {
         return;
     } else {
         updateMoveDir();
-        if (!hasNeighborAtLabel(moveDir)) {
+        if (!hasNbrAtLabel(moveDir)) {
           expand(moveDir);
         } else if (hasTailAtLabel(moveDir)) {
           push(moveDir);
@@ -123,12 +123,15 @@ QString HexagonParticle::inspectionText() const {
       }
   }();
   text += "\n";
+  text += "followDir: " + QString::number(followDir) + "\n";
+  text += "moveDir: " + QString::number(moveDir) + "\n";
+  text += "constructionDir: " + QString::number(constructionDir) + "\n";
 
   return text;
 }
 
-HexagonParticle& HexagonParticle::neighborAtLabel(int label) const {
-  return AmoebotParticle::neighborAtLabel<HexagonParticle>(label);
+HexagonParticle& HexagonParticle::nbrAtLabel(int label) const {
+  return AmoebotParticle::nbrAtLabel<HexagonParticle>(label);
 }
 
 int HexagonParticle::labelOfFirstNeighborInState(
@@ -142,7 +145,7 @@ int HexagonParticle::labelOfFirstNeighborInState(
     return false;
   };
 
-  return labelOfFirstNeighborWithProperty<HexagonParticle>(propertyCheck,
+  return labelOfFirstNbrWithProperty<HexagonParticle>(propertyCheck,
                                                            startLabel);
 }
 
@@ -158,7 +161,7 @@ int HexagonParticle::constructionReceiveDir() const {
            pointsAtMe(p, p.constructionDir);
   };
 
-  return labelOfFirstNeighborWithProperty<HexagonParticle>(propertyCheck);
+  return labelOfFirstNbrWithProperty<HexagonParticle>(propertyCheck);
 }
 
 bool HexagonParticle::canFinish() const {
@@ -167,23 +170,23 @@ bool HexagonParticle::canFinish() const {
 
 void HexagonParticle::updateConstructionDir() {
   constructionDir = constructionReceiveDir();
-  if (neighborAtLabel(constructionDir).state == State::Seed) {
+  if (nbrAtLabel(constructionDir).state == State::Seed) {
     constructionDir = (constructionDir + 1) % 6;
   } else {
     constructionDir = (constructionDir + 2) % 6;
   }
 
-  if(hasNeighborAtLabel(constructionDir) &&
-     neighborAtLabel(constructionDir).state == State::Finish) {
+  if(hasNbrAtLabel(constructionDir) &&
+     nbrAtLabel(constructionDir).state == State::Finish) {
     constructionDir = (constructionDir + 1) % 6;
   }
 }
 
 void HexagonParticle::updateMoveDir() {
   moveDir = labelOfFirstNeighborInState({State::Seed, State::Finish});
-  while (hasNeighborAtLabel(moveDir) &&
-         (neighborAtLabel(moveDir).state == State::Seed ||
-          neighborAtLabel(moveDir).state == State::Finish)) {
+  while (hasNbrAtLabel(moveDir) && (nbrAtLabel(moveDir).state == State::Seed ||
+                                    nbrAtLabel(moveDir).state == State::Finish))
+  {
     moveDir = (moveDir + 5) % 6;
   }
 }
@@ -194,7 +197,7 @@ bool HexagonParticle::hasTailFollower() const {
            pointsAtMyTail(p, p.dirToHeadLabel(p.followDir));
   };
 
-  return labelOfFirstNeighborWithProperty<HexagonParticle>(propertyCheck) != -1;
+  return labelOfFirstNbrWithProperty<HexagonParticle>(propertyCheck) != -1;
 }
 
 HexagonSystem::HexagonSystem(int numParticles, float holeProb) {

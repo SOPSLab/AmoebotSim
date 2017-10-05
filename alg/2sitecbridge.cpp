@@ -4,7 +4,7 @@
 #include <set>
 
 #include "alg/2sitecbridge.h"
-#include "alg/labellednocompassparticle.h"
+#include "alg/localparticle.h"
 
 TwoSiteCBridgeParticle::TwoSiteCBridgeParticle(const Node head,
                                                const int globalTailDir,
@@ -105,15 +105,15 @@ QString TwoSiteCBridgeParticle::inspectionText() const
     return text;
 }
 
-TwoSiteCBridgeParticle& TwoSiteCBridgeParticle::neighborAtLabel(int label) const
+TwoSiteCBridgeParticle& TwoSiteCBridgeParticle::nbrAtLabel(int label) const
 {
-    return AmoebotParticle::neighborAtLabel<TwoSiteCBridgeParticle>(label);
+    return AmoebotParticle::nbrAtLabel<TwoSiteCBridgeParticle>(label);
 }
 
 bool TwoSiteCBridgeParticle::hasExpandedNeighbor() const
 {
     for(const int label: uniqueLabels()) {
-        if(hasNeighborAtLabel(label) && neighborAtLabel(label).isExpanded()) {
+        if(hasNbrAtLabel(label) && nbrAtLabel(label).isExpanded()) {
             return true;
         }
     }
@@ -126,7 +126,7 @@ int TwoSiteCBridgeParticle::neighborCount(std::vector<int> labels, const Role r)
     int neighbors = 0;
 
     for(const int label : labels) {
-        if(hasNeighborAtLabel(label) && (r == Role::All || neighborAtLabel(label).role == r)) {
+        if(hasNbrAtLabel(label) && (r == Role::All || nbrAtLabel(label).role == r)) {
             ++neighbors;
         }
     }
@@ -292,7 +292,7 @@ const std::vector<int> TwoSiteCBridgeParticle::uniqueLabels() const
     else { // is expanded
         std::vector<int> labels;
         for(int label = 0; label < 10; ++label) {
-            if(neighboringNodeReachedViaLabel(label) != neighboringNodeReachedViaLabel((label + 9) % 10)) {
+            if(nbrNodeReachedViaLabel(label) != nbrNodeReachedViaLabel((label + 9) % 10)) {
                 labels.push_back(label);
             }
         }
@@ -309,8 +309,8 @@ const std::vector<int> TwoSiteCBridgeParticle::occupiedLabelsNoExpandedHeads(std
     std::vector<int> occNoExpHeadLabels;
     for(const int label : labels) {
         // if the label points at the head of an expanded neighboring particle, do not include it
-        if(hasNeighborAtLabel(label) && (r == Role::All || neighborAtLabel(label).role == r)
-                && !(neighborAtLabel(label).isExpanded() && neighborAtLabel(label).pointsAtMyHead(*this, label)))
+        if(hasNbrAtLabel(label) && (r == Role::All || nbrAtLabel(label).role == r)
+                && !(nbrAtLabel(label).isExpanded() && nbrAtLabel(label).pointsAtMyHead(*this, label)))
         {
             occNoExpHeadLabels.push_back(label);
         }

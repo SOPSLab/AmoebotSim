@@ -19,7 +19,7 @@ public:
 
     virtual QString inspectionText() const;
 
-    CompressionParticle& neighborAtLabel(int label) const;
+    CompressionParticle& nbrAtLabel(int label) const;
 
 protected:
     const float lambda;

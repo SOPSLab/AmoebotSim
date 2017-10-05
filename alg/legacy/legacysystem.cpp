@@ -2,219 +2,219 @@
 
 #include "legacysystem.h"
 #include <QDebug>
-LegacySystem::LegacySystem() :
-    systemState(SystemState::Valid),
+LegacySystem::LegacySystem()
+  : systemState(SystemState::Valid),
     numNonStaticParticles(0),
     _numMovements(0),
     _numRounds(0),
-    _leRounds(0)
-{
-    uint32_t seed;
-    std::random_device device;
-    if(device.entropy() == 0) {
-        auto duration = std::chrono::high_resolution_clock::now() - std::chrono::high_resolution_clock::time_point::min();
-        seed = duration.count();
-    } else {
-        std::uniform_int_distribution<uint32_t> dist(std::numeric_limits<uint32_t>::min(),
-                                                     std::numeric_limits<uint32_t>::max());
-        seed = dist(device);
-    }
-    rng.seed(seed);
+    _leaderElectionRounds(0) {
+  uint32_t seed;
+  std::random_device device;
+  if (device.entropy() == 0) {
+    auto duration = std::chrono::high_resolution_clock::now()
+                    - std::chrono::high_resolution_clock::time_point::min();
+    seed = duration.count();
+  } else {
+    std::uniform_int_distribution<uint32_t>
+        dist(std::numeric_limits<uint32_t>::min(),
+             std::numeric_limits<uint32_t>::max());
+    seed = dist(device);
+  }
+  rng.seed(seed);
 }
 
-LegacySystem::~LegacySystem()
-{
-    for(auto p : particles) {
-        delete p;
-    }
-    particles.clear();
+LegacySystem::~LegacySystem() {
+  for(auto p : particles) {
+    delete p;
+  }
+
+  particles.clear();
 }
 
-void LegacySystem::activate(){
-    if(systemState != SystemState::Valid) {
-        return;
+void LegacySystem::activate() {
+  if (systemState != SystemState::Valid) {
+    return;
+  }
+
+  if (numNonStaticParticles == 0) {
+    systemState = SystemState::Terminated;
+    return;
+  }
+
+  bool attemptedActivatingEveryParticles = false;
+  bool hasBlockedParticles = false;
+
+  while (!attemptedActivatingEveryParticles) {
+    if (shuffledParticles.size() == 0) {
+      attemptedActivatingEveryParticles = true;
+
+      for (auto it = particles.begin(); it != particles.end(); ++it) {
+        shuffledParticles.push_back(*it);
+      }
+      std::shuffle(shuffledParticles.begin(), shuffledParticles.end(), rng);
     }
 
-    if(numNonStaticParticles == 0) {
-        systemState = SystemState::Terminated;
-        return;
-    }
+    while (shuffledParticles.size() > 0) {
+      LegacyParticle* p = shuffledParticles.front();
+      shuffledParticles.pop_front();
 
-    bool attemptedActivatingEveryParticles = false;
-    bool hasBlockedParticles = false;
+      if (p->isStatic()) {
+        continue;
+      }
 
-    while(!attemptedActivatingEveryParticles) {
-        if(shuffledParticles.size() == 0) {
-            attemptedActivatingEveryParticles = true;
+      updateNumRounds(p);
 
-            for(auto it = particles.begin(); it != particles.end(); ++it) {
-                shuffledParticles.push_back(*it);
-            }
-            std::shuffle(shuffledParticles.begin(), shuffledParticles.end(), rng);
-        }
+      auto inFlags = assembleFlags(*p);
+      Movement m = p->executeAlgorithm(inFlags);
 
-        while(shuffledParticles.size() > 0) {
-            LegacyParticle* p = shuffledParticles.front();
-            shuffledParticles.pop_front();
-
-            if(p->isStatic()) {
-                continue;
-            }
-
-            updateNumRounds(p);
-
-            auto inFlags = assembleFlags(*p);
-            Movement m = p->executeAlgorithm(inFlags);
-
-            if(m.type == MovementType::Empty) {
-                p->discard();
-                continue;
-            } else if(m.type == MovementType::Idle) {
-                p->apply();
-                return;
-            } else if(m.type == MovementType::Expand) {
-                if(handleExpansion(*p, m.label)) {
-                    return;
-                }
-            } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
-                if(handleContraction(*p, m.label, m.type == MovementType::HandoverContract)) {
-                    return;
-                }
-            }
-
-            // particle is blocked, it cannot execute its action
-            hasBlockedParticles = true;
-        }
-    }
-
-    if(hasBlockedParticles) {
-        if(particles[0]->algorithmIsDeterministic()) {
-            systemState = SystemState::Deadlocked;
-        } else {
-            systemState = SystemState::Valid;
-        }
-    } else {
-        systemState = SystemState::Terminated;
-    }
-}
-
-void LegacySystem::activateParticleAt(Node node)
-{
-    if(systemState != SystemState::Valid) {
-        return;
-    }
-
-    if(numNonStaticParticles == 0) {
-        systemState = SystemState::Terminated;
-        return;
-    }
-
-    auto it = particleMap.find(node);
-    if(it == particleMap.end() || it->second->isStatic()) {
-        return;
-    }
-
-    LegacyParticle* p = it->second;
-    updateNumRounds(p);
-
-    auto inFlags = assembleFlags(*p);
-    Movement m = p->executeAlgorithm(inFlags);
-
-    if(m.type == MovementType::Empty) {
+      if (m.type == MovementType::Empty) {
         p->discard();
-    } else if(m.type == MovementType::Idle) {
+        continue;
+      } else if (m.type == MovementType::Idle) {
         p->apply();
-    } else if(m.type == MovementType::Expand) {
-        handleExpansion(*p, m.label);
-    } else if(m.type == MovementType::Contract || m.type == MovementType::HandoverContract) {
-        handleContraction(*p, m.label, m.type == MovementType::HandoverContract);
+        return;
+      } else if (m.type == MovementType::Expand) {
+        if (handleExpansion(*p, m.label)) {
+          return;
+        }
+      } else if (m.type == MovementType::Contract ||
+                 m.type == MovementType::HandoverContract) {
+        if (handleContraction(*p, m.label,
+                              m.type == MovementType::HandoverContract)) {
+          return;
+        }
+      }
+
+      // particle is blocked, it cannot execute its action
+      hasBlockedParticles = true;
     }
-}
+  }
 
-unsigned int LegacySystem::size() const
-{
-    return particles.size();
-}
-
-const LegacyParticle& LegacySystem::at(int i) const
-{
-    return *particles.at(i);
-}
-
-int LegacySystem::numMovements() const
-{
-    return _numMovements;
-}
-
-int LegacySystem::numRounds() const
-{
-    return _numRounds;
-}
-int LegacySystem::leaderElectionRounds() const
-{
-    return _leRounds;
-}
-int LegacySystem::weakBounds() const
-{
-    return weakBound;
-}
-int LegacySystem::strongBounds() const
-{
-    return strongBound;
-}
-void LegacySystem::setStrongBound(int bound)
-{
-    strongBound = bound;
-}
-void LegacySystem::setWeakBound(int bound)
-{
-    weakBound = bound;
-}
-bool LegacySystem::hasTerminated() const
-{
-    return systemState != SystemState::Valid;
-}
-
-void LegacySystem::insertParticle(const LegacyParticle& p)
-{
-    Q_ASSERT(particleMap.find(p.head) == particleMap.end());
-    Q_ASSERT(p.globalTailDir == -1 || particleMap.find(p.tail()) == particleMap.end());
-
-    LegacyParticle* particle = new LegacyParticle(p);
-    particles.push_back(particle);
-    particleMap.insert(std::pair<Node, LegacyParticle*>(p.head, particle));
-    if(p.globalTailDir != -1) {
-        particleMap.insert(std::pair<Node, LegacyParticle*>(p.tail(), particle));
+  if (hasBlockedParticles) {
+    if (particles[0]->algorithmIsDeterministic()) {
+      systemState = SystemState::Deadlocked;
+    } else {
+      systemState = SystemState::Valid;
     }
+  } else {
+    systemState = SystemState::Terminated;
+  }
+}
 
-    if(!p.isStatic()) {
-        numNonStaticParticles++;
-    }
+void LegacySystem::activateParticleAt(Node node) {
+  if (systemState != SystemState::Valid) {
+    return;
+  }
+
+  if (numNonStaticParticles == 0) {
+    systemState = SystemState::Terminated;
+    return;
+  }
+
+  auto it = particleMap.find(node);
+  if (it == particleMap.end() || it->second->isStatic()) {
+    return;
+  }
+
+  LegacyParticle* p = it->second;
+  updateNumRounds(p);
+
+  auto inFlags = assembleFlags(*p);
+  Movement m = p->executeAlgorithm(inFlags);
+
+  if (m.type == MovementType::Empty) {
+    p->discard();
+  } else if (m.type == MovementType::Idle) {
+    p->apply();
+  } else if (m.type == MovementType::Expand) {
+    handleExpansion(*p, m.label);
+  } else if (m.type == MovementType::Contract ||
+             m.type == MovementType::HandoverContract) {
+    handleContraction(*p, m.label, m.type == MovementType::HandoverContract);
+  }
+}
+
+unsigned int LegacySystem::size() const {
+  return particles.size();
+}
+
+const LegacyParticle& LegacySystem::at(int i) const {
+  return *particles.at(i);
+}
+
+unsigned int LegacySystem::numMovements() const {
+  return _numMovements;
+}
+
+unsigned int LegacySystem::numRounds() const {
+  return _numRounds;
+}
+
+unsigned int LegacySystem::leaderElectionRounds() const {
+  return _leaderElectionRounds;
+}
+
+unsigned int LegacySystem::weakBounds() const {
+  return _weakBound;
+}
+
+unsigned int LegacySystem::strongBounds() const {
+  return _strongBound;
+}
+
+void LegacySystem::setStrongBound(unsigned int bound) {
+  _strongBound = bound;
+}
+
+void LegacySystem::setWeakBound(unsigned int bound) {
+  _weakBound = bound;
+}
+
+bool LegacySystem::hasTerminated() const {
+  return systemState != SystemState::Valid;
+}
+
+void LegacySystem::insertParticle(const LegacyParticle& p) {
+  Q_ASSERT(particleMap.find(p.head) == particleMap.end());
+  Q_ASSERT(p.globalTailDir == -1 ||
+           particleMap.find(p.tail()) == particleMap.end());
+
+  LegacyParticle* particle = new LegacyParticle(p);
+  particles.push_back(particle);
+  particleMap.insert(std::pair<Node, LegacyParticle*>(p.head, particle));
+
+  if (p.globalTailDir != -1) {
+    particleMap.insert(std::pair<Node, LegacyParticle*>(p.tail(), particle));
+  }
+
+  if (!p.isStatic()) {
+    numNonStaticParticles++;
+  }
 }
 
 std::array<const Flag*, 10> LegacySystem::assembleFlags(LegacyParticle& p){
-    std::array<const Flag*, 10> flags;
+  std::array<const Flag*, 10> flags;
 
-    int labelLimit = p.globalTailDir == -1 ? 6 : 10;
-    for(int label = 0; label < 10; label++) {
-        if(label >= labelLimit) {
-            flags[label] = nullptr;
-            continue;
-        }
-
-        auto neighborIt = particleMap.find(p.neighboringNodeReachedViaLabel(label));
-        if(neighborIt == particleMap.end()) {
-            flags[label] = nullptr;
-        } else {
-            auto incidentNode = p.occupiedNodeIncidentToLabel(label);
-            flags[label] = neighborIt->second->getFlagForNodeInDir(incidentNode, (p.labelToGlobalDir(label) + 3) % 6);
-        }
+  int labelLimit = p.globalTailDir == -1 ? 6 : 10;
+  for (int label = 0; label < 10; label++) {
+    if (label >= labelLimit) {
+      flags[label] = nullptr;
+      continue;
     }
 
-    return flags;
+    auto neighborIt = particleMap.find(p.nbrNodeReachedViaLabel(label));
+    if (neighborIt == particleMap.end()) {
+      flags[label] = nullptr;
+    } else {
+      auto incidentNode = p.occupiedNodeIncidentToLabel(label);
+      flags[label] = neighborIt->second->getFlagForNodeInDir(incidentNode, (p.labelToGlobalDir(label) + 3) % 6);
+    }
+  }
+
+  return flags;
 }
 
-bool LegacySystem::handleExpansion(LegacyParticle& p, int label){
+bool LegacySystem::handleExpansion(LegacyParticle& p, int label) {
     if(p.globalTailDir != -1) {
         p.discard(); // already expanded particle cannot expand
         return false;
@@ -426,9 +426,9 @@ bool LegacySystem::handleContraction(LegacyParticle& p, int label, bool isHandov
 void LegacySystem::updateNumRounds(LegacyParticle *p)
 {
     activatedParticles.insert(p);
-    if(p->isRetired() && _leRounds == 0)
+    if(p->isRetired() && _leaderElectionRounds == 0)
     {
-        _leRounds = _numRounds;
+        _leaderElectionRounds = _numRounds;
     }
     if(activatedParticles.size() == numNonStaticParticles) {
         _numRounds++;

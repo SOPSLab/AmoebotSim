@@ -40,7 +40,6 @@ HEADERS += \
     ui/view.h \
     alg/legacy/legacysystem.h \
     alg/legacy/legacyparticle.h \
-    alg/labellednocompassparticle.h \
     alg/amoebotparticle.h \
     alg/amoebotsystem.h \
     helper/randomnumbergenerator.h \
@@ -57,7 +56,8 @@ HEADERS += \
     alg/matrix2.h \
     alg/2sitecbridge.h \
     alg/edgedetect.h \
-    alg/twositeebridge.h
+    alg/twositeebridge.h \
+    alg/localparticle.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -83,7 +83,6 @@ SOURCES += \
     alg/legacy/leaderelection.cpp \
     alg/legacy/legacysystem.cpp \
     alg/legacy/legacyparticle.cpp \
-    alg/labellednocompassparticle.cpp \
     alg/amoebotparticle.cpp \
     alg/amoebotsystem.cpp \
     helper/randomnumbergenerator.cpp \
@@ -102,7 +101,8 @@ SOURCES += \
     alg/matrix2.cpp \
     alg/2sitecbridge.cpp \
     alg/edgedetect.cpp \
-    alg/twositeebridge.cpp
+    alg/twositeebridge.cpp \
+    alg/localparticle.cpp
 
 RESOURCES += \
     res/qml.qrc \

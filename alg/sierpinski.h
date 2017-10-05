@@ -34,7 +34,7 @@ public:
 
     virtual QString inspectionText() const;
 
-    SierpinskiParticle& neighborAtLabel(int label) const;
+    SierpinskiParticle& nbrAtLabel(int label) const;
 
     int labelOfFirstNeighborInState(std::initializer_list<State> states, int startLabel = 0) const;
     bool hasNeighborInState(std::initializer_list<State> states) const;

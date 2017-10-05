@@ -48,8 +48,8 @@ void SierpinskiParticle::activate()
             {
                 int dir1 = constructionDir;
                 int dir2 = (constructionDir+1)%6;
-                if(hasNeighborAtLabel(dir1) && neighborAtLabel(dir1).state==State::Wait &&
-                        hasNeighborAtLabel(dir2) && neighborAtLabel(dir2).state==State::Wait)
+                if(hasNbrAtLabel(dir1) && nbrAtLabel(dir1).state==State::Wait &&
+                        hasNbrAtLabel(dir2) && nbrAtLabel(dir2).state==State::Wait)
                 {
                     fractalPoint1 = dir1;
                     fractalPoint2 = dir2;
@@ -73,8 +73,8 @@ void SierpinskiParticle::activate()
                 updateMoveDir();
                 return;
             } else if(hasTailAtLabel(followDir)) {
-                auto neighbor = neighborAtLabel(followDir);
-                int neighborContractionDir = neighborDirToDir(neighbor, (neighbor.tailDir() + 3) % 6);
+                auto neighbor = nbrAtLabel(followDir);
+                int neighborContractionDir = nbrDirToDir(neighbor, (neighbor.tailDir() + 3) % 6);
                 push(followDir);
                 followDir = neighborContractionDir;
                 return;
@@ -87,7 +87,7 @@ void SierpinskiParticle::activate()
                 return;
             } else {
                 updateMoveDir();
-                if(!hasNeighborAtLabel(moveDir)) {
+                if(!hasNbrAtLabel(moveDir)) {
                     expand(moveDir);
                 } else if(hasTailAtLabel(moveDir)) {
                     push(moveDir);
@@ -109,8 +109,8 @@ void SierpinskiParticle::activate()
                 };
                 for(int label = 0; label<6; label++)
                 {
-                    if(hasNeighborAtLabel(label)){
-                        SierpinskiParticle particle = neighborAtLabel(label);
+                    if(hasNbrAtLabel(label)){
+                        SierpinskiParticle particle = nbrAtLabel(label);
                         if(fractal1prop(particle)) {
                             fractalPoint1 = (label+3)%6;
                         }
@@ -188,9 +188,9 @@ QString SierpinskiParticle::inspectionText() const
     return text;
 }
 
-SierpinskiParticle& SierpinskiParticle::neighborAtLabel(int label) const
+SierpinskiParticle& SierpinskiParticle::nbrAtLabel(int label) const
 {
-    return AmoebotParticle::neighborAtLabel<SierpinskiParticle>(label);
+    return AmoebotParticle::nbrAtLabel<SierpinskiParticle>(label);
 }
 
 int SierpinskiParticle::labelOfFirstNeighborInState(std::initializer_list<State> states, int startLabel) const
@@ -204,7 +204,7 @@ int SierpinskiParticle::labelOfFirstNeighborInState(std::initializer_list<State>
         return false;
     };
 
-    return labelOfFirstNeighborWithProperty<SierpinskiParticle>(propertyCheck, startLabel);
+    return labelOfFirstNbrWithProperty<SierpinskiParticle>(propertyCheck, startLabel);
 }
 
 bool SierpinskiParticle::hasNeighborInState(std::initializer_list<State> states) const
@@ -221,7 +221,7 @@ int SierpinskiParticle::constructionReceiveDir() const
                  ||(p.constructionDir2>-1 &&  pointsAtMe(p,p.constructionDir2)));
     };
 
-    return labelOfFirstNeighborWithProperty<SierpinskiParticle>(propertyCheck);
+    return labelOfFirstNbrWithProperty<SierpinskiParticle>(propertyCheck);
 }
 int SierpinskiParticle::sideReceiveDir() const
 {
@@ -231,7 +231,7 @@ int SierpinskiParticle::sideReceiveDir() const
                 p.sideDir>-1&&  (pointsAtMe(p, p.sideDir) );
     };
 
-    return labelOfFirstNeighborWithProperty<SierpinskiParticle>(propertyCheck);
+    return labelOfFirstNbrWithProperty<SierpinskiParticle>(propertyCheck);
 }
 
 bool SierpinskiParticle::canFinish() const
@@ -250,7 +250,7 @@ int SierpinskiParticle::numFractalPointers() const
     int count = 0;
     for(int label = 0; label<6; label++)
     {
-        if(hasNeighborAtLabel(label) && fractalprop(neighborAtLabel(label))){
+        if(hasNbrAtLabel(label) && fractalprop(nbrAtLabel(label))){
             count++;
         }
     }
@@ -263,24 +263,24 @@ void SierpinskiParticle::updateConstructionDir()
 {
     constructionDir = constructionReceiveDir();
     int direction = constructionDir;
-    if(hasNeighborAtLabel(constructionDir) && neighborAtLabel(constructionDir).state == State::Seed) {
+    if(hasNbrAtLabel(constructionDir) && nbrAtLabel(constructionDir).state == State::Seed) {
         constructionDir = (constructionDir + 1) % 6;
     }
-    if((hasNeighborAtLabel((direction+4)%6)&&neighborAtLabel((direction+4)%6).state == State::Wait )
-            ||(hasNeighborAtLabel((direction+2)%6)&& neighborAtLabel((direction+2)%6).state== State::Wait)){
+    if((hasNbrAtLabel((direction+4)%6)&&nbrAtLabel((direction+4)%6).state == State::Wait )
+            ||(hasNbrAtLabel((direction+2)%6)&& nbrAtLabel((direction+2)%6).state== State::Wait)){
         constructionDir =(direction+3)%6;
     } else{
-        if ((!hasNeighborAtLabel((direction+1)%6) || neighborAtLabel((direction+1)%6).state != State::Wait)
-                && (!hasNeighborAtLabel((direction+5)%6) || neighborAtLabel((direction+5)%6).state!= State::Wait )&&
-                (!hasNeighborAtLabel((direction+5)%6) || neighborAtLabel((direction+5)%6).state!= State::Seed)){
-            if (sideReceiveDir()>-1 || neighborAtLabel(direction).state ==State::Seed){
+        if ((!hasNbrAtLabel((direction+1)%6) || nbrAtLabel((direction+1)%6).state != State::Wait)
+                && (!hasNbrAtLabel((direction+5)%6) || nbrAtLabel((direction+5)%6).state!= State::Wait )&&
+                (!hasNbrAtLabel((direction+5)%6) || nbrAtLabel((direction+5)%6).state!= State::Seed)){
+            if (sideReceiveDir()>-1 || nbrAtLabel(direction).state ==State::Seed){
                 constructionDir=(direction+5)%6;
             } else {
                 constructionDir=(direction+1)%6;
             }
-        } else if (hasNeighborInState({State::Seed}) || (hasNeighborAtLabel((direction+5)%6) && neighborAtLabel((direction+5)%6).state== State::Wait)){
+        } else if (hasNeighborInState({State::Seed}) || (hasNbrAtLabel((direction+5)%6) && nbrAtLabel((direction+5)%6).state== State::Wait)){
             constructionDir =(direction+2)%6;
-        } else if ( hasNeighborAtLabel((direction+1)%6) && neighborAtLabel((direction+1)%6).state== State::Wait){
+        } else if ( hasNbrAtLabel((direction+1)%6) && nbrAtLabel((direction+1)%6).state== State::Wait){
             constructionDir=(direction+4)%6;
             constructionDir2=(direction+4)%6;
             sideDir = constructionDir2;
@@ -292,7 +292,7 @@ void SierpinskiParticle::updateConstructionDir()
 void SierpinskiParticle::updateMoveDir()
 {
     moveDir = labelOfFirstNeighborInState({State::Seed, State::Wait});
-    while(hasNeighborAtLabel(moveDir) && (neighborAtLabel(moveDir).state == State::Seed || neighborAtLabel(moveDir).state == State::Wait)) {
+    while(hasNbrAtLabel(moveDir) && (nbrAtLabel(moveDir).state == State::Seed || nbrAtLabel(moveDir).state == State::Wait)) {
         moveDir = (moveDir + 5) % 6;
     }
 }
@@ -303,7 +303,7 @@ bool SierpinskiParticle::hasTailFollower() const
         return  p.state == State::Follow &&
                 pointsAtMyTail(p, p.dirToHeadLabel(p.followDir));
     };
-    return labelOfFirstNeighborWithProperty<SierpinskiParticle>(propertyCheck) != -1;
+    return labelOfFirstNbrWithProperty<SierpinskiParticle>(propertyCheck) != -1;
 }
 
 SierpinskiSystem::SierpinskiSystem(int numParticles, float holeProb)

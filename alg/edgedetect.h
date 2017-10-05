@@ -47,7 +47,7 @@ public:
 
     virtual QString inspectionText() const;
 
-    EdgeDetectParticle& neighborAtLabel(int label) const;
+    EdgeDetectParticle& nbrAtLabel(int label) const;
 
     int labelOfFirstNeighborInState(std::initializer_list<State> states, int startLabel = 0) const;
     bool hasNeighborInState(std::initializer_list<State> states) const;
