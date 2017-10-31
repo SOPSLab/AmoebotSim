@@ -65,7 +65,7 @@ void HexagonParticle::activate() {
         state = State::Finish;
         updateConstructionDir();
         return;
-    } else {
+      } else {
         updateMoveDir();
         if (!hasNbrAtLabel(moveDir)) {
           expand(moveDir);
@@ -113,14 +113,14 @@ QString HexagonParticle::inspectionText() const {
   text += "globalTailDir: " + QString::number(globalTailDir) + "\n";
   text += "state: ";
   text += [this](){
-      switch(state) {
-      case State::Seed:   return "seed";
-      case State::Idle:   return "idle";
-      case State::Follow: return "follow";
-      case State::Lead:   return "lead";
-      case State::Finish: return "finish";
-      default:            return "no state";
-      }
+    switch(state) {
+    case State::Seed:   return "seed";
+    case State::Idle:   return "idle";
+    case State::Follow: return "follow";
+    case State::Lead:   return "lead";
+    case State::Finish: return "finish";
+    default:            return "no state";
+    }
   }();
   text += "\n";
   text += "followDir: " + QString::number(followDir) + "\n";

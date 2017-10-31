@@ -11,7 +11,6 @@ win32:RC_FILE = res/AmoebotSim.rc
 HEADERS += \
     alg/legacy/algorithm.h \
     alg/legacy/algorithmwithflags.h \
-    alg/legacy/infobjcoating.h \
     alg/legacy/triangle.h \
     main/application.h \
     script/scriptinterface.h \
@@ -57,11 +56,11 @@ HEADERS += \
     alg/2sitecbridge.h \
     alg/edgedetect.h \
     alg/twositeebridge.h \
-    alg/localparticle.h
+    alg/localparticle.h \
+    alg/infobjcoating.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
-    alg/legacy/infobjcoating.cpp \
     alg/legacy/triangle.cpp \
     main/application.cpp \
     main/main.cpp\
@@ -102,7 +101,8 @@ SOURCES += \
     alg/2sitecbridge.cpp \
     alg/edgedetect.cpp \
     alg/twositeebridge.cpp \
-    alg/localparticle.cpp
+    alg/localparticle.cpp \
+    alg/infobjcoating.cpp
 
 RESOURCES += \
     res/qml.qrc \

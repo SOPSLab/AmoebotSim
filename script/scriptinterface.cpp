@@ -9,7 +9,6 @@
 #include "alg/legacy/compaction.h"
 #include "alg/legacy/holeelimcompaction.h"
 #include "alg/legacy/holeelimstandard.h"
-#include "alg/legacy/infobjcoating.h"
 #include "alg/legacy/leaderelection.h"
 #include "alg/legacy/leaderelectiondemo.h"
 #include "alg/legacy/line.h"
@@ -22,6 +21,7 @@
 #include "alg/adder.h"
 #include "alg/compression.h"
 #include "alg/hexagon.h"
+#include "alg/infobjcoating.h"
 #include "alg/ising.h"
 #include "alg/linesort.h"
 #include "alg/matrix.h"
@@ -163,6 +163,15 @@ void ScriptInterface::hexagon(int numParticles, float holeProb)
 {
     sim.setSystem(std::make_shared<HexagonSystem>(numParticles, holeProb));
 }
+void ScriptInterface::infObjCoating(uint numParticles, float holeProb) {
+  if (numParticles <= 0) {
+    log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    log("holeProb in [0,1] required", true);
+  } else {
+    sim.setSystem(std::make_shared<InfObjCoatingSystem>(numParticles, holeProb));
+  }
+}
 void ScriptInterface::ising(int numParticles, float beta)
 {
     sim.setSystem(std::make_shared<IsingSystem>(numParticles, beta));
@@ -262,20 +271,6 @@ void ScriptInterface::holeelimcompaction(const unsigned int numParticles)
 void ScriptInterface::holeelimstandard(const unsigned int numParticles)
 {
     sim.setSystem(HoleElimStandard::HoleElimStandard::instance(numParticles));
-}
-void ScriptInterface::infObjCoating(const int numParticles, const float holeProb)
-{
-    if(numParticles < 0) {
-        log("numParticles >= 0 required", true);
-        return;
-    }
-
-    if(holeProb < 0.0f || holeProb > 1.0f) {
-        log("holeProb in [0.0, 1.0] required", true);
-        return;
-    }
-
-    sim.setSystem(InfObjCoating::InfObjCoating::instance(numParticles, holeProb));
 }
 void ScriptInterface::leaderelection(const unsigned int numParticles)
 {

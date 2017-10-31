@@ -48,6 +48,7 @@ public slots:
     void adder(int numParticles = 10, int countValue = 250);
     void compression(int numParticles = 100, float lambda = 4.0);
     void hexagon(int numParticles = 200, float holeProb = 0.2);
+    void infObjCoating(uint numParticles = 100, float holeProb = 0.2);
     void ising(int numParticles = 200, float beta = 0.2);
     void linesort(int numParticles = 200, float holeProb = 0.2);
     void matrix(int numParticles = 10, int countValue = 250, int whichStream =3, int mode = 0);
@@ -63,7 +64,6 @@ public slots:
     void compaction(const unsigned int numParticles = 100);
     void holeelimcompaction(const unsigned int numParticles = 100);
     void holeelimstandard(const unsigned int numParticles = 100);
-    void infObjCoating(const int numParticles, const float holeProb = 0.2);
     void leaderelection(const unsigned int numParticles = 100);
     void leaderelectiondemo();
     void line(const unsigned int numParticles = 100, const float holeProb = 0.0);

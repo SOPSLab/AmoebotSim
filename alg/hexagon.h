@@ -96,7 +96,7 @@ class HexagonSystem : public AmoebotSystem  {
 
   // Checks whether or not the system's run of the hexagon formation algorithm
   // has terminated (all particles in state Finish).
-  virtual bool hasTerminated() const;
+  bool hasTerminated() const override;
 };
 
 #endif  // AMOEBOTSIM_ALG_HEXAGON_H
