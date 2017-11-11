@@ -57,7 +57,8 @@ HEADERS += \
     alg/edgedetect.h \
     alg/twositeebridge.h \
     alg/localparticle.h \
-    alg/infobjcoating.h
+    alg/infobjcoating.h \
+    alg/faultrepair.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -102,7 +103,8 @@ SOURCES += \
     alg/edgedetect.cpp \
     alg/twositeebridge.cpp \
     alg/localparticle.cpp \
-    alg/infobjcoating.cpp
+    alg/infobjcoating.cpp \
+    alg/faultrepair.cpp
 
 RESOURCES += \
     res/qml.qrc \

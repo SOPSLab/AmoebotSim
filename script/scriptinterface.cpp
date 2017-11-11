@@ -31,6 +31,7 @@
 #include "alg/sierpinski.h"
 #include "alg/tokendemo.h"
 #include "alg/twositeebridge.h"
+#include "alg/faultrepair.h"
 
 //#include "helper/universalcoatinghelper.h"
 
@@ -243,7 +244,15 @@ void ScriptInterface::twositeebridge(int numParticles, float explambda, float co
 
     sim.setSystem(std::make_shared<TwoSiteEBridgeSystem>(numParticles, explambda, complambda, siteDistance));
 }
-
+void ScriptInterface::faultRepair(uint numParticles, float holeProb) {
+  if (numParticles <= 0) {
+    log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    log("holeProb in [0,1] required", true);
+  } else {
+    sim.setSystem(std::make_shared<FaultRepairSystem>(numParticles, holeProb));
+  }
+}
 
 // legacy algorithms
 void ScriptInterface::boundedObjCoating(const int numStaticParticles, const int numParticles, const float holeProb)
