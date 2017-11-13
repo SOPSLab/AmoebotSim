@@ -4,7 +4,8 @@
 //      choose a reasonabel finite number and count upto that number of such
 //      particles as you pass over them. Reset the count if the surface vector
 //      changes. This would give you an idea of the scale of a fault, which past
-//      a certain point could be ignored.
+//      a certain point could be ignored. A parameter could be added to the algorithm
+//      that determines how large a concavity has to be to not be consider a fault.
 
 #ifndef AMOEBOTSIM_ALG_FAULTREPAIR_H
 #define AMOEBOTSIM_ALG_FAULTREPAIR_H
