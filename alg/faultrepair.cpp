@@ -16,21 +16,142 @@ FaultRepairParticle::FaultRepairParticle(const Node head,
 
 void FaultRepairParticle::activate() {
   if (isExpanded()) {
-    if (state == State::Follower) {
+    if (state == State::Follower || state == State::Leader) {
       // If an expanded follower has no child or inactive neighbor, contract.
       if (!hasFollowerChild() && !hasNbrInState({State::Inactive})) {
         contractTail();
         return;
-      }
-    } else if (state == State::Leader) {
-      // If an expanded leader holds a complaint token and has no child or
-      // inactive neighbor, contract and consume token.
-      if (!hasNbrInState({State::Inactive}) && !hasFollowerChild()) {
-        contractTail();
-        return;
-      }
+      } 
     }
   } else {  // Particle is contracted.
+      if(true){
+          //Determines adjacency configuration without needing to store a new integer
+          //at most 6 lines will execute (states determined by binary tree)
+          if(nbrIsObject(0)){ //2
+              if(nbrIsObject(1)){ //14
+                  if(nbrIsObject(2)){ //17
+                      if(nbrIsObject(3)){ //22
+                          if(nbrIsObject(4)){ //30
+                              if(nbrIsObject(5)){
+                                  //end
+                              }
+                              else{ //dead-end
+                                  state = State::Object;
+                              }
+                          }
+                          else{ //29
+                              if(nbrIsObject(5)){ //dead-end
+                                  state = State::Object;
+                              }
+                              //end
+                          }
+                      }
+                      else{ //21
+                          if(nbrIsObject(4)){ //28
+                              if(nbrIsObject(5)){ //dead-end
+                                  state = State::Object;
+                              }
+                              else{ //tunnel
+                                  deltaOne = deltaTwo = 0;
+                              }
+                          }
+                          //end
+                      }
+                  }
+                  else{ //16
+                      if(nbrIsObject(3)){ //20
+                          if(nbrIsObject(4)){ //27
+                              if(nbrIsObject(5)){ //dead-end
+                                  state = State::Object;
+                              }
+                              else{ //tunnel
+                                  deltaOne = deltaTwo = 0;
+                              }
+                          }
+                          else{ //26
+                              if(nbrIsObject(5)){ //tunnel
+                                  deltaOne = deltaTwo = 0;
+                              }
+                              //end
+                          }
+                      }
+                      //end
+                  }
+              }
+              else{ //13
+                  if(nbrIsObject(2)){ //15
+                      if(nbrIsObject(3)){ //19
+                          if(nbrIsObject(4)){ //25
+                              if(nbrIsObject(5)){ //dead-end
+                                  state = State::Object;
+                              }
+                              else{ //tunnel
+                                  deltaOne = deltaTwo = 0;
+                              }
+                          }
+                          else{ //24
+                              if(nbrIsObject(5)){ //tunnel
+                                  deltaOne = deltaTwo = 0;
+                              }
+                              //end
+                          }
+                      }
+                      else{ //18
+                          if(nbrIsObject(4)){ //23
+                              if(nbrIsObject(5)){ //tunnel
+                                  deltaOne = deltaTwo = 0;
+                              }
+                              //end
+                          }
+                          //end
+                      }
+                  }
+                  //end
+              }
+          }
+          else{ //1
+              if(nbrIsObject(1)){ //3
+                  if(nbrIsObject(2)){ //5
+                      if(nbrIsObject(3)){ //8
+                          if(nbrIsObject(4)){ //12
+                              if(nbrIsObject(5)){ //dead-end
+                                  state = State::Object;
+                              }
+                              //end
+                          }
+                          else{ //11
+                              if(nbrIsObject(5)){ //tunnel
+                                  deltaOne = deltaTwo = 0;
+                              }
+                              //end
+                          }
+                      }
+                      else{ //7
+                          if(nbrIsObject(4)){ //10
+                              if(nbrIsObject(5)){ //tunnel
+                                  deltaOne = deltaTwo = 0;
+                              }
+                              //end
+                          }
+                          //end
+                      }
+                  }
+                  else{ //4
+                      if(nbrIsObject(3)){ //6
+                          if(nbrIsObject(4)){ //9
+                              if(nbrIsObject(5)){ //tunnel
+                                  deltaOne = deltaTwo = 0;
+                              }
+                              //end
+                          }
+                          //end
+                      }
+                      //end
+                  }
+              }
+              //end
+          }
+       }
     if (state == State::Inactive) {
       // Inactive particles need to first join the spanning tree.
       if (hasNbrInState({State::Object})) {
@@ -61,15 +182,8 @@ void FaultRepairParticle::activate() {
         return;
       }
     } else if (state == State::Leader) {
-      /*/----------------------------------------------------------------------
-      if(# of Object adjacencies == 5) {  //Dead-end
-        state = State::Object;
-        return;
-      }
-      if(# of Object adjacencies == 4 in two groups)  //Tunnel
-        deltaOne = 0;
-      ----------------------------------------------------------------------/*/
       moveDir = nextSurfaceDir();
+
       if(surfaceVect != moveDir) {
         deltaTwo = deltaOne;
         deltaOne = surfaceVect - moveDir;
@@ -88,7 +202,6 @@ void FaultRepairParticle::activate() {
         return;
       }
       if (!hasNbrAtLabel(moveDir)) {
-        // If there is no particle ahead, expand and consume complaint token.
         expand(moveDir);
         if(deltaOne == 2 && !hasNbrAtLabel((moveDir+1)%6)){
            contractHead();
@@ -152,6 +265,7 @@ FaultRepairParticle& FaultRepairParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<FaultRepairParticle>(label);
 }
 
+
 int FaultRepairParticle::labelOfFirstNbrInState(
     std::initializer_list<State> states, int startLabel) const {
   auto prop = [&](const FaultRepairParticle& p) {
@@ -171,15 +285,34 @@ bool FaultRepairParticle::hasNbrInState(std::initializer_list<State> states)
   return labelOfFirstNbrInState(states) != -1;
 }
 
+/*int FaultRepairParticle::nextSurfaceDir() const {
+  Q_ASSERT(state == State::Leader);
+
+  int dir = labelOfFirstNbrInState({State::Object},(moveDir+4)%6); //<---initial port?
+  while (hasNbrAtLabel(dir) && nbrAtLabel(dir).state == State::Object) {
+    dir = (dir +5) % 6;
+  }
+
+  return dir;
+}*/
+
 int FaultRepairParticle::nextSurfaceDir() const {
   Q_ASSERT(state == State::Leader);
 
-  int dir = labelOfFirstNbrInState({State::Object});
+  int dir = labelOfFirstNbrInState({State::Object}, (moveDir+4)%6);
   while (hasNbrAtLabel(dir) && nbrAtLabel(dir).state == State::Object) {
     dir = (dir + 5) % 6;
   }
 
   return dir;
+}
+
+bool FaultRepairParticle::nbrIsObject(int port) const {
+  if (hasNbrAtLabel(port) && nbrAtLabel(port).state == State::Object) {
+    return true;
+  }
+
+  return false;
 }
 
 bool FaultRepairParticle::hasFollowerChild() const {
@@ -202,7 +335,239 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, float holeProb) {
   // Instantiate the object as a single line with turns. "Infinite" in this case
   // just means the object's surface is longer than the number of particles.
   Node objPos;
-  while (objNodes.size() < numParticles * 2) {
+  for(int i = 0; i < 20; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, randDir(), *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    int offset = (randInt(2, 5) + 3) % 6;
+    objPos = objPos.nodeInDir(offset);
+  }
+
+  for(int i = 0; i < 10; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 0, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(0);
+  }
+
+  for(int i = 0; i < 6; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 4, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(4);
+  }
+
+  for(int i = 0; i < 2; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 3, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(3);
+  }
+
+  for(int i = 0; i < 4; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 1, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(1);
+  }
+
+  for(int i = 0; i < 6; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 3, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(3);
+  }
+
+  for(int i = 0; i < 10; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 4, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(4);
+  }
+
+  for(int i = 0; i < 10; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 0, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(0);
+  }
+
+  for(int i = 0; i < 2; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 5, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(5);
+  }
+
+  for(int i = 0; i < 2; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 3, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(3);
+  }
+
+  for(int i = 0; i < 6; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 5, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(5);
+  }
+
+  for(int i = 0; i < 12; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 1, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(1);
+  }
+
+  for(int i = 0; i < 6; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 5, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(5);
+  }
+
+  for(int i = 0; i < 6; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 1, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(1);
+  }
+
+  for(int i = 0; i <2; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 0, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(0);
+  }
+
+  for(int i = 0; i < 6; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 4, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(4);
+  }
+
+  for(int i = 0; i < 8; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 0, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(0);
+  }
+
+  for(int i = 0; i < 4; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 2, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(2);
+  }
+
+  for(int i = 0; i < 8; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 0, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(0);
+  }
+
+  for(int i = 0; i < 10; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 2, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(2);
+  }
+
+  for(int i = 0; i < 10; i++) {
+    // Insert a new object particle at the given position.
+    insert(new FaultRepairParticle(objPos, -1, 0, *this,
+                                     FaultRepairParticle::State::Object));
+    objNodes.insert(objPos);
+
+    // Calculate the next object position, avoiding 'tunnels'. Do this using
+    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+    objPos = objPos.nodeInDir(0);
+  }
+
+  for(int i = 0; i < 20; i++) {
     // Insert a new object particle at the given position.
     insert(new FaultRepairParticle(objPos, -1, randDir(), *this,
                                      FaultRepairParticle::State::Object));

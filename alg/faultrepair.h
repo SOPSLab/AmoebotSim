@@ -63,6 +63,9 @@ class FaultRepairParticle : public AmoebotParticle {
   // counterclockwise traversal.
   int nextSurfaceDir() const;
 
+  //Returns true if the neighbor at the given port is an object
+  bool nbrIsObject(int port) const;
+
   // Checks whether this particle has an immediate child in the spanning tree
   // following its tail (if expanded) or head (if contracted).
   bool hasFollowerChild() const;
@@ -74,7 +77,7 @@ class FaultRepairParticle : public AmoebotParticle {
 
   // Particle memory.
   State state;
-  int moveDir, surfaceVect, deltaOne, deltaTwo;
+  int deltaOne, deltaTwo, surfaceVect, moveDir;
 
  private:
   friend class FaultRepairSystem;
