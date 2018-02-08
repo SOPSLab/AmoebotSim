@@ -44,14 +44,14 @@ class HexagonParticle : public AmoebotParticle {
 
   // Gets a reference to the neighboring particle incident to the specified port
   // label. Crashes if no such particle exists at this label; consider using
-  // hasNeighborAtLabel() first if unsure.
+  // hasNbrAtLabel() first if unsure.
   HexagonParticle& nbrAtLabel(int label) const;
 
   // Returns the label of the first port incident to a neighboring particle in
   // any of the specified states, starting at the (optionally) specified label
   // and continuing clockwise.
-  int labelOfFirstNeighborInState(std::initializer_list<State> states,
-                                  int startLabel = 0) const;
+  int labelOfFirstNbrInState(std::initializer_list<State> states,
+                             int startLabel = 0) const;
 
   // Checks whether this particle has a neighbor in any of the given states.
   bool hasNeighborInState(std::initializer_list<State> states) const;

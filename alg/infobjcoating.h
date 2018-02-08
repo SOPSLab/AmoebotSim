@@ -61,7 +61,7 @@ class InfObjCoatingParticle : public AmoebotParticle {
   bool hasNbrInState(std::initializer_list<State> states) const;
 
   // Returns the direction to the next object surface position in a
-  // counterclockwise traversal.
+  // counterclockwise traversal of the surface.
   int nextSurfaceDir() const;
 
   // Checks whether this particle has an immediate child in the spanning tree

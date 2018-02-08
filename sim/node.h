@@ -1,67 +1,66 @@
-#ifndef NODE_H
-#define NODE_H
+// Defines a class representing nodes on the triangular lattice. The x-axis runs
+// left-right and the y-axis runs northeast-southwest.
 
-#include <array>
+#ifndef AMOEBOTSIM_SIM_NODE_H
+#define AMOEBOTSIM_SIM_NODE_H
 
 #include <QtGlobal>
 
-class Node
-{
-public:
-    Node();
-    Node(int x, int y);
-    Node(const Node& other);
+#include <array>
 
-    bool operator==(const Node& other) const;
-    bool operator!=(const Node& other) const;
+class Node {
+ public:
+  // Node constructors. The default constructor makes the origin node (0, 0),
+  // the second constructs a node (x, y), and the third copies the input node.
+  Node();
+  Node(int x, int y);
+  Node(const Node& other);
 
-    Node nodeInDir(int dir) const;
+  // Equality operators; == returns true if the two nodes are equal and != does
+  // the opposite.
+  bool operator==(const Node& other) const;
+  bool operator!=(const Node& other) const;
 
-public:
-    int x, y;
+  // Returns the node adjacent to this one in the given global direction. For
+  // more information on global directions, see localparticle.h.
+  Node nodeInDir(int dir) const;
+
+  int x, y;
 };
 
-bool operator<(const Node& node1, const Node& node2);
+// Comparator between two nodes. First compares the nodes' x-coordinates and, in
+// case of a tie, compares their y-coordinates.
+bool operator<(const Node& v1, const Node& v2);
+
 
 inline Node::Node()
-    : x(0), y(0)
-{
-
-}
+  : x(0), y(0) {}
 
 inline Node::Node(int x, int y)
-    : x(x), y(y)
-{
-
-}
+  : x(x), y(y) {}
 
 inline Node::Node(const Node& other)
-    : x(other.x), y(other.y)
-{
+  : x(other.x), y(other.y) {}
 
+inline bool Node::operator==(const Node& other) const {
+  return (x == other.x) && (y == other.y);
 }
 
-inline bool Node::operator==(const Node& other) const
-{
-    return (x == other.x) && (y == other.y);
+inline bool Node::operator!=(const Node& other) const {
+  return !operator==(other);
 }
 
-inline bool Node::operator!=(const Node& other) const
-{
-    return !operator==(other);
+inline Node Node::nodeInDir(int dir) const {
+  Q_ASSERT(0 <= dir && dir <= 5);
+
+  static constexpr std::array<int, 6> xOffset = {{1, 0, -1, -1,  0,  1}};
+  static constexpr std::array<int, 6> yOffset = {{0, 1,  1,  0, -1, -1}};
+
+  return Node(x + xOffset[dir], y + yOffset[dir]);
 }
 
-inline Node Node::nodeInDir(int dir) const
-{
-    Q_ASSERT(0 <= dir && dir <= 5);
-    static constexpr std::array<int, 6> xOffset = {{1, 0, -1, -1,  0,  1}};
-    static constexpr std::array<int, 6> yOffset = {{0, 1,  1,  0, -1, -1}};
-    return Node(x + xOffset[dir], y + yOffset[dir]);
+inline bool operator<(const Node& v1, const Node& v2) {
+  return (v1.x < v2.x) || (v1.x == v2.x && v1.y < v2.y);
 }
 
-inline bool operator<(const Node& v1, const Node& v2)
-{
-    return (v1.x < v2.x) || (v1.x == v2.x && v1.y < v2.y);
-}
-
-#endif // NODE_H
+#endif  // AMOEBOTSIM_SIM_NODE_H

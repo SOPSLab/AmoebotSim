@@ -44,7 +44,7 @@ void HexagonParticle::activate() {
         return;
       } else if (hasNeighborInState({State::Lead, State::Follow})) {
         state = State::Follow;
-        followDir = labelOfFirstNeighborInState({State::Lead, State::Follow});
+        followDir = labelOfFirstNbrInState({State::Lead, State::Follow});
         return;
       }
     } else if (state == State::Follow) {
@@ -134,8 +134,8 @@ HexagonParticle& HexagonParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<HexagonParticle>(label);
 }
 
-int HexagonParticle::labelOfFirstNeighborInState(
-  std::initializer_list<State> states, int startLabel) const {
+int HexagonParticle::labelOfFirstNbrInState(std::initializer_list<State> states,
+                                            int startLabel) const {
   auto propertyCheck = [&](const HexagonParticle& p) {
     for (auto state : states) {
       if (p.state == state) {
@@ -151,7 +151,7 @@ int HexagonParticle::labelOfFirstNeighborInState(
 
 bool HexagonParticle::hasNeighborInState(std::initializer_list<State> states)
   const {
-  return labelOfFirstNeighborInState(states) != -1;
+  return labelOfFirstNbrInState(states) != -1;
 }
 
 int HexagonParticle::constructionReceiveDir() const {
@@ -183,7 +183,7 @@ void HexagonParticle::updateConstructionDir() {
 }
 
 void HexagonParticle::updateMoveDir() {
-  moveDir = labelOfFirstNeighborInState({State::Seed, State::Finish});
+  moveDir = labelOfFirstNbrInState({State::Seed, State::Finish});
   while (hasNbrAtLabel(moveDir) && (nbrAtLabel(moveDir).state == State::Seed ||
                                     nbrAtLabel(moveDir).state == State::Finish))
   {
