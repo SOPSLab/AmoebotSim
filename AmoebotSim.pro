@@ -58,7 +58,8 @@ HEADERS += \
     alg/twositeebridge.h \
     alg/localparticle.h \
     alg/infobjcoating.h \
-    alg/faultrepair.h
+    alg/faultrepair.h \
+    alg/convexhull.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -104,7 +105,8 @@ SOURCES += \
     alg/twositeebridge.cpp \
     alg/localparticle.cpp \
     alg/infobjcoating.cpp \
-    alg/faultrepair.cpp
+    alg/faultrepair.cpp \
+    alg/convexhull.cpp
 
 RESOURCES += \
     res/qml.qrc \

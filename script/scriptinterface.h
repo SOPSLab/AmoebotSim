@@ -59,6 +59,7 @@ public slots:
     void twositecbridge(int numParticles = 100, float lambda = 4.0, float alpha = 1.0);
     void twositeebridge(int numParticles = 200, float explambda = 2.0, float complambda = 4.0, float siteDistance = 1.25);
     void faultRepair(uint numParticles = 100, float holeProb = 0.2);
+    void convexHull(int numParticles = 50, int numTiles = 300, float holeProb = 0.4);
 
     // legacy algorithms
     void boundedObjCoating(const int numStaticParticles, const int numParticles, const float holeProb = 0.2);

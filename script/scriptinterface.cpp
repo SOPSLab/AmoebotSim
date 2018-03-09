@@ -32,6 +32,7 @@
 #include "alg/tokendemo.h"
 #include "alg/twositeebridge.h"
 #include "alg/faultrepair.h"
+#include "alg/convexhull.h"
 
 //#include "helper/universalcoatinghelper.h"
 
@@ -332,6 +333,11 @@ void ScriptInterface::universalcoating(const  int staticParticlesRadius, const i
         return;
     }
     sim.setSystem(UniversalCoating::UniversalCoating::instance(staticParticlesRadius, numParticles, holeProb));
+}
+
+void ScriptInterface::convexHull(int numParticles, int numTiles, float holeProb)
+{
+    sim.setSystem(std::make_shared<ConvexHullSystem>(numParticles, numTiles, holeProb));
 }
 
 
