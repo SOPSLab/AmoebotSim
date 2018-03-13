@@ -28,16 +28,14 @@ void ConvexHullParticle::activate() {
             contractTail();
         }
         else {
-            int pointerDir;
-            hasTileAtLabel(moveDir) ? pointerDir = 1 : pointerDir = 5;
 
-            for(int i = 0; i < 6; i++) {
-                printf("%i\n", i);
-                if (!hasTileAtLabel(moveDir) && hasTileAtLabel((moveDir+5)%6)) {
+            int checkDirs[6] = {0, 5, 4, 1, 2, 3}; // If, e.g., pointing E, check in this order: E, SE, SW, NE, NW, W
+            for(auto &checkDir : checkDirs) {
+                if (!hasTileAtLabel((moveDir + checkDir) % 6) && hasTileAtLabel((moveDir + checkDir + 5) % 6)) {
+                    moveDir = (moveDir + checkDir) % 6;
                     expand(moveDir);
                     return;
                 }
-                moveDir = (moveDir + pointerDir) % 6;
             }
         }
 
