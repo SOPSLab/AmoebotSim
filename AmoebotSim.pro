@@ -59,7 +59,8 @@ HEADERS += \
     alg/localparticle.h \
     alg/infobjcoating.h \
     alg/faultrepair.h \
-    alg/convexhull.h
+    alg/convexhull.h \
+    sim/tile.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -106,7 +107,8 @@ SOURCES += \
     alg/localparticle.cpp \
     alg/infobjcoating.cpp \
     alg/faultrepair.cpp \
-    alg/convexhull.cpp
+    alg/convexhull.cpp \
+    sim/tile.cpp
 
 RESOURCES += \
     res/qml.qrc \

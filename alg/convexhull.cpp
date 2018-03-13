@@ -29,11 +29,11 @@ void ConvexHullParticle::activate() {
         }
         else {
             int pointerDir;
-            hasNbrAtLabel(moveDir) ? pointerDir = 1 : pointerDir = 5;
+            hasTileAtLabel(moveDir) ? pointerDir = 1 : pointerDir = 5;
 
             for(int i = 0; i < 6; i++) {
                 printf("%i\n", i);
-                if (!hasNbrAtLabel(moveDir) && hasNbrAtLabel((moveDir+5)%6)) {
+                if (!hasTileAtLabel(moveDir) && hasTileAtLabel((moveDir+5)%6)) {
                     expand(moveDir);
                     return;
                 }
@@ -92,7 +92,7 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, float holePro
   Q_ASSERT(numTiles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
 
-  insert(new ConvexHullParticle(Node(0, 0), -1, randDir(), *this, ConvexHullParticle::State::Object));
+  insert(new Tile(Node(0, 0)));
 
   std::set<Node> occupied;
   occupied.insert(Node(0, 0));
@@ -102,7 +102,7 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, float holePro
     candidates.insert(Node(0, 0).nodeInDir(i));
   }
 
-  // Add object particles
+  // Add object tiles
   int tiles = 0;
   while (tiles < numTiles && !candidates.empty()) {
     // Pick random candidate.
@@ -115,8 +115,7 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, float holePro
 
     // Add this candidate as a tile if not a hole.
     if (randBool(1.0f - holeProb)) {
-      insert(new ConvexHullParticle(randomCandidate, -1, randDir(), *this,
-                                 ConvexHullParticle::State::Object));
+      insert(new Tile(randomCandidate));
       ++tiles;
 
       // Add new candidates.
@@ -137,15 +136,20 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, float holePro
       }
    }
 
+  printf("%i %i\n", maxNode.x, maxNode.y);
+
    // Place leader particle
-   insert(new ConvexHullParticle(Node(maxNode.x, maxNode.y+1), -1, randDir(), *this,
+   insert(new ConvexHullParticle(Node(maxNode.x, maxNode.y + 1), -1, randDir(), *this,
                               ConvexHullParticle::State::LeaderStart));
+
+   printf("%i %i\n", maxNode.x , maxNode.y + 1);
 
 }
 
 bool ConvexHullSystem::hasTerminated() const {
   #ifdef QT_DEBUG
     if (!isConnected(particles)) {
+      printf("test");
       return true;
     }
   #endif

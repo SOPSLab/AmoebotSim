@@ -1,5 +1,6 @@
 // Defines a class representing nodes on the triangular lattice. The x-axis runs
 // left-right and the y-axis runs northeast-southwest.
+// The neighbors of a node are numbered ascendingy in clockwise order: 0=E, 1=NE, 2=NW, 3=W, 4=SW, 5=SE
 
 #ifndef AMOEBOTSIM_SIM_NODE_H
 #define AMOEBOTSIM_SIM_NODE_H

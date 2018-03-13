@@ -13,6 +13,7 @@
 #include "sim/system.h"
 #include "ui/glitem.h"
 #include "ui/view.h"
+#include "sim/tile.h"
 
 class QMouseEvent;
 class QWheelEvent;
@@ -50,6 +51,8 @@ protected:
     void drawBorders(const Particle& p);
     void drawBorderPoints(const Particle& p);
     void drawFromParticleTex(int index, const QPointF& pos);
+    void drawTiles();
+    void drawTile(const Tile& t);
 
     static QPointF nodeToWorldCoord(const Node& node);
     static Node worldCoordToNode(const QPointF& worldCord);

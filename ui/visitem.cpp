@@ -107,6 +107,7 @@ void VisItem::paint()
     if(system != nullptr) {
         QMutexLocker locker(&system->mutex);
         drawParticles();
+        drawTiles();
     }
 }
 
@@ -163,6 +164,8 @@ void VisItem::drawParticles()
 {
     particleTex->bind();
     glfn->glBegin(GL_QUADS);
+
+    // Draw Particles
     for(const Particle& p : *system) {
         if(view.includes(nodeToWorldCoord(p.head))) {
             drawMarks(p);
@@ -183,6 +186,13 @@ void VisItem::drawParticles()
             drawBorderPoints(p);
         }
     }
+
+    // Draw Tiles
+    std::deque<Tile*> tiles = system->getTiles();
+    for(auto t : tiles) {
+        drawTile(*t);
+    }
+
     glfn->glEnd();
 }
 
@@ -255,6 +265,18 @@ void VisItem::drawFromParticleTex(int index, const QPointF& pos)
     glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
     glfn->glTexCoord2f(texOffset.x(), texOffset.y() + invTexSize);
     glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
+}
+
+void VisItem::drawTiles()
+{
+    return;
+}
+
+void VisItem::drawTile(const Tile& t)
+{
+    auto pos = nodeToWorldCoord(t.node);
+    glfn->glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+    drawFromParticleTex(14, pos);
 }
 
 QPointF VisItem::nodeToWorldCoord(const Node& node)

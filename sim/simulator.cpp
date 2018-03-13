@@ -76,6 +76,12 @@ int Simulator::numParticles() const
     return system->size();
 }
 
+int Simulator::numTiles() const
+{
+    QMutexLocker locker(&system->mutex);
+    return system->numTiles();
+}
+
 int Simulator::numMovements() const
 {
     QMutexLocker locker(&system->mutex);

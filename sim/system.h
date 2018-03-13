@@ -11,6 +11,7 @@
 
 #include "sim/node.h"
 #include "sim/particle.h"
+#include "sim/tile.h"
 
 class System;
 
@@ -48,9 +49,15 @@ class System {
   // system subclasses.
   virtual unsigned int size() const = 0;
 
+  // Returns the number of tiles in the system.
+  virtual unsigned int numTiles() const = 0;
+
   // Returns a reference to the particle at the specified index. Must be
   // overridden by any system subclasses.
   virtual const Particle& at(int i) const = 0;
+
+  // Returns a reference to the tile list.
+  virtual const std::deque<Tile*>& getTiles() const = 0;
 
   // STL-like begin and end functions for particle-accessing iterators.
   SystemIterator begin() const;
@@ -79,31 +86,32 @@ class System {
 
 template<class ParticleContainer>
 bool System::isConnected(const ParticleContainer& particles) {
-  std::set<Node> occupied;
+  std::set<Node> occupiedNodes;
   for (auto p : particles) {
-    occupied.insert(p->head);
+    occupiedNodes.insert(p->head);
     if (p->isExpanded()) {
-      occupied.insert(p->tail());
+      occupiedNodes.insert(p->tail());
     }
   }
 
   std::deque<Node> queue;
-  queue.push_back(*occupied.begin());
+  queue.push_back(*occupiedNodes.begin());
+  occupiedNodes.clear(); // remove the first node already
 
   while (!queue.empty()) {
     Node n = queue.front();
     queue.pop_front();
     for (int dir = 0; dir < 6; ++dir) {
       Node neighbor = n.nodeInDir(dir);
-      auto nondeIt = occupied.find(neighbor);
-      if (nondeIt != occupied.end()) {
+      auto nondeIt = occupiedNodes.find(neighbor);
+      if (nondeIt != occupiedNodes.end()) {
         queue.push_back(neighbor);
-        occupied.erase(nondeIt);
+        occupiedNodes.erase(nondeIt);
       }
     }
   }
 
-  return occupied.empty();
+  return occupiedNodes.empty();
 }
 
 #endif  // AMOEBOTSIM_SIM_SYSTEM_H
