@@ -101,20 +101,21 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, float holePro
   }
 
   // Add object tiles
-  int tiles = 0;
-  while (tiles < numTiles && !candidates.empty()) {
+  int countTiles = 0;
+  while (countTiles < numTiles && !candidates.empty()) {
     // Pick random candidate.
     std::set<Node>::const_iterator it(candidates.begin());
     advance(it,randInt(0,candidates.size()));
     Node randomCandidate = *it;
     candidates.erase(it);
 
-    occupied.insert(randomCandidate);
+    occupied.insert(randomCandidate); // node actually gets occupied only with a certain probability, but shall not be considered again
 
     // Add this candidate as a tile if not a hole.
     if (randBool(1.0f - holeProb)) {
+
       insert(new Tile(randomCandidate));
-      ++tiles;
+      ++countTiles;
 
       // Add new candidates.
       for (int i = 0; i < 6; ++i) {
@@ -128,19 +129,15 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, float holePro
 
   // Find max occupied node
   Node maxNode = Node(0,0);
-  for(auto node : occupied) {
-      if (maxNode < node) {
-        maxNode = node;
+  for(auto &tile : tiles) {
+      if (maxNode < tile->node) {
+        maxNode = tile->node;
       }
    }
 
-  printf("%i %i\n", maxNode.x, maxNode.y);
-
-   // Place leader particle
-   insert(new ConvexHullParticle(Node(maxNode.x, maxNode.y + 1), -1, randDir(), *this,
+    // Place leader particle
+    insert(new ConvexHullParticle(Node(maxNode.x, maxNode.y + 1), -1, randDir(), *this,
                               ConvexHullParticle::State::LeaderStart));
-
-   printf("%i %i\n", maxNode.x , maxNode.y + 1);
 
 }
 
