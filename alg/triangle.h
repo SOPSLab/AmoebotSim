@@ -1,3 +1,8 @@
+// Defines the particle system and composing particles for the Triangle
+// Formation Algorithm as defined in 'An Algorithmic Framework for Shape
+// Formation Problems in Self-Organizing Particle Systems'
+// [arxiv.org/abs/1504.00744].
+//
 // Run with triangle(# of particles, hole probability) in the simulator command
 //     line.
 #ifndef TRIANGLE_H
