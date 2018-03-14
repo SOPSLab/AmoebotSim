@@ -11,7 +11,7 @@ win32:RC_FILE = res/AmoebotSim.rc
 HEADERS += \
     alg/legacy/algorithm.h \
     alg/legacy/algorithmwithflags.h \
-    alg/legacy/triangle.h \
+    alg/triangle.h \
     main/application.h \
     script/scriptinterface.h \
     alg/legacy/movement.h \
@@ -23,7 +23,7 @@ HEADERS += \
     ui/commandhistorymanager.h \
     ui/visitem.h \
     alg/legacy/ring.h \
-    alg/legacy/line.h \
+    alg/line.h \
     alg/legacy/square.h \
     alg/legacy/boundedobjcoating.h \
     alg/legacy/compaction.h \
@@ -64,7 +64,7 @@ HEADERS += \
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
-    alg/legacy/triangle.cpp \
+    alg/triangle.cpp \
     main/application.cpp \
     main/main.cpp\
     sim/particle.cpp \
@@ -74,7 +74,7 @@ SOURCES += \
     ui/glitem.cpp \
     ui/visitem.cpp \
     alg/legacy/ring.cpp \
-    alg/legacy/line.cpp \
+    alg/line.cpp \
     alg/legacy/square.cpp \
     alg/legacy/boundedobjcoating.cpp \
     alg/legacy/compaction.cpp \

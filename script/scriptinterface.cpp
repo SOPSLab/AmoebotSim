@@ -11,10 +11,10 @@
 #include "alg/legacy/holeelimstandard.h"
 #include "alg/legacy/leaderelection.h"
 #include "alg/legacy/leaderelectiondemo.h"
-#include "alg/legacy/line.h"
+#include "alg/line.h"
 #include "alg/legacy/ring.h"
 #include "alg/legacy/square.h"
-#include "alg/legacy/triangle.h"
+#include "alg/triangle.h"
 #include "alg/legacy/universalcoating.h"
 
 #include "alg/2sitecbridge.h"
@@ -292,12 +292,7 @@ void ScriptInterface::leaderelectiondemo()
 }
 void ScriptInterface::line(const unsigned int numParticles, const float holeProb)
 {
-    if(holeProb < 0.0f || holeProb > 1.0f) {
-        log("holeProb in [0.0, 1.0] required", true);
-        return;
-    }
-
-    sim.setSystem(Line::Line::instance(numParticles, holeProb));
+    sim.setSystem(std::make_shared<LineSystem>(numParticles, holeProb));
 }
 void ScriptInterface::ring(const unsigned int numParticles, const float holeProb)
 {
@@ -319,12 +314,7 @@ void ScriptInterface::square(const unsigned int numParticles, const float holePr
 }
 void ScriptInterface::triangle(const unsigned int numParticles, const float holeProb)
 {
-    if(holeProb < 0.0f || holeProb > 1.0f) {
-        log("holeProb in [0.0, 1.0] required", true);
-        return;
-    }
-
-    sim.setSystem(Triangle::Triangle::instance(numParticles, holeProb));
+    sim.setSystem(std::make_shared<TriangleSystem>(numParticles, holeProb));
 }
 void ScriptInterface::universalcoating(const  int staticParticlesRadius, const int numParticles, const float holeProb)
 {
