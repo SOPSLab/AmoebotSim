@@ -1,5 +1,5 @@
-// Defines the particle system and composing particles for the Universal
-// Formation Algorithm as defined in 'An Algorithmic Framework for Shape
+// Defines the particle system and composing particles for the General
+// Formation Algorithm as alluded to in 'An Algorithmic Framework for Shape
 // Formation Problems in Self-Organizing Particle Systems'
 // [arxiv.org/abs/1504.00744].
 //
