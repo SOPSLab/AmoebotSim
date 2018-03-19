@@ -312,9 +312,9 @@ void ScriptInterface::square(const unsigned int numParticles, const float holePr
 
     sim.setSystem(Square::Square::instance(numParticles, holeProb));
 }
-void ScriptInterface::triangle(const unsigned int numParticles, const float holeProb)
+void ScriptInterface::triangle(const unsigned int numParticles, const float holeProb, const int mode)
 {
-    sim.setSystem(std::make_shared<TriangleSystem>(numParticles, holeProb));
+    sim.setSystem(std::make_shared<TriangleSystem>(numParticles, holeProb, mode));
 }
 void ScriptInterface::universalcoating(const  int staticParticlesRadius, const int numParticles, const float holeProb)
 {

@@ -71,7 +71,7 @@ public slots:
     void line(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void ring(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void square(const unsigned int numParticles = 100, const float holeProb = 0.0);
-    void triangle(const unsigned int numParticles = 100, const float holeProb = 0.0);
+    void triangle(const unsigned int numParticles = 100, const float holeProb = 0.0, const int mode = 0);
     void universalcoating(const int staticParticlesRadius = 5, const int numParticles = 50, const float holeProb = 0.2);
 
     // universal coating competitive analysis

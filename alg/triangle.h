@@ -25,7 +25,8 @@ public:
   // compass direction from its head to its tail (-1 if contracted), an offset
   // for its local compass, a system which it belongs to, and an initial state.
   TriangleParticle(const Node head, const int globalTailDir,
-               const int orientation, AmoebotSystem& system, State state);
+               const int orientation, AmoebotSystem& system, State state,
+               const int mode, int turn);
 
   // Executes one particle activation.
   virtual void activate();
@@ -82,6 +83,8 @@ protected:
   int constructionDir;
   int followDir;
   int moveDir;
+  int modeBit;
+  int turnSignal;
 
 private:
   friend class TriangleSystem;
@@ -94,7 +97,7 @@ class TriangleSystem : public AmoebotSystem {
     // (#particles) and hole probability. holeProb in [0,1] controls how "spread
     // out" the system is; closer to 0 is more compressed, closer to 1 is more
     // expanded.
-    TriangleSystem(int numParticles = 200, float holeProb = 0.2);
+    TriangleSystem(int numParticles = 200, float holeProb = 0.2, int mode = 0);
 
     // Checks whether or not the system's run of the Triangle formation algorithm
     // has terminated (all particles in state Finish).

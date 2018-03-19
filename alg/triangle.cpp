@@ -7,7 +7,7 @@
 
 TriangleParticle::TriangleParticle(const Node head, const int globalTailDir,
                                  const int orientation, AmoebotSystem& system,
-                                 State state)
+                                 State state, const int mode, int turn)
   : AmoebotParticle(head, globalTailDir, orientation, system),
     state(state),
     constructionDir(-1),
@@ -16,6 +16,8 @@ TriangleParticle::TriangleParticle(const Node head, const int globalTailDir,
   if (state == State::Seed) {
       constructionDir = 0;
   }
+  modeBit = mode;
+  turnSignal = turn;
 }
 
 void TriangleParticle::activate() {
@@ -126,7 +128,8 @@ QString TriangleParticle::inspectionText() const {
   text += "followDir: " + QString::number(followDir) + "\n";
   text += "moveDir: " + QString::number(moveDir) + "\n";
   text += "constructionDir: " + QString::number(constructionDir) + "\n";
-
+  text += "modeBit: " + QString::number(modeBit) + "\n";
+  text += "turnSignal: " + QString::number(turnSignal) + "\n";
   return text;
 }
 
@@ -169,12 +172,45 @@ bool TriangleParticle::canFinish() const {
 }
 
 void TriangleParticle::updateConstructionDir() {
-  constructionDir = (constructionReceiveDir() + 1) % 6;
+  if(modeBit == 1) {
+    constructionDir = (constructionReceiveDir() + 1) % 6;
 
-  if (hasNbrAtLabel(constructionDir) &&
-      (nbrAtLabel(constructionDir).state == State::Seed ||
-      nbrAtLabel(constructionDir).state == State::Finish)) {
-    constructionDir = (constructionDir + 2) % 6;
+    if (hasNbrAtLabel(constructionDir) &&
+        (nbrAtLabel(constructionDir).state == State::Seed ||
+        nbrAtLabel(constructionDir).state == State::Finish)) {
+      constructionDir = (constructionDir + 2) % 6;
+    }
+  }
+  else {
+    constructionDir = constructionReceiveDir();
+    if (nbrAtLabel(constructionDir).state == State::Seed) {
+      constructionDir = (constructionDir + 5) % 6;
+    } else if (((hasNbrAtLabel((constructionDir + 5) % 6) &&
+               hasNbrAtLabel((constructionDir + 4) % 6)) &&
+               (nbrAtLabel((constructionDir + 5) % 6).state == State::Finish &&
+                nbrAtLabel((constructionDir + 4) % 6).state == State::Finish))
+               ||
+               ((hasNbrAtLabel((constructionDir + 1) % 6) &&
+               hasNbrAtLabel((constructionDir + 2) % 6)) &&
+               (nbrAtLabel((constructionDir + 1) % 6).state == State::Finish &&
+                nbrAtLabel((constructionDir + 2) % 6).state == State::Finish)))
+    {
+      constructionDir = (constructionDir + 3) % 6;
+    } else if (hasNbrAtLabel((constructionDir + 5) % 6) &&
+                 (nbrAtLabel((constructionDir + 5) % 6).state == State::Finish
+                  ||
+                  nbrAtLabel((constructionDir + 5) % 6).state == State::Seed)) {
+      constructionDir = (constructionDir + 2) % 6;
+      turnSignal = 1;
+    } else if (hasNbrAtLabel((constructionDir + 1) % 6) &&
+               nbrAtLabel((constructionDir + 1) % 6).state == State::Finish) {
+      constructionDir = (constructionDir + 4) % 6;
+      turnSignal = 0;
+    } else if (nbrAtLabel(constructionDir).turnSignal == 0) {
+      constructionDir = (constructionDir + 5) % 6;
+    } else if (nbrAtLabel(constructionDir).turnSignal == 1) {
+      constructionDir = (constructionDir + 1) % 6;
+    }
   }
 }
 
@@ -196,13 +232,13 @@ bool TriangleParticle::hasTailFollower() const {
   return labelOfFirstNbrWithProperty<TriangleParticle>(propertyCheck) != -1;
 }
 
-TriangleSystem::TriangleSystem(int numParticles, float holeProb) {
+TriangleSystem::TriangleSystem(int numParticles, float holeProb, int mode) {
   Q_ASSERT(numParticles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
 
   // Insert the seed at (0,0).
   insert(new TriangleParticle(Node(0, 0), -1, randDir(), *this,
-                             TriangleParticle::State::Seed));
+                             TriangleParticle::State::Seed, mode, 0));
   std::set<Node> occupied;
   occupied.insert(Node(0, 0));
 
@@ -232,7 +268,7 @@ TriangleSystem::TriangleSystem(int numParticles, float holeProb) {
     // Add this candidate as a particle if not a hole.
     if (randBool(1.0f - holeProb)) {
       insert(new TriangleParticle(randomCandidate, -1, randDir(), *this,
-                                 TriangleParticle::State::Idle));
+                                 TriangleParticle::State::Idle, mode, 0));
       ++numNonStaticParticles;
 
       // Add new candidates.
