@@ -33,6 +33,7 @@
 #include "alg/twositeebridge.h"
 #include "alg/faultrepair.h"
 #include "alg/convexhull.h"
+#include "alg/universalshape.h"
 
 //#include "helper/universalcoatinghelper.h"
 
@@ -203,9 +204,17 @@ void ScriptInterface::sierpinski(int numParticles, float holeProb)
 {
     sim.setSystem(std::make_shared<SierpinskiSystem>(numParticles, holeProb));
 }
+void ScriptInterface::square(const unsigned int numParticles, const float holeProb)
+{
+    sim.setSystem(std::make_shared<SquareSystem>(numParticles, holeProb));
+}
 void ScriptInterface::tokenDemo(int numParticles, float holeProb)
 {
     sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
+}
+void ScriptInterface::triangle(const unsigned int numParticles, const float holeProb, const int mode)
+{
+    sim.setSystem(std::make_shared<TriangleSystem>(numParticles, holeProb, mode));
 }
 void ScriptInterface::twositecbridge(int numParticles, float lambda, float alpha)
 {
@@ -253,6 +262,9 @@ void ScriptInterface::faultRepair(uint numParticles, float holeProb) {
   } else {
     sim.setSystem(std::make_shared<FaultRepairSystem>(numParticles, holeProb));
   }
+}
+void ScriptInterface::universalshape(int numParticles, float holeProb, int mode) {
+  sim.setSystem(std::make_shared<UniversalSystem>(numParticles, holeProb, mode));
 }
 
 // legacy algorithms
@@ -302,14 +314,6 @@ void ScriptInterface::ring(const unsigned int numParticles, const float holeProb
     }
 
     sim.setSystem(Ring::Ring::instance(numParticles, holeProb));
-}
-void ScriptInterface::square(const unsigned int numParticles, const float holeProb)
-{
-    sim.setSystem(std::make_shared<SquareSystem>(numParticles, holeProb));
-}
-void ScriptInterface::triangle(const unsigned int numParticles, const float holeProb, const int mode)
-{
-    sim.setSystem(std::make_shared<TriangleSystem>(numParticles, holeProb, mode));
 }
 void ScriptInterface::universalcoating(const  int staticParticlesRadius, const int numParticles, const float holeProb)
 {

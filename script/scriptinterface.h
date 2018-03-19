@@ -55,11 +55,14 @@ public slots:
     void edgedetect(int numParticles = 10, int countValue = 250, int mode = 0);
     void rectangle(int numParticles = 200, float holeProb = 0.2);
     void sierpinski(int numParticles = 200, float holeProb = 0.2);
+    void square(unsigned int numParticles = 100, float holeProb = 0.0);
     void tokenDemo(int numParticles = 200, float holeProb = 0.2);
+    void triangle(unsigned int numParticles = 100, float holeProb = 0.0, int mode = 0);
     void twositecbridge(int numParticles = 100, float lambda = 4.0, float alpha = 1.0);
     void twositeebridge(int numParticles = 200, float explambda = 2.0, float complambda = 4.0, float siteDistance = 1.25);
     void faultRepair(uint numParticles = 100, float holeProb = 0.2);
     void convexHull(int numParticles = 50, int numTiles = 300, float holeProb = 0.4);
+    void universalshape(int numParticles = 200, float holeProb = 0.2, int mode = 0);
 
     // legacy algorithms
     void boundedObjCoating(const int numStaticParticles, const int numParticles, const float holeProb = 0.2);
@@ -70,8 +73,6 @@ public slots:
     void leaderelectiondemo();
     void line(const unsigned int numParticles = 100, const float holeProb = 0.0);
     void ring(const unsigned int numParticles = 100, const float holeProb = 0.0);
-    void square(const unsigned int numParticles = 100, const float holeProb = 0.0);
-    void triangle(const unsigned int numParticles = 100, const float holeProb = 0.0, const int mode = 0);
     void universalcoating(const int staticParticlesRadius = 5, const int numParticles = 50, const float holeProb = 0.2);
 
     // universal coating competitive analysis

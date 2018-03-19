@@ -60,7 +60,8 @@ HEADERS += \
     alg/infobjcoating.h \
     alg/faultrepair.h \
     alg/convexhull.h \
-    sim/tile.h
+    sim/tile.h \
+    alg/universalshape.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -108,7 +109,8 @@ SOURCES += \
     alg/infobjcoating.cpp \
     alg/faultrepair.cpp \
     alg/convexhull.cpp \
-    sim/tile.cpp
+    sim/tile.cpp \
+    alg/universalshape.cpp
 
 RESOURCES += \
     res/qml.qrc \
