@@ -24,7 +24,7 @@ HEADERS += \
     ui/visitem.h \
     alg/legacy/ring.h \
     alg/line.h \
-    alg/legacy/square.h \
+    alg/square.h \
     alg/legacy/boundedobjcoating.h \
     alg/legacy/compaction.h \
     alg/legacy/holeelimstandard.h \
@@ -75,7 +75,7 @@ SOURCES += \
     ui/visitem.cpp \
     alg/legacy/ring.cpp \
     alg/line.cpp \
-    alg/legacy/square.cpp \
+    alg/square.cpp \
     alg/legacy/boundedobjcoating.cpp \
     alg/legacy/compaction.cpp \
     alg/legacy/holeelimstandard.cpp \

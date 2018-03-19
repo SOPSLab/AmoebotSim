@@ -13,7 +13,7 @@
 #include "alg/legacy/leaderelectiondemo.h"
 #include "alg/line.h"
 #include "alg/legacy/ring.h"
-#include "alg/legacy/square.h"
+#include "alg/square.h"
 #include "alg/triangle.h"
 #include "alg/legacy/universalcoating.h"
 
@@ -305,12 +305,7 @@ void ScriptInterface::ring(const unsigned int numParticles, const float holeProb
 }
 void ScriptInterface::square(const unsigned int numParticles, const float holeProb)
 {
-    if(holeProb < 0.0f || holeProb > 1.0f) {
-        log("holeProb in [0.0, 1.0] required", true);
-        return;
-    }
-
-    sim.setSystem(Square::Square::instance(numParticles, holeProb));
+    sim.setSystem(std::make_shared<SquareSystem>(numParticles, holeProb));
 }
 void ScriptInterface::triangle(const unsigned int numParticles, const float holeProb, const int mode)
 {
