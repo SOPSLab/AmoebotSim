@@ -1,90 +1,112 @@
-#ifndef SCRIPTINTERFACE_H
-#define SCRIPTINTERFACE_H
+// Defines the API for the command line interface in the simulator.
+
+#ifndef AMOEBOTSIM_SCRIPT_SCRIPTINTERFACE_H
+#define AMOEBOTSIM_SCRIPT_SCRIPTINTERFACE_H
 
 #include <QObject>
 #include <QString>
 
 #include "script/scriptengine.h"
-
 #include "sim/simulator.h"
-
 #include "ui/visitem.h"
 
-/*
- * The public slots of the following class are automatically available during runtime as command in the command-line.
- * */
-class ScriptInterface : public QObject
-{
-    Q_OBJECT
-public:
-    explicit ScriptInterface(ScriptEngine& engine, Simulator& sim, VisItem* vis);
-    
-public slots:
-    // script commands
-    void log(const QString msg, bool error = false);
-    void runScript(const QString scriptFilePath);
-    void writeToFile(const QString filePath, const QString text);
+class ScriptInterface : public QObject {
+  Q_OBJECT
 
-    // simulator flow controls
-    void round();
-    void runUntilTermination();
+ public:
+  explicit ScriptInterface(ScriptEngine& engine, Simulator& sim, VisItem* vis);
 
-    int getNumParticles();
-    int getNumMovements();
-    int getNumRounds();
-    int getLeaderElectionRounds();
-    int getWeakBound();
-    int getStrongBound();
+ public slots:
+  // These public slots functions are directly accessible from the simulator's
+  // command line.
 
-    void setRoundDuration(int ms); 
+  // Script commands. log writes a message to the simulator engine, optionally
+  // flagging an error. runScript loads a JavaScript script from the provided
+  // filepath and executes it in the simulator command line. writeToFile appends
+  // the specified text to a file at the given location.
+  void log(const QString msg, bool error = false);
+  void runScript(const QString scriptFilePath);
+  void writeToFile(const QString filePath, const QString text);
 
-    // visualization interface
-    void focusOn(int x, int y);
-    void setZoom(float zoom);
-    void saveScreenshot(QString filePath = "");
-    void filmSimulation(QString filePath, const int iterLimit);
+  // Simulator flow commands. round executes a single particle activation.
+  // runUntilTermination runs the current algorithm instance until its
+  // hasTerminated function returns true. setRoundDuration sets the simulator's
+  // delay between particle activations to the given value; if this value is
+  // negative, an error is logged and the round duration is set to 0.
+  void round();
+  void runUntilTermination();
+  void setRoundDuration(const int ms);
 
-    // algorithms
-    void adder(int numParticles = 10, int countValue = 250);
-    void compression(int numParticles = 100, float lambda = 4.0);
-    void hexagon(int numParticles = 200, float holeProb = 0.2);
-    void infObjCoating(uint numParticles = 100, float holeProb = 0.2);
-    void ising(int numParticles = 200, float beta = 0.2);
-    void linesort(int numParticles = 200, float holeProb = 0.2);
-    void matrix(int numParticles = 10, int countValue = 250, int whichStream =3, int mode = 0);
-    void edgedetect(int numParticles = 10, int countValue = 250, int mode = 0);
-    void rectangle(int numParticles = 200, float holeProb = 0.2);
-    void sierpinski(int numParticles = 200, float holeProb = 0.2);
-    void square(unsigned int numParticles = 100, float holeProb = 0.0);
-    void tokenDemo(int numParticles = 200, float holeProb = 0.2);
-    void triangle(unsigned int numParticles = 100, float holeProb = 0.0, int mode = 0);
-    void twositecbridge(int numParticles = 100, float lambda = 4.0, float alpha = 1.0);
-    void twositeebridge(int numParticles = 200, float explambda = 2.0, float complambda = 4.0, float siteDistance = 1.25);
-    void faultRepair(uint numParticles = 100, float holeProb = 0.2);
-    void convexHull(int numParticles = 50, int numTiles = 300, float holeProb = 0.4);
-    void universalshape(int numParticles = 200, float holeProb = 0.2, int mode = 0);
+  // Simulator metrics commands. getNumParticles returns the number of particles
+  // in the given instance. getNumMovements returns the total number of
+  // expansions and contractions executed by the particle system. getNumRounds
+  // returns the number of asynchronous rounds completed by the particle system.
+  // See amoebotsystem.h for further discussion.
+  // LEGACY: getLeaderElectionRounds, getWeakBound, and getStrongBound are only
+  // used in LegacySystem and should not be used going forward. TODO: remove
+  // after the matching functions in Simulator and System have been removed.
+  int getNumParticles();
+  int getNumMovements();
+  int getNumRounds();
+  int getLeaderElectionRounds();
+  int getWeakBound();
+  int getStrongBound();
 
-    // legacy algorithms
-    void boundedObjCoating(const int numStaticParticles, const int numParticles, const float holeProb = 0.2);
-    void compaction(const unsigned int numParticles = 100);
-    void holeelimcompaction(const unsigned int numParticles = 100);
-    void holeelimstandard(const unsigned int numParticles = 100);
-    void leaderelection(const unsigned int numParticles = 100);
-    void leaderelectiondemo();
-    void line(const unsigned int numParticles = 100, const float holeProb = 0.0);
-    void ring(const unsigned int numParticles = 100, const float holeProb = 0.0);
-    void universalcoating(const int staticParticlesRadius = 5, const int numParticles = 50, const float holeProb = 0.2);
+  // Visualization commands. focusOn centers the window at the given (x,y) node.
+  // setZoom sets the zoom level of the window. saveScreenshot saves the current
+  // window as a .png in the specified location; if no filepath is provided, a
+  // default path is created that ensures no previous screenshots are
+  // overwritten. filmSimulation saves a series of screenshots to the specified
+  // location, up to the specified number of rounds.
+  void focusOn(int x, int y);
+  void setZoom(float zoom);
+  void saveScreenshot(QString filePath = "");
+  void filmSimulation(QString filePath, const int roundLimit);
 
-    // universal coating competitive analysis
-    // int getUniversalCoatingWeakLowerBound();
-    // int getUniversalCoatingStrongLowerBound();
+  // Non-legacy algorithm instance commands. Documentation for foo() can be
+  // found in alg/foo.h.
+  void adder(const int numParticles = 10, int countValue = 250);
+  void compression(const int numParticles = 100, const float lambda = 4.0);
+  void convexhull(const int numParticles = 50, const int numTiles = 300, const float holeProb = 0.4);
+  void edgedetect(const int numParticles = 10, int countValue = 250);
+  void faultrepair(const int numParticles = 100, const float holeProb = 0.2);
+  void hexagon(const int numParticles = 200, const float holeProb = 0.2);
+  void holeelimination(const int numParticles = 100, const float holeProb = 0.4);
+  void infobjcoating(const int numParticles = 100, const float holeProb = 0.2);
+  void ising(const int numParticles = 200, const float beta = 0.2);
+  void line(const int numParticles = 100, const float holeProb = 0.0);
+  void linesort(const int numParticles = 200, const float holeProb = 0.2);
+  void matrix(const int numParticles = 10, int countValue = 250, int whichStream =3, const int mode = 0);
+  void rectangle(const int numParticles = 200, const float holeProb = 0.2);
+  void sierpinski(const int numParticles = 200, const float holeProb = 0.2);
+  void square(const int numParticles = 100, const float holeProb = 0.0);
+  void tokendemo(const int numParticles = 200, const float holeProb = 0.2);
+  void triangle(const int numParticles = 100, float holeProb = 0.0, int mode = 0);
+  void twositecbridge(const int numParticles = 100, const float lambda = 4.0, const float alpha = 1.0);
+  void twositeebridge(const int numParticles = 200, const float explambda = 2.0, const float complambda = 4.0, const float siteDistance = 1.25);
+  void universalshape(int numParticles = 200, float holeProb = 0.2, int mode = 0);
 
-private:
-    ScriptEngine& engine;
-    Simulator& sim;
-    VisItem* vis;
+  // Legacy algorithm instance commands. Documentation for foo() can be found in
+  // alg/legacy/foo.h.
+  void boundedobjcoating(const int numStaticParticles, const int numParticles, const float holeProb = 0.2);
+  void compaction(const int numParticles = 100);
+  void leaderelection(const int numParticles = 100);
+  void leaderelectiondemo();
+  void ring(const int numParticles = 100, const float holeProb = 0.0);
+  void universalcoating(const int staticParticlesRadius = 5, const int numParticles = 50, const float holeProb = 0.2);
 
-    QString pad(const int number, const int length);
+  // Commands for universal coating competitive analysis. TODO: when bringing
+  // Universal Coating out of legacy, figure out what to do with these.
+  // int getUniversalCoatingWeakLowerBound();
+  // int getUniversalCoatingStrongLowerBound();
+
+ private:
+  ScriptEngine& engine;
+  Simulator& sim;
+  VisItem* vis;
+
+  // Pads the given number with leading zeroes to achieve the specified length.
+  QString pad(const int number, const int length);
 };
 
-#endif // SCRIPTINTERFACE_H
+#endif  // AMOEBOTSIM_SCRIPT_SCRIPTINTERFACE_H
