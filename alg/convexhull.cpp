@@ -13,7 +13,9 @@ ConvexHullParticle::ConvexHullParticle(const Node head, const int globalTailDir,
     parent(-1),
     moveDir(-1),
     delta(std::vector<std::vector<int> >(6)),
-    distance(std::vector<int>(6))  // NE, N, NW, SW, S, SE
+    distance(std::vector<int>(6)),  // NE, N, NW, SW, S, SE
+    completed(std::vector<int>(6)),
+    lastHp(-1)
     {
         for ( int i = 0 ; i < 6 ; i++ )
            delta[i].resize(6);
@@ -51,10 +53,34 @@ void ConvexHullParticle::activate() {
 
             // Walk around the boundary in clockwise fashion
             int checkDirs[6] = {0, 5, 4, 1, 2, 3}; // If, e.g., pointing E, check in this order: E, SE, SW, NE, NW, W
-            for(auto &checkDir : checkDirs) {
-                if (!hasTileAtLabel((moveDir + checkDir) % 6) && hasTileAtLabel((moveDir + checkDir + 5) % 6)) {
+            for(auto &checkDir : checkDirs)
+            {
+                if (!hasTileAtLabel((moveDir + checkDir) % 6) && hasTileAtLabel((moveDir + checkDir + 5) % 6))
+                {
                     moveDir = (moveDir + checkDir) % 6;
+
+                    // Check termination
+                    if (distance[moveDir] == 0) completed[moveDir] = 0;
+                    if (distance[((moveDir + 5) % 6)] == 0) completed[((moveDir + 5) % 6)] = 0;
+
+                    if (distance[((moveDir + 2) % 6)] == 0 && completed[((moveDir + 2) % 6)] == 0) {
+                        completed[((moveDir + 2) % 6)] = 1;
+                        lastHp = ((moveDir + 2) % 6);
+                    }
+
+                    bool alltrue = true;
+                    for (int i = 0; i < 6; i++) {
+                        if (completed[i] == 0) alltrue = false;
+                    }
+
+                    if (alltrue && distance[((lastHp + 4) % 6)] == 0) {
+                        state = State::Done;
+                        return;
+                    }
+
+                    // Update distances
                     for(int i = 0; i < 6; i++) distance[i] = distance[i] + delta[moveDir][i];
+
                     expand(moveDir);
                     return;
                 }

@@ -292,7 +292,7 @@ void VisItem::drawConvexHull()
 
     glfn->glDisable(GL_TEXTURE_2D);
     glfn->glColor3f(0.952f, 0.396f, 0.086f);
-    glfn->glLineWidth(2.0f);
+    glfn->glLineWidth(4.0f);
 
     std::vector<int> offset({1, 0, -1, -1, 0, 1});
 

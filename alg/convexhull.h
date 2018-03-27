@@ -57,6 +57,10 @@ class ConvexHullParticle : public AmoebotParticle {
   // Stores the distance to each halfplane. Must be replaced by tokens eventually.
   std::vector<int> distance;
 
+  // Used for detecting termination.
+  std::vector<int> completed;
+  int lastHp;
+
  private:
   friend class ConvexHullSystem;
 };
