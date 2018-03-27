@@ -5,7 +5,7 @@
 // paper, but is functionally equivalent. Also note that pull handovers are not
 // used in this simulation, for simplicity in updating follower move directions.
 //
-// Run with infObjCoating(#particles, hole probability) on the simulator command
+// Run with infobjcoating(#particles, hole probability) on the simulator command
 // line.
 
 #ifndef AMOEBOTSIM_ALG_INFOBJCOATING_H
@@ -48,7 +48,7 @@ class InfObjCoatingParticle : public AmoebotParticle {
 
   // Gets a reference to the neighboring particle incident to the specified port
   // label. Crashes if no such particle exists at this label; consider using
-  // hasNeighborAtLabel() first if unsure.
+  // hasNbrAtLabel() first if unsure.
   InfObjCoatingParticle& nbrAtLabel(int label) const;
 
   // labelOfFirstNbrInState returns the label of the first port incident to a

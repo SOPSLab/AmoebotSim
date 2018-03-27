@@ -96,10 +96,10 @@ int InfObjCoatingParticle::headMarkColor() const {
   }
 
   switch(state) {
-  case State::Object:   return 0x000000;
-  case State::Inactive: return -1;
-  case State::Follower: return 0x0000ff;
-  case State::Leader:   return 0xff0000;
+    case State::Object:   return 0x000000;
+    case State::Inactive: return -1;
+    case State::Follower: return 0x0000ff;
+    case State::Leader:   return 0xff0000;
   }
 
   return -1;

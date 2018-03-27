@@ -1,4 +1,4 @@
-// Run with faultRepair(#particles, hole probability) on the simulator command
+// Run with faultrepair(#particles, hole probability) on the simulator command
 // line.
 // ADD: Make object particle that were active particles recognizable, and then
 //      choose a reasonabel finite number and count upto that number of such

@@ -1,4 +1,7 @@
 // Defines a particle for demonstrating token passing functionality.
+//
+// Run with tokendemo(#particles, hole probability) on the simulator command
+// line.
 
 #ifndef AMOEBOTSIM_ALG_TOKENDEMO_H
 #define AMOEBOTSIM_ALG_TOKENDEMO_H

@@ -11,7 +11,7 @@ win32:RC_FILE = res/AmoebotSim.rc
 HEADERS += \
     alg/legacy/algorithm.h \
     alg/legacy/algorithmwithflags.h \
-    alg/legacy/triangle.h \
+    alg/triangle.h \
     main/application.h \
     script/scriptinterface.h \
     alg/legacy/movement.h \
@@ -23,12 +23,10 @@ HEADERS += \
     ui/commandhistorymanager.h \
     ui/visitem.h \
     alg/legacy/ring.h \
-    alg/legacy/line.h \
-    alg/legacy/square.h \
+    alg/line.h \
+    alg/square.h \
     alg/legacy/boundedobjcoating.h \
     alg/legacy/compaction.h \
-    alg/legacy/holeelimstandard.h \
-    alg/legacy/holeelimcompaction.h \
     alg/legacy/universalcoating.h \
     alg/legacy/leaderelectiondemo.h \
     alg/legacy/leaderelection.h \
@@ -60,11 +58,13 @@ HEADERS += \
     alg/infobjcoating.h \
     alg/faultrepair.h \
     alg/convexhull.h \
-    sim/tile.h
+    sim/tile.h \
+    alg/universalshape.h \
+    alg/holeelimination.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
-    alg/legacy/triangle.cpp \
+    alg/triangle.cpp \
     main/application.cpp \
     main/main.cpp\
     sim/particle.cpp \
@@ -74,12 +74,10 @@ SOURCES += \
     ui/glitem.cpp \
     ui/visitem.cpp \
     alg/legacy/ring.cpp \
-    alg/legacy/line.cpp \
-    alg/legacy/square.cpp \
+    alg/line.cpp \
+    alg/square.cpp \
     alg/legacy/boundedobjcoating.cpp \
     alg/legacy/compaction.cpp \
-    alg/legacy/holeelimstandard.cpp \
-    alg/legacy/holeelimcompaction.cpp \
     alg/legacy/universalcoating.cpp \
     alg/legacy/leaderelectiondemo.cpp \
     alg/legacy/leaderelection.cpp \
@@ -108,7 +106,9 @@ SOURCES += \
     alg/infobjcoating.cpp \
     alg/faultrepair.cpp \
     alg/convexhull.cpp \
-    sim/tile.cpp
+    sim/tile.cpp \
+    alg/universalshape.cpp \
+    alg/holeelimination.cpp
 
 RESOURCES += \
     res/qml.qrc \
