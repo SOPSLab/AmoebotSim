@@ -11,7 +11,20 @@ ConvexHullParticle::ConvexHullParticle(const Node head, const int globalTailDir,
   : AmoebotParticle(head, globalTailDir, orientation, system),
     state(state),
     parent(-1),
-    moveDir(-1){}
+    moveDir(-1),
+    delta(std::vector<std::vector<int> >(6)),
+    distance(std::vector<int>(6))  // NE, N, NW, SW, S, SE
+    {
+        for ( int i = 0 ; i < 6 ; i++ )
+           delta[i].resize(6);
+
+        delta[0] = {-1, 0, 1, 1, 0, -1}; // E
+        delta[1] = {-1, -1, 0, 1, 1, 0}; // NE
+        delta[2] = {0, -1, -1, 0, 1, 1}; // NW
+        delta[3] = {1, 0, -1, -1, 0, 1}; // W
+        delta[4] = {1, 1, 0, -1, -1, 0}; // SW
+        delta[5] = {0, 1, 1, 0, -1, -1}; // SE
+    }
 
 void ConvexHullParticle::activate() {
     if (state == State::Object) {
@@ -29,10 +42,19 @@ void ConvexHullParticle::activate() {
         }
         else {
 
+            // Check whether the convex hull approximation can be updated
+            for(int hp = 0; hp < 6; hp++) {
+                if (distance[hp] == 0 && (hasTileAtLabel(hp) or hasTileAtLabel((hp + 1) % 6) or hasTileAtLabel((hp + 2) % 6) or hasTileAtLabel((hp + 5) % 6))) {
+                    distance[hp]++;
+                }
+            }
+
+            // Walk around the boundary in clockwise fashion
             int checkDirs[6] = {0, 5, 4, 1, 2, 3}; // If, e.g., pointing E, check in this order: E, SE, SW, NE, NW, W
             for(auto &checkDir : checkDirs) {
                 if (!hasTileAtLabel((moveDir + checkDir) % 6) && hasTileAtLabel((moveDir + checkDir + 5) % 6)) {
                     moveDir = (moveDir + checkDir) % 6;
+                    for(int i = 0; i < 6; i++) distance[i] = distance[i] + delta[moveDir][i];
                     expand(moveDir);
                     return;
                 }
@@ -83,6 +105,11 @@ QString ConvexHullParticle::inspectionText() const {
   text += "\n";
 
   return text;
+}
+
+std::vector<int> ConvexHullParticle::getConvexHullApproximate() const {
+    std::vector<int> value(distance);
+    return value;
 }
 
 ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, float holeProb) {
@@ -136,7 +163,8 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, float holePro
    }
 
     // Place leader particle
-    insert(new ConvexHullParticle(Node(maxNode.x, maxNode.y + 1), -1, randDir(), *this,
+    // To display the convex hull correctly, we set its direction to 0...
+    insert(new ConvexHullParticle(Node(maxNode.x, maxNode.y + 1), -1, 0, *this,
                               ConvexHullParticle::State::LeaderStart));
 
 }
@@ -144,7 +172,6 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, float holePro
 bool ConvexHullSystem::hasTerminated() const {
   #ifdef QT_DEBUG
     if (!isConnected(particles)) {
-      printf("test");
       return true;
     }
   #endif

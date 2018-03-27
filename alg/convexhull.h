@@ -44,10 +44,18 @@ class ConvexHullParticle : public AmoebotParticle {
   // to snapshot the current values of this particle's memory at runtime.
   virtual QString inspectionText() const;
 
+  virtual std::vector<int> getConvexHullApproximate() const;
+
  protected:
   State state;
   int parent;
   int moveDir;
+
+  // Used to update the distance counters according to the movements
+  std::vector<std::vector<int>> delta;
+
+  // Stores the distance to each halfplane. Must be replaced by tokens eventually.
+  std::vector<int> distance;
 
  private:
   friend class ConvexHullSystem;

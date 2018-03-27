@@ -7,6 +7,7 @@
 #include <QString>
 
 #include <array>
+#include <vector>
 
 #include "sim/node.h"
 
@@ -51,6 +52,8 @@ class Particle {
   // Returns the string to be displayed when this particle is inspected; used
   // to snapshot the current values of this particle's memory at runtime.
   virtual QString inspectionText() const;
+
+  virtual std::vector<int> getConvexHullApproximate() const;
 
   Node head;
   int globalTailDir;

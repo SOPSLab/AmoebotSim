@@ -73,6 +73,7 @@ class System {
   virtual unsigned int leaderElectionRounds() const;
   virtual unsigned int weakBounds() const;
   virtual unsigned int strongBounds() const;
+
   virtual bool hasTerminated() const;
 
  protected:

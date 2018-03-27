@@ -14,6 +14,7 @@
 #include "ui/glitem.h"
 #include "ui/view.h"
 #include "sim/tile.h"
+#include "alg/convexhull.h"
 
 class QMouseEvent;
 class QWheelEvent;
@@ -53,6 +54,7 @@ protected:
     void drawFromParticleTex(int index, const QPointF& pos);
     void drawTiles();
     void drawTile(const Tile& t);
+    void drawConvexHull();
 
     static QPointF nodeToWorldCoord(const Node& node);
     static Node worldCoordToNode(const QPointF& worldCord);

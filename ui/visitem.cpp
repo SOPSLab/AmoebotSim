@@ -108,6 +108,11 @@ void VisItem::paint()
         QMutexLocker locker(&system->mutex);
         drawParticles();
         drawTiles();
+
+        // Draw Convex Hull Appproximate only if the convex hull algorithm is simulated
+        if(system->size() >= 1 and (&system->at(0))->getConvexHullApproximate().size() != 0) {
+            drawConvexHull();
+        }
     }
 }
 
@@ -187,12 +192,6 @@ void VisItem::drawParticles()
         }
     }
 
-    // Draw Tiles
-    std::deque<Tile*> tiles = system->getTiles();
-    for(auto t : tiles) {
-        drawTile(*t);
-    }
-
     glfn->glEnd();
 }
 
@@ -269,7 +268,14 @@ void VisItem::drawFromParticleTex(int index, const QPointF& pos)
 
 void VisItem::drawTiles()
 {
-    return;
+    glfn->glBegin(GL_QUADS);
+
+    std::deque<Tile*> tiles = system->getTiles();
+    for(auto t : tiles) {
+        drawTile(*t);
+    }
+
+    glfn->glEnd();
 }
 
 void VisItem::drawTile(const Tile& t)
@@ -277,6 +283,36 @@ void VisItem::drawTile(const Tile& t)
     auto pos = nodeToWorldCoord(t.node);
     glfn->glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
     drawFromParticleTex(14, pos);
+}
+
+void VisItem::drawConvexHull()
+{
+    const Particle& leader = system->at(0);
+    std::vector<int> distance = leader.getConvexHullApproximate();
+
+    glfn->glDisable(GL_TEXTURE_2D);
+    glfn->glColor3f(0.952f, 0.396f, 0.086f);
+    glfn->glLineWidth(2.0f);
+
+    std::vector<int> offset({1, 0, -1, -1, 0, 1});
+
+    std::vector<Node> convexVertices(6);
+
+    for(int i = 0; i<6; i++) {
+        convexVertices[i] = Node(leader.head.x + (offset[i] * distance[((i + 5) % 6)]) + (offset[((i + 1) % 6)] * (distance[i] - distance[((i + 5) % 6)])), leader.head.y + (offset[((i + 4) % 6)] * distance[((i + 5) % 6)]) + (offset[((i + 5) % 6)] * (distance[i] - distance[((i + 5) % 6)])));
+    }
+
+    for(int i = 0; i < 6; i++) {
+        auto start_w = nodeToWorldCoord(convexVertices[i]);
+        auto end_w = nodeToWorldCoord(convexVertices[((i + 1) % 6)]);
+
+        glfn->glBegin(GL_LINES);
+        glfn->glVertex2f(start_w.x(), start_w.y());
+        glfn->glVertex2f(end_w.x(), end_w.y());
+        glfn->glEnd();
+    }
+
+    glfn->glEnable(GL_TEXTURE_2D);
 }
 
 QPointF VisItem::nodeToWorldCoord(const Node& node)
