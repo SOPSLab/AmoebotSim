@@ -408,12 +408,19 @@ void ScriptInterface::leaderelectiondemo() {
 }
 
 void ScriptInterface::ring(const int numParticles, const float holeProb) {
+//  if (numParticles <= 0) {
+//    log("# particles must be > 0", true);
+//  } else if (holeProb < 0 || holeProb > 1) {
+//    log("holeProb in [0,1] required", true);
+//  } else {
+//    sim.setSystem(Ring::Ring::instance(numParticles, holeProb));
+//  }
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
     log("holeProb in [0,1] required", true);
   } else {
-    sim.setSystem(Ring::Ring::instance(numParticles, holeProb));
+    sim.setSystem(std::make_shared<RingSystem>(numParticles, holeProb));
   }
 }
 
