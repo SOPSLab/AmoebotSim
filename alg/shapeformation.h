@@ -6,25 +6,9 @@
 // Run with shapeformation(#particles, hole probability, mode)
 // on the simulator command line.
 // mode == "h" --> hexagon formation
+// mode == "s" --> square formation
 // mode == "t1" --> vertex triangle formation
 // mode == "t2" --> center triangle formation
-// mode == "s" --> square formation
-
-// TODO: 1)  change to strings DONE
-//       2)  change name to shape formation and ShapeFormationParticle DONE
-//       3)  make sure indentation matches throughout (Kinda done)
-//       4)  consistency with neighbor vs nbr DONE (?)
-//       5)  make sure the ShapeFormationsystem comments account for all parameters
-//           and double check all other ocmmnets too
-//       6)  Can remove the return statements in activate function DONE
-//       7)  Remove brittle coding Done
-//       8)  Rename to vertex triangle and center triangle Done
-//       9)  When removing shape formation algorithms, need to update so that the
-//           simulator initializes with the general shape formation algorithm in
-//           the scriptinterface constructor
-//       10) Determine where all of the legacy components are in the simulator
-//       11) Take a look at the leader election algorithm
-//       12) boundedobjcoating, leader election, [ring], and ShapeFormation coating
 
 #ifndef AMOEBOTSIM_ALG_SHAPEFORMATION_H
 #define AMOEBOTSIM_ALG_SHAPEFORMATION_H
@@ -49,7 +33,7 @@ class ShapeFormationParticle : public AmoebotParticle {
   // and square construction), and a string to determine what shape to form.
   ShapeFormationParticle(const Node head, const int globalTailDir,
                          const int orientation, AmoebotSystem& system,
-                         State state, int turn, const QString modeBit);
+                         State state, const QString mode, int turnSignal);
 
   // Executes one particle activation.
   virtual void activate();
@@ -103,11 +87,11 @@ class ShapeFormationParticle : public AmoebotParticle {
 
  protected:
   State state;
+  QString mode;
+  int turnSignal;
   int constructionDir;
   int moveDir;
   int followDir;
-  int turnSignal;
-  QString mode;
 
  private:
   friend class ShapeFormationSystem;
@@ -116,16 +100,15 @@ class ShapeFormationParticle : public AmoebotParticle {
 class ShapeFormationSystem : public AmoebotSystem  {
  public:
   // Constructs a system of ShapeFormationParticles with an optionally specified
-  // size (#particles), hole probability, and optionally specified shape to
-  // form. holeProb in [0,1] controls how "spread out" the system is; closer to
-  // 0 is more compressed, closer to 1 is more expanded.
-  // The current shapes accepted are...
-  //   "h" --> hexagon
-  //   "t1" --> center triangle
-  //   "t2" --> vertex triangle
-  //   "s" --> square
+  // size (#particles), hole probability, and shape to form. holeProb in [0,1]
+  // controls how "spread out" the system is; closer to 0 is more compressed,
+  // closer to 1 is more expanded. The current shapes accepted are...
+  //   "h"  --> hexagon
+  //   "s"  --> square
+  //   "t1" --> vertex triangle
+  //   "t2" --> center triangle
   ShapeFormationSystem(int numParticles = 200, float holeProb = 0.2,
-                       QString modeBit = 0);
+                       QString mode = "h");
 
   // Checks whether or not the system's run of the ShapeFormation formation
   // algorithm has terminated (all particles in state Finish).

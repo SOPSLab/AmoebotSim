@@ -25,12 +25,10 @@
 #include "alg/matrix.h"
 #include "alg/matrix2.h"
 #include "alg/rectangle.h"
-#include "alg/sierpinski.h"
-#include "alg/square.h"
-#include "alg/tokendemo.h"
-#include "alg/triangle.h"
-#include "alg/twositeebridge.h"
 #include "alg/shapeformation.h"
+#include "alg/sierpinski.h"
+#include "alg/tokendemo.h"
+#include "alg/twositeebridge.h"
 
 #include "script/scriptinterface.h"
 #include "sim/node.h"
@@ -286,6 +284,18 @@ void ScriptInterface::rectangle(const int numParticles, const float holeProb) {
   }
 }
 
+void ScriptInterface::shapeformation(const int numParticles,
+                                     const float holeProb, const QString mode) {
+  if (numParticles <= 0) {
+    log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    log("holeProb in [0,1] required", true);
+  } else {
+    sim.setSystem(std::make_shared<ShapeFormationSystem>(numParticles, holeProb,
+                                                         mode));
+  }
+}
+
 void ScriptInterface::sierpinski(const int numParticles, const float holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
@@ -296,16 +306,6 @@ void ScriptInterface::sierpinski(const int numParticles, const float holeProb) {
   }
 }
 
-void ScriptInterface::square(const int numParticles, const float holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<SquareSystem>(numParticles, holeProb));
-  }
-}
-
 void ScriptInterface::tokendemo(const int numParticles, const float holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
@@ -313,18 +313,6 @@ void ScriptInterface::tokendemo(const int numParticles, const float holeProb) {
     log("holeProb in [0,1] required", true);
   } else {
     sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::triangle(const int numParticles, const float holeProb,
-                               const int mode) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<TriangleSystem>(numParticles, holeProb,
-                                                   mode));
   }
 }
 
@@ -358,18 +346,6 @@ void ScriptInterface::twositeebridge(const int numParticles,
     sim.setSystem(std::make_shared<TwoSiteEBridgeSystem>(numParticles,
                                                          explambda, complambda,
                                                          siteDistance));
-  }
-}
-
-void ScriptInterface::shapeformation(const int numParticles,
-                                     const float holeProb, const QString mode) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<ShapeFormationSystem>(numParticles, holeProb,
-                                                    mode));
   }
 }
 
