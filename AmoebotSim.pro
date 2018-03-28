@@ -59,7 +59,7 @@ HEADERS += \
     alg/faultrepair.h \
     alg/convexhull.h \
     sim/tile.h \
-    alg/universalshape.h \
+    alg/shapeformation.h \
     alg/holeelimination.h
 
 SOURCES += \
@@ -107,7 +107,7 @@ SOURCES += \
     alg/faultrepair.cpp \
     alg/convexhull.cpp \
     sim/tile.cpp \
-    alg/universalshape.cpp \
+    alg/shapeformation.cpp \
     alg/holeelimination.cpp
 
 RESOURCES += \

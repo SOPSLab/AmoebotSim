@@ -84,7 +84,7 @@ class ScriptInterface : public QObject {
   void triangle(const int numParticles = 100, float holeProb = 0.0, int mode = 0);
   void twositecbridge(const int numParticles = 100, const float lambda = 4.0, const float alpha = 1.0);
   void twositeebridge(const int numParticles = 200, const float explambda = 2.0, const float complambda = 4.0, const float siteDistance = 1.25);
-  void universalshape(int numParticles = 200, float holeProb = 0.2, int mode = 0);
+  void shapeformation(int numParticles = 200, float holeProb = 0.2, QString mode = "h");
 
   // Legacy algorithm instance commands. Documentation for foo() can be found in
   // alg/legacy/foo.h.

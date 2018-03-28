@@ -30,7 +30,7 @@
 #include "alg/tokendemo.h"
 #include "alg/triangle.h"
 #include "alg/twositeebridge.h"
-#include "alg/universalshape.h"
+#include "alg/shapeformation.h"
 
 #include "script/scriptinterface.h"
 #include "sim/node.h"
@@ -44,7 +44,7 @@ ScriptInterface::ScriptInterface(ScriptEngine &engine, Simulator& sim,
   : engine(engine),
     sim(sim),
     vis(vis) {
-  hexagon();
+  shapeformation();
 }
 
 void ScriptInterface::log(const QString msg, bool error) {
@@ -361,14 +361,14 @@ void ScriptInterface::twositeebridge(const int numParticles,
   }
 }
 
-void ScriptInterface::universalshape(const int numParticles,
-                                     const float holeProb, const int mode) {
+void ScriptInterface::shapeformation(const int numParticles,
+                                     const float holeProb, const QString mode) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
     log("holeProb in [0,1] required", true);
   } else {
-    sim.setSystem(std::make_shared<UniversalSystem>(numParticles, holeProb,
+    sim.setSystem(std::make_shared<ShapeFormationSystem>(numParticles, holeProb,
                                                     mode));
   }
 }
