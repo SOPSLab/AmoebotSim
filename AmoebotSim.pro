@@ -21,7 +21,7 @@ HEADERS += \
     ui/glitem.h \
     ui/commandhistorymanager.h \
     ui/visitem.h \
-    alg/legacy/ring.h \
+    alg/ring.h \
     alg/line.h \
     alg/legacy/boundedobjcoating.h \
     alg/legacy/compaction.h \
@@ -69,7 +69,7 @@ SOURCES += \
     ui/commandhistorymanager.cpp \
     ui/glitem.cpp \
     ui/visitem.cpp \
-    alg/legacy/ring.cpp \
+    alg/ring.cpp \
     alg/line.cpp \
     alg/legacy/boundedobjcoating.cpp \
     alg/legacy/compaction.cpp \

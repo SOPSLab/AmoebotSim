@@ -8,7 +8,7 @@
 #include "alg/legacy/leaderelection.h"
 #include "alg/legacy/leaderelectiondemo.h"
 #include "alg/legacy/legacysystem.h"
-#include "alg/legacy/ring.h"
+#include "alg/ring.h"
 #include "alg/legacy/universalcoating.h"
 #include "alg/2sitecbridge.h"
 #include "alg/adder.h"
@@ -375,13 +375,6 @@ void ScriptInterface::leaderelectiondemo() {
 }
 
 void ScriptInterface::ring(const int numParticles, const float holeProb) {
-//  if (numParticles <= 0) {
-//    log("# particles must be > 0", true);
-//  } else if (holeProb < 0 || holeProb > 1) {
-//    log("holeProb in [0,1] required", true);
-//  } else {
-//    sim.setSystem(Ring::Ring::instance(numParticles, holeProb));
-//  }
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
