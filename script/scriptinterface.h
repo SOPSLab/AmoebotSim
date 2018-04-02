@@ -70,7 +70,6 @@ class ScriptInterface : public QObject {
   void convexhull(const int numParticles = 50, const int numTiles = 300, const float holeProb = 0.4);
   void edgedetect(const int numParticles = 10, int countValue = 250);
   void faultrepair(const int numParticles = 100, const float holeProb = 0.2);
-  void hexagon(const int numParticles = 200, const float holeProb = 0.2);
   void holeelimination(const int numParticles = 100, const float holeProb = 0.4);
   void infobjcoating(const int numParticles = 100, const float holeProb = 0.2);
   void ising(const int numParticles = 200, const float beta = 0.2);

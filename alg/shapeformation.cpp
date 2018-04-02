@@ -292,6 +292,7 @@ bool ShapeFormationParticle::hasTailFollower() const {
 
 ShapeFormationSystem::ShapeFormationSystem(int numParticles, float holeProb,
                                            QString mode) {
+  Q_ASSERT(mode == "h" || mode == "s" || mode == "t1" || mode == "t2");
   Q_ASSERT(numParticles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
 

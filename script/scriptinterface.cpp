@@ -16,7 +16,6 @@
 #include "alg/convexhull.h"
 #include "alg/edgedetect.h"
 #include "alg/faultrepair.h"
-#include "alg/hexagon.h"
 #include "alg/holeelimination.h"
 #include "alg/infobjcoating.h"
 #include "alg/ising.h"
@@ -198,16 +197,6 @@ void ScriptInterface::faultrepair(const int numParticles,
   }
 }
 
-void ScriptInterface::hexagon(const int numParticles, const float holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<HexagonSystem>(numParticles, holeProb));
-  }
-}
-
 void ScriptInterface::holeelimination(const int numParticles,
                                       const float holeProb) {
   if (numParticles <= 0) {
@@ -290,6 +279,8 @@ void ScriptInterface::shapeformation(const int numParticles,
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
     log("holeProb in [0,1] required", true);
+  } else if (mode != "h" && mode != "s" && mode != "t1" && mode != "t2") {
+    log("mode is not recognized", true);
   } else {
     sim.setSystem(std::make_shared<ShapeFormationSystem>(numParticles, holeProb,
                                                          mode));

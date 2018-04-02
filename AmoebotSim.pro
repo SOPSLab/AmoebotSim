@@ -38,7 +38,6 @@ HEADERS += \
     alg/amoebotparticle.h \
     alg/amoebotsystem.h \
     helper/randomnumbergenerator.h \
-    alg/hexagon.h \
     alg/tokendemo.h \
     script/scriptengine.h \
     alg/ising.h \
@@ -82,7 +81,6 @@ SOURCES += \
     alg/amoebotparticle.cpp \
     alg/amoebotsystem.cpp \
     helper/randomnumbergenerator.cpp \
-    alg/hexagon.cpp \
     alg/tokendemo.cpp \
     script/scriptinterface.cpp \
     script/scriptengine.cpp \
