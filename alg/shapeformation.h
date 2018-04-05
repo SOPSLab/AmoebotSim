@@ -1,16 +1,22 @@
-// Defines the particle system and composing particles for the Hexagon Formation
-// Algorithm as defined in 'An Algorithmic Framework for Shape Formation
-// Problems in Self-Organizing Particle Systems' [arxiv.org/abs/1504.00744].
+// Defines the particle system and composing particles for the General
+// Formation Algorithm as alluded to in 'An Algorithmic Framework for Shape
+// Formation Problems in Self-Organizing Particle Systems'
+// [arxiv.org/abs/1504.00744].
 //
-// Run with hexagon(#particles, hole probability) on the simulator command line.
+// Run with shapeformation(#particles, hole probability, mode)
+// on the simulator command line.
+// mode == "h" --> hexagon formation
+// mode == "s" --> square formation
+// mode == "t1" --> vertex triangle formation
+// mode == "t2" --> center triangle formation
 
-#ifndef AMOEBOTSIM_ALG_HEXAGON_H
-#define AMOEBOTSIM_ALG_HEXAGON_H
+#ifndef AMOEBOTSIM_ALG_SHAPEFORMATION_H
+#define AMOEBOTSIM_ALG_SHAPEFORMATION_H
 
 #include "alg/amoebotparticle.h"
 #include "alg/amoebotsystem.h"
 
-class HexagonParticle : public AmoebotParticle {
+class ShapeFormationParticle : public AmoebotParticle {
  public:
   enum class State {
     Seed,
@@ -22,9 +28,12 @@ class HexagonParticle : public AmoebotParticle {
 
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
-  // for its local compass, a system which it belongs to, and an initial state.
-  HexagonParticle(const Node head, const int globalTailDir,
-                  const int orientation, AmoebotSystem& system, State state);
+  // for its local compass, a system which it belongs to, an initial state, a
+  // signal for determining turning directions (currently for vertex triangle
+  // and square construction), and a string to determine what shape to form.
+  ShapeFormationParticle(const Node head, const int globalTailDir,
+                         const int orientation, AmoebotSystem& system,
+                         State state, const QString mode, int turnSignal);
 
   // Executes one particle activation.
   virtual void activate();
@@ -45,7 +54,7 @@ class HexagonParticle : public AmoebotParticle {
   // Gets a reference to the neighboring particle incident to the specified port
   // label. Crashes if no such particle exists at this label; consider using
   // hasNbrAtLabel() first if unsure.
-  HexagonParticle& nbrAtLabel(int label) const;
+  ShapeFormationParticle& nbrAtLabel(int label) const;
 
   // Returns the label of the first port incident to a neighboring particle in
   // any of the specified states, starting at the (optionally) specified label
@@ -54,7 +63,7 @@ class HexagonParticle : public AmoebotParticle {
                              int startLabel = 0) const;
 
   // Checks whether this particle has a neighbor in any of the given states.
-  bool hasNeighborInState(std::initializer_list<State> states) const;
+  bool hasNbrInState(std::initializer_list<State> states) const;
 
   // Returns the label of the port incident to a neighbor which is finished and
   // pointing at this particle's position as the next one to be filled; returns
@@ -78,25 +87,32 @@ class HexagonParticle : public AmoebotParticle {
 
  protected:
   State state;
+  QString mode;
+  int turnSignal;
   int constructionDir;
   int moveDir;
   int followDir;
 
  private:
-  friend class HexagonSystem;
+  friend class ShapeFormationSystem;
 };
 
-class HexagonSystem : public AmoebotSystem  {
+class ShapeFormationSystem : public AmoebotSystem  {
  public:
-  // Constructs a system of HexagonParticles with an optionally specified size
-  // (#particles) and hole probability. holeProb in [0,1] controls how "spread
-  // out" the system is; closer to 0 is more compressed, closer to 1 is more
-  // expanded.
-  HexagonSystem(int numParticles = 200, float holeProb = 0.2);
+  // Constructs a system of ShapeFormationParticles with an optionally specified
+  // size (#particles), hole probability, and shape to form. holeProb in [0,1]
+  // controls how "spread out" the system is; closer to 0 is more compressed,
+  // closer to 1 is more expanded. The current shapes accepted are...
+  //   "h"  --> hexagon
+  //   "s"  --> square
+  //   "t1" --> vertex triangle
+  //   "t2" --> center triangle
+  ShapeFormationSystem(int numParticles = 200, float holeProb = 0.2,
+                       QString mode = "h");
 
-  // Checks whether or not the system's run of the hexagon formation algorithm
-  // has terminated (all particles in state Finish).
+  // Checks whether or not the system's run of the ShapeFormation formation
+  // algorithm has terminated (all particles in state Finish).
   bool hasTerminated() const override;
 };
 
-#endif  // AMOEBOTSIM_ALG_HEXAGON_H
+#endif  // AMOEBOTSIM_ALG_SHAPEFORMATION_H

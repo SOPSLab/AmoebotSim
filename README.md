@@ -20,7 +20,7 @@ The following instructions should get you started working with AmoebotSim; pleas
 
 - Leaving QML debugging enabled might pose a security risk. It can be disabled by unchecking the checkbox under _Projects_ > _Build Steps_ > _qmake_ > _Details_.
 
-- If you are new to developing algorithms in AmoebotSim, _hexagon.cpp_ in the "alg" directory serves as a self-contained example. For an example which includes token passing, see _tokendemo.cpp_.
+- If you are new to developing algorithms in AmoebotSim, _line.cpp_ in the "alg" directory serves as a self-contained example. For an example which includes token passing, see _tokendemo.cpp_.
 
 ###User Interface###
 

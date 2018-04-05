@@ -70,7 +70,6 @@ class ScriptInterface : public QObject {
   void convexhull(const int numParticles = 12, const int numTiles = 300, const float holeProb = 0.4);
   void edgedetect(const int numParticles = 10, int countValue = 250);
   void faultrepair(const int numParticles = 100, const float holeProb = 0.2);
-  void hexagon(const int numParticles = 200, const float holeProb = 0.2);
   void holeelimination(const int numParticles = 100, const float holeProb = 0.4);
   void infobjcoating(const int numParticles = 100, const float holeProb = 0.2);
   void ising(const int numParticles = 200, const float beta = 0.2);
@@ -78,13 +77,11 @@ class ScriptInterface : public QObject {
   void linesort(const int numParticles = 200, const float holeProb = 0.2);
   void matrix(const int numParticles = 10, int countValue = 250, int whichStream =3, const int mode = 0);
   void rectangle(const int numParticles = 200, const float holeProb = 0.2);
+  void shapeformation(const int numParticles = 200, const float holeProb = 0.2, const QString mode = "h");
   void sierpinski(const int numParticles = 200, const float holeProb = 0.2);
-  void square(const int numParticles = 100, const float holeProb = 0.0);
   void tokendemo(const int numParticles = 200, const float holeProb = 0.2);
-  void triangle(const int numParticles = 100, float holeProb = 0.0, int mode = 0);
   void twositecbridge(const int numParticles = 100, const float lambda = 4.0, const float alpha = 1.0);
   void twositeebridge(const int numParticles = 200, const float explambda = 2.0, const float complambda = 4.0, const float siteDistance = 1.25);
-  void universalshape(int numParticles = 200, float holeProb = 0.2, int mode = 0);
 
   // Legacy algorithm instance commands. Documentation for foo() can be found in
   // alg/legacy/foo.h.

@@ -6,15 +6,15 @@
 #include "alg/line.h"
 
 LineParticle::LineParticle(const Node head, const int globalTailDir,
-                                 const int orientation, AmoebotSystem& system,
-                                 State state)
+                           const int orientation, AmoebotSystem& system,
+                           State state)
   : AmoebotParticle(head, globalTailDir, orientation, system),
     state(state),
     constructionDir(-1),
     moveDir(-1),
     followDir(-1) {
   if (state == State::Seed) {
-      constructionDir = 0;
+    constructionDir = 0;
   }
 }
 
@@ -80,24 +80,25 @@ void LineParticle::activate() {
 
 int LineParticle::headMarkColor() const {
   switch(state) {
-  case State::Seed:   return 0x00ff00;
-  case State::Idle:   return -1;
-  case State::Follow: return 0x0000ff;
-  case State::Lead:   return 0xff0000;
-  case State::Finish: return 0x000000;
+    case State::Seed:   return 0x00ff00;
+    case State::Idle:   return -1;
+    case State::Follow: return 0x0000ff;
+    case State::Lead:   return 0xff0000;
+    case State::Finish: return 0x000000;
   }
 
   return -1;
 }
 
 int LineParticle::headMarkDir() const {
-  if (state == State::Lead) {
-    return moveDir;
-  } else if (state == State::Seed || state == State::Finish) {
+  if (state == State::Seed || state == State::Finish) {
     return constructionDir;
+  } else if (state == State::Lead) {
+    return moveDir;
   } else if (state == State::Follow) {
     return followDir;
   }
+
   return -1;
 }
 
@@ -114,18 +115,18 @@ QString LineParticle::inspectionText() const {
   text += "state: ";
   text += [this](){
     switch(state) {
-    case State::Seed:   return "seed";
-    case State::Idle:   return "idle";
-    case State::Follow: return "follow";
-    case State::Lead:   return "lead";
-    case State::Finish: return "finish";
-    default:            return "no state";
+      case State::Seed:   return "seed";
+      case State::Idle:   return "idle";
+      case State::Follow: return "follow";
+      case State::Lead:   return "lead";
+      case State::Finish: return "finish";
+      default:            return "no state";
     }
   }();
   text += "\n";
-  text += "followDir: " + QString::number(followDir) + "\n";
-  text += "moveDir: " + QString::number(moveDir) + "\n";
   text += "constructionDir: " + QString::number(constructionDir) + "\n";
+  text += "moveDir: " + QString::number(moveDir) + "\n";
+  text += "followDir: " + QString::number(followDir) + "\n";
 
   return text;
 }
@@ -135,7 +136,7 @@ LineParticle& LineParticle::nbrAtLabel(int label) const {
 }
 
 int LineParticle::labelOfFirstNbrInState(std::initializer_list<State> states,
-                                            int startLabel) const {
+                                         int startLabel) const {
   auto propertyCheck = [&](const LineParticle& p) {
     for (auto state : states) {
       if (p.state == state) {
@@ -145,12 +146,10 @@ int LineParticle::labelOfFirstNbrInState(std::initializer_list<State> states,
     return false;
   };
 
-  return labelOfFirstNbrWithProperty<LineParticle>(propertyCheck,
-                                                           startLabel);
+  return labelOfFirstNbrWithProperty<LineParticle>(propertyCheck, startLabel);
 }
 
-bool LineParticle::hasNbrInState(std::initializer_list<State> states)
-  const {
+bool LineParticle::hasNbrInState(std::initializer_list<State> states) const {
   return labelOfFirstNbrInState(states) != -1;
 }
 
@@ -197,7 +196,7 @@ LineSystem::LineSystem(int numParticles, float holeProb) {
 
   // Insert the seed at (0,0).
   insert(new LineParticle(Node(0, 0), -1, randDir(), *this,
-                             LineParticle::State::Seed));
+                          LineParticle::State::Seed));
   std::set<Node> occupied;
   occupied.insert(Node(0, 0));
 
@@ -227,7 +226,7 @@ LineSystem::LineSystem(int numParticles, float holeProb) {
     // Add this candidate as a particle if not a hole.
     if (randBool(1.0f - holeProb)) {
       insert(new LineParticle(randomCandidate, -1, randDir(), *this,
-                                 LineParticle::State::Idle));
+                              LineParticle::State::Idle));
       ++numNonStaticParticles;
 
       // Add new candidates.

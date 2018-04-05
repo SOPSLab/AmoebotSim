@@ -11,7 +11,6 @@ win32:RC_FILE = res/AmoebotSim.rc
 HEADERS += \
     alg/legacy/algorithm.h \
     alg/legacy/algorithmwithflags.h \
-    alg/triangle.h \
     main/application.h \
     script/scriptinterface.h \
     alg/legacy/movement.h \
@@ -22,9 +21,8 @@ HEADERS += \
     ui/glitem.h \
     ui/commandhistorymanager.h \
     ui/visitem.h \
-    alg/legacy/ring.h \
+    alg/ring.h \
     alg/line.h \
-    alg/square.h \
     alg/legacy/boundedobjcoating.h \
     alg/legacy/compaction.h \
     alg/legacy/universalcoating.h \
@@ -40,7 +38,6 @@ HEADERS += \
     alg/amoebotparticle.h \
     alg/amoebotsystem.h \
     helper/randomnumbergenerator.h \
-    alg/hexagon.h \
     alg/tokendemo.h \
     script/scriptengine.h \
     alg/ising.h \
@@ -59,12 +56,11 @@ HEADERS += \
     alg/faultrepair.h \
     alg/convexhull.h \
     sim/tile.h \
-    alg/universalshape.h \
+    alg/shapeformation.h \
     alg/holeelimination.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
-    alg/triangle.cpp \
     main/application.cpp \
     main/main.cpp\
     sim/particle.cpp \
@@ -73,9 +69,8 @@ SOURCES += \
     ui/commandhistorymanager.cpp \
     ui/glitem.cpp \
     ui/visitem.cpp \
-    alg/legacy/ring.cpp \
+    alg/ring.cpp \
     alg/line.cpp \
-    alg/square.cpp \
     alg/legacy/boundedobjcoating.cpp \
     alg/legacy/compaction.cpp \
     alg/legacy/universalcoating.cpp \
@@ -86,7 +81,6 @@ SOURCES += \
     alg/amoebotparticle.cpp \
     alg/amoebotsystem.cpp \
     helper/randomnumbergenerator.cpp \
-    alg/hexagon.cpp \
     alg/tokendemo.cpp \
     script/scriptinterface.cpp \
     script/scriptengine.cpp \
@@ -107,7 +101,7 @@ SOURCES += \
     alg/faultrepair.cpp \
     alg/convexhull.cpp \
     sim/tile.cpp \
-    alg/universalshape.cpp \
+    alg/shapeformation.cpp \
     alg/holeelimination.cpp
 
 RESOURCES += \

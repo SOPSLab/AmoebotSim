@@ -1,7 +1,12 @@
-// Run with line(# of particles, hole probability) in the simulator command line
+// Defines the particle system and composing particles for the Line Formation
+// Algorithm as defined in 'Brief Announcement: On the Feasibility of Leader
+// Election and Shape Formation with Self-Organizing Programmble Matter'
+// [dl.acm.org/citation.cfm?id=2767451].
+//
+// Run with line(#particles, hole probability) on the simulator command line.
 
-#ifndef LINE_H
-#define LINE_H
+#ifndef AMOEBOTSIM_ALG_LINE_H
+#define AMOEBOTSIM_ALG_LINE_H
 
 #include "alg/amoebotparticle.h"
 #include "alg/amoebotsystem.h"
@@ -78,8 +83,8 @@ public:
 protected:
   State state;
   int constructionDir;
-  int followDir;
   int moveDir;
+  int followDir;
 
 private:
   friend class LineSystem;
@@ -87,7 +92,6 @@ private:
 
 class LineSystem : public AmoebotSystem {
   public:
-
     // Constructs a system of LineParticles with an optionally specified size
     // (#particles) and hole probability. holeProb in [0,1] controls how "spread
     // out" the system is; closer to 0 is more compressed, closer to 1 is more
@@ -99,4 +103,4 @@ class LineSystem : public AmoebotSystem {
     bool hasTerminated() const override;
 };
 
-#endif // LINE_H
+#endif  // AMOEBOTSIM_ALG_LINE_H

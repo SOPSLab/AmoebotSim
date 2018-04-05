@@ -6,9 +6,9 @@
 #ifndef AMOEBOTSIM_ALG_TOKENDEMO_H
 #define AMOEBOTSIM_ALG_TOKENDEMO_H
 
-#include "alg/hexagon.h"
+#include "alg/line.h"
 
-class TokenDemoParticle : public HexagonParticle {
+class TokenDemoParticle : public LineParticle {
  public:
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
