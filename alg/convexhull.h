@@ -11,13 +11,11 @@
 class ConvexHullParticle : public AmoebotParticle {
  public:
   enum class State {
-    Object,
     LeaderStart,
-    LeaderWait,
     LeaderMove,
-    Start,
-    Wait,
-    Tree,
+    TreeStart,
+    TreeWait,
+    TreeMove,
     Follow,
     Done
   };
@@ -30,6 +28,36 @@ class ConvexHullParticle : public AmoebotParticle {
 
   // Executes one particle activation.
   virtual void activate();
+
+  // Returns the label of the first port incident to a neighboring particle in
+  // any of the specified states, starting at the (optionally) specified label
+  // and continuing clockwise.
+  int labelOfFirstNbrInState(std::initializer_list<State> states,
+                             int startLabel = 0) const;
+
+  // Checks whether this particle has a neighbor in any of the given states.
+  bool hasNeighborInState(std::initializer_list<State> states) const;
+
+  // Checks if the neighbor in a given direction is in a certain state
+  bool neighborInDirIsInState(int dir, std::initializer_list<State> states) const;
+
+  // Checks whether this particle has a waiting child during the tree construction
+  bool hasWaitingChild() const;
+
+  // Function called by the leader to swap itself with a tree particle
+  void swapWithTreeParticleInDir(int dir);
+
+  // Function called from the leader to a tree particle
+  void swapWithLeaderParticleInDir(int dir);
+
+  // Checks whether the particle has a child (an adjacent tree particle that point at it)
+  bool hasChild() const;
+
+  // Pulls in a child, if possible
+  void pullChildIfPossible();
+
+  // Pushes a parent, if possible (might be the leader)
+  void pushParentIfPossible();
 
   // Functions for altering a particle's cosmetic appearance; headMarkColor
   // (respectively, tailMarkColor) returns the color to be used for the ring
@@ -44,11 +72,9 @@ class ConvexHullParticle : public AmoebotParticle {
   // to snapshot the current values of this particle's memory at runtime.
   virtual QString inspectionText() const;
 
-  virtual std::vector<int> getConvexHullApproximate() const;
-
  protected:
   State state;
-  int parent;
+  int parentDir;
   int moveDir;
 
   // Used to update the distance counters according to the movements
@@ -59,7 +85,6 @@ class ConvexHullParticle : public AmoebotParticle {
 
   // Used for detecting termination.
   std::vector<int> completed;
-  int lastHp;
 
  private:
   friend class ConvexHullSystem;
@@ -67,7 +92,11 @@ class ConvexHullParticle : public AmoebotParticle {
 
 class ConvexHullSystem : public AmoebotSystem  {
  public:
+  ConvexHullParticle* leader;
+
   ConvexHullSystem(int numParticles = 50, int numTiles = 300, float holeProb = 0.2);
+
+  virtual std::vector<Node> getConvexHullApproximate() const;
 
   bool hasTerminated() const override;
 };

@@ -53,8 +53,6 @@ class Particle {
   // to snapshot the current values of this particle's memory at runtime.
   virtual QString inspectionText() const;
 
-  virtual std::vector<int> getConvexHullApproximate() const;
-
   Node head;
   int globalTailDir;
 };

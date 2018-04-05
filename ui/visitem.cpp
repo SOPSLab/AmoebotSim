@@ -110,7 +110,13 @@ void VisItem::paint()
         drawTiles();
 
         // Draw Convex Hull Appproximate only if the convex hull algorithm is simulated
-        if(system->size() >= 1 and (&system->at(0))->getConvexHullApproximate().size() != 0) {
+        if(system->size() >= 1 and std::dynamic_pointer_cast<ConvexHullSystem>(system)) {
+
+            glEnable( GL_LINE_SMOOTH );
+            glEnable( GL_POLYGON_SMOOTH );
+            glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
+            glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
+
             drawConvexHull();
         }
     }
@@ -287,20 +293,11 @@ void VisItem::drawTile(const Tile& t)
 
 void VisItem::drawConvexHull()
 {
-    const Particle& leader = system->at(0);
-    std::vector<int> distance = leader.getConvexHullApproximate();
+    std::vector<Node> convexVertices = std::dynamic_pointer_cast<ConvexHullSystem>(system)->getConvexHullApproximate();
 
     glfn->glDisable(GL_TEXTURE_2D);
-    glfn->glColor3f(0.952f, 0.396f, 0.086f);
-    glfn->glLineWidth(4.0f);
-
-    std::vector<int> offset({1, 0, -1, -1, 0, 1});
-
-    std::vector<Node> convexVertices(6);
-
-    for(int i = 0; i<6; i++) {
-        convexVertices[i] = Node(leader.head.x + (offset[i] * distance[((i + 5) % 6)]) + (offset[((i + 1) % 6)] * (distance[i] - distance[((i + 5) % 6)])), leader.head.y + (offset[((i + 4) % 6)] * distance[((i + 5) % 6)]) + (offset[((i + 5) % 6)] * (distance[i] - distance[((i + 5) % 6)])));
-    }
+    glfn->glColor3f(0, 0.302, 0.545);
+    glfn->glLineWidth(3.0f);
 
     for(int i = 0; i < 6; i++) {
         auto start_w = nodeToWorldCoord(convexVertices[i]);

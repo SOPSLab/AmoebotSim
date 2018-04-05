@@ -119,8 +119,8 @@ class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
   template<class TokenType>
   bool hasToken() const;
 
- private:
   AmoebotSystem& system;
+ private:
   std::deque<std::shared_ptr<Token>> tokens;
 };
 

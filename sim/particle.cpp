@@ -53,11 +53,6 @@ std::array<int, 6> Particle::borderPointColors() const {
   return borderPointColors;
 }
 
-std::vector<int> Particle::getConvexHullApproximate() const {
-    std::vector<int> value(0);
-    return value;
-}
-
 QString Particle::inspectionText() const {
   return "Overwrite Particle::inspectionText() to specify an inspection text.";
 }
