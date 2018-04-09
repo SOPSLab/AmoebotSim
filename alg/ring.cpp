@@ -1,13 +1,19 @@
+
 #include <QtGlobal>
 
 #include <set>
 #include <vector>
+#include <iostream>
 
 #include "alg/ring.h"
 
+// TODO: 1) Consider case where follower of a particle (in state Follow or Lead)
+//            is expanded
+//       2) Consider case where Wait particle does not change to follow in time
+//
 RingParticle::RingParticle(const Node head, const int globalTailDir,
-                                 const int orientation, AmoebotSystem& system,
-                                 State state)
+                           const int orientation, AmoebotSystem& system,
+                           State state)
   : AmoebotParticle(head, globalTailDir, orientation, system),
     state(state),
     constructionDir(-1),
@@ -24,16 +30,31 @@ RingParticle::RingParticle(const Node head, const int globalTailDir,
 void RingParticle::activate() {
   if (isExpanded()) {
     if (state == State::Follow) {
-      if (!hasNbrInState({State::Idle}) && !hasTailFollower()) {
-        contractTail();
+      if (totalNumber > 0) {
+        if (!hasNbrInState({State::Wait, State::Seed}) && !hasTailFollower()) {
+          contractTail();
+          return;
+        }
+      } else {
+        if (!hasNbrInState({State::Idle}) && !hasTailFollower()) {
+          contractTail();
+          return;
+        }
       }
-      return;
     } else if (state == State::Lead) {
-      if (!hasNbrInState({State::Idle}) && !hasTailFollower()) {
-        contractTail();
-        updateMoveDir();
+      if (totalNumber > 0) {
+        if (!hasNbrInState({State::Wait, State::Seed}) && !hasTailFollower()) {
+          contractTail();
+          updateMoveDir();
+          return;
+        }
+      } else {
+        if (!hasNbrInState({State::Idle}) && !hasTailFollower()) {
+          contractTail();
+          updateMoveDir();
+          return;
+        }
       }
-      return;
     } else {
       Q_ASSERT(false);
     }
@@ -44,6 +65,10 @@ void RingParticle::activate() {
           nbrAtLabel(constructionDir).totalNumber > 0) {
         state = State::Follow;
         followDir = constructionDir;
+        return;
+      } else if (hasNbrInState({State::Finish})) {
+        state = State::Finish;
+        constructionDir = (constructionDir + 3) % 6;
         return;
       }
       return;
@@ -87,11 +112,20 @@ void RingParticle::activate() {
         updateConstructionDir();
         return;
       } else if (totalNumber > 0 && hasNbrAtLabel(moveDir)) {
-        if (nbrAtLabel(moveDir).state == State::Follow ||  // Set state to
-            nbrAtLabel(moveDir).state == State::Finish){   // finish if there is
-          state = State::Finish;                           // a follow/finish
-          updateConstructionDir();                         // particle at
-          return;                                          // moveDir.
+        if (nbrAtLabel(moveDir).state == State::Follow &&
+            nbrAtLabel(moveDir).totalNumber < totalNumber){
+          state = State::Finish;
+          updateConstructionDir();
+          return;
+        } else if (nbrAtLabel(moveDir).state == State::Follow &&
+                   nbrAtLabel(moveDir).totalNumber > totalNumber) {
+          state = State::Follow;
+          followDir = moveDir;
+          return;
+        } else if (nbrAtLabel(moveDir).state == State::Finish) {
+          state = State::Finish;
+          updateConstructionDir();
+          return;
         }
       } else {
         updateMoveDir();
@@ -107,21 +141,27 @@ void RingParticle::activate() {
     } else if (state == State::Wait) {
       if (nbrAtLabel(constructionWaitReceiveDir()).totalNumber > 0
           && totalNumber < 0) {
-        if (moveNum > 0) {      // Use moveNum as arbitrary wait before getting
-          moveNum--;            // totalNum from neighbor.
+        if (hasNbrInState({State::Follow, State::Lead})) {
+          return;
+        }
+        if (moveNum > 0) {
+          moveNum--;
           return;
         }
         int dir = constructionWaitReceiveDir();
         totalNumber = nbrAtLabel(dir).totalNumber + 1;
         return;
-      }
-      else if (!hasNbrAtLabel(constructionDir) && totalNumber > 0) {
+      } else if (!hasNbrAtLabel(constructionDir) && totalNumber > 0) {
+        if (hasNbrInState({State::Follow, State::Lead})) {
+          auto neighbor =
+              nbrAtLabel(labelOfFirstNbrInState({State::Follow, State::Lead}));
+          if (neighbor.totalNumber < 0) return;
+        }
         state = State::Lead;             // Set the last wait node to be the
         moveDir = constructionDir;       // lead particle for ring formation.
         updateMoveDir();
         return;
-      }
-      else if (totalNumber > 0 && hasNbrInState({State::Lead, State::Follow})) {
+      } else if (totalNumber > 0 && hasNbrInState({State::Lead, State::Follow})) {
         int label = labelOfFirstNbrInState({State::Lead, State::Follow},
                                            constructionDir);
         if (label == constructionDir &&           // Set the waiting particle to
@@ -131,6 +171,9 @@ void RingParticle::activate() {
           return;                                 // greater than 0.
         }
         return;
+      } else if (hasNbrInState({State::Finish})) {
+        constructionDir = (constructionDir + 3) % 6;
+        state = State::Finish;
       }
       return;
     }
@@ -200,7 +243,7 @@ RingParticle& RingParticle::nbrAtLabel(int label) const {
 }
 
 int RingParticle::labelOfFirstNbrInState(std::initializer_list<State> states,
-                                            int startLabel) const {
+                                         int startLabel) const {
   auto propertyCheck = [&](const RingParticle& p) {
     for (auto state : states) {
       if (p.state == state) {
@@ -211,7 +254,7 @@ int RingParticle::labelOfFirstNbrInState(std::initializer_list<State> states,
   };
 
   return labelOfFirstNbrWithProperty<RingParticle>(propertyCheck,
-                                                           startLabel);
+                                                   startLabel);
 }
 
 bool RingParticle::hasNbrInState(std::initializer_list<State> states)

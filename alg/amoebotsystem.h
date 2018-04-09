@@ -7,6 +7,7 @@
 #include <deque>
 #include <map>
 #include <set>
+#include <vector>
 
 #include "helper/randomnumbergenerator.h"
 #include "sim/system.h"
@@ -72,9 +73,8 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   void registerActivation(AmoebotParticle* particle);
 
  protected:
-  std::deque<AmoebotParticle*> particles;
+  std::vector<AmoebotParticle*> particles;
   std::map<Node, AmoebotParticle*> particleMap;
-  std::deque<AmoebotParticle*> shuffledParticles;
   std::set<AmoebotParticle*> activatedParticles;
   std::deque<Tile*> tiles;
   std::map<Node, Tile*> tileMap;
