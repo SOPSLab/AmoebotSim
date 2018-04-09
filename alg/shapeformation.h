@@ -16,6 +16,9 @@
 #include "alg/amoebotparticle.h"
 #include "alg/amoebotsystem.h"
 
+#include <set>
+#include <QString>
+
 class ShapeFormationParticle : public AmoebotParticle {
  public:
   enum class State {
@@ -113,6 +116,10 @@ class ShapeFormationSystem : public AmoebotSystem  {
   // Checks whether or not the system's run of the ShapeFormation formation
   // algorithm has terminated (all particles in state Finish).
   bool hasTerminated() const override;
+
+  // Returns a set of strings containing the current accepted modes of
+  // Shapeformation.
+  static std::set<QString> getAcceptedModes();
 };
 
 #endif  // AMOEBOTSIM_ALG_SHAPEFORMATION_H
