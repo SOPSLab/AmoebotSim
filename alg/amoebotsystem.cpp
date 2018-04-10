@@ -20,16 +20,9 @@ AmoebotSystem::~AmoebotSystem() {
 }
 
 void AmoebotSystem::activate() {
-  if (shuffledParticles.empty()) {
-    for (auto p : particles) {
-      shuffledParticles.push_back(p);
-    }
-    shuffle(shuffledParticles.begin(), shuffledParticles.end());
-  }
-
-  shuffledParticles.front()->activate();
-  registerActivation(shuffledParticles.front());
-  shuffledParticles.pop_front();
+  int rand = randInt(0, particles.size());
+  particles.at(rand)->activate();
+  registerActivation(particles.at(rand));
 }
 
 void AmoebotSystem::activateParticleAt(Node node) {

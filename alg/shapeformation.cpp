@@ -361,3 +361,8 @@ bool ShapeFormationSystem::hasTerminated() const {
 
   return true;
 }
+
+std::set<QString> ShapeFormationSystem::getAcceptedModes() {
+  std::set<QString> set = {"h", "t1", "t2", "s"};
+  return set;
+}

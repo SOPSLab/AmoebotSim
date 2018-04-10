@@ -275,12 +275,18 @@ void ScriptInterface::rectangle(const int numParticles, const float holeProb) {
 
 void ScriptInterface::shapeformation(const int numParticles,
                                      const float holeProb, const QString mode) {
+  std::set<QString> set = ShapeFormationSystem::getAcceptedModes();
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
     log("holeProb in [0,1] required", true);
-  } else if (mode != "h" && mode != "s" && mode != "t1" && mode != "t2") {
-    log("mode is not recognized", true);
+  } else if (set.find(mode) == set.end()) {
+    QString accepted = "";
+    for(std::set<QString>::iterator it = set.begin(); it != set.end(); ++it) {
+      if (accepted != "") accepted = accepted + ", " + *it;
+      else accepted = *it;
+    }
+    log("only accepted modes are: " + accepted, true);
   } else {
     sim.setSystem(std::make_shared<ShapeFormationSystem>(numParticles, holeProb,
                                                          mode));
