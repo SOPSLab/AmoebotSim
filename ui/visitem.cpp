@@ -106,8 +106,8 @@ void VisItem::paint()
 
     if(system != nullptr) {
         QMutexLocker locker(&system->mutex);
+
         drawParticles();
-        drawTiles();
 
         // Draw Convex Hull Appproximate only if the convex hull algorithm is simulated
         if(system->size() >= 1 and std::dynamic_pointer_cast<ConvexHullSystem>(system)) {
@@ -119,6 +119,8 @@ void VisItem::paint()
 
             drawConvexHull();
         }
+
+        drawTiles();
     }
 }
 
@@ -296,8 +298,9 @@ void VisItem::drawConvexHull()
     std::vector<Node> convexVertices = std::dynamic_pointer_cast<ConvexHullSystem>(system)->getConvexHullApproximate();
 
     glfn->glDisable(GL_TEXTURE_2D);
-    glfn->glColor3f(0, 0.302, 0.545);
-    glfn->glLineWidth(3.0f);
+    glfn->glColor4f(0.2, 0.2, 0.2, 0.5);
+
+    glfn->glLineWidth(2.5f);
 
     for(int i = 0; i < 6; i++) {
         auto start_w = nodeToWorldCoord(convexVertices[i]);

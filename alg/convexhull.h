@@ -11,12 +11,9 @@
 class ConvexHullParticle : public AmoebotParticle {
  public:
   enum class State {
-    LeaderStart,
-    LeaderMove,
-    TreeStart,
-    TreeWait,
-    TreeMove,
-    Follow,
+    Leader,
+    Idle,
+    Follower,
     Done
   };
 
@@ -41,14 +38,8 @@ class ConvexHullParticle : public AmoebotParticle {
   // Checks if the neighbor in a given direction is in a certain state
   bool neighborInDirIsInState(int dir, std::initializer_list<State> states) const;
 
-  // Checks whether this particle has a waiting child during the tree construction
-  bool hasWaitingChild() const;
-
   // Function called by the leader to swap itself with a tree particle
-  void swapWithTreeParticleInDir(int dir);
-
-  // Function called from the leader to a tree particle
-  void swapWithLeaderParticleInDir(int dir);
+  void swapWithFollowerInDir(int dir);
 
   // Checks whether the particle has a child (an adjacent tree particle that point at it)
   bool hasChild() const;
