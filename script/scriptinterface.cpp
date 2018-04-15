@@ -4,7 +4,6 @@
 #include <math.h>
 
 #include "alg/legacy/boundedobjcoating.h"
-#include "alg/legacy/compaction.h"
 #include "alg/legacy/leaderelection.h"
 #include "alg/legacy/leaderelectiondemo.h"
 #include "alg/legacy/legacysystem.h"
@@ -12,6 +11,7 @@
 #include "alg/legacy/universalcoating.h"
 #include "alg/2sitecbridge.h"
 #include "alg/adder.h"
+#include "alg/compaction.h"
 #include "alg/compression.h"
 #include "alg/convexhull.h"
 #include "alg/edgedetect.h"
@@ -152,6 +152,16 @@ void ScriptInterface::adder(const int numParticles, int countValue) {
     log("# particles must be > 0", true);
   } else {
     sim.setSystem(std::make_shared<AdderSystem>(numParticles, countValue));
+  }
+}
+
+void ScriptInterface::compaction(const int numParticles, const float holeProb) {
+  if (numParticles <= 0) {
+    log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    log("holeProb in [0,1] required", true);
+  } else {
+    sim.setSystem(std::make_shared<CompactionSystem>(numParticles, holeProb));
   }
 }
 
@@ -357,14 +367,6 @@ void ScriptInterface::boundedobjcoating(const int numStaticParticles,
   } else {
     sim.setSystem(BoundedObjCoating::BoundedObjCoating::instance(
         numStaticParticles, numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::compaction(const int numParticles) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else {
-    sim.setSystem(Compaction::Compaction::instance(numParticles));
   }
 }
 

@@ -24,7 +24,6 @@ HEADERS += \
     alg/ring.h \
     alg/line.h \
     alg/legacy/boundedobjcoating.h \
-    alg/legacy/compaction.h \
     alg/legacy/universalcoating.h \
     alg/legacy/leaderelectiondemo.h \
     alg/legacy/leaderelection.h \
@@ -57,7 +56,8 @@ HEADERS += \
     alg/convexhull.h \
     sim/tile.h \
     alg/shapeformation.h \
-    alg/holeelimination.h
+    alg/holeelimination.h \
+    alg/compaction.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -72,7 +72,6 @@ SOURCES += \
     alg/ring.cpp \
     alg/line.cpp \
     alg/legacy/boundedobjcoating.cpp \
-    alg/legacy/compaction.cpp \
     alg/legacy/universalcoating.cpp \
     alg/legacy/leaderelectiondemo.cpp \
     alg/legacy/leaderelection.cpp \
@@ -102,7 +101,8 @@ SOURCES += \
     alg/convexhull.cpp \
     sim/tile.cpp \
     alg/shapeformation.cpp \
-    alg/holeelimination.cpp
+    alg/holeelimination.cpp \
+    alg/compaction.cpp
 
 RESOURCES += \
     res/qml.qrc \

@@ -77,7 +77,6 @@ class HoleEliminationParticle : public AmoebotParticle {
   // particles.
   int adjFinishedNbrsDir() const;
 
-
  protected:
   State state;
   int axisDir;

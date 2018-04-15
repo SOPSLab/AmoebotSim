@@ -1,353 +1,262 @@
-#include <algorithm> // used for find()
-#include <math.h> // used for random number generation
+#include <algorithm>  // For distance() and find().
 #include <QtGlobal>
 #include <set>
+#include <vector>
 
 #include "alg/compression.h"
-#include "alg/localparticle.h"
 
 CompressionParticle::CompressionParticle(const Node head,
                                          const int globalTailDir,
                                          const int orientation,
                                          AmoebotSystem& system,
                                          const float lambda)
-    : AmoebotParticle(head, globalTailDir, orientation, system),
-      lambda(lambda)
-{
-    q = 0; numNeighbors = 0; numTriBefore = 0; flag = false;
+  : AmoebotParticle(head, globalTailDir, orientation, system),
+    lambda(lambda),
+    q(0),
+    numNbrsBefore(0),
+    flag(false) {}
+
+void CompressionParticle::activate() {
+  if (isContracted()) {
+    int expandDir = randDir();  // Select a random neighboring location.
+    q = randFloat(0, 1);        // Select a random q in (0,1).
+
+    if (canExpand(expandDir) && !hasExpNbr()) {
+      // Count neighbors in original position and expand.
+      numNbrsBefore = nbrCount(uniqueLabels());
+      expand(expandDir);
+      flag = !hasExpNbr();
+    }
+  } else {  // isExpanded().
+    if (!flag || numNbrsBefore == 5) {
+      contractHead();
+    } else {
+      // Count neighbors in new position and compute the set S.
+      int numNbrsAfter = nbrCount(headLabels());
+      std::vector<int> S;
+      for (const int label : {headLabels()[4], tailLabels()[4]}) {
+        if (hasNbrAtLabel(label) && !hasExpHeadAtLabel(label)) {
+          S.push_back(label);
+        }
+      }
+
+      // If the conditions are satisfied, contract to the new position;
+      // otherwise, contract back to the original one.
+      if ((q < pow(lambda, numNbrsAfter - numNbrsBefore))
+          && (checkProp1(S) || checkProp2(S))) {
+        contractTail();
+      } else {
+        contractHead();
+      }
+    }
+  }
 }
 
-void CompressionParticle::activate()
-{
-    if(isContracted()) {
+QString CompressionParticle::inspectionText() const {
+  QString text;
+  text += "Global Info:\n";
+  text += "  head: (" + QString::number(head.x) + ", "
+                      + QString::number(head.y) + ")\n";
+  text += "  orientation: " + QString::number(orientation) + "\n";
+  text += "  globalTailDir: " + QString::number(globalTailDir) + "\n\n";
+  text += "Properties:\n";
+  text += "  lambda = " + QString::number(lambda) + ",\n";
+  text += "  q in (0,1) = " + QString::number(q) + ",\n";
+  text += "  flag = " + QString::number(flag) + ".\n";
 
-        int expandDir = randDir(); // select a random neighboring location
-        q = randFloat(0,1); // select a random q in (0,1)
+  if(isContracted()) {
+    text += "Contracted properties:\n";
+    text += "  #neighbors before = " + QString::number(numNbrsBefore) + ",\n";
+  } else {  // isExpanded().
+    text += "Expanded properties:\n";
+    text += "  #neighbors before = " + QString::number(numNbrsBefore) + ",\n";
+    text += "  #neighbors after = " + QString::number(nbrCount(headLabels()))
+            + ".\n";
+  }
 
-        if(canExpand(expandDir) && !hasExpandedNeighbor()) {
-            // count neighbors and triangles before expansion
-            numNeighbors = neighborCount(uniqueLabels());
-            numTriBefore = triangleCount();
-
-            expand(expandDir); // expand to the unoccupied position
-
-            flag = !hasExpandedNeighbor();
-        }
-    }
-    else { // is expanded
-        if(flag && numNeighbors != 5) { // can only attempt to contract to new location if flag == TRUE and original position does not have 5 neighbors
-            // count triangles formed in new location
-            int numTriAfter = triangleCount();
-
-            // compute the number of particles that will be in set S after expansion
-            int sizeS = 0;
-            if(hasNbrAtLabel(headLabels()[0]) && !(nbrAtLabel(headLabels()[0]).isExpanded() && nbrAtLabel(headLabels()[0]).pointsAtMyHead(*this, headLabels()[0]))) {
-                ++sizeS;
-            }
-            if(hasNbrAtLabel(headLabels()[4]) && !(nbrAtLabel(headLabels()[4]).isExpanded() && nbrAtLabel(headLabels()[4]).pointsAtMyHead(*this, headLabels()[4]))) {
-                ++sizeS;
-            }
-
-            // check if the bias probability is satisfied and the locations satisfy property 1 or 2
-            if((q < pow(lambda, numTriAfter - numTriBefore)) && (checkProp1(sizeS) || checkProp2(sizeS))) {
-                contractTail(); // contract to new location
-            }
-            else {
-                contractHead(); // contract back to original location
-            }
-        }
-        else {
-            contractHead(); // contract back to original location
-        }
-    }
-
-    return;
+  return text;
 }
 
-QString CompressionParticle::inspectionText() const
-{
-    QString text;
-    text = "Properties:\n";
-    text += "    lambda = " + QString::number(lambda) + ",\n";
-    text += "    q in (0,1) = " + QString::number(q) + ",\n";
-    text += "    flag = " + QString::number(flag) + ".\n";
-
-    if(isContracted()) {
-        text += "Contracted properties:\n";
-        text += "    numNeighbors in first position = " + QString::number(numNeighbors) + ",\n";
-        text += "    numTriangles in first position = " + QString::number(numTriBefore) + ".\n";
-    }
-    else { // is expanded
-        text += "Expanded properties:\n";
-        text += "    numNeighbors in first position = " + QString::number(numNeighbors) + ",\n";
-        text += "    numTriangles in first position = " + QString::number(numTriBefore) + ",\n";
-        text += "    numTriangles in second position = " + QString::number(triangleCount()) + ",\n";
-    }
-
-    return text;
+CompressionParticle& CompressionParticle::nbrAtLabel(int label) const {
+  return AmoebotParticle::nbrAtLabel<CompressionParticle>(label);
 }
 
-CompressionParticle& CompressionParticle::nbrAtLabel(int label) const
-{
-    return AmoebotParticle::nbrAtLabel<CompressionParticle>(label);
+bool CompressionParticle::hasExpNbr() const {
+  for (const int label: uniqueLabels()) {
+    if (hasNbrAtLabel(label) && nbrAtLabel(label).isExpanded()) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
-bool CompressionParticle::hasExpandedNeighbor() const
-{
-    for(const int label: uniqueLabels()) {
-        if(hasNbrAtLabel(label) && nbrAtLabel(label).isExpanded()) {
-            return true;
-        }
-    }
-
-    return false;
+bool CompressionParticle::hasExpHeadAtLabel(const int label) const {
+  return hasNbrAtLabel(label) && nbrAtLabel(label).isExpanded()
+         && nbrAtLabel(label).pointsAtMyHead(*this, label);
 }
 
-int CompressionParticle::neighborCount(std::vector<int> labels) const
-{
-    int neighbors = 0;
-
-    for(const int label : labels) {
-        if(hasNbrAtLabel(label)) {
-            ++neighbors;
-        }
+int CompressionParticle::nbrCount(std::vector<int> labels) const {
+  int numNbrs = 0;
+  for (const int label : labels) {
+    if (hasNbrAtLabel(label) && !hasExpHeadAtLabel(label)) {
+      ++numNbrs;
     }
+  }
 
-    return neighbors;
+  return numNbrs;
 }
 
-int CompressionParticle::triangleCount() const
-{
-    int triangles = 0;
-    int limit = (isContracted()) ? 6 : 4; // contracted could have six triangles, expanded should at most four
+bool CompressionParticle::checkProp1(std::vector<int> S) const {
+  Q_ASSERT(isExpanded());
+  Q_ASSERT(S.size() <= 2);
+  Q_ASSERT(flag);  // Not required, but equivalent/cleaner for implementation.
 
-    for(int i = 0; i < limit; ++i) {
-        if(hasNbrAtLabel(headLabels()[i]) && hasNbrAtLabel(headLabels()[(i + 1) % headLabels().size()])) {
-            ++triangles;
+  if (S.size() == 0) {
+    return false;  // S has to be nonempty for Property 1.
+  } else {
+    const std::vector<int> labels = uniqueLabels();
+    std::set<int> adjNbrs;
+
+    // Starting from the particles in S, sweep out and mark connected neighbors.
+    for (int s : S) {
+      adjNbrs.insert(s);
+      int i = distance(labels.begin(), find(labels.begin(), labels.end(), s));
+
+      // First sweep counter-clockwise, stopping when an unoccupied position or
+      // expanded head is encountered.
+      for (uint offset = 1; offset < labels.size(); ++offset) {
+        int label = labels[(i + offset) % labels.size()];
+        if (hasNbrAtLabel(label) && !hasExpHeadAtLabel(label)) {
+          adjNbrs.insert(label);
+        } else {
+          break;
         }
+      }
+
+      // Then sweep clockwise.
+      for (uint offset = 1; offset < labels.size(); ++offset) {
+        int label = labels[(i - offset + labels.size()) % labels.size()];
+        if (hasNbrAtLabel(label) && !hasExpHeadAtLabel(label)) {
+          adjNbrs.insert(label);
+        } else {
+          break;
+        }
+      }
     }
 
-    return triangles;
+    // If all neighbors are connected to a particle in S by a path through the
+    // neighborhood, then the number of labels in adjNbrs should equal the total
+    // number of neighbors.
+    return adjNbrs.size() == (uint)nbrCount(labels);
+  }
 }
 
-bool CompressionParticle::checkProp1(const int sizeS) const
-{
-    Q_ASSERT(isExpanded());
-    Q_ASSERT(0 <= sizeS && sizeS <= 2);
-    Q_ASSERT(flag); // not required by algorithm, but equivalent and cleaner for our implementation
+bool CompressionParticle::checkProp2(std::vector<int> S) const {
+  Q_ASSERT(isExpanded());
+  Q_ASSERT(S.size() <= 2);
+  Q_ASSERT(flag);  // Not required, but equivalent/cleaner for implementation.
 
-    if(sizeS != 0) { // S has to be nonempty for Property 1
-        const std::vector<int> allLabels = uniqueLabels();
-        const std::vector<int> occLabels = occupiedLabelsNoExpandedHeads();
+  if (S.size() != 0) {
+    return false;  // S has to be empty for Property 2.
+  } else {
+    const int numHeadNbrs = nbrCount(headLabels());
+    const int numTailNbrs = nbrCount(tailLabels());
 
-        // find the first position which is occupied but the previous (clockwise) is not
-        int firstOccupiedIndex = -1;
-        for(int i = 0; (size_t)i < allLabels.size(); ++i) {
-            if(std::find(occLabels.begin(), occLabels.end(), allLabels[i]) != occLabels.end() &&
-               std::find(occLabels.begin(), occLabels.end(), allLabels[(i + allLabels.size() - 1) % allLabels.size()]) == occLabels.end()) {
-                firstOccupiedIndex = i;
-                break;
-            }
-        }
-        Q_ASSERT(firstOccupiedIndex != -1); // DEBUG: sanity check
-
-        // proceeding counter-clockwise, count the number of consecutive occupied positions
-        int consecutiveCount = 0;
-        for(int offset = 0; (size_t)offset < allLabels.size(); ++offset) {
-            if(std::find(occLabels.begin(), occLabels.end(), allLabels[(firstOccupiedIndex + offset) % allLabels.size()]) != occLabels.end()) {
-                ++consecutiveCount;
-            }
-            else {
-                break;
-            }
-        }
-
-        return (size_t)consecutiveCount == occLabels.size();
+    // Check if the head's neighbors are connected.
+    int numAdjHeadNbrs = 0;
+    bool seenNbr = false;
+    for (const int label : headLabels()) {
+      if (hasNbrAtLabel(label) && !hasExpHeadAtLabel(label)) {
+        seenNbr = true;
+        ++numAdjHeadNbrs;
+      } else if (seenNbr) {
+        break;
+      }
     }
-    else {
-        return false;
+
+    // Check if the tail's neighbors are connected.
+    int numAdjTailNbrs = 0;
+    seenNbr = false;
+    for (const int label : tailLabels()) {
+      if (hasNbrAtLabel(label) && !hasExpHeadAtLabel(label)) {
+        seenNbr = true;
+        ++numAdjTailNbrs;
+      } else if (seenNbr) {
+        break;
+      }
     }
+
+    // Property 2 is satisfied if both the head and tail have at least one
+    // neighbor and all head (tail) neighbors are connected.
+    return (numHeadNbrs > 0) && (numTailNbrs > 0) &&
+           (numHeadNbrs == numAdjHeadNbrs) && (numTailNbrs == numAdjTailNbrs);
+  }
 }
 
-bool CompressionParticle::checkProp2(const int sizeS) const
-{
-    Q_ASSERT(isExpanded());
-    Q_ASSERT(0 <= sizeS && sizeS <= 2);
-    Q_ASSERT(flag); // not required by algorithm, but equivalent and cleaner for our implementation
 
-    const std::vector<int> occLabels = occupiedLabelsNoExpandedHeads();
+CompressionSystem::CompressionSystem(int numParticles, float lambda) {
+  Q_ASSERT(lambda > 1);
 
-    if(sizeS == 0) { // S has to be empty for Property 2
-        // both nodes occupied by the particle need to have at least one neighbor
-        bool hasHeadNeighbor = false, hasTailNeighbor = false;
-        for(int i = 1; i <= 3; ++i) { // only need the head labels not in S
-            if(std::find(occLabels.begin(), occLabels.end(), headLabels()[i]) != occLabels.end()) {
-                hasHeadNeighbor = true;
-                break;
-            }
+  if (lambda <= 2.17) {  // In the proven range of expansion, make a hexagon.
+    int x, y;
+    for (int i = 1; i <= numParticles; ++i) {
+      int layer = 1;
+      int position = i - 1;
+      while (position - (6 * layer) >= 0) {
+        position -= 6 * layer;
+        ++layer;
+      }
+
+      switch(position / layer) {
+        case 0: {
+          x = layer;
+          y = (position % layer) - layer;
+          if (position % layer == 0) {x -= 1; y += 1;}  // Corner case.
+          break;
         }
-        for(int i = 1; i <= 3; ++i) { // only need the tail labels not in S
-            if(std::find(occLabels.begin(), occLabels.end(), tailLabels()[i]) != occLabels.end()) {
-                hasTailNeighbor = true;
-                break;
-            }
+        case 1: {
+          x = layer - (position % layer);
+          y = position % layer;
+          break;
         }
-
-        // all neighbors of the head must be consecutive
-        bool hasConsecutiveHead = false;
-        if(hasHeadNeighbor) {
-            int firstOccupiedHeadIndex = -1;
-            for(int i = 1; i <= 3; ++i) { // again, we only care about the head labels not in S
-                if(std::find(occLabels.begin(), occLabels.end(), headLabels()[i]) != occLabels.end()) {
-                    firstOccupiedHeadIndex = i;
-                    break;
-                }
-            }
-            Q_ASSERT(firstOccupiedHeadIndex != -1); // DEBUG: sanity check
-
-            int consecutiveHeadCount = 0;
-            for(int i = firstOccupiedHeadIndex; i <= 3; ++i) { // iterate from the first occupied head index to the last head label before S (headLabel[3])
-                if(std::find(occLabels.begin(), occLabels.end(), headLabels()[i]) != occLabels.end()) {
-                    ++consecutiveHeadCount;
-                }
-                else {
-                    break;
-                }
-            }
-
-            // count number of head labels (not in S) in occLabels
-            int totalHeadNeighbors = 0;
-            for(int i = 1; i <= 3; ++i) {
-                if(std::find(occLabels.begin(), occLabels.end(), headLabels()[i]) != occLabels.end()) {
-                    ++totalHeadNeighbors;
-                }
-            }
-
-            hasConsecutiveHead = consecutiveHeadCount == totalHeadNeighbors;
+        case 2: {
+          x = -1 * (position % layer);
+          y = layer;
+          break;
         }
-
-        // all neighbors of the tail must be consecutive
-        bool hasConsecutiveTail = false;
-        if(hasTailNeighbor) {
-            int firstOccupiedTailIndex = -1;
-            for(int i = 1; i <= 3; ++i) { // again, only need tail labels not in S
-                if(std::find(occLabels.begin(), occLabels.end(), tailLabels()[i]) != occLabels.end()) {
-                    firstOccupiedTailIndex = i;
-                    break;
-                }
-            }
-            Q_ASSERT(firstOccupiedTailIndex != -1); // DEBUG: sanity check
-
-            int consecutiveTailCount = 0;
-            for(int i = firstOccupiedTailIndex; i <= 3; ++i) { // iterate from first occupied tail label to last tail label before S (tailLabel[3])
-                if(std::find(occLabels.begin(), occLabels.end(), tailLabels()[i]) != occLabels.end()) {
-                    ++consecutiveTailCount;
-                }
-                else {
-                    break;
-                }
-            }
-
-            // count number of tail labels (not in S) in occLabels
-            int totalTailNeighbors = 0;
-            for(int i = 1; i <= 3; ++i) {
-                if(std::find(occLabels.begin(), occLabels.end(), tailLabels()[i]) != occLabels.end()) {
-                    ++totalTailNeighbors;
-                }
-            }
-
-            hasConsecutiveTail = consecutiveTailCount == totalTailNeighbors;
+        case 3: {
+          x = -1 * layer;
+          y = layer - (position % layer);
+          break;
         }
+        case 4: {
+          x = (position % layer) - layer;
+          y = -1 * (position % layer);
+          break;
+        }
+        case 5: {
+          x = (position % layer);
+          y = -1 * layer;
+          break;
+        }
+      }
 
-        return hasHeadNeighbor && hasTailNeighbor && hasConsecutiveHead && hasConsecutiveTail;
+      insert(new CompressionParticle(Node(x, y), -1, randDir(), *this, lambda));
     }
-    else {
-        return false;
+  } else {  // In the unknown range or compression range, make a straight line.
+    for (int i = 0; i < numParticles; ++i) {
+      insert(new CompressionParticle(Node(i, 0), -1, randDir(), *this, lambda));
     }
+  }
 }
 
-const std::vector<int> CompressionParticle::uniqueLabels() const
-{
-    if(isContracted()) {
-        return {0, 1, 2, 3, 4, 5};
-    }
-    else { // is expanded
-        std::vector<int> labels;
-        for(int label = 0; label < 10; ++label) {
-            if(nbrNodeReachedViaLabel(label) != nbrNodeReachedViaLabel((label + 9) % 10)) {
-                labels.push_back(label);
-            }
-        }
-
-        Q_ASSERT(labels.size() == 8); // DEBUG: sanity check
-        return labels;
-    }
-}
-
-const std::vector<int> CompressionParticle::occupiedLabelsNoExpandedHeads() const
-{
-    Q_ASSERT(flag); // expanded particles with flag == TRUE can ignore heads of expanded neighbors since their flag == FALSE
-
-    std::vector<int> labels;
-    for(const int label : uniqueLabels()) {
-        // if the label points at the head of an expanded neighboring particle, do not include it
-        if(hasNbrAtLabel(label) && !(nbrAtLabel(label).isExpanded() && nbrAtLabel(label).pointsAtMyHead(*this, label)))
-        {
-            labels.push_back(label);
-        }
-    }
-
-    return labels;
-}
-
-CompressionSystem::CompressionSystem(int numParticles, float lambda)
-{
-    Q_ASSERT(lambda > 1);
-
-    if(lambda <= 2.17) { // expansion
-        // generate a hexagon
-        int posx, posy;
-        for(int i = 1; i <= numParticles; ++i) {
-            int layer = 1;
-            int position = i - 1;
-            while(position - (6 * layer) >= 0) {
-                position -= 6 * layer;
-                ++layer;
-            }
-
-            switch(position / layer) {
-                case 0: {
-                    posx = layer;
-                    posy = (position % layer) - layer;
-                    if(position % layer == 0) {posx -= 1; posy += 1;} // addresses a corner case
-                    break;
-                }
-                case 1: {posx = layer - (position % layer); posy = position % layer; break;}
-                case 2: {posx = -1 * (position % layer); posy = layer; break;}
-                case 3: {posx = -1 * layer; posy = layer - (position % layer); break;}
-                case 4: {posx = (position % layer) - layer; posy = -1 * (position % layer); break;}
-                case 5: {posx = (position % layer); posy = -1 * layer; break;}
-            }
-
-            insert(new CompressionParticle(Node(posx, posy), -1, randDir(), *this, lambda));
-        }
-    }
-    else { // lambda is in unknown zone, attempt compression
-        // generate a straight line of particles
-        for(int i = 0; i < numParticles; ++i) {
-            insert(new CompressionParticle(Node(i, 0), -1, randDir(), *this, lambda));
-        }
-    }
-}
-
-bool CompressionSystem::hasTerminated() const
-{
-#ifdef QT_DEBUG
-    // terminates on disconnection
-    if(!isConnected(particles)) {
+bool CompressionSystem::hasTerminated() const {
+  #ifdef QT_DEBUG
+    if (!isConnected(particles)) {
         return true;
     }
-#endif
+  #endif
 
-    return false;
+  return false;
 }

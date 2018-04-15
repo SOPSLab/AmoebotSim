@@ -45,6 +45,9 @@ class LocalParticle : public Particle {
   int labelToDir(int label) const;
   int labelToDirAfterExpansion(int label, int expansionDir) const;
 
+  // Returns a list of labels which uniquely address the neighboring nodes.
+  const std::vector<int> uniqueLabels() const;
+
   // Functions for accessing labels specifically indicent to the head or tail.
   // headLabels (respectively, tailLabels) returns a vector of labels of edges
   // incident to the particle's head (respectively, tail). isHeadLabel (resp.,
