@@ -86,42 +86,40 @@ void VisItem::initialize()
     connect(&renderTimer, &QTimer::timeout, window(), &QQuickWindow::update);
 }
 
-void VisItem::paint()
-{
-    glfn->glUseProgram(0);
+void VisItem::paint() {
+  glfn->glUseProgram(0);
 
-    glfn->glViewport(0, 0, width(), height());
+  glfn->glViewport(0, 0, width(), height());
 
-    glfn->glDisable(GL_DEPTH_TEST);
-    glfn->glDisable(GL_CULL_FACE);
+  glfn->glDisable(GL_DEPTH_TEST);
+  glfn->glDisable(GL_CULL_FACE);
 
-    glfn->glEnable(GL_BLEND);
-    glfn->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glfn->glEnable(GL_BLEND);
+  glfn->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glfn->glEnable(GL_TEXTURE_2D);
+  glfn->glEnable(GL_TEXTURE_2D);
 
-    setupCamera();
+  setupCamera();
 
-    drawGrid();
+  drawGrid();
 
-    if(system != nullptr) {
-        QMutexLocker locker(&system->mutex);
+  if(system != nullptr) {
+    QMutexLocker locker(&system->mutex);
 
-        drawParticles();
+    drawParticles();
 
-        // Draw Convex Hull Appproximate only if the convex hull algorithm is simulated
-        if(system->size() >= 1 and std::dynamic_pointer_cast<ConvexHullSystem>(system)) {
+    // Draw Convex Hull Appproximate only if the convex hull algorithm is simulated
+    if(system->size() >= 1 and std::dynamic_pointer_cast<ConvexHullSystem>(system)) {
+      glfn->glEnable( GL_LINE_SMOOTH );
+      glfn->glEnable( GL_POLYGON_SMOOTH );
+      glfn->glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
+      glfn->glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
 
-            glEnable( GL_LINE_SMOOTH );
-            glEnable( GL_POLYGON_SMOOTH );
-            glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
-            glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
-
-            drawConvexHull();
-        }
-
-        drawTiles();
+      drawConvexHull();
     }
+
+    drawTiles();
+  }
 }
 
 void VisItem::deinitialize()

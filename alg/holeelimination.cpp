@@ -86,7 +86,7 @@ QString HoleEliminationParticle::inspectionText() const {
   text += "  state: ";
   text += [this](){
     switch(state) {
-    case State::Seed:     return "object\n";
+    case State::Seed:     return "seed\n";
     case State::Inactive: return "inactive\n";
     case State::Walking:  return "walking\n";
     case State::Follower: return "follower\n";

@@ -59,6 +59,22 @@ int LocalParticle::labelToDirAfterExpansion(int label, int expansionDir) const {
   return labelDir[(expansionDir + 3) % 6][label];
 }
 
+const std::vector<int> LocalParticle::uniqueLabels() const {
+  std::vector<int> labels;
+  if (isContracted()) {
+    labels = sixLabels;
+  } else { // isExpanded().
+    for (int label = 0; label < 10; ++label) {
+      if (nbrNodeReachedViaLabel(label) !=
+          nbrNodeReachedViaLabel((label + 9) % 10)) {
+        labels.push_back(label);
+      }
+    }
+  }
+
+  return labels;
+}
+
 const std::vector<int>& LocalParticle::headLabels() const {
   Q_ASSERT(-1 <= globalTailDir && globalTailDir < 6);
 

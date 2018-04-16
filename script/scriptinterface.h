@@ -66,6 +66,7 @@ class ScriptInterface : public QObject {
   // Non-legacy algorithm instance commands. Documentation for foo() can be
   // found in alg/foo.h.
   void adder(const int numParticles = 10, int countValue = 250);
+  void compaction(const int numParticles = 100, const float holdProb = 0.4);
   void compression(const int numParticles = 100, const float lambda = 4.0);
   void convexhull(const int numParticles = 20, const int numTiles = 200, const float holeProb = 0.1);
   void edgedetect(const int numParticles = 10, int countValue = 250);
@@ -86,7 +87,6 @@ class ScriptInterface : public QObject {
   // Legacy algorithm instance commands. Documentation for foo() can be found in
   // alg/legacy/foo.h.
   void boundedobjcoating(const int numStaticParticles, const int numParticles, const float holeProb = 0.2);
-  void compaction(const int numParticles = 100);
   void leaderelection(const int numParticles = 100);
   void leaderelectiondemo();
   void ring(const int numParticles = 100, const float holeProb = 0.0);
