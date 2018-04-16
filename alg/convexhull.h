@@ -11,10 +11,16 @@
 class ConvexHullParticle : public AmoebotParticle {
  public:
   enum class State {
-    Leader,
     Idle,
+    Leader,
+    LeaderWait,
+    LeaderOrtho,
+    LeaderDone,
     Follower,
-    Done
+    FollowerWait,
+    FollowerWait2,
+    FollowerDone,
+    FollowerOrtho
   };
 
   // Constructs a new particle with a node position for its head, a global
@@ -43,6 +49,9 @@ class ConvexHullParticle : public AmoebotParticle {
 
   // Checks whether the particle has a child (an adjacent tree particle that point at it)
   bool hasChild() const;
+
+  // Checks whether all children are already done
+  bool allChildrenDone() const;
 
   // Pulls in a child, if possible
   void pullChildIfPossible();
@@ -74,8 +83,21 @@ class ConvexHullParticle : public AmoebotParticle {
   // Stores the distance to each halfplane. Must be replaced by tokens eventually.
   std::vector<int> distance;
 
-  // Used for detecting termination.
+  // Used for detecting termination of phase 1
   std::vector<int> completed;
+
+  // Used for detecting termination of phase 2
+  int turns;
+
+  // Flag to detect whether the particle lies on the hull after contraction
+  bool preHull;
+
+  // Flag to detect whether the particle is on the hull
+  bool onHull;
+
+  // Successor and Predecessor pointers for ortho-convex hull
+  int successor;
+  int predecessor;
 
  private:
   friend class ConvexHullSystem;
