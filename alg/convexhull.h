@@ -32,6 +32,12 @@ class ConvexHullParticle : public AmoebotParticle {
   // Executes one particle activation.
   virtual void activate();
 
+  // Updates the distance vector according to move direction
+  void updateDistances(int dir);
+
+  // Updates the completed vector according to move direction
+  void updateCompleted(int dir);
+
   // Returns the label of the first port incident to a neighboring particle in
   // any of the specified states, starting at the (optionally) specified label
   // and continuing clockwise.
@@ -41,8 +47,11 @@ class ConvexHullParticle : public AmoebotParticle {
   // Checks whether this particle has a neighbor in any of the given states.
   bool hasNeighborInState(std::initializer_list<State> states) const;
 
+  // Checks whether there is a hull neighbor in the given direction''
+  bool hasHullParticleInDir(int dir) const;
+
   // Checks if the neighbor in a given direction is in a certain state
-  bool neighborInDirIsInState(int dir, std::initializer_list<State> states) const;
+  bool nbrInDirIsInState(int dir, std::initializer_list<State> states) const;
 
   // Function called by the leader to swap itself with a tree particle
   void swapWithFollowerInDir(int dir);

@@ -64,15 +64,30 @@ void ConvexHullParticle::activate() {
                     {
                         moveDir = (moveDir + checkDir) % 6;
 
-                        // Update completed vector
-                        if (distance[moveDir] == 0 or distance[((moveDir + 5) % 6)] == 0) std::fill(completed.begin(), completed.end(), 0);
-                        else {
-                            for (int i = 0; i < 6; i++) {
-                                if (distance[i] + delta[moveDir][i] == 0) completed[i] = 1;
-                            }
-                        }
+                        updateCompleted(moveDir);
+
+                        updateDistances(moveDir);
+
                         break;
                     }
+                }
+
+                // Check if there is a neighbor in moveDir (can be a non-hull Follower or an Idle Particle)
+                if(hasNbrAtLabel(moveDir)) {
+                    if (canPush(moveDir)) {
+                        if (hasHeadAtLabel(moveDir)) {
+                            ConvexHullParticle& p = nbrAtLabel<ConvexHullParticle>(moveDir);
+                            p.parentDir = (p.tailDir() + 3) % 6;
+                        }
+                        push(moveDir);
+                    }
+                    else {
+                        // Swap leader role
+                        swapWithFollowerInDir(moveDir);
+                    }
+                }
+                else {
+                    expand(moveDir);
                 }
             }
 
@@ -87,41 +102,41 @@ void ConvexHullParticle::activate() {
                 }
 
                 // Check if already completed Phase 2
-                if (turns == 14 && hasTileAtLabel((moveDir+5) % 6)) {
+                if (turns >= 14 && hasTileAtLabel((moveDir+5) % 6)) {
                     state = State::LeaderWait;
                     return;
                 }
 
-                // Wait on hull particles
-                ConvexHullParticle& nbr = nbrAtLabel<ConvexHullParticle>(moveDir);
-                if (nbr.state == State::Follower && nbr.onHull == true) {
-                    return;
-                }
-            }
+                // Otherwise: Move along convex hull
 
-            // Perform the move
+                updateDistances(moveDir);
 
-            // Update distances
-            for(int i = 0; i < 6; i++) distance[i] = std::max(0, distance[i] + delta[moveDir][i]);
-
-            // Check if there is a neighbor in moveDir (can be a non-hull Follower or an Idle Particle)
-            if(hasNbrAtLabel(moveDir)) {
-                if (canPush(moveDir)) {
-                    if (hasHeadAtLabel(moveDir)) {
-                        ConvexHullParticle& p = nbrAtLabel<ConvexHullParticle>(moveDir);
-                        p.parentDir = (p.tailDir() + 3) % 6;
-                    }
-                    push(moveDir);
+                if(!hasNbrAtLabel(moveDir)) {
+                    expand(moveDir);
                 }
                 else {
-                    // Swap leader role
-                    swapWithFollowerInDir(moveDir);
+                    Q_ASSERT(nbrInDirIsInState(moveDir, {State::Follower}));
+
+                    if (hasTailAtLabel(moveDir) && !hasHullParticleInDir(moveDir)) {
+                        // In this case only it is safe to push
+                        // We do not swap here since the particles head might lie outside the hull
+                        push(moveDir);
+                    }
+                    else if (hasTailAtLabel(moveDir) && hasHullParticleInDir(moveDir)) {
+                        // Here we do not push since we must give preference to non-hull particles
+                        // to enter the hull, but do not want to wait
+                        // In this special case we 'skip' a step (see implementation of swap method)
+
+                        swapWithFollowerInDir(moveDir);
+                    }
+                    else {
+                        // Might be (1) Contracted hull or non-hull particle
+                        // (2) Expanded prehull particle with head at moveDir
+                        // We swap in all those cases to make progress
+                        swapWithFollowerInDir(moveDir);
+                    }
                 }
             }
-            else {
-                expand(moveDir);
-            }
-
         }
     }
 
@@ -150,7 +165,7 @@ void ConvexHullParticle::activate() {
 //            }
         }
         else {
-            if (neighborInDirIsInState(parentDir, {State::LeaderWait, State::FollowerWait})) {
+            if (nbrInDirIsInState(parentDir, {State::LeaderWait, State::FollowerWait})) {
                 state = State::FollowerWait;
             }
             else {
@@ -166,16 +181,13 @@ void ConvexHullParticle::activate() {
             if (hasNbrAtLabel(moveDir)) {
                 // Set successor and predecessor pointers
                 successor = moveDir;
-
-                if (hasNbrAtLabel((moveDir+3) % 6) and neighborInDirIsInState((moveDir+3) % 6, {State::FollowerWait2})) {
+                if (hasHullParticleInDir((moveDir+3) % 6)) {
                     predecessor = (moveDir+3) % 6;
                 }
                 else {
-                    Q_ASSERT(hasNbrAtLabel((moveDir + 4) % 6));
-                    Q_ASSERT(neighborInDirIsInState((moveDir+4) % 6, {State::FollowerWait2}));
-                    predecessor = (moveDir+4) % 6;
+                    Q_ASSERT(hasHullParticleInDir((moveDir+4) % 6));
+                    predecessor = (moveDir + 4) % 6;
                 }
-
                 state = State::LeaderOrtho;
             }
             else {
@@ -189,20 +201,19 @@ void ConvexHullParticle::activate() {
     }
 
     else if (state == State::FollowerWait2) {
-        if (neighborInDirIsInState(parentDir, {State::LeaderDone, State::FollowerDone})) {
+        if (nbrInDirIsInState(parentDir, {State::LeaderDone, State::FollowerDone})) {
             state = State::FollowerDone;
         }
-        else if (neighborInDirIsInState(parentDir, {State::LeaderOrtho, State::FollowerOrtho})) {
+        else if (nbrInDirIsInState(parentDir, {State::LeaderOrtho, State::FollowerOrtho})) {
 
             if (onHull) {
                 // Set successor and predecessor pointers
                 successor = parentDir;
-                if (hasNbrAtLabel((parentDir+3) % 6) and neighborInDirIsInState((parentDir+3) % 6, {State::FollowerWait2})) {
+                if (hasHullParticleInDir((parentDir+3) % 6)) {
                     predecessor = (parentDir+3) % 6;
                 }
                 else {
-                    Q_ASSERT(hasNbrAtLabel((parentDir + 4) % 6));
-                    Q_ASSERT(neighborInDirIsInState((parentDir + 4) % 6, {State::FollowerWait2}));
+                    Q_ASSERT(hasHullParticleInDir((parentDir+4) % 6));
                     predecessor = (parentDir + 4) % 6;
                 }
                 parentDir = -1;
@@ -246,6 +257,7 @@ void ConvexHullParticle::activate() {
                             onHull = false;
                             successor = -1;
                             predecessor = -1;
+                            parentDir = dir;
                         }
                     }
                 }
@@ -293,17 +305,39 @@ void ConvexHullParticle::activate() {
 
 }
 
+void ConvexHullParticle::updateDistances(int dir) {
+    for(int i = 0; i < 6; i++) distance[i] = std::max(0, distance[i] + delta[dir][i]);
+}
+
+void ConvexHullParticle::updateCompleted(int dir) {
+    if (distance[dir] == 0 or distance[((dir + 5) % 6)] == 0) std::fill(completed.begin(), completed.end(), 0);
+    else {
+        for (int i = 0; i < 6; i++) {
+            if (distance[i] + delta[dir][i] == 0) completed[i] = 1;
+        }
+    }
+}
+
 bool ConvexHullParticle::hasNeighborInState(std::initializer_list<State> states) const {
   return labelOfFirstNbrInState(states) != -1;
 }
 
-bool ConvexHullParticle::neighborInDirIsInState(int dir, std::initializer_list<State> states) const {
+bool ConvexHullParticle::nbrInDirIsInState(int dir, std::initializer_list<State> states) const {
     Q_ASSERT(0 <= dir && dir < 6);
     Q_ASSERT(hasNbrAtLabel(dir));
 
     const ConvexHullParticle& p = nbrAtLabel<ConvexHullParticle>(dir);
     for (auto state : states) {
       if (p.state == state) return true;
+    }
+    return false;
+}
+
+bool ConvexHullParticle::hasHullParticleInDir(int dir) const {
+    Q_ASSERT(0 <= dir && dir < 10);
+    if (hasNbrAtLabel(dir) ) {
+        ConvexHullParticle& nbr = nbrAtLabel<ConvexHullParticle>(dir);
+        if (nbr.onHull == true) return true;
     }
     return false;
 }
@@ -325,13 +359,33 @@ int ConvexHullParticle::labelOfFirstNbrInState(std::initializer_list<State> stat
 void ConvexHullParticle::swapWithFollowerInDir(int dir) {
     Q_ASSERT(0 <= dir && dir < 6);
     Q_ASSERT(hasNbrAtLabel(dir));
-    Q_ASSERT(neighborInDirIsInState(dir, {State::Idle, State::Follower}));
+    Q_ASSERT(nbrInDirIsInState(dir, {State::Idle, State::Follower}));
 
     ConvexHullParticle& nbr = nbrAtLabel<ConvexHullParticle>(dir);
 
+    if (hasTailAtLabel(moveDir) && nbr.onHull) {
+            // Special case: We have to essentially 'skip' a step on the hull,
+            // taking care of distance updates etc.
+            Q_ASSERT(nbr.isExpanded());
+
+            int expansionDir = nbrDirToDir(nbr, ((nbr.tailDir() + 3) % 6));
+
+            updateCompleted(expansionDir);
+            updateDistances(expansionDir);
+
+            if (expansionDir == ((moveDir + 5) % 6)) {
+                // Add a turn, if the tail is on a corner
+                turns++;
+            }
+
+            moveDir = expansionDir;
+    }
+
     // Update Follower
     nbr.state = State::Leader;
+
     nbr.moveDir = dirToNbrDir(nbr, moveDir);
+
     nbr.parentDir = -1;
 
     int orientOffset = nbrDirToDir(nbr, 0);
@@ -344,7 +398,18 @@ void ConvexHullParticle::swapWithFollowerInDir(int dir) {
     }
 
     nbr.turns = turns;
-    nbr.onHull = onHull;
+
+    if (onHull) {
+        // only here prehull and onhull flags might have to be altered
+        if (nbr.isContracted()) {
+            nbr.onHull = true;
+        }
+        else if (hasHeadAtLabel(dir)){
+            nbr.preHull = true;
+        }
+        // If there is a tail at label, then it must be a hull particle already,
+        // since otherwise we would simply push
+    }
 
     // Update self
     state = State::Follower;
@@ -361,7 +426,7 @@ void ConvexHullParticle::swapWithFollowerInDir(int dir) {
 bool ConvexHullParticle::hasChild() const {
     auto propertyCheck = [&](const ConvexHullParticle& p) {
       return p.state == State::Follower &&
-             ((isContracted() && pointsAtMe(p, p.dirToHeadLabel(p.parentDir))) or
+             ((isContracted() && pointsAtMyHead(p, p.dirToHeadLabel(p.parentDir))) or
               (isExpanded() && pointsAtMyTail(p, p.dirToHeadLabel(p.parentDir))));
     };
 
@@ -432,7 +497,16 @@ int ConvexHullParticle::headMarkDir() const {
   if (state == State::Leader) {
     return moveDir;
   }
-  else if (state == State::Follower) {
+  else if (state == State::LeaderOrtho) {
+      return successor;
+  }
+  else if (state == State::Follower or state == State::FollowerDone) {
+      return parentDir;
+  }
+  else if (state == State::FollowerOrtho && onHull) {
+      return successor;
+  }
+  else if (state == State::FollowerOrtho && !onHull) {
       return parentDir;
   }
   return -1;
