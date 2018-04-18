@@ -37,7 +37,6 @@ HEADERS += \
     alg/amoebotparticle.h \
     alg/amoebotsystem.h \
     helper/randomnumbergenerator.h \
-    alg/tokendemo.h \
     script/scriptengine.h \
     alg/ising.h \
     alg/compression.h \
@@ -57,7 +56,9 @@ HEADERS += \
     sim/tile.h \
     alg/shapeformation.h \
     alg/holeelimination.h \
-    alg/compaction.h
+    alg/compaction.h \
+    alg/demo/pulldemo.h \
+    alg/demo/tokendemo.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -80,7 +81,6 @@ SOURCES += \
     alg/amoebotparticle.cpp \
     alg/amoebotsystem.cpp \
     helper/randomnumbergenerator.cpp \
-    alg/tokendemo.cpp \
     script/scriptinterface.cpp \
     script/scriptengine.cpp \
     ui/view.cpp \
@@ -102,7 +102,9 @@ SOURCES += \
     sim/tile.cpp \
     alg/shapeformation.cpp \
     alg/holeelimination.cpp \
-    alg/compaction.cpp
+    alg/compaction.cpp \
+    alg/demo/pulldemo.cpp \
+    alg/demo/tokendemo.cpp
 
 RESOURCES += \
     res/qml.qrc \

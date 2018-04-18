@@ -89,12 +89,12 @@ QString CompactionParticle::inspectionText() const {
   text += "  state: ";
   text += [this](){
     switch(state) {
-    case State::Seed:     return "seed\n";
-    case State::Inactive: return "inactive\n";
-    case State::Active:   return "active\n";
-    case State::Leader:   return "leader\n";
-    case State::Follower: return "follower\n";
-    default:              return "no state\n";
+      case State::Seed:     return "seed\n";
+      case State::Inactive: return "inactive\n";
+      case State::Active:   return "active\n";
+      case State::Leader:   return "leader\n";
+      case State::Follower: return "follower\n";
+      default:              return "no state\n";
     }
   }();
   text += "  followDir: " + QString::number(followDir) + "\n";

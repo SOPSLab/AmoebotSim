@@ -3,6 +3,8 @@
 #include <QTime>
 #include <math.h>
 
+#include "alg/demo/pulldemo.h"
+#include "alg/demo/tokendemo.h"
 #include "alg/legacy/boundedobjcoating.h"
 #include "alg/legacy/leaderelection.h"
 #include "alg/legacy/leaderelectiondemo.h"
@@ -26,7 +28,6 @@
 #include "alg/rectangle.h"
 #include "alg/shapeformation.h"
 #include "alg/sierpinski.h"
-#include "alg/tokendemo.h"
 #include "alg/twositeebridge.h"
 
 #include "script/scriptinterface.h"
@@ -143,6 +144,20 @@ void ScriptInterface::filmSimulation(QString filePath, const int roundLimit) {
     saveScreenshot(filePath + pad(i,fnameLen) + QString(".png"));
     round();
     ++i;
+  }
+}
+
+void ScriptInterface::pulldemo() {
+  sim.setSystem(std::make_shared<PullDemoSystem>());
+}
+
+void ScriptInterface::tokendemo(const int numParticles, const float holeProb) {
+  if (numParticles <= 0) {
+    log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    log("holeProb in [0,1] required", true);
+  } else {
+    sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
   }
 }
 
@@ -310,16 +325,6 @@ void ScriptInterface::sierpinski(const int numParticles, const float holeProb) {
     log("holeProb in [0,1] required", true);
   } else {
     sim.setSystem(std::make_shared<SierpinskiSystem>(numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::tokendemo(const int numParticles, const float holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
   }
 }
 

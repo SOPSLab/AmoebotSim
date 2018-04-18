@@ -63,6 +63,11 @@ class ScriptInterface : public QObject {
   void saveScreenshot(QString filePath = "");
   void filmSimulation(QString filePath, const int roundLimit);
 
+  // Non-legacy demonstration algorithm instance commands. Documentation for
+  // foo() can be found in alg/demo/foo.h.
+  void pulldemo();
+  void tokendemo(const int numParticles = 200, const float holeProb = 0.2);
+
   // Non-legacy algorithm instance commands. Documentation for foo() can be
   // found in alg/foo.h.
   void adder(const int numParticles = 10, int countValue = 250);
@@ -80,7 +85,6 @@ class ScriptInterface : public QObject {
   void rectangle(const int numParticles = 200, const float holeProb = 0.2);
   void shapeformation(const int numParticles = 200, const float holeProb = 0.2, const QString mode = "h");
   void sierpinski(const int numParticles = 200, const float holeProb = 0.2);
-  void tokendemo(const int numParticles = 200, const float holeProb = 0.2);
   void twositecbridge(const int numParticles = 100, const float lambda = 4.0, const float alpha = 1.0);
   void twositeebridge(const int numParticles = 200, const float explambda = 2.0, const float complambda = 4.0, const float siteDistance = 1.25);
 
