@@ -53,6 +53,9 @@ class ConvexHullParticle : public AmoebotParticle {
   // Checks if the neighbor in a given direction is in a certain state
   bool nbrInDirIsInState(int dir, std::initializer_list<State> states) const;
 
+  // Checks if the neighbor in a given direction is contracted
+  bool nbrInDirIsContracted(int dir) const;
+
   // Function called by the leader to swap itself with a tree particle
   void swapWithFollowerInDir(int dir);
 
@@ -96,7 +99,8 @@ class ConvexHullParticle : public AmoebotParticle {
   std::vector<int> completed;
 
   // Used for detecting termination of phase 2
-  int turns;
+  int turns_1;
+  int turns_2;
 
   // Flag to detect whether the particle lies on the hull after contraction
   bool preHull;
