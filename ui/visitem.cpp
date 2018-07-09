@@ -298,7 +298,7 @@ void VisItem::drawConvexHull()
     glfn->glDisable(GL_TEXTURE_2D);
     glfn->glColor4f(0.2, 0.2, 0.2, 0.5);
 
-    glfn->glLineWidth(2.5f);
+    glfn->glLineWidth(5.0f);
 
     for(int i = 0; i < 6; i++) {
         auto start_w = nodeToWorldCoord(convexVertices[i]);
