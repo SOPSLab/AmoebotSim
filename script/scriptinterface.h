@@ -58,6 +58,7 @@ class ScriptInterface : public QObject {
   // default path is created that ensures no previous screenshots are
   // overwritten. filmSimulation saves a series of screenshots to the specified
   // location, up to the specified number of rounds.
+  void setWindowSize(int width = 800, int height = 600);
   void focusOn(int x, int y);
   void setZoom(float zoom);
   void saveScreenshot(QString filePath = "");

@@ -108,6 +108,13 @@ int ScriptInterface::getStrongBound() {
   return sim.strongBounds();
 }
 
+void ScriptInterface::setWindowSize(int width, int height) {
+  if(vis != nullptr) {
+    vis->setWindowSize(width, height);
+  }
+}
+
+
 void ScriptInterface::focusOn(int x, int y) {
   if (vis != nullptr) {
     vis->focusOn(Node(x, y));

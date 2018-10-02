@@ -54,6 +54,12 @@ void VisItem::focusOnCenterOfMass()
     view.setFocusPos(sum / numNodes);
 }
 
+void VisItem::setWindowSize(int width, int height)
+{
+    window()->setWidth(width);
+    window()->setHeight(height);
+}
+
 void VisItem::focusOn(Node node)
 {
     view.setFocusPos(nodeToWorldCoord(node));

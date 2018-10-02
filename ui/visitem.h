@@ -32,6 +32,7 @@ signals:
 public slots:
     void systemChanged(std::shared_ptr<System> _system);
     void focusOnCenterOfMass();
+    void setWindowSize(int width, int height);
     void focusOn(Node node);
     void setZoom(float zoom);
     void saveScreenshot(QString filePath);
