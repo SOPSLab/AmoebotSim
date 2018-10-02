@@ -12,7 +12,9 @@ The following instructions should get you started working with AmoebotSim; pleas
 
 4. Choose your build directories.
 
-5. Run AmoebotSim by pressing the green _play_-button in the bottom left corner.
+5. [FOR WINDOWS] Navigate to _Projects_ (left side-bar) > _Build & Run_ > _Run_ > _Run Environment_. Navigate through the environment variables listed until you find the variable named QT_OPENGL. Make sure the value of this variable is configured to desktop (if the value is angle, you will get the warning "versionFunctions: Not supported on OpenGL ES" and the simulator will not run).
+
+6. Run AmoebotSim by pressing the green _play_-button in the bottom left corner.
 
 ###Development###
 
