@@ -14,6 +14,7 @@ protected:
     static int randInt(const int from, const int toNotIncluding);
     static int randDir();
     static float randFloat(const float from, const float toNotIncluding);
+    static double randDouble(const double from, const double toNotIncluding);
     static bool randBool(const double trueProb = 0.5);
 
     template <class Iterator>
@@ -56,6 +57,12 @@ inline int RandomNumberGenerator::randDir()
 inline float RandomNumberGenerator::randFloat(const float from, const float toNotIncluding)
 {
     std::uniform_real_distribution<float> dist(from, toNotIncluding);
+    return dist(rng);
+}
+
+inline double RandomNumberGenerator::randDouble(const double from, const double toNotIncluding)
+{
+    std::uniform_real_distribution<double> dist(from, toNotIncluding);
     return dist(rng);
 }
 

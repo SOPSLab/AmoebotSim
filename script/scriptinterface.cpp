@@ -28,6 +28,7 @@
 #include "alg/rectangle.h"
 #include "alg/shapeformation.h"
 #include "alg/sierpinski.h"
+#include "alg/swarmseparation.h"
 #include "alg/twositeebridge.h"
 
 #include "script/scriptinterface.h"
@@ -332,6 +333,16 @@ void ScriptInterface::sierpinski(const int numParticles, const float holeProb) {
     log("holeProb in [0,1] required", true);
   } else {
     sim.setSystem(std::make_shared<SierpinskiSystem>(numParticles, holeProb));
+  }
+}
+
+void ScriptInterface::swarmseparation(const int numParticles, const double randConstant) {
+  if (numParticles <= 0) {
+    log("# particles must be > 0", true);
+  } else if (randConstant < 0) {
+    log("randConstant >= 0 required", true);
+  } else {
+    sim.setSystem(std::make_shared<SwarmSeparationSystem>(numParticles, randConstant));
   }
 }
 
