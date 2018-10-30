@@ -79,9 +79,14 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   std::deque<Tile*> tiles;
   std::map<Node, Tile*> tileMap;
 
-
   unsigned int _numMovements;
   unsigned int _numRounds;
+
+ private:
+  // This friend class is here so that the swarm separation algorithm can access
+  // the list of particles, which is protected since this is usually global
+  // information that should be inaccessible to the algorithms.
+  friend class SwarmSeparationParticle;
 };
 
 #endif  // AMOEBOTSIM_ALG_AMOEBOTSYSTEM_H

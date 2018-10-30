@@ -1,27 +1,51 @@
 #include <cmath>
-#include <QDebug>
 #include <set>
 
 #include "swarmseparation.h"
 
 SwarmSeparationParticle::SwarmSeparationParticle(const Node head,
-                                               const int globalTailDir,
-                                               const int orientation,
-                                               AmoebotSystem& system,
-                                               State state,
-                                               double randConstant)
+                                                 const int globalTailDir,
+                                                 const int orientation,
+                                                 AmoebotSystem& system,
+                                                 State state, double c_rand,
+                                                 double c_repulse)
   : AmoebotParticle(head, globalTailDir, orientation, system),
     state(state),
-    randConstant(randConstant) {}
+    c_rand(c_rand),
+    c_repulse(c_repulse) {}
 
 void SwarmSeparationParticle::activate() {
-  int expandDir = vectorCalculation();
+  std::pair<double, double> moveVector = getMoveVector();
 
-  if (expandDir != -1) {
-    if (canExpand(expandDir)) {
-      expand(expandDir);
-      contractTail();
+  // Only move if the magnitude of the proposed movement is above a threshold.
+  int expandDir = -1;
+  double threshold = 0;
+  if (magnitude(moveVector) > threshold) {
+    // Get the angle of the move in degrees.
+    double angle = atan2(moveVector.second, moveVector.first) * 180.0 / M_PI;
+    if (angle < 0) {
+      angle += 360;
     }
+
+    // Map angles to movement directions on the triangular lattice.
+    if (30 <= angle && angle < 90) {
+      expandDir = 1;
+    } else if (90 <= angle && angle < 150) {
+      expandDir = 2;
+    } else if (150 <= angle && angle < 210) {
+      expandDir = 3;
+    } else if (210 <= angle && angle < 270) {
+      expandDir = 4;
+    } else if (270 <= angle && angle < 330) {
+      expandDir = 5;
+    } else {
+      expandDir = 0;
+    }
+  }
+
+  if (expandDir != -1 && canExpand(expandDir)) {
+    expand(expandDir);
+    contractTail();
   }
 }
 
@@ -53,64 +77,102 @@ QString SwarmSeparationParticle::inspectionText() const {
     Q_ASSERT(false);
   }
   text += "\n";
-  text += "randConstant: " + QString::number(randConstant) + "\n";
+  text += "c_rand: " + QString::number(c_rand) + "\n";
+  text += "c_repulse: " + QString::number(c_repulse) + "\n";
   text += "\n";
 
   return text;
 }
 
-int SwarmSeparationParticle::vectorCalculation() {
-  // Built a taxis vector in square coordinates based on hexagonal coordinates.
-  double taxis_x = -1 * (head.x + head.y / 2.0);
-  double taxis_y = -1 * (sqrt(3) * head.y / 2.0);
+std::pair<double, double> SwarmSeparationParticle::getTaxisVector() {
+  // The light source is at (0,0), so -<head.x, head.y> points at the light.
+  auto taxis = std::make_pair<double, double> (-1 * xTriToCart(head.x, head.y),
+                                               -1 * yTriToCart(head.y));
+  normalize(taxis);
 
-  // Choose a random vector in [0, 2pi).
-  double rand = randDouble(0, 2 * M_PI);
-  double rand_x = cos(rand);
-  double rand_y = sin(rand);
+  return taxis;
+}
 
-  // Combine the vectors in normalized form.
-  double result_x = (taxis_x / vectorMag(taxis_x, taxis_y))
-                    + randConstant * (rand_x / vectorMag(rand_x, rand_y));
-  double result_y = (taxis_y / vectorMag(taxis_x, taxis_y))
-                    + randConstant * (rand_y / vectorMag(rand_x, rand_y));
+std::pair<double, double> SwarmSeparationParticle::getRandVector() {
+  double randAngle = randDouble(0, 2 * M_PI);
+  auto rand = std::make_pair<double, double> (cos(randAngle), sin(randAngle));
+  normalize(rand);
 
-  // Only move if the magnitude of the proposed movement is above a threshold.
-  double threshold = 0;
-  if (vectorMag(result_x, result_y) > threshold) {
-    // Get the angle of the move in degrees, transformed to hexagonal coords.
-    double angle = atan(result_y / result_x) * 180.0 / M_PI;
-    if (result_x < 0) {
-      angle += 180;
-    } else if (result_x >= 0 && -90 <= angle && angle < 0) {
-      angle += 360;
-    }
+  return rand;
+}
 
-    // Map angles to movement directions.
-    if (30 <= angle && angle < 90) {
-      return 1;
-    } else if (90 <= angle && angle < 150) {
-      return 2;
-    } else if (150 <= angle && angle < 210) {
-      return 3;
-    } else if (210 <= angle && angle < 270) {
-      return 4;
-    } else if (270 <= angle && angle < 330) {
-      return 5;
-    } else {
-      return 0;
-    }
+std::pair<double, double> SwarmSeparationParticle::getRepulseVector() {
+  int radius = 0;
+  if (state == State::Small) {
+    radius = 1;
+  } else if (state == State::Medium) {
+    radius = 4;
+  } else if (state == State::Large) {
+    radius = 8;
   }
 
-  return -1;
+  auto repulse = std::make_pair<double, double> (0, 0);
+  for (auto p : system.particles) {
+    if (p->head != head && nodeDist(p->head, head) < 2 * radius - 1) {
+      double x_diff = xTriToCart(head.x - p->head.x, head.y - p->head.y);
+      double y_diff = yTriToCart(head.y - p->head.y);
+      repulse.first += cos(atan2(y_diff, x_diff));
+      repulse.second += sin(atan2(y_diff, x_diff));
+    }
+  }
+  normalize(repulse);
+
+  return repulse;
 }
 
-double SwarmSeparationParticle::vectorMag(const double x, const double y) {
-  return sqrt(pow(x, 2) + pow(y, 2));
+std::pair<double, double> SwarmSeparationParticle::getMoveVector() {
+  auto taxis = getTaxisVector();
+  auto rand = getRandVector();
+  auto repulse = getRepulseVector();
+
+  repulse.first = c_repulse * repulse.first;
+  repulse.second = c_repulse * repulse.second;
+  normalize(repulse);
+
+  return std::make_pair<double, double>
+      (taxis.first + (c_rand * rand.first) + repulse.first,
+       taxis.second + (c_rand * rand.second) + repulse.second);
 }
 
-SwarmSeparationSystem::SwarmSeparationSystem(int numParticles,
-                                             double randConstant) {
+double SwarmSeparationParticle::magnitude(const std::pair<double, double> &vec) {
+  return sqrt(pow(vec.first, 2) + pow(vec.second, 2));
+}
+
+void SwarmSeparationParticle::normalize(std::pair<double, double> &vec) {
+  if (std::abs(vec.first) > std::numeric_limits<double>::epsilon() ||
+      std::abs(vec.second) > std::numeric_limits<double>::epsilon()) {
+    double mag = magnitude(vec);
+    vec.first = vec.first / mag;
+    vec.second = vec.second / mag;
+  }
+}
+
+double SwarmSeparationParticle::xTriToCart(const double x, const double y) {
+  return x + y / 2.0;
+}
+
+double SwarmSeparationParticle::yTriToCart(const double y) {
+  return sqrt(3) * y / 2.0;
+}
+
+double SwarmSeparationParticle::nodeDist(const Node &n1, const Node &n2) {
+  auto n1Cart = std::make_pair<double, double> (xTriToCart(n1.x, n1.y),
+                                                yTriToCart(n1.y));
+  auto n2Cart = std::make_pair<double, double> (xTriToCart(n2.x, n2.y),
+                                                yTriToCart(n2.y));
+  auto diff = std::make_pair<double, double> (n1Cart.first - n2Cart.first,
+                                              n1Cart.second - n2Cart.second);
+
+  return magnitude(diff);
+}
+
+SwarmSeparationSystem::SwarmSeparationSystem(int numParticles, double c_rand,
+                                             double c_repulse) {
   Q_ASSERT(numParticles > 0);
   std::set<Node> occupied;
 
@@ -122,7 +184,7 @@ SwarmSeparationSystem::SwarmSeparationSystem(int numParticles,
     int y = randInt(-1 * boxradius, boxradius);
     if (occupied.find(Node(x,y)) == occupied.end()) {
       insert(new SwarmSeparationParticle(Node(x,y), -1, 0, *this,
-                 SwarmSeparationParticle::State(randInt(0, 3)), randConstant));
+             SwarmSeparationParticle::State(randInt(0, 3)), c_rand, c_repulse));
       occupied.insert(Node(x,y));
       ++n;
     }
