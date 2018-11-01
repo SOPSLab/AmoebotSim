@@ -345,13 +345,18 @@ void ScriptInterface::sierpinski(const int numParticles, const float holeProb) {
   }
 }
 
-void ScriptInterface::swarmseparation(const int numParticles, const double randConstant) {
+void ScriptInterface::swarmseparation(const int numParticles,
+                                      const double c_rand,
+                                      const double c_repulse) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
-  } else if (randConstant < 0) {
-    log("randConstant >= 0 required", true);
+  } else if (c_rand < 0) {
+    log("c_rand >= 0 required", true);
+  } else if (c_repulse < 0) {
+    log("c_repulse >= 0 required", true);
   } else {
-    sim.setSystem(std::make_shared<SwarmSeparationSystem>(numParticles, randConstant));
+    sim.setSystem(std::make_shared<SwarmSeparationSystem>(numParticles, c_rand,
+                                                          c_repulse));
   }
 }
 
