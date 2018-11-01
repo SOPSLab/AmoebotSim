@@ -13,6 +13,7 @@
 #include "alg/legacy/universalcoating.h"
 #include "alg/2sitecbridge.h"
 #include "alg/adder.h"
+#include "alg/aggregation.h"
 #include "alg/compaction.h"
 #include "alg/compression.h"
 #include "alg/convexhull.h"
@@ -175,6 +176,14 @@ void ScriptInterface::adder(const int numParticles, int countValue) {
     log("# particles must be > 0", true);
   } else {
     sim.setSystem(std::make_shared<AdderSystem>(numParticles, countValue));
+  }
+}
+
+void ScriptInterface::aggregation(const int numParticles) {
+  if (numParticles <= 0) {
+    log("# particles must be > 0", true);
+  } else {
+    sim.setSystem(std::make_shared<AggregateSystem>(numParticles));
   }
 }
 

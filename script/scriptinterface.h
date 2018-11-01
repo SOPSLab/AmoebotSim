@@ -72,6 +72,7 @@ class ScriptInterface : public QObject {
   // Non-legacy algorithm instance commands. Documentation for foo() can be
   // found in alg/foo.h.
   void adder(const int numParticles = 10, int countValue = 250);
+  void aggregation(const int numParticles = 2);
   void compaction(const int numParticles = 100, const float holdProb = 0.4);
   void compression(const int numParticles = 100, const float lambda = 4.0);
   void convexhull(const int numParticles = 20, const int numTiles = 200, const float holeProb = 0.1);

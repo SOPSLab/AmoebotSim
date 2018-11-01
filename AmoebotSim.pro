@@ -59,7 +59,8 @@ HEADERS += \
     alg/compaction.h \
     alg/demo/pulldemo.h \
     alg/demo/tokendemo.h \
-    alg/swarmseparation.h
+    alg/swarmseparation.h \
+    alg/aggregation.h
 
 SOURCES += \
     alg/legacy/algorithm.cpp \
@@ -106,7 +107,8 @@ SOURCES += \
     alg/compaction.cpp \
     alg/demo/pulldemo.cpp \
     alg/demo/tokendemo.cpp \
-    alg/swarmseparation.cpp
+    alg/swarmseparation.cpp \
+    alg/aggregation.cpp
 
 RESOURCES += \
     res/qml.qrc \
