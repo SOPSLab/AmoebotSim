@@ -34,7 +34,7 @@ int AggregateParticle::tailMarkColor() const {
 }
 
 int AggregateParticle::headMarkDir() const {
-  return (center + 1) % 6;
+  return (center + 5) % 6;
 }
 
 QString AggregateParticle::inspectionText() const {
@@ -45,7 +45,7 @@ QString AggregateParticle::inspectionText() const {
   text += "globalTailDir: " + QString::number(globalTailDir) + "\n";
   text += "\n";
   text += "center: " + QString::number(center) + "\n";
-  text += "sight: " + QString::number((center + 1) % 6) + "\n";
+  text += "sight: " + QString::number((center + 5) % 6) + "\n";
   text += "particle in sight: " + QString::number(this->checkIfParticleInSight()) + "\n";
   return text;
 }
