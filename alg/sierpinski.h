@@ -65,7 +65,7 @@ protected:
 class SierpinskiSystem : public AmoebotSystem
 {
 public:
-    SierpinskiSystem(int numParticles = 200, float holeProb = 0.2);
+    SierpinskiSystem(int numParticles = 200, double holeProb = 0.2);
 
     virtual bool hasTerminated() const;
 };

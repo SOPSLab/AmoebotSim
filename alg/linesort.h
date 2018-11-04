@@ -76,7 +76,7 @@ protected:
 class LineSortSystem : public AmoebotSystem
 {
 public:
-    LineSortSystem(int numParticles = 200, float holeProb = 0.2);
+    LineSortSystem(int numParticles = 200, double holeProb = 0.2);
 
     virtual bool hasTerminated() const;
 };

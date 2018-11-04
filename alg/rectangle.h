@@ -81,7 +81,7 @@ protected:
 class RectangleSystem : public AmoebotSystem
 {
 public:
-    RectangleSystem(int numParticles = 200, float holeProb = 0.2);
+    RectangleSystem(int numParticles = 200, double holeProb = 0.2);
 
     virtual bool hasTerminated() const;
 };

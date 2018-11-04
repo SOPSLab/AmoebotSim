@@ -181,7 +181,7 @@ bool InfObjCoatingParticle::hasFollowerChild() const {
   return labelOfFirstNbrWithProperty<InfObjCoatingParticle>(prop) != -1;
 }
 
-InfObjCoatingSystem::InfObjCoatingSystem(uint numParticles, float holeProb) {
+InfObjCoatingSystem::InfObjCoatingSystem(uint numParticles, double holeProb) {
   Q_ASSERT(numParticles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
 

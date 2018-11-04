@@ -290,7 +290,7 @@ bool ShapeFormationParticle::hasTailFollower() const {
   return labelOfFirstNbrWithProperty<ShapeFormationParticle>(prop) != -1;
 }
 
-ShapeFormationSystem::ShapeFormationSystem(int numParticles, float holeProb,
+ShapeFormationSystem::ShapeFormationSystem(int numParticles, double holeProb,
                                            QString mode) {
   Q_ASSERT(mode == "h" || mode == "s" || mode == "t1" || mode == "t2");
   Q_ASSERT(numParticles > 0);
@@ -327,7 +327,7 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, float holeProb,
     occupied.insert(randomCandidate);
 
     // Add this candidate as a particle if not a hole.
-    if (randBool(1.0f - holeProb)) {
+    if (randBool(1.0 - holeProb)) {
       insert(new ShapeFormationParticle(randomCandidate, -1, randDir(), *this,
                                         ShapeFormationParticle::State::Idle,
                                         mode, 0));

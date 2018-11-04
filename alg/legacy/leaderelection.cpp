@@ -540,7 +540,7 @@ LeaderElection::LeaderElection(const LeaderElection& other) :
 LeaderElection::~LeaderElection()
 {}
 
-std::shared_ptr<LegacySystem> LeaderElection::instance(const unsigned int size)
+std::shared_ptr<LegacySystem> LeaderElection::instance(const uint size)
 {
     std::shared_ptr<LegacySystem> system = std::make_shared<LegacySystem>();
     std::set<Node> occupied, baseComponent;

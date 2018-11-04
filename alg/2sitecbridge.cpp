@@ -11,8 +11,8 @@ TwoSiteCBridgeParticle::TwoSiteCBridgeParticle(const Node head,
                                                const int orientation,
                                                AmoebotSystem& system,
                                                Role role,
-                                               const float lambda,
-                                               const float alpha)
+                                               const double lambda,
+                                               const double alpha)
     : AmoebotParticle(head, globalTailDir, orientation, system),
       role(role),
       lambda(lambda),
@@ -26,7 +26,7 @@ void TwoSiteCBridgeParticle::activate()
     if(role == Role::Particle) { // only particles perform movements; sites remain stationary
         if(isContracted()) {
             int expandDir = randDir(); // select a random neighboring location
-            q = randFloat(0,1); // select a random q in (0,1)
+            q = randDouble(0,1); // select a random q in (0,1)
 
             if(canExpand(expandDir) && !hasExpandedNeighbor()) {
                 // count neighbors before expansion
@@ -320,7 +320,7 @@ const std::vector<int> TwoSiteCBridgeParticle::occupiedLabelsNoExpandedHeads(std
 }
 
 // TODO: update initialization
-TwoSiteCBridgeSystem::TwoSiteCBridgeSystem(int numParticles, float lambda, float alpha)
+TwoSiteCBridgeSystem::TwoSiteCBridgeSystem(int numParticles, double lambda, double alpha)
 {
     Q_ASSERT(lambda > 1);
     Q_ASSERT(alpha >= 1);

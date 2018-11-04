@@ -468,7 +468,7 @@ bool LineSortParticle::hasTailFollower() const
     return labelOfFirstNbrWithProperty<LineSortParticle>(propertyCheck) != -1;
 }
 
-LineSortSystem::LineSortSystem(int numParticles, float holeProb)
+LineSortSystem::LineSortSystem(int numParticles, double holeProb)
 {
     insert(new LineSortParticle(Node(0, 0), -1, randDir(), *this, LineSortParticle::State::Seed));
 
@@ -498,7 +498,7 @@ LineSortSystem::LineSortSystem(int numParticles, float holeProb)
 
         occupied.insert(randomCandidate);
 
-        if(randBool(1.0f - holeProb)) {
+        if(randBool(1.0 - holeProb)) {
             // only add particle if not a hole
             insert(new LineSortParticle(randomCandidate, -1, randDir(), *this, LineSortParticle::State::Idle));
             numNonStaticParticles++;

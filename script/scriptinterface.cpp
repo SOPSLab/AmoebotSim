@@ -160,7 +160,7 @@ void ScriptInterface::pulldemo() {
   sim.setSystem(std::make_shared<PullDemoSystem>());
 }
 
-void ScriptInterface::tokendemo(const int numParticles, const float holeProb) {
+void ScriptInterface::tokendemo(const int numParticles, const double holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
@@ -187,7 +187,8 @@ void ScriptInterface::aggregation(const int numParticles) {
   }
 }
 
-void ScriptInterface::compaction(const int numParticles, const float holeProb) {
+void ScriptInterface::compaction(const int numParticles,
+                                 const double holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
@@ -197,7 +198,7 @@ void ScriptInterface::compaction(const int numParticles, const float holeProb) {
   }
 }
 
-void ScriptInterface::compression(const int numParticles, const float lambda) {
+void ScriptInterface::compression(const int numParticles, const double lambda) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else {
@@ -206,7 +207,7 @@ void ScriptInterface::compression(const int numParticles, const float lambda) {
 }
 
 void ScriptInterface::convexhull(const int numParticles, const int numTiles,
-                                 const float holeProb) {
+                                 const double holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (numTiles <= 0) {
@@ -229,7 +230,7 @@ void ScriptInterface::edgedetect(const int numParticles, int countValue) {
 }
 
 void ScriptInterface::faultrepair(const int numParticles,
-                                  const float holeProb) {
+                                  const double holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
@@ -240,7 +241,7 @@ void ScriptInterface::faultrepair(const int numParticles,
 }
 
 void ScriptInterface::holeelimination(const int numParticles,
-                                      const float holeProb) {
+                                      const double holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
@@ -252,7 +253,7 @@ void ScriptInterface::holeelimination(const int numParticles,
 }
 
 void ScriptInterface::infobjcoating(const int numParticles,
-                                    const float holeProb) {
+                                    const double holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
@@ -263,7 +264,7 @@ void ScriptInterface::infobjcoating(const int numParticles,
   }
 }
 
-void ScriptInterface::ising(const int numParticles, const float beta) {
+void ScriptInterface::ising(const int numParticles, const double beta) {
   // TODO: check on any constraints for beta.
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
@@ -272,7 +273,7 @@ void ScriptInterface::ising(const int numParticles, const float beta) {
   }
 }
 
-void ScriptInterface::line(const int numParticles, const float holeProb) {
+void ScriptInterface::line(const int numParticles, const double holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
@@ -282,7 +283,7 @@ void ScriptInterface::line(const int numParticles, const float holeProb) {
   }
 }
 
-void ScriptInterface::linesort(const int numParticles, const float holeProb) {
+void ScriptInterface::linesort(const int numParticles, const double holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
@@ -305,7 +306,7 @@ void ScriptInterface::matrix(const int numParticles, int countValue,
   }
 }
 
-void ScriptInterface::rectangle(const int numParticles, const float holeProb) {
+void ScriptInterface::rectangle(const int numParticles, const double holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
@@ -315,8 +316,19 @@ void ScriptInterface::rectangle(const int numParticles, const float holeProb) {
   }
 }
 
+void ScriptInterface::ring(const int numParticles, const double holeProb) {
+  if (numParticles <= 0) {
+    log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    log("holeProb in [0,1] required", true);
+  } else {
+    sim.setSystem(std::make_shared<RingSystem>(numParticles, holeProb));
+  }
+}
+
 void ScriptInterface::shapeformation(const int numParticles,
-                                     const float holeProb, const QString mode) {
+                                     const double holeProb,
+                                     const QString mode) {
   std::set<QString> set = ShapeFormationSystem::getAcceptedModes();
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
@@ -335,7 +347,8 @@ void ScriptInterface::shapeformation(const int numParticles,
   }
 }
 
-void ScriptInterface::sierpinski(const int numParticles, const float holeProb) {
+void ScriptInterface::sierpinski(const int numParticles,
+                                 const double holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
@@ -360,8 +373,9 @@ void ScriptInterface::swarmseparation(const int numParticles,
   }
 }
 
-void ScriptInterface::twositecbridge(const int numParticles, const float lambda,
-                                     const float alpha) {
+void ScriptInterface::twositecbridge(const int numParticles,
+                                     const double lambda,
+                                     const double alpha) {
   if (numParticles < 5) {
     log("# particles must be >= 5", true);
   } else if (lambda <= 1) {
@@ -375,9 +389,9 @@ void ScriptInterface::twositecbridge(const int numParticles, const float lambda,
 }
 
 void ScriptInterface::twositeebridge(const int numParticles,
-                                     const float explambda,
-                                     const float complambda,
-                                     const float siteDistance) {
+                                     const double explambda,
+                                     const double complambda,
+                                     const double siteDistance) {
   if (numParticles < 5) {
     log("# particles must be >= 5", true);
   } else if (explambda <= 0 || explambda >= 2.17) {
@@ -395,7 +409,7 @@ void ScriptInterface::twositeebridge(const int numParticles,
 
 void ScriptInterface::boundedobjcoating(const int numStaticParticles,
                                         const int numParticles,
-                                        const float holeProb) {
+                                        const double holeProb) {
   // TODO: check for constraints on numStaticParticles.
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
@@ -407,7 +421,7 @@ void ScriptInterface::boundedobjcoating(const int numStaticParticles,
   }
 }
 
-void ScriptInterface::leaderelection(const int numParticles) {
+void ScriptInterface::leaderelection(const uint numParticles) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else {
@@ -419,19 +433,9 @@ void ScriptInterface::leaderelectiondemo() {
   sim.setSystem(LeaderElectionDemo::LeaderElectionDemo::instance());
 }
 
-void ScriptInterface::ring(const int numParticles, const float holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<RingSystem>(numParticles, holeProb));
-  }
-}
-
 void ScriptInterface::universalcoating(const int staticParticlesRadius,
                                        const int numParticles,
-                                       const float holeProb) {
+                                       const double holeProb) {
   // TODO: rename 'static particles' to 'object'.
   if (staticParticlesRadius <= 0) {
     log("radius of static particles must be > 0", true);

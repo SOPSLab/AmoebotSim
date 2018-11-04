@@ -120,7 +120,8 @@ class ConvexHullSystem : public AmoebotSystem  {
  public:
   ConvexHullParticle* leader;
 
-  ConvexHullSystem(int numParticles = 50, int numTiles = 300, float holeProb = 0.2);
+  ConvexHullSystem(int numParticles = 50, int numTiles = 300,
+                   double holeProb = 0.2);
 
   virtual std::vector<Node> getConvexHullApproximate() const;
 

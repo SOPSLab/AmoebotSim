@@ -102,7 +102,7 @@ public:
     LeaderElection(const LeaderElection& other);
     virtual ~LeaderElection();
 
-    static std::shared_ptr<LegacySystem> instance(const unsigned int size);
+    static std::shared_ptr<LegacySystem> instance(const uint size);
     virtual Movement execute();
     virtual std::shared_ptr<Algorithm> blank() const override;
     virtual std::shared_ptr<Algorithm> clone() override;

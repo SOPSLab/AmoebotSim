@@ -9,10 +9,9 @@ class IsingParticle : public AmoebotParticle
     friend class IsingSystem;
 
 public:
-    enum class Spin
-    {
-        Pos,
-        Neg
+    enum class Spin {
+      Pos,
+      Neg
     };
 
 public:
@@ -21,7 +20,7 @@ public:
                     const int orientation,
                     AmoebotSystem& system,
                     Spin spin,
-                    float beta);
+                    double beta);
 
     virtual void activate();
 
@@ -34,8 +33,8 @@ public:
 
 protected:
     Spin spin;
-    float beta;
-    float switchProb;
+    double beta;
+    double switchProb;
 
 private:
     int hamiltonian(const int mySpin) const;
@@ -44,7 +43,7 @@ private:
 class IsingSystem : public AmoebotSystem
 {
 public:
-    IsingSystem(int numParticles = 200, float beta = 0.2);
+    IsingSystem(int numParticles = 200, double beta = 0.2);
 
     virtual bool hasTerminated() const;
 };

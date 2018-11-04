@@ -249,7 +249,7 @@ bool CompactionParticle::isParticleCompressed() const {
 }
 
 
-CompactionSystem::CompactionSystem(int numParticles, float holeProb) {
+CompactionSystem::CompactionSystem(int numParticles, double holeProb) {
   Q_ASSERT(numParticles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
 
@@ -283,7 +283,7 @@ CompactionSystem::CompactionSystem(int numParticles, float holeProb) {
     occupied.insert(randomCandidate);
 
     // Add this candidate as a particle if not a hole.
-    if (randBool(1.0f - holeProb)) {
+    if (randBool(1.0 - holeProb)) {
       insert(new CompactionParticle(randomCandidate, -1, randDir(), *this,
                                     CompactionParticle::State::Inactive));
       ++numNonStaticParticles;

@@ -52,7 +52,7 @@ BoundedObjCoating::~BoundedObjCoating()
 {
 }
 
-std::shared_ptr<LegacySystem> BoundedObjCoating::instance(const int numStaticParticles, const int numParticles, const float holeProb)
+std::shared_ptr<LegacySystem> BoundedObjCoating::instance(const int numStaticParticles, const int numParticles, const double holeProb)
 {
     std::shared_ptr<LegacySystem> system = std::make_shared<LegacySystem>();
 
@@ -145,7 +145,7 @@ std::shared_ptr<LegacySystem> BoundedObjCoating::instance(const int numStaticPar
 
         std::set<Node> nextCandidates;
         for(auto it = candidates.begin(); it != candidates.end() && numNonStaticParticles < numParticles; ++it) {
-            if(randBool(1.0f - holeProb)) {
+            if(randBool(1.0 - holeProb)) {
                 system->insertParticle(LegacyParticle(std::make_shared<BoundedObjCoating>(Phase::Inactive), randDir(), *it));
                 numNonStaticParticles++;
 

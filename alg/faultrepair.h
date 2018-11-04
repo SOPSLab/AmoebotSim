@@ -90,7 +90,7 @@ class FaultRepairSystem : public AmoebotSystem {
   // (#particles) and a hole probability. holeProb in [0,1] controls how "spread
   // out" the system is; closer to 0 is more compressed, closer to 1 is more
   // expanded.
-  FaultRepairSystem(uint numParticles = 100, float holeProb = 0.2);
+  FaultRepairSystem(uint numParticles = 100, double holeProb = 0.2);
 
   // Checks whether or not the system has completed fault repair (all
   // particles contracted and in the object state.

@@ -11,8 +11,8 @@ TwoSiteEBridgeParticle::TwoSiteEBridgeParticle(const Node head,
                                                const int orientation,
                                                AmoebotSystem& system,
                                                Role role,
-                                               const float explambda,
-                                               const float complambda,
+                                               const double explambda,
+                                               const double complambda,
                                                const bool flag)
     : AmoebotParticle(head, globalTailDir, orientation, system),
       role(role),
@@ -28,7 +28,7 @@ void TwoSiteEBridgeParticle::activate()
     if(role == Role::Particle) { // only particles perform movements; sites remain stationary
         if(isContracted()) {
             int expandDir = randDir(); // select a random neighboring location
-            q = randFloat(0,1); // select a random q in (0,1)
+            q = randDouble(0,1); // select a random q in (0,1)
 
             // check for particles in neighborhood with updated lambdas (expansion -> compression)
             if(hasNeighborWithLambda(complambda)) {
@@ -357,7 +357,7 @@ const std::vector<int> TwoSiteEBridgeParticle::occupiedLabelsNoExpandedHeads(std
     return occNoExpHeadLabels;
 }
 
-TwoSiteEBridgeSystem::TwoSiteEBridgeSystem(int numParticles, float explambda, float complambda, float siteDistance)
+TwoSiteEBridgeSystem::TwoSiteEBridgeSystem(int numParticles, double explambda, double complambda, double siteDistance)
 {
     // first insert the anchor site at the center of the hexagon
     insert(new TwoSiteEBridgeParticle(Node(0,0), -1, randDir(), *this, TwoSiteEBridgeParticle::Role::Site, 0, 0, true));

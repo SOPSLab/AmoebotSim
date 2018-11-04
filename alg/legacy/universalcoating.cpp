@@ -143,7 +143,7 @@ UniversalCoating::UniversalCoating(const UniversalCoating& other)
 
 UniversalCoating::~UniversalCoating() {}
 
-std::shared_ptr<LegacySystem> UniversalCoating::instance(const int staticParticlesRadius, const int numParticles, const float holeProb) {
+std::shared_ptr<LegacySystem> UniversalCoating::instance(const int staticParticlesRadius, const int numParticles, const double holeProb) {
   std::shared_ptr<LegacySystem> system = std::make_shared<LegacySystem>();
   std::set<Node> occupied;
   const int hexRadius = staticParticlesRadius;
@@ -223,7 +223,7 @@ std::shared_ptr<LegacySystem> UniversalCoating::instance(const int staticParticl
 
     occupied.insert(randomCandidate);
 
-    if(randBool(1.0f - holeProb)) {
+    if(randBool(1.0 - holeProb)) {
       // only add particle if not a hole
       std::shared_ptr<UniversalCoating> newParticle= std::make_shared<UniversalCoating>(Phase::Inactive);
       newParticle->id = particleID;

@@ -345,7 +345,7 @@ bool RingParticle::hasTailFollower() const {
   return labelOfFirstNbrWithProperty<RingParticle>(propertyCheck) != -1;
 }
 
-RingSystem::RingSystem(int numParticles, float holeProb) {
+RingSystem::RingSystem(int numParticles, double holeProb) {
   Q_ASSERT(numParticles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
 
@@ -379,7 +379,7 @@ RingSystem::RingSystem(int numParticles, float holeProb) {
     occupied.insert(randomCandidate);
 
     // Add this candidate as a particle if not a hole.
-    if (randBool(1.0f - holeProb)) {
+    if (randBool(1.0 - holeProb)) {
       insert(new RingParticle(randomCandidate, -1, randDir(), *this,
                                  RingParticle::State::Idle));
       ++numNonStaticParticles;

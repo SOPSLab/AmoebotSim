@@ -59,7 +59,7 @@ TokenDemoParticle& TokenDemoParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<TokenDemoParticle>(label);
 }
 
-TokenDemoSystem::TokenDemoSystem(int numParticles, float holeProb) {
+TokenDemoSystem::TokenDemoSystem(int numParticles, double holeProb) {
   Q_ASSERT(numParticles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
 
@@ -94,7 +94,7 @@ TokenDemoSystem::TokenDemoSystem(int numParticles, float holeProb) {
     occupied.insert(randomCandidate);
 
     // Add this candidate as a particle if not a hole.
-    if (randBool(1.0f - holeProb)) {
+    if (randBool(1.0 - holeProb)) {
       insert(new TokenDemoParticle(randomCandidate, -1, randDir(), *this,
                                    LineParticle::State::Idle));
       numNonStaticParticles++;

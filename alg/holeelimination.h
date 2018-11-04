@@ -92,7 +92,7 @@ class HoleEliminationSystem : public AmoebotSystem {
   // specified size (#particles) and hole probability. holeProb in [0,1]
   // controls how "spread out" the system is; closer to 0 is more compressed,
   // closer to 1 is more expanded.
-  HoleEliminationSystem(uint numParticles = 100, float holeProb = 0.4);
+  HoleEliminationSystem(uint numParticles = 100, double holeProb = 0.4);
 
   // Checks whether or not the system's run of the hole elimination algorithm
   // has terminated (all particles in state Finished).

@@ -115,7 +115,7 @@ class UniversalCoating : public AlgorithmWithFlags<UniversalCoatingFlag> {
   UniversalCoating(const UniversalCoating& other);
   virtual ~UniversalCoating();
 
-  static std::shared_ptr<LegacySystem> instance(const int numStaticParticles, const int numParticles, const float holeProb);
+  static std::shared_ptr<LegacySystem> instance(const int numStaticParticles, const int numParticles, const double holeProb);
   virtual Movement execute();
   virtual Movement subExecute();
   virtual bool isDeterministic() const;

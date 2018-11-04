@@ -325,7 +325,7 @@ bool FaultRepairParticle::hasFollowerChild() const {
   return labelOfFirstNbrWithProperty<FaultRepairParticle>(prop) != -1;
 }
 
-FaultRepairSystem::FaultRepairSystem(uint numParticles, float holeProb) {
+FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
   Q_ASSERT(numParticles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
 

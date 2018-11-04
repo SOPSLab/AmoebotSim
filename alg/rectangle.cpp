@@ -612,7 +612,7 @@ std::shared_ptr<RectangleParticle::Token> RectangleParticle::makePCWithValue(int
 }
 
 
-RectangleSystem::RectangleSystem(int numParticles, float holeProb)
+RectangleSystem::RectangleSystem(int numParticles, double holeProb)
 {
     insert(new RectangleParticle(Node(0, 0), -1, randDir(), *this, RectangleParticle::State::Seed));
 
@@ -642,7 +642,7 @@ RectangleSystem::RectangleSystem(int numParticles, float holeProb)
 
         occupied.insert(randomCandidate);
 
-        if(randBool(1.0f - holeProb)) {
+        if(randBool(1.0 - holeProb)) {
             // only add particle if not a hole
             insert(new RectangleParticle(randomCandidate, -1, randDir(), *this, RectangleParticle::State::Idle));
             numNonStaticParticles++;

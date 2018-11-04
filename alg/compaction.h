@@ -104,7 +104,7 @@ class CompactionSystem : public AmoebotSystem {
   // size (#particles) and hole probability. holeProb in [0,1] controls how
   // "spread out" the system is; closer to 0 is more compressed, closer to 1 is
   // more expanded.
-  CompactionSystem(int numParticles = 100, float holeProb = 0.4);
+  CompactionSystem(int numParticles = 100, double holeProb = 0.4);
 
   // Because this algorithm never terminates, this simply returns false.
   bool hasTerminated() const override;

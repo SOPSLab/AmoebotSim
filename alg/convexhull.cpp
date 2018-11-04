@@ -527,7 +527,7 @@ QString ConvexHullParticle::inspectionText() const {
   return text;
 }
 
-ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, float holeProb) {
+ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, double holeProb) {
     Q_ASSERT(numParticles > 0);
     Q_ASSERT(numTiles > 0);
     Q_ASSERT(0 <= holeProb && holeProb <= 1);
@@ -554,7 +554,7 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, float holePro
         considered.insert(randomCandidate);
 
         // Add this candidate as a tile only if not a hole.
-        if (randBool(1.0f - holeProb)) {
+        if (randBool(1.0 - holeProb)) {
 
             // Add this candidate only if afterwards no empty node in its neighborhood would have two partitions
 

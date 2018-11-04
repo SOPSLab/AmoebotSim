@@ -20,7 +20,7 @@ class CompressionParticle : public AmoebotParticle {
   // for its local compass, a system which it belongs to, and a bias parameter.
   CompressionParticle(const Node head, const int globalTailDir,
                       const int orientation, AmoebotSystem& system,
-                      const float lambda);
+                      const double lambda);
 
   // Executes one particle activation.
   virtual void activate();
@@ -36,8 +36,8 @@ class CompressionParticle : public AmoebotParticle {
 
 protected:
   // Particle memory.
-  const float lambda;
-  float q;
+  const double lambda;
+  double q;
   int numNbrsBefore;
   bool flag;
 
@@ -65,7 +65,7 @@ class CompressionSystem : public AmoebotSystem {
   // generated surface (with no tunnels). Takes an optionally specified size
   // (#particles) and a bias parameter. A bias above 2 + sqrt(2) will provably
   // yield compression; a bias below 2.17 will provably yield expansion.
-  CompressionSystem(int numParticles = 100, float lambda = 4.0);
+  CompressionSystem(int numParticles = 100, double lambda = 4.0);
 
   // Because this algorithm never terminates, this simply returns false.
   virtual bool hasTerminated() const;

@@ -45,7 +45,7 @@ class TokenDemoSystem : public AmoebotSystem {
   // (#particles) and hole probability. holeProb in [0,1] controls how "spread
   // out" the system is; closer to 0 is more compressed, closer to 1 is more
   // expanded.
-  TokenDemoSystem(int numParticles = 20, float holeProb = 0.2);
+  TokenDemoSystem(int numParticles = 20, double holeProb = 0.2);
 
   // Returns true when the simulation has completed; however, as this demo runs
   // indefinitely, it always returns false.

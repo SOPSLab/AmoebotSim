@@ -10,7 +10,7 @@ IsingParticle::IsingParticle(const Node head,
                              const int orientation,
                              AmoebotSystem& system,
                              Spin spin,
-                             float beta)
+                             double beta)
     : AmoebotParticle(head, globalTailDir, orientation, system),
       spin(spin),
       beta(beta),
@@ -25,7 +25,7 @@ void IsingParticle::activate()
     const int H2 = hamiltonian(-1 * mySpinVal);
 
     // flip spin if new energy is less than current or if new energy is more but probability is satisfied
-    if((H2 > H1) || randFloat(0,1) < exp(beta * (H2 - H1))) {
+    if((H2 > H1) || randDouble(0, 1) < exp(beta * (H2 - H1))) {
         spin = (spin == Spin::Pos) ? Spin::Neg : Spin::Pos;
     }
 
@@ -84,7 +84,7 @@ int IsingParticle::hamiltonian(const int mySpin) const
     return sum;
 }
 
-IsingSystem::IsingSystem(int numParticles, float beta)
+IsingSystem::IsingSystem(int numParticles, double beta)
 {
     int posx, posy;
     for(int i = 1; i <= numParticles; ++i) {

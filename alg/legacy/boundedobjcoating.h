@@ -37,7 +37,7 @@ public:
     BoundedObjCoating(const BoundedObjCoating& other);
     virtual ~BoundedObjCoating();
 
-    static std::shared_ptr<LegacySystem> instance(const int numStaticParticles, const int numParticles, const float holeProb);
+    static std::shared_ptr<LegacySystem> instance(const int numStaticParticles, const int numParticles, const double holeProb);
 
     virtual Movement execute();
     virtual std::shared_ptr<Algorithm> blank() const override;

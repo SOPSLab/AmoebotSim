@@ -110,7 +110,7 @@ class ShapeFormationSystem : public AmoebotSystem  {
   //   "s"  --> square
   //   "t1" --> vertex triangle
   //   "t2" --> center triangle
-  ShapeFormationSystem(int numParticles = 200, float holeProb = 0.2,
+  ShapeFormationSystem(int numParticles = 200, double holeProb = 0.2,
                        QString mode = "h");
 
   // Checks whether or not the system's run of the ShapeFormation formation

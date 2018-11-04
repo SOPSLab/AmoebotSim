@@ -9,7 +9,7 @@ CompressionParticle::CompressionParticle(const Node head,
                                          const int globalTailDir,
                                          const int orientation,
                                          AmoebotSystem& system,
-                                         const float lambda)
+                                         const double lambda)
   : AmoebotParticle(head, globalTailDir, orientation, system),
     lambda(lambda),
     q(0),
@@ -19,7 +19,7 @@ CompressionParticle::CompressionParticle(const Node head,
 void CompressionParticle::activate() {
   if (isContracted()) {
     int expandDir = randDir();  // Select a random neighboring location.
-    q = randFloat(0, 1);        // Select a random q in (0,1).
+    q = randDouble(0, 1);        // Select a random q in (0,1).
 
     if (canExpand(expandDir) && !hasExpNbr()) {
       // Count neighbors in original position and expand.
@@ -195,7 +195,7 @@ bool CompressionParticle::checkProp2(std::vector<int> S) const {
 }
 
 
-CompressionSystem::CompressionSystem(int numParticles, float lambda) {
+CompressionSystem::CompressionSystem(int numParticles, double lambda) {
   Q_ASSERT(lambda > 1);
 
   if (lambda <= 2.17) {  // In the proven range of expansion, make a hexagon.

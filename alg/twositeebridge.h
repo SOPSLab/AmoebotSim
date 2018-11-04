@@ -18,8 +18,8 @@ public:
                            const int orientation,
                            AmoebotSystem& system,
                            Role role,
-                           const float explambda,
-                           const float complambda,
+                           const double explambda,
+                           const double complambda,
                            const bool flag);
 
     virtual void activate();
@@ -31,8 +31,8 @@ public:
 
 protected:
     const Role role;
-    const float explambda, complambda;
-    float lambda, q;
+    const double explambda, complambda;
+    double lambda, q;
     int numNbrs1;
     bool flag;
 
@@ -49,7 +49,7 @@ private:
 class TwoSiteEBridgeSystem : public AmoebotSystem
 {
 public:
-    TwoSiteEBridgeSystem(int numParticles = 100, float explambda = 2.0, float complambda = 4.0, float siteDistance = 1.25);
+    TwoSiteEBridgeSystem(int numParticles = 100, double explambda = 2.0, double complambda = 4.0, double siteDistance = 1.25);
 
     virtual bool hasTerminated() const;
 };

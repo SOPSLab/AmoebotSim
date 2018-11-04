@@ -306,7 +306,7 @@ bool SierpinskiParticle::hasTailFollower() const
     return labelOfFirstNbrWithProperty<SierpinskiParticle>(propertyCheck) != -1;
 }
 
-SierpinskiSystem::SierpinskiSystem(int numParticles, float holeProb)
+SierpinskiSystem::SierpinskiSystem(int numParticles, double holeProb)
 {
     insert(new SierpinskiParticle(Node(0, 0), -1, randDir(), *this, SierpinskiParticle::State::Seed));
 
@@ -336,7 +336,7 @@ SierpinskiSystem::SierpinskiSystem(int numParticles, float holeProb)
 
         occupied.insert(randomCandidate);
 
-        if(randBool(1.0f - holeProb)) {
+        if(randBool(1.0 - holeProb)) {
             // only add particle if not a hole
             insert(new SierpinskiParticle(randomCandidate, -1, randDir(), *this, SierpinskiParticle::State::Idle));
             numNonStaticParticles++;
