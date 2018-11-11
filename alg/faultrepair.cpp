@@ -4,173 +4,65 @@
 #include "alg/faultrepair.h"
 
 FaultRepairParticle::FaultRepairParticle(const Node head,
-                                             const int globalTailDir,
-                                             const int orientation,
-                                             AmoebotSystem &system, State state)
+                                         const int globalTailDir,
+                                         const int orientation,
+                                         AmoebotSystem &system, State state)
   : AmoebotParticle(head, globalTailDir, orientation, system),
     state(state),
-    moveDir(-1),
-    deltaOne(0),
-    deltaTwo(0),
-    surfaceVect(-1) {}
+    delta1(0),
+    delta2(0),
+    surfaceVec(-1),
+    moveDir(-1) {}
 
 void FaultRepairParticle::activate() {
+  // Objects and finished particles do nothing.
+  if (state == State::Object || state == State::Finished) {
+    return;
+  }
+
   if (isExpanded()) {
-    if (state == State::Follower || state == State::Leader) {
-      // If an expanded follower has no child or inactive neighbor, contract.
-      if (!hasFollowerChild() && !hasNbrInState({State::Inactive})) {
+    // First, handle the override case where the particle contracts back.
+    // Otherwise, contract if safe to do so.
+    // TODO: figure out if this first expanded case is necessary.
+    /*if (state == State::Root && delta1 == 2
+        && !nbrIsObject((moveDir + 1) % 6)) {
+      contractHead();
+      state = State::Finished;
+      return;
+    } else*/ if (state == State::Follower || state == State::Root) {
+      if (!hasFollowerChild() && !hasNbrInState({State::Idle})) {
         contractTail();
         return;
-      } 
+      }
     }
   } else {  // Particle is contracted.
-      if(true){
-          //Determines adjacency configuration without needing to store a new integer
-          //at most 6 lines will execute (states determined by binary tree)
-          if(nbrIsObject(0)){ //2
-              if(nbrIsObject(1)){ //14
-                  if(nbrIsObject(2)){ //17
-                      if(nbrIsObject(3)){ //22
-                          if(nbrIsObject(4)){ //30
-                              if(nbrIsObject(5)){
-                                  //end
-                              }
-                              else{ //dead-end
-                                  state = State::Object;
-                              }
-                          }
-                          else{ //29
-                              if(nbrIsObject(5)){ //dead-end
-                                  state = State::Object;
-                              }
-                              //end
-                          }
-                      }
-                      else{ //21
-                          if(nbrIsObject(4)){ //28
-                              if(nbrIsObject(5)){ //dead-end
-                                  state = State::Object;
-                              }
-                              else{ //tunnel
-                                  deltaOne = deltaTwo = 0;
-                              }
-                          }
-                          //end
-                      }
-                  }
-                  else{ //16
-                      if(nbrIsObject(3)){ //20
-                          if(nbrIsObject(4)){ //27
-                              if(nbrIsObject(5)){ //dead-end
-                                  state = State::Object;
-                              }
-                              else{ //tunnel
-                                  deltaOne = deltaTwo = 0;
-                              }
-                          }
-                          else{ //26
-                              if(nbrIsObject(5)){ //tunnel
-                                  deltaOne = deltaTwo = 0;
-                              }
-                              //end
-                          }
-                      }
-                      //end
-                  }
-              }
-              else{ //13
-                  if(nbrIsObject(2)){ //15
-                      if(nbrIsObject(3)){ //19
-                          if(nbrIsObject(4)){ //25
-                              if(nbrIsObject(5)){ //dead-end
-                                  state = State::Object;
-                              }
-                              else{ //tunnel
-                                  deltaOne = deltaTwo = 0;
-                              }
-                          }
-                          else{ //24
-                              if(nbrIsObject(5)){ //tunnel
-                                  deltaOne = deltaTwo = 0;
-                              }
-                              //end
-                          }
-                      }
-                      else{ //18
-                          if(nbrIsObject(4)){ //23
-                              if(nbrIsObject(5)){ //tunnel
-                                  deltaOne = deltaTwo = 0;
-                              }
-                              //end
-                          }
-                          //end
-                      }
-                  }
-                  //end
-              }
-          }
-          else{ //1
-              if(nbrIsObject(1)){ //3
-                  if(nbrIsObject(2)){ //5
-                      if(nbrIsObject(3)){ //8
-                          if(nbrIsObject(4)){ //12
-                              if(nbrIsObject(5)){ //dead-end
-                                  state = State::Object;
-                              }
-                              //end
-                          }
-                          else{ //11
-                              if(nbrIsObject(5)){ //tunnel
-                                  deltaOne = deltaTwo = 0;
-                              }
-                              //end
-                          }
-                      }
-                      else{ //7
-                          if(nbrIsObject(4)){ //10
-                              if(nbrIsObject(5)){ //tunnel
-                                  deltaOne = deltaTwo = 0;
-                              }
-                              //end
-                          }
-                          //end
-                      }
-                  }
-                  else{ //4
-                      if(nbrIsObject(3)){ //6
-                          if(nbrIsObject(4)){ //9
-                              if(nbrIsObject(5)){ //tunnel
-                                  deltaOne = deltaTwo = 0;
-                              }
-                              //end
-                          }
-                          //end
-                      }
-                      //end
-                  }
-              }
-              //end
-          }
-       }
-    if (state == State::Inactive) {
-      // Inactive particles need to first join the spanning tree.
-      if (hasNbrInState({State::Object})) {
-        state = State::Leader;
+    // Handle tunnel cases.
+    if (isAtDeadEnd()) {
+      state = State::Finished;
+    } else if (isInTunnel()) {
+      delta1 = 0;
+      delta2 = 0;
+    }
+
+    if (state == State::Idle) {
+      // Idle particles need to first join the spanning tree.
+      if (hasNbrInState({State::Object, State::Finished})) {
+        state = State::Root;
         moveDir = nextSurfaceDir();
-        surfaceVect = moveDir;
+        surfaceVec = moveDir;
         return;
-      } else if (state != State::Leader && hasNbrInState({State::Leader, State::Follower})) {
+      } else if (hasNbrInState({State::Root, State::Follower})) {
         state = State::Follower;
-        moveDir = labelOfFirstNbrInState({State::Leader, State::Follower});
+        moveDir = labelOfFirstNbrInState({State::Root, State::Follower});
         return;
       }
     } else if (state == State::Follower) {
-      if (hasNbrInState({State::Object})) {
+      if (hasNbrInState({State::Object, State::Finished})) {
         // If a follower has followed its spanning tree to the surface, become a
-        // leader, removing follow direction and calculating move direction.
-        state = State::Leader;
+        // root, removing follow direction and calculating move direction.
+        state = State::Root;
         moveDir = nextSurfaceDir();
-        surfaceVect = moveDir;
+        surfaceVec = moveDir;
         return;
       } else if (hasTailAtLabel(moveDir)) {
         // If a follower's parent is expanded, handover expand with it. Update
@@ -181,56 +73,51 @@ void FaultRepairParticle::activate() {
         moveDir = nbrContractDir;
         return;
       }
-    } else if (state == State::Leader) {
+    } else if (state == State::Root) {
+      // Calculate next surface direction and resulting deltas.
       moveDir = nextSurfaceDir();
+      if (surfaceVec != moveDir) {
+        delta2 = delta1;
+        delta1 = surfaceVec - moveDir;
+        if (delta1 < -3) {
+          delta1 += 6;
+        } else if (delta1 > 3) {
+          delta1 -= 6;
+        }
+        surfaceVec = moveDir;
+      }
 
-      if(surfaceVect != moveDir) {
-        deltaTwo = deltaOne;
-        deltaOne = surfaceVect - moveDir;
-        if(deltaOne < -3) {
-          deltaOne += 6;
-        } else if (deltaOne > 3) {
-          deltaOne -= 6;
-        }
-        surfaceVect = moveDir;
-      }
-      if ((deltaTwo == -1 && deltaOne == 2) ||
-          (deltaTwo == -2 && deltaOne == 2) ||
-          (deltaTwo == 1 && (deltaOne == 1 || deltaOne == 2)) ||
-          (deltaTwo == 2 && (deltaOne == 1 || deltaOne == 2))) {
-        state = State::Object;
+      // Check the delta finishing conditions. Otherwise, move if possible.
+      if ((delta2 == -1 && delta1 == 2) || (delta2 == -2 && delta1 == 2)
+          || (delta2 == 1 && (delta1 == 1 || delta1 == 2))
+          || (delta2 == 2 && (delta1 == 1 || delta1 == 2))) {
+        state = State::Finished;
         return;
-      }
-      if (!hasNbrAtLabel(moveDir)) {
+      } else if (canExpand(moveDir)) {
         expand(moveDir);
-        if(deltaOne == 2 && !hasNbrAtLabel((moveDir+1)%6)){
-           contractHead();
-           state = State::Object;
-        }
         return;
       } else if (hasTailAtLabel(moveDir)) {
-        // If there is an expanded particle ahead, handover expand
         push(moveDir);
         return;
-      } else
-        return;
+      }
     }
   }
 }
 
 int FaultRepairParticle::headMarkColor() const {
   switch(state) {
-  case State::Object:   return 0x000000;
-  case State::Inactive: return -1;
-  case State::Follower: return 0x0000ff;
-  case State::Leader:   return 0xff0000;
+    case State::Object:   return 0x000000;
+    case State::Idle:     return -1;
+    case State::Follower: return 0x0000ff;
+    case State::Root:     return 0xff0000;
+    case State::Finished: return 0x00ff00;
   }
 
   return -1;
 }
 
 int FaultRepairParticle::headMarkDir() const {
-  return (state == State::Leader || state == State::Follower) ? moveDir : -1;
+  return (state == State::Root || state == State::Follower) ? moveDir : -1;
 }
 
 int FaultRepairParticle::tailMarkColor() const {
@@ -246,17 +133,21 @@ QString FaultRepairParticle::inspectionText() const {
   text += "  globalTailDir: " + QString::number(globalTailDir) + "\n\n";
   text += "Local Info:\n";
   text += "  state: ";
-  text += [this](){
-    switch(state) {
-    case State::Object:   return "object\n";
-    case State::Inactive: return "inactive\n";
-    case State::Follower: return "follower\n";
-    case State::Leader:   return "leader\n";
-    default:              return "no state\n";
-    }
-  }();
+  if (state == State::Object) {
+    text += "object\n";
+  } else if (state == State::Idle) {
+    text += "idle\n";
+  } else if (state == State::Follower) {
+    text += "follower\n";
+  } else if (state == State::Root) {
+    text += "root\n";
+  } else if (state == State::Finished) {
+    text += "finished\n";
+  }
+  text += "  delta1: " + QString::number(delta1) + "\n";
+  text += "  delta2: " + QString::number(delta2) + "\n";
+  text += "  surfaceVec: " + QString::number(surfaceVec) + "\n";
   text += "  moveDir: " + QString::number(moveDir) + "\n";
-  text += "  complaint: " + QString::number(hasToken<ComplaintToken>()) + "\n";
 
   return text;
 }
@@ -264,7 +155,6 @@ QString FaultRepairParticle::inspectionText() const {
 FaultRepairParticle& FaultRepairParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<FaultRepairParticle>(label);
 }
-
 
 int FaultRepairParticle::labelOfFirstNbrInState(
     std::initializer_list<State> states, int startLabel) const {
@@ -285,36 +175,6 @@ bool FaultRepairParticle::hasNbrInState(std::initializer_list<State> states)
   return labelOfFirstNbrInState(states) != -1;
 }
 
-/*int FaultRepairParticle::nextSurfaceDir() const {
-  Q_ASSERT(state == State::Leader);
-
-  int dir = labelOfFirstNbrInState({State::Object},(moveDir+4)%6); //<---initial port?
-  while (hasNbrAtLabel(dir) && nbrAtLabel(dir).state == State::Object) {
-    dir = (dir +5) % 6;
-  }
-
-  return dir;
-}*/
-
-int FaultRepairParticle::nextSurfaceDir() const {
-  Q_ASSERT(state == State::Leader);
-
-  int dir = labelOfFirstNbrInState({State::Object}, (moveDir+4)%6);
-  while (hasNbrAtLabel(dir) && nbrAtLabel(dir).state == State::Object) {
-    dir = (dir + 5) % 6;
-  }
-
-  return dir;
-}
-
-bool FaultRepairParticle::nbrIsObject(int port) const {
-  if (hasNbrAtLabel(port) && nbrAtLabel(port).state == State::Object) {
-    return true;
-  }
-
-  return false;
-}
-
 bool FaultRepairParticle::hasFollowerChild() const {
   auto prop = [&](const FaultRepairParticle& p) {
     return p.state == State::Follower
@@ -325,6 +185,65 @@ bool FaultRepairParticle::hasFollowerChild() const {
   return labelOfFirstNbrWithProperty<FaultRepairParticle>(prop) != -1;
 }
 
+bool FaultRepairParticle::nbrIsObject(int port) const {
+  return hasNbrAtLabel(port) && (nbrAtLabel(port).state == State::Object ||
+                                 nbrAtLabel(port).state == State::Finished);
+}
+
+bool FaultRepairParticle::isInTunnel() const {
+  Q_ASSERT(isContracted());
+
+  // Find a port incident to an object/finished particle that has an unoccupied
+  // node immediately clockwise. Note that this must exist, since a particle is
+  // never surrounded by object/finished particles.
+  int dir = -1;
+  for (int i : uniqueLabels()) {
+    if (nbrIsObject(i) && !nbrIsObject((i + 5) % 6)) {
+      dir = i;
+    }
+  }
+
+  bool seenNonObj = false;
+  for (int offset = 1; offset < 6; ++offset) {
+    if (nbrIsObject((dir + offset) % 6)) {
+      if (seenNonObj) {
+        return true;
+      }
+    } else {
+      seenNonObj = true;
+    }
+  }
+
+  return false;
+}
+
+bool FaultRepairParticle::isAtDeadEnd() const {
+  Q_ASSERT(isContracted());
+
+  // Count number of object neighbors.
+  uint numObjNbrs = 0;
+  for (int label : uniqueLabels()) {
+    if (nbrIsObject(label)) {
+      numObjNbrs++;
+    }
+  }
+
+  return numObjNbrs == 5;
+}
+
+int FaultRepairParticle::nextSurfaceDir() const {
+  Q_ASSERT(state == State::Root);
+
+  int dir = labelOfFirstNbrInState({State::Object, State::Finished},
+                                   (moveDir + 1) % 6);
+  while (nbrIsObject(dir)) {
+    dir = (dir + 5) % 6;
+  }
+
+  return dir;
+}
+
+// TODO: create a more dynamic surface generation.
 FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
   Q_ASSERT(numParticles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
@@ -603,7 +522,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
       // Place a particle at the candidate position with probability 1 - hole.
       if (particleNodes.size() < numParticles && randBool(1 - holeProb)) {
         insert(new FaultRepairParticle(candPos, -1, randDir(), *this,
-                                       FaultRepairParticle::State::Inactive));
+                                       FaultRepairParticle::State::Idle));
         particleNodes.insert(candPos);
         lastAdded.insert(candPos);
       }
@@ -629,11 +548,11 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 }
 
 bool FaultRepairSystem::hasTerminated() const {
-  // Algorithm is terminated if all particles are on the surface (object) and
-  // have contracted.
+  // Algorithm is terminated if all particles are finished.
   for (auto p : particles) {
-    auto iocp = dynamic_cast<FaultRepairParticle*>(p);
-    if ((iocp->state != FaultRepairParticle::State::Object)) {
+    auto frp = dynamic_cast<FaultRepairParticle*>(p);
+    if (frp->state != FaultRepairParticle::State::Object
+        && frp->state != FaultRepairParticle::State::Finished) {
       return false;
     }
   }

@@ -53,7 +53,7 @@ class InfObjCoatingParticle : public AmoebotParticle {
 
   // labelOfFirstNbrInState returns the label of the first port incident to a
   // neighboring particle in any of the specified states, starting at the
-  // (optionally) specified label and continuing clockwise.
+  // (optionally) specified label and continuing counterclockwise.
   int labelOfFirstNbrInState(std::initializer_list<State> states,
                              int startLabel = 0) const;
 

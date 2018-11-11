@@ -29,11 +29,6 @@ class CompressionParticle : public AmoebotParticle {
   // to snapshot the current values of this particle's memory at runtime.
   virtual QString inspectionText() const;
 
-  // Gets a reference to the neighboring particle incident to the specified port
-  // label. Crashes if no such particle exists at this label; consider using
-  // hasNbrAtLabel() first if unsure.
-  CompressionParticle& nbrAtLabel(int label) const;
-
 protected:
   // Particle memory.
   const double lambda;
@@ -42,6 +37,11 @@ protected:
   bool flag;
 
 private:
+  // Gets a reference to the neighboring particle incident to the specified port
+  // label. Crashes if no such particle exists at this label; consider using
+  // hasNbrAtLabel() first if unsure.
+  CompressionParticle& nbrAtLabel(int label) const;
+
   // hasExpNbr() checks whether this particle has an expanded neighbor, while
   // hasExpHeadAtLabel() checks whether the head of an expanded neighbor is at
   // the position at the specified label.
