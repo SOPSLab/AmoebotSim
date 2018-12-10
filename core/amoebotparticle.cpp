@@ -154,6 +154,18 @@ bool AmoebotParticle::hasObjectAtLabel(int label) const {
   return system.objectMap.find(neighboringNode) != system.objectMap.end();
 }
 
+int AmoebotParticle::labelOfFirstObjectNbr(int startLabel) const {
+  const int labelLimit = isContracted() ? 6 : 10;
+  for (int labelOffset = 0; labelOffset < labelLimit; labelOffset++) {
+    const int label = (startLabel + labelOffset) % labelLimit;
+    if (hasObjectAtLabel(label)) {
+      return label;
+    }
+  }
+
+  return -1;
+}
+
 void AmoebotParticle::putToken(std::shared_ptr<Token> token) {
   tokens.push_back(token);
 }

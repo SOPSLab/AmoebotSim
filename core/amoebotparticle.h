@@ -89,6 +89,8 @@ class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
   // Function for checking the existence of a neighboring object
   bool hasObjectAtLabel(int label) const;
 
+  int labelOfFirstObjectNbr(int startLabel = 0) const;
+
   // Returns the label of the first port incident to a neighboring particle
   // that satisfies the specified property, starting at the (optionally)
   // specified label and continuing counter-clockwise.
