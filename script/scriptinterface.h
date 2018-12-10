@@ -75,7 +75,7 @@ class ScriptInterface : public QObject {
   void aggregation(const int numParticles = 2);
   void compaction(const int numParticles = 100, const double holdProb = 0.4);
   void compression(const int numParticles = 100, const double lambda = 4.0);
-  void convexhull(const int numParticles = 20, const int numTiles = 200,
+  void convexhull(const int numParticles = 20, const int numObjects = 200,
                   const double holeProb = 0.1);
   void edgedetect(const int numParticles = 10, int countValue = 250);
   void faultrepair(const int numParticles = 100, const double holeProb = 0.2);

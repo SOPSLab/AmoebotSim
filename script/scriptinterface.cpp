@@ -206,16 +206,16 @@ void ScriptInterface::compression(const int numParticles, const double lambda) {
   }
 }
 
-void ScriptInterface::convexhull(const int numParticles, const int numTiles,
+void ScriptInterface::convexhull(const int numParticles, const int numObjects,
                                  const double holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
-  } else if (numTiles <= 0) {
-    log("# object tiles must be > 0", true);
+  } else if (numObjects <= 0) {
+    log("# object objects must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
     log("holeProb in [0,1] required", true);
   } else {
-    sim.setSystem(std::make_shared<ConvexHullSystem>(numParticles, numTiles,
+    sim.setSystem(std::make_shared<ConvexHullSystem>(numParticles, numObjects,
                                                      holeProb));
   }
 }

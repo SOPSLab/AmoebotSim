@@ -10,7 +10,7 @@
 #include "alg/legacy/algorithm.h"
 #include "alg/legacy/legacyparticle.h"
 #include "core/system.h"
-#include "core/tile.h"
+#include "core/object.h"
 
 class LegacySystem : public System {
 protected:
@@ -29,9 +29,9 @@ public:
   void activateParticleAt(Node node) final;
 
   unsigned int size() const final;
-  unsigned int numTiles() const final;
+  unsigned int numObjects() const final;
   virtual const LegacyParticle& at(int i) const;
-  virtual const std::deque<Tile*>& getTiles() const final;
+  virtual const std::deque<Object*>& getObjects() const final;
 
   unsigned int numMovements() const final;
   unsigned int numRounds() const final;
@@ -59,8 +59,8 @@ protected:
   std::map<Node, LegacyParticle*> particleMap;
   std::set<LegacyParticle*> activatedParticles;
   std::deque<LegacyParticle*> shuffledParticles;
-  std::deque<Tile*> tiles;
-  std::map<Node, Tile*> tileMap;
+  std::deque<Object*> objects;
+  std::map<Node, Object*> objectMap;
 
   std::mt19937 rng;
 

@@ -57,7 +57,7 @@ void ConvexHullParticle::activate() {
                 int checkDirs[6] = {0, 5, 4, 1, 2, 3}; // If, e.g., pointing E, check in this order: E, SE, SW, NE, NW, W
                 for(auto &checkDir : checkDirs)
                 {
-                    if (!hasTileAtLabel((moveDir + checkDir) % 6) && hasTileAtLabel((moveDir + checkDir + 5) % 6))
+                    if (!hasObjectAtLabel((moveDir + checkDir) % 6) && hasObjectAtLabel((moveDir + checkDir + 5) % 6))
                     {
                         moveDir = (moveDir + checkDir) % 6;
                         break;
@@ -104,7 +104,7 @@ void ConvexHullParticle::activate() {
                     if (hasNbrAtLabel(i) && !hasHullParticleInDir(i)) turns_2 = 0;
                 }
 
-                if ((turns_1 == 7 or turns_2 == 7) && hasTileAtLabel((moveDir+5) % 6)) {
+                if ((turns_1 == 7 or turns_2 == 7) && hasObjectAtLabel((moveDir+5) % 6)) {
                     state = State::LeaderWait;
                     return;
                 }
@@ -218,7 +218,7 @@ void ConvexHullParticle::activate() {
                 // Hull particle
                 if (isContracted()) {
                     // Check whether move is possible
-                    if (successor == ((predecessor + 2) % 6) && !hasTileAtLabel(((predecessor + 1) % 6))) {
+                    if (successor == ((predecessor + 2) % 6) && !hasObjectAtLabel(((predecessor + 1) % 6))) {
                         // Update successor and predecessor pointers of neighbors
                         int dir = ((predecessor + 1) % 6);
                         ConvexHullParticle& predParticle = nbrAtLabel<ConvexHullParticle>(predecessor);
@@ -527,13 +527,13 @@ QString ConvexHullParticle::inspectionText() const {
   return text;
 }
 
-ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, double holeProb) {
+ConvexHullSystem::ConvexHullSystem(int numParticles, int numObjects, double holeProb) {
     Q_ASSERT(numParticles > 0);
-    Q_ASSERT(numTiles > 0);
+    Q_ASSERT(numObjects > 0);
     Q_ASSERT(0 <= holeProb && holeProb <= 1);
 
-    // Add object tiles
-    insert(new Tile(Node(0, 0)));
+    // Add objects
+    insert(new Object(Node(0, 0)));
 
     std::set<Node> considered; //contains all nodes that have been considered already
     considered.insert(Node(0, 0));
@@ -541,10 +541,10 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, double holePr
     std::set<Node> candidates;
     for (int i = 0; i < 6; ++i) candidates.insert(Node(0, 0).nodeInDir(i));
 
-    std::set<Node> tilePositions; //contains all nodes occupied by tiles
-    tilePositions.insert(Node(0, 0));
+    std::set<Node> objectPositions; //contains all nodes occupied by objects
+    objectPositions.insert(Node(0, 0));
 
-    while ((int) tilePositions.size() < numTiles && !candidates.empty()) {
+    while ((int) objectPositions.size() < numObjects && !candidates.empty()) {
         // Pick random candidate.
         std::set<Node>::const_iterator it(candidates.begin());
         advance(it,randInt(0,candidates.size()));
@@ -553,7 +553,7 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, double holePr
 
         considered.insert(randomCandidate);
 
-        // Add this candidate as a tile only if not a hole.
+        // Add this candidate as a object only if not a hole.
         if (randBool(1.0 - holeProb)) {
 
             // Add this candidate only if afterwards no empty node in its neighborhood would have two partitions
@@ -562,12 +562,12 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, double holePr
             for (int i = 0; i < 6; ++i) {
                 auto neighbor = randomCandidate.nodeInDir(i);
                 // Neighbor empty?
-                if (tilePositions.find(neighbor) == tilePositions.end()) {
-                    // Neighborhood of tiles only one partition?
+                if (objectPositions.find(neighbor) == objectPositions.end()) {
+                    // Neighborhood of objects only one partition?
                     int changes = 0;
                     bool lastOccupied = true;
                     for (int j = 1; j < 6; ++j) {
-                        bool curOccupied = (not (tilePositions.find(neighbor.nodeInDir(((i + 3 + j) % 6))) == tilePositions.end()));
+                        bool curOccupied = (not (objectPositions.find(neighbor.nodeInDir(((i + 3 + j) % 6))) == objectPositions.end()));
                         if (lastOccupied ^ curOccupied) changes++;
                         lastOccupied = curOccupied;
                     }
@@ -580,8 +580,8 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, double holePr
 
             if (allEmptyNeighborsOnePartition) {
 
-                insert(new Tile(randomCandidate));
-                tilePositions.insert(randomCandidate);
+                insert(new Object(randomCandidate));
+                objectPositions.insert(randomCandidate);
 
                 // Add new candidates.
                 for (int i = 0; i < 6; ++i) {
@@ -597,8 +597,8 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, double holePr
     // First, place leader particle
 
     Node maxNode = Node(0,0);
-    for(auto &tile : tiles) {
-        if (maxNode < tile->node) maxNode = tile->node;
+    for(auto &object : objects) {
+        if (maxNode < object->node) maxNode = object->node;
     }
 
     leader = new ConvexHullParticle(Node(maxNode.x, maxNode.y + 1), -1, randDir(), *this,
@@ -609,7 +609,7 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, double holePr
     candidates.clear();
     Node leaderPos = leader->head;
     for (int i = 0; i < 6; ++i) {
-        if (tilePositions.find(leaderPos.nodeInDir(i)) == tilePositions.end()) candidates.insert(leaderPos.nodeInDir(i));
+        if (objectPositions.find(leaderPos.nodeInDir(i)) == objectPositions.end()) candidates.insert(leaderPos.nodeInDir(i));
     }
 
     std::set<Node> particlePositions; //contains all nodes occupied by particles
@@ -630,7 +630,7 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numTiles, double holePr
         // Add new candidates.
         for (int i = 0; i < 6; ++i) {
             auto neighbor = randomCandidate.nodeInDir(i);
-            if (particlePositions.find(randomCandidate.nodeInDir(i)) == particlePositions.end() && tilePositions.find(randomCandidate.nodeInDir(i)) == tilePositions.end()) candidates.insert(neighbor);
+            if (particlePositions.find(randomCandidate.nodeInDir(i)) == particlePositions.end() && objectPositions.find(randomCandidate.nodeInDir(i)) == objectPositions.end()) candidates.insert(neighbor);
 
         }
     }

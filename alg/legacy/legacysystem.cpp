@@ -138,16 +138,16 @@ unsigned int LegacySystem::size() const {
   return particles.size();
 }
 
-unsigned int LegacySystem::numTiles() const {
-  return tiles.size();
+unsigned int LegacySystem::numObjects() const {
+  return objects.size();
 }
 
 const LegacyParticle& LegacySystem::at(int i) const {
   return *particles.at(i);
 }
 
-const std::deque<Tile*>& LegacySystem::getTiles() const {
-    return tiles;
+const std::deque<Object*>& LegacySystem::getObjects() const {
+    return objects;
 }
 
 unsigned int LegacySystem::numMovements() const {

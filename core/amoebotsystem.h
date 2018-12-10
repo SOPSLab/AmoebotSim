@@ -11,7 +11,7 @@
 
 #include "helper/randomnumbergenerator.h"
 #include "core/system.h"
-#include "core/tile.h"
+#include "core/object.h"
 
 class AmoebotParticle;
 
@@ -38,14 +38,14 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   // Returns the number of particles in the system.
   unsigned int size() const final;
 
-  // Returns the number of tiles in the system.
-  unsigned int numTiles() const final;
+  // Returns the number of objects in the system.
+  unsigned int numObjects() const final;
 
   // Returns a reference to the particle at the specified index of particles.
   const Particle& at(int i) const final;
 
-  // Returns a reference to the tile list.
-  virtual const std::deque<Tile*>& getTiles() const final;
+  // Returns a reference to the object list.
+  virtual const std::deque<Object*>& getObjects() const final;
 
   // Functions for measuring the progress of the system. numMovements returns
   // the total number of expansions and contractions performed by the system's
@@ -55,10 +55,10 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   unsigned int numMovements() const final;
   unsigned int numRounds() const final;
 
-  // Inserts a particle or a tile, respectively, into the system. A particle can be contracted or
+  // Inserts a particle or a object, respectively, into the system. A particle can be contracted or
   // expanded. Fails if the respective node(s) are already occupied.
   void insert(AmoebotParticle* particle);
-  void insert(Tile* tile);
+  void insert(Object* object);
 
   // Functions for logging the progress of the system. registerMovement
   // increments the total number of movements the system has made by the given
@@ -76,8 +76,8 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   std::vector<AmoebotParticle*> particles;
   std::map<Node, AmoebotParticle*> particleMap;
   std::set<AmoebotParticle*> activatedParticles;
-  std::deque<Tile*> tiles;
-  std::map<Node, Tile*> tileMap;
+  std::deque<Object*> objects;
+  std::map<Node, Object*> objectMap;
 
   unsigned int _numMovements;
   unsigned int _numRounds;
