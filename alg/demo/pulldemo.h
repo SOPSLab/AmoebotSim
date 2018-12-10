@@ -5,8 +5,8 @@
 #ifndef AMOEBOTSIM_ALG_DEMO_PULLDEMO_H
 #define AMOEBOTSIM_ALG_DEMO_PULLDEMO_H
 
-#include "alg/amoebotparticle.h"
-#include "alg/amoebotsystem.h"
+#include "core/amoebotparticle.h"
+#include "core/amoebotsystem.h"
 
 class PullDemoParticle : public AmoebotParticle {
  public:

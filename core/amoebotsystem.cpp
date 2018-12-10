@@ -1,5 +1,5 @@
-#include "alg/amoebotparticle.h"
-#include "alg/amoebotsystem.h"
+#include "core/amoebotparticle.h"
+#include "core/amoebotsystem.h"
 
 AmoebotSystem::AmoebotSystem()
   : _numMovements(0),

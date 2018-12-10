@@ -9,9 +9,9 @@
 
 #include "alg/legacy/legacyparticle.h"
 #include "alg/legacy/legacysystem.h"
-#include "sim/node.h"
-#include "sim/particle.h"
-#include "sim/system.h"
+#include "core/node.h"
+#include "core/particle.h"
+#include "core/system.h"
 #include "bipartitematchinggraph.h"
 #include "misc.h"
 #include "rect.h"

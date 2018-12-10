@@ -7,7 +7,7 @@
 #include <QString>
 
 #include "script/scriptengine.h"
-#include "sim/simulator.h"
+#include "core/simulator.h"
 #include "ui/visitem.h"
 
 class ScriptInterface : public QObject {

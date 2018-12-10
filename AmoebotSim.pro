@@ -14,14 +14,14 @@ HEADERS += \
     main/application.h \
     script/scriptinterface.h \
     alg/legacy/movement.h \
-    sim/node.h \
-    sim/particle.h \
-    sim/simulator.h \
-    sim/system.h \
-    sim/amoebotparticle.h \
-    sim/amoebotsystem.h \
-    sim/localparticle.h \
-    sim/tile.h \
+    core/node.h \
+    core/particle.h \
+    core/simulator.h \
+    core/system.h \
+    core/amoebotparticle.h \
+    core/amoebotsystem.h \
+    core/localparticle.h \
+    core/tile.h \
     ui/glitem.h \
     ui/commandhistorymanager.h \
     ui/visitem.h \
@@ -66,18 +66,18 @@ SOURCES += \
     alg/legacy/algorithm.cpp \
     main/application.cpp \
     main/main.cpp\
-    sim/particle.cpp \
-    sim/simulator.cpp \
-    sim/system.cpp \
+    core/particle.cpp \
+    core/simulator.cpp \
+    core/system.cpp \
     ui/commandhistorymanager.cpp \
     ui/glitem.cpp \
     ui/visitem.cpp \
     alg/ring.cpp \
     alg/line.cpp \
-    sim/amoebotparticle.cpp \
-    sim/amoebotsystem.cpp \
-    sim/tile.cpp \
-    sim/localparticle.cpp \
+    core/amoebotparticle.cpp \
+    core/amoebotsystem.cpp \
+    core/tile.cpp \
+    core/localparticle.cpp \
     alg/legacy/boundedobjcoating.cpp \
     alg/legacy/universalcoating.cpp \
     alg/legacy/leaderelectiondemo.cpp \

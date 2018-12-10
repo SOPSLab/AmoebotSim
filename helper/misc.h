@@ -4,7 +4,7 @@
 #include <functional>
 #include <set>
 
-#include "sim/node.h"
+#include "core/node.h"
 
 // given a set of nodes, this function returns surrounding set of nodes for which checkFunc return true
 // this is a nice tool to grow layers from a set of nodes (hence the name)

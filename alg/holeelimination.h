@@ -8,8 +8,8 @@
 #ifndef AMOEBOTSIM_ALG_HOLEELIMINATION_H
 #define AMOEBOTSIM_ALG_HOLEELIMINATION_H
 
-#include "alg/amoebotparticle.h"
-#include "alg/amoebotsystem.h"
+#include "core/amoebotparticle.h"
+#include "core/amoebotsystem.h"
 
 class HoleEliminationParticle : public AmoebotParticle {
  public:

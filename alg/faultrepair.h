@@ -13,8 +13,8 @@
 #ifndef AMOEBOTSIM_ALG_FAULTREPAIR_H
 #define AMOEBOTSIM_ALG_FAULTREPAIR_H
 
-#include "alg/amoebotparticle.h"
-#include "alg/amoebotsystem.h"
+#include "core/amoebotparticle.h"
+#include "core/amoebotsystem.h"
 
 class FaultRepairParticle : public AmoebotParticle {
  public:

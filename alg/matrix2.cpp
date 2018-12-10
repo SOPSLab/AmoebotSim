@@ -70,7 +70,7 @@ void Matrix2Particle::activate()
             {
                 if(streamIter==0)
                 {
-                    std::string firstpath =  "/Users/Alex/amoebotsim/alg/matrixstream_";
+                    std::string firstpath =  "/Users/Alex/amoebotcore/alg/matrixstream_";
                     std::string endpath = ".txt";
                     std::string streamfilename =firstpath+std::to_string(streamDim)+endpath;
                     std::ifstream myfile(streamfilename);

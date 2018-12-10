@@ -1,4 +1,4 @@
-#include "alg/localparticle.h"
+#include "core/localparticle.h"
 
 const std::vector<int> LocalParticle::sixLabels = {
   {0, 1, 2, 3, 4, 5}

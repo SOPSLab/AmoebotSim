@@ -4,7 +4,7 @@
 #include <set>
 
 #include "alg/twositeebridge.h"
-#include "alg/localparticle.h"
+#include "core/localparticle.h"
 
 TwoSiteEBridgeParticle::TwoSiteEBridgeParticle(const Node head,
                                                const int globalTailDir,

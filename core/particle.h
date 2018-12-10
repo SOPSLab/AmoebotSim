@@ -9,7 +9,7 @@
 #include <array>
 #include <vector>
 
-#include "sim/node.h"
+#include "core/node.h"
 
 class Particle {
  public:

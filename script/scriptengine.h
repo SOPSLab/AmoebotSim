@@ -4,7 +4,7 @@
 #include <QJSEngine>
 #include <QObject>
 
-#include "sim/simulator.h"
+#include "core/simulator.h"
 
 #include "ui/visitem.h"
 

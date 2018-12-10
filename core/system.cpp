@@ -1,4 +1,4 @@
-#include "sim/system.h"
+#include "core/system.h"
 
 SystemIterator::SystemIterator(const System* system, int pos)
   : _pos(pos)

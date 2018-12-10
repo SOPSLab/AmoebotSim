@@ -1,5 +1,5 @@
 #include <QtGlobal>
 
-#include "sim/tile.h"
+#include "core/tile.h"
 
 Tile::Tile(const Node& node) : node(node) {}
