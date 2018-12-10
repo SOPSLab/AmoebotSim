@@ -17,7 +17,6 @@
 class InfObjCoatingParticle : public AmoebotParticle {
  public:
   enum class State {
-    Object,    // Special state for object particles.
     Inactive,  // Initial state.
     Follower,  // Not yet touched the surface.
     Leader     // Moving along the surface.

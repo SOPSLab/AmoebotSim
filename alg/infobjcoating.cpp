@@ -32,7 +32,7 @@ void InfObjCoatingParticle::activate() {
   } else {  // Particle is contracted.
     if (state == State::Inactive) {
       // Inactive particles need to first join the spanning tree.
-      if (hasNbrInState({State::Object})) {
+      if (labelOfFirstObjectNbr() != -1) {
         state = State::Leader;
         moveDir = nextSurfaceDir();
         return;
@@ -42,7 +42,7 @@ void InfObjCoatingParticle::activate() {
         return;
       }
     } else if (state == State::Follower) {
-      if (hasNbrInState({State::Object})) {
+      if (labelOfFirstObjectNbr() != -1) {
         // If a follower has followed its spanning tree to the surface, become a
         // leader, removing follow direction and calculating move direction.
         state = State::Leader;
@@ -96,7 +96,6 @@ int InfObjCoatingParticle::headMarkColor() const {
   }
 
   switch(state) {
-    case State::Object:   return 0x000000;
     case State::Inactive: return -1;
     case State::Follower: return 0x0000ff;
     case State::Leader:   return 0xff0000;
@@ -124,7 +123,6 @@ QString InfObjCoatingParticle::inspectionText() const {
   text += "  state: ";
   text += [this](){
     switch(state) {
-    case State::Object:   return "object\n";
     case State::Inactive: return "inactive\n";
     case State::Follower: return "follower\n";
     case State::Leader:   return "leader\n";
@@ -163,8 +161,8 @@ bool InfObjCoatingParticle::hasNbrInState(std::initializer_list<State> states)
 int InfObjCoatingParticle::nextSurfaceDir() const {
   Q_ASSERT(state == State::Leader);
 
-  int dir = labelOfFirstNbrInState({State::Object});
-  while (hasNbrAtLabel(dir) && nbrAtLabel(dir).state == State::Object) {
+  int dir = labelOfFirstObjectNbr();
+  while (hasObjectAtLabel(dir)) {
     dir = (dir + 5) % 6;
   }
 
@@ -193,8 +191,7 @@ InfObjCoatingSystem::InfObjCoatingSystem(uint numParticles, double holeProb) {
   Node objPos;
   while (objNodes.size() < numParticles * 2) {
     // Insert a new object particle at the given position.
-    insert(new InfObjCoatingParticle(objPos, -1, randDir(), *this,
-                                     InfObjCoatingParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -257,8 +254,7 @@ bool InfObjCoatingSystem::hasTerminated() const {
   // have contracted.
   for (auto p : particles) {
     auto iocp = dynamic_cast<InfObjCoatingParticle*>(p);
-    if ((iocp->state != InfObjCoatingParticle::State::Leader
-         && iocp->state != InfObjCoatingParticle::State::Object) ||
+    if ((iocp->state != InfObjCoatingParticle::State::Leader) ||
         iocp->hasToken<InfObjCoatingParticle::ComplaintToken>()) {
       return false;
     }
