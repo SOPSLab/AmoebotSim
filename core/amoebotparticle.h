@@ -10,10 +10,10 @@
 #include <map>
 #include <memory>
 
-#include "alg/amoebotsystem.h"
-#include "alg/localparticle.h"
+#include "core/amoebotsystem.h"
+#include "core/localparticle.h"
 #include "helper/randomnumbergenerator.h"
-#include "sim/node.h"
+#include "core/node.h"
 
 class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
  public:

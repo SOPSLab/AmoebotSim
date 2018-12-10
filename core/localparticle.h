@@ -24,8 +24,8 @@
 #include <array>
 #include <vector>
 
-#include "sim/node.h"
-#include "sim/particle.h"
+#include "core/node.h"
+#include "core/particle.h"
 
 class LocalParticle : public Particle {
  public:

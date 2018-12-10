@@ -1,8 +1,8 @@
 #ifndef SIERPINSKI_H
 #define SIERPINSKI_H
 
-#include "alg/amoebotparticle.h"
-#include "alg/amoebotsystem.h"
+#include "core/amoebotparticle.h"
+#include "core/amoebotsystem.h"
 
 class SierpinskiParticle : public AmoebotParticle
 {

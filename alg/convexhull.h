@@ -5,8 +5,8 @@
 #ifndef AMOEBOTSIM_ALG_CONVEXHULL_H
 #define AMOEBOTSIM_ALG_CONVEXHULL_H
 
-#include "alg/amoebotparticle.h"
-#include "alg/amoebotsystem.h"
+#include "core/amoebotparticle.h"
+#include "core/amoebotsystem.h"
 
 class ConvexHullParticle : public AmoebotParticle {
  public:

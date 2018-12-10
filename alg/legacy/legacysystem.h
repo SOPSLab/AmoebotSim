@@ -9,8 +9,8 @@
 
 #include "alg/legacy/algorithm.h"
 #include "alg/legacy/legacyparticle.h"
-#include "sim/system.h"
-#include "sim/tile.h"
+#include "core/system.h"
+#include "core/tile.h"
 
 class LegacySystem : public System {
 protected:

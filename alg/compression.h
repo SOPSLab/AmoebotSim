@@ -10,8 +10,8 @@
 #ifndef AMOEBOTSIM_ALG_COMPRESSION_H
 #define AMOEBOTSIM_ALG_COMPRESSION_H
 
-#include "alg/amoebotparticle.h"
-#include "alg/amoebotsystem.h"
+#include "core/amoebotparticle.h"
+#include "core/amoebotsystem.h"
 
 class CompressionParticle : public AmoebotParticle {
  public:

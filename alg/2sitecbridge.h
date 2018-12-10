@@ -1,8 +1,8 @@
 #ifndef TWOSITECBRIDGE_H
 #define TWOSITECBRIDGE_H
 
-#include "alg/amoebotparticle.h"
-#include "alg/amoebotsystem.h"
+#include "core/amoebotparticle.h"
+#include "core/amoebotsystem.h"
 
 class TwoSiteCBridgeParticle : public AmoebotParticle
 {

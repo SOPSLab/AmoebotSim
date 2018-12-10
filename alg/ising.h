@@ -1,8 +1,8 @@
 #ifndef ISING_H
 #define ISING_H
 
-#include "alg/amoebotparticle.h"
-#include "alg/amoebotsystem.h"
+#include "core/amoebotparticle.h"
+#include "core/amoebotsystem.h"
 
 class IsingParticle : public AmoebotParticle
 {

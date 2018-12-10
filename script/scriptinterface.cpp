@@ -33,7 +33,7 @@
 #include "alg/twositeebridge.h"
 
 #include "script/scriptinterface.h"
-#include "sim/node.h"
+#include "core/node.h"
 
 // TODO: See comment in scriptinterface.h regarding universal coating competitve
 // analysis functions.

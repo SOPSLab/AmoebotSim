@@ -6,7 +6,7 @@
 
 #include "alg/legacy/algorithm.h"
 #include "alg/legacy/movement.h"
-#include "alg/localparticle.h"
+#include "core/localparticle.h"
 
 class LegacyParticle : public LocalParticle
 {

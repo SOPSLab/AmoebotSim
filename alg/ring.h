@@ -11,8 +11,8 @@
 #ifndef AMOEBOTSIM_ALG_RING_H
 #define AMOEBOTSIM_ALG_RING_H
 
-#include "alg/amoebotparticle.h"
-#include "alg/amoebotsystem.h"
+#include "core/amoebotparticle.h"
+#include "core/amoebotsystem.h"
 
 class RingParticle : public AmoebotParticle {
  public:

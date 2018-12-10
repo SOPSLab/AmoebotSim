@@ -3,7 +3,7 @@
 #ifndef AMOEBOTSIM_SIM_TILE_H
 #define AMOEBOTSIM_SIM_TILE_H
 
-#include "sim/node.h"
+#include "core/node.h"
 
 class Tile {
  public:

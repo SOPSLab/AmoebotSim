@@ -1,8 +1,8 @@
 #ifndef RECTANGLE_H
 #define RECTANGLE_H
 
-#include "alg/amoebotparticle.h"
-#include "alg/amoebotsystem.h"
+#include "core/amoebotparticle.h"
+#include "core/amoebotsystem.h"
 
 class RectangleParticle : public AmoebotParticle
 {

@@ -1,6 +1,6 @@
 #include <QtGlobal>
 
-#include "sim/particle.h"
+#include "core/particle.h"
 
 Particle::Particle(const Node& head, int globalTailDir)
   : head(head),

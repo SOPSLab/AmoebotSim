@@ -1,7 +1,7 @@
 #include <QMutexLocker>
 
 #include "script/scriptinterface.h"
-#include "sim/simulator.h"
+#include "core/simulator.h"
 #include "alg/legacy/legacysystem.h"
 Simulator::Simulator()
 {

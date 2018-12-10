@@ -6,7 +6,7 @@
 #include <deque>
 #include <set>
 
-#include "sim/node.h"
+#include "core/node.h"
 #include "misc.h"
 #include "rect.h"
 

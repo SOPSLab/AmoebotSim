@@ -1,4 +1,4 @@
-#include "alg/amoebotparticle.h"
+#include "core/amoebotparticle.h"
 
 AmoebotParticle::AmoebotParticle(const Node& head, int globalTailDir,
                                  const int orientation, AmoebotSystem& system)

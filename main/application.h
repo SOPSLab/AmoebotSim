@@ -7,7 +7,7 @@
 #include <QQmlApplicationEngine>
 
 #include "script/scriptengine.h"
-#include "sim/simulator.h"
+#include "core/simulator.h"
 #include "ui/commandhistorymanager.h"
 
 class Application : public QGuiApplication

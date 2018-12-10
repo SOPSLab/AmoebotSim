@@ -79,7 +79,7 @@ void EdgeDetectParticle::activate()
             {
                 if(streamIter==0)
                 {
-                    std::ifstream myfile("/Users/Alex/amoebotsim/alg/matrixstream_image_tinysquarethethe.txt");
+                    std::ifstream myfile("/Users/Alex/amoebotcore/alg/matrixstream_image_tinysquarethethe.txt");
                     std::string line;
 
                     if (myfile.is_open())

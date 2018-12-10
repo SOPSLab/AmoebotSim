@@ -8,12 +8,12 @@
 #include <QString>
 #include <QTimer>
 
-#include "sim/node.h"
-#include "sim/particle.h"
-#include "sim/system.h"
+#include "core/node.h"
+#include "core/particle.h"
+#include "core/system.h"
 #include "ui/glitem.h"
 #include "ui/view.h"
-#include "sim/tile.h"
+#include "core/tile.h"
 #include "alg/convexhull.h"
 
 class QMouseEvent;

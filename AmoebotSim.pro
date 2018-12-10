@@ -14,10 +14,14 @@ HEADERS += \
     main/application.h \
     script/scriptinterface.h \
     alg/legacy/movement.h \
-    sim/node.h \
-    sim/particle.h \
-    sim/simulator.h \
-    sim/system.h \
+    core/node.h \
+    core/particle.h \
+    core/simulator.h \
+    core/system.h \
+    core/amoebotparticle.h \
+    core/amoebotsystem.h \
+    core/localparticle.h \
+    core/tile.h \
     ui/glitem.h \
     ui/commandhistorymanager.h \
     ui/visitem.h \
@@ -34,8 +38,6 @@ HEADERS += \
     ui/view.h \
     alg/legacy/legacysystem.h \
     alg/legacy/legacyparticle.h \
-    alg/amoebotparticle.h \
-    alg/amoebotsystem.h \
     helper/randomnumbergenerator.h \
     script/scriptengine.h \
     alg/ising.h \
@@ -49,11 +51,9 @@ HEADERS += \
     alg/2sitecbridge.h \
     alg/edgedetect.h \
     alg/twositeebridge.h \
-    alg/localparticle.h \
     alg/infobjcoating.h \
     alg/faultrepair.h \
     alg/convexhull.h \
-    sim/tile.h \
     alg/shapeformation.h \
     alg/holeelimination.h \
     alg/compaction.h \
@@ -66,22 +66,24 @@ SOURCES += \
     alg/legacy/algorithm.cpp \
     main/application.cpp \
     main/main.cpp\
-    sim/particle.cpp \
-    sim/simulator.cpp \
-    sim/system.cpp \
+    core/particle.cpp \
+    core/simulator.cpp \
+    core/system.cpp \
     ui/commandhistorymanager.cpp \
     ui/glitem.cpp \
     ui/visitem.cpp \
     alg/ring.cpp \
     alg/line.cpp \
+    core/amoebotparticle.cpp \
+    core/amoebotsystem.cpp \
+    core/tile.cpp \
+    core/localparticle.cpp \
     alg/legacy/boundedobjcoating.cpp \
     alg/legacy/universalcoating.cpp \
     alg/legacy/leaderelectiondemo.cpp \
     alg/legacy/leaderelection.cpp \
     alg/legacy/legacysystem.cpp \
     alg/legacy/legacyparticle.cpp \
-    alg/amoebotparticle.cpp \
-    alg/amoebotsystem.cpp \
     helper/randomnumbergenerator.cpp \
     script/scriptinterface.cpp \
     script/scriptengine.cpp \
@@ -97,11 +99,9 @@ SOURCES += \
     alg/2sitecbridge.cpp \
     alg/edgedetect.cpp \
     alg/twositeebridge.cpp \
-    alg/localparticle.cpp \
     alg/infobjcoating.cpp \
     alg/faultrepair.cpp \
     alg/convexhull.cpp \
-    sim/tile.cpp \
     alg/shapeformation.cpp \
     alg/holeelimination.cpp \
     alg/compaction.cpp \
