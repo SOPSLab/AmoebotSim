@@ -18,6 +18,10 @@ HEADERS += \
     sim/particle.h \
     sim/simulator.h \
     sim/system.h \
+    sim/amoebotparticle.h \
+    sim/amoebotsystem.h \
+    sim/localparticle.h \
+    sim/tile.h \
     ui/glitem.h \
     ui/commandhistorymanager.h \
     ui/visitem.h \
@@ -34,8 +38,6 @@ HEADERS += \
     ui/view.h \
     alg/legacy/legacysystem.h \
     alg/legacy/legacyparticle.h \
-    alg/amoebotparticle.h \
-    alg/amoebotsystem.h \
     helper/randomnumbergenerator.h \
     script/scriptengine.h \
     alg/ising.h \
@@ -49,11 +51,9 @@ HEADERS += \
     alg/2sitecbridge.h \
     alg/edgedetect.h \
     alg/twositeebridge.h \
-    alg/localparticle.h \
     alg/infobjcoating.h \
     alg/faultrepair.h \
     alg/convexhull.h \
-    sim/tile.h \
     alg/shapeformation.h \
     alg/holeelimination.h \
     alg/compaction.h \
@@ -74,14 +74,16 @@ SOURCES += \
     ui/visitem.cpp \
     alg/ring.cpp \
     alg/line.cpp \
+    sim/amoebotparticle.cpp \
+    sim/amoebotsystem.cpp \
+    sim/tile.cpp \
+    sim/localparticle.cpp \
     alg/legacy/boundedobjcoating.cpp \
     alg/legacy/universalcoating.cpp \
     alg/legacy/leaderelectiondemo.cpp \
     alg/legacy/leaderelection.cpp \
     alg/legacy/legacysystem.cpp \
     alg/legacy/legacyparticle.cpp \
-    alg/amoebotparticle.cpp \
-    alg/amoebotsystem.cpp \
     helper/randomnumbergenerator.cpp \
     script/scriptinterface.cpp \
     script/scriptengine.cpp \
@@ -97,11 +99,9 @@ SOURCES += \
     alg/2sitecbridge.cpp \
     alg/edgedetect.cpp \
     alg/twositeebridge.cpp \
-    alg/localparticle.cpp \
     alg/infobjcoating.cpp \
     alg/faultrepair.cpp \
     alg/convexhull.cpp \
-    sim/tile.cpp \
     alg/shapeformation.cpp \
     alg/holeelimination.cpp \
     alg/compaction.cpp \
