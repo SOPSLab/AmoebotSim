@@ -16,7 +16,7 @@ static constexpr float targetFramesPerSecond = 60.0f;
 static constexpr float targetFrameDuration = 1000.0f / targetFramesPerSecond;
 
 // height of a triangle in our equilateral triangular grid if the side length is 1
-static const float triangleHeight = sqrtf(3.0f / 4.0f);
+static const double triangleHeight = sqrt(3.0 / 4.0);
 
 VisItem::VisItem(QQuickItem* parent) :
   GLItem(parent),
@@ -59,7 +59,7 @@ void VisItem::focusOn(Node node) {
   view.setFocusPos(nodeToWorldCoord(node));
 }
 
-void VisItem::setZoom(float zoom) {
+void VisItem::setZoom(double zoom) {
   view.setZoom(zoom);
 }
 
@@ -139,28 +139,28 @@ void VisItem::setupCamera() {
 }
 
 void VisItem::drawGrid() {
-  // gridTex has the height of two triangles
-  static const float gridTexHeight = 2.0f * triangleHeight;
+  // gridTex has the height of two triangles.
+  static const double gridTexHeight = 2.0 * triangleHeight;
 
   // Coordinate sytem voodoo:
   // Calculates the texture coordinates of the corners of the shown part of the grid.
-  const float left = fmodf(view.left(), 1.0f);
-  const float right = left + view.right() - view.left();
-  const float bottom = fmodf(view.bottom(), gridTexHeight) / gridTexHeight;
-  const float top = bottom + (view.top() - view.bottom()) / gridTexHeight;
+  const double left = fmod(view.left(), 1.0);
+  const double right = left + view.right() - view.left();
+  const double bottom = fmod(view.bottom(), gridTexHeight) / gridTexHeight;
+  const double top = bottom + (view.top() - view.bottom()) / gridTexHeight;
 
   // Draw screen-filling quad with gridTex according to above texture coordinates.
   gridTex->bind();
-  glfn->glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+  glfn->glColor4d(1.0, 1.0, 1.0, 1.0);
   glfn->glBegin(GL_QUADS);
-  glfn->glTexCoord2f(left, bottom);
-  glfn->glVertex2f(view.left(), view.bottom());
-  glfn->glTexCoord2f(right, bottom);
-  glfn->glVertex2f(view.right(), view.bottom());
-  glfn->glTexCoord2f(right, top);
-  glfn->glVertex2f(view.right(), view.top());
-  glfn->glTexCoord2f(left, top);
-  glfn->glVertex2f(view.left(), view.top());
+  glfn->glTexCoord2d(left, bottom);
+  glfn->glVertex2d(view.left(), view.bottom());
+  glfn->glTexCoord2d(right, bottom);
+  glfn->glVertex2d(view.right(), view.bottom());
+  glfn->glTexCoord2d(right, top);
+  glfn->glVertex2d(view.right(), view.top());
+  glfn->glTexCoord2d(left, top);
+  glfn->glVertex2d(view.left(), view.top());
   glfn->glEnd();
 }
 
@@ -249,18 +249,18 @@ void VisItem::drawFromParticleTex(int index, const QPointF& pos)
     static constexpr float invTexSize = (90.0f / 96.0f) / texSize;
     static constexpr float halfQuadSideLength = 256.0f / 220.0f;
 
-  const float column = index % texSize;
-  const float row = index / texSize;
+  const double column = index % texSize;
+  const double row = index / texSize;
   const QPointF texOffset(invTexSize * column, invTexSize * row);
 
-  glfn->glTexCoord2f(texOffset.x(), texOffset.y());
-  glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
-  glfn->glTexCoord2f(texOffset.x() + invTexSize, texOffset.y());
-  glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() - halfQuadSideLength);
-  glfn->glTexCoord2f(texOffset.x() + invTexSize, texOffset.y() + invTexSize);
-  glfn->glVertex2f(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
-  glfn->glTexCoord2f(texOffset.x(), texOffset.y() + invTexSize);
-  glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
+  glfn->glTexCoord2d(texOffset.x(), texOffset.y());
+  glfn->glVertex2d(pos.x() - halfQuadSideLength, pos.y() - halfQuadSideLength);
+  glfn->glTexCoord2d(texOffset.x() + invTexSize, texOffset.y());
+  glfn->glVertex2d(pos.x() + halfQuadSideLength, pos.y() - halfQuadSideLength);
+  glfn->glTexCoord2d(texOffset.x() + invTexSize, texOffset.y() + invTexSize);
+  glfn->glVertex2d(pos.x() + halfQuadSideLength, pos.y() + halfQuadSideLength);
+  glfn->glTexCoord2d(texOffset.x(), texOffset.y() + invTexSize);
+  glfn->glVertex2d(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
 }
 
 void VisItem::drawObjects()
@@ -286,17 +286,17 @@ void VisItem::drawConvexHull() {
   std::vector<Node> convexVertices = std::dynamic_pointer_cast<ConvexHullSystem>(system)->getConvexHullApproximate();
 
   glfn->glDisable(GL_TEXTURE_2D);
-  glfn->glColor4f(0.2, 0.2, 0.2, 0.5);
+  glfn->glColor4d(0.2, 0.2, 0.2, 0.5);
 
   glfn->glLineWidth(5.0f);
 
-  for (int i = 0; i < 6; i++) {
+  for (uint i = 0; i < 6; i++) {
     auto start_w = nodeToWorldCoord(convexVertices[i]);
     auto end_w = nodeToWorldCoord(convexVertices[((i + 1) % 6)]);
 
     glfn->glBegin(GL_LINES);
-    glfn->glVertex2f(start_w.x(), start_w.y());
-    glfn->glVertex2f(end_w.x(), end_w.y());
+    glfn->glVertex2d(start_w.x(), start_w.y());
+    glfn->glVertex2d(end_w.x(), end_w.y());
     glfn->glEnd();
   }
 
@@ -304,7 +304,7 @@ void VisItem::drawConvexHull() {
 }
 
 QPointF VisItem::nodeToWorldCoord(const Node& node) {
-  return QPointF(node.x + 0.5f * node.y, node.y * triangleHeight);
+  return QPointF(node.x + 0.5 * node.y, node.y * triangleHeight);
 }
 
 Node VisItem::worldCoordToNode(const QPointF& worldCord) {
@@ -315,8 +315,8 @@ Node VisItem::worldCoordToNode(const QPointF& worldCord) {
 }
 
 QPointF VisItem::windowCoordToWorldCoord(const QPointF& windowCoord) {
-  const float x = view.left() + (view.right() - view.left()) * windowCoord.x() / width();
-  const float y = view.top() + (view.bottom() - view.top() ) * windowCoord.y() / height();
+  const double x = view.left() + (view.right() - view.left()) * windowCoord.x() / width();
+  const double y = view.top() + (view.bottom() - view.top()) * windowCoord.y() / height();
 
   return QPointF(x, y);
 }
@@ -326,7 +326,7 @@ void VisItem::mousePressEvent(QMouseEvent* e) {
     if (e->modifiers() & Qt::ControlModifier) {
       translating = false;
       auto clickedNode = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));
-      emit roundForParticleAt(clickedNode);
+      emit stepForParticleAt(clickedNode);
     } else if (e->modifiers() & Qt::AltModifier) {
       translating = false;
       auto clickedNode = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));

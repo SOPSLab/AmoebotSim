@@ -28,14 +28,14 @@ class ScriptInterface : public QObject {
   void runScript(const QString scriptFilePath);
   void writeToFile(const QString filePath, const QString text);
 
-  // Simulator flow commands. round executes a single particle activation.
-  // runUntilTermination runs the current algorithm instance until its
-  // hasTerminated function returns true. setRoundDuration sets the simulator's
-  // delay between particle activations to the given value; if this value is
-  // negative, an error is logged and the round duration is set to 0.
-  void round();
+  // Simulator flow commands. step executes a single particle activation.
+  // setStepDuration sets the simulator's delay between particle activations to
+  // the given value; if this value is negative, an error is logged and the step
+  // duration is set to 0. runUntilTermination runs the current algorithm
+  // instance until its hasTerminated function returns true.
+  void step();
+  void setStepDuration(const int ms);
   void runUntilTermination();
-  void setRoundDuration(const int ms);
 
   // Simulator metrics commands. getNumParticles returns the number of particles
   // in the given instance. getNumMovements returns the total number of
@@ -57,12 +57,12 @@ class ScriptInterface : public QObject {
   // window as a .png in the specified location; if no filepath is provided, a
   // default path is created that ensures no previous screenshots are
   // overwritten. filmSimulation saves a series of screenshots to the specified
-  // location, up to the specified number of rounds.
+  // location, up to the specified number of steps.
   void setWindowSize(int width = 800, int height = 600);
   void focusOn(int x, int y);
   void setZoom(float zoom);
   void saveScreenshot(QString filePath = "");
-  void filmSimulation(QString filePath, const int roundLimit);
+  void filmSimulation(QString filePath, const int stepLimit);
 
   // Non-legacy demonstration algorithm instance commands. Documentation for
   // foo() can be found in alg/demo/foo.h.

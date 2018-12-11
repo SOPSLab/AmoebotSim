@@ -2,15 +2,13 @@ import QtQuick 2.0
 import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.1
 
-Button {
-  style: ButtonStyle {
+TextField {
+  style: TextFieldStyle {
     background: Rectangle {
-      implicitWidth: 115
       implicitHeight: 30
       border.width: 1
       border.color: "#888"
-      radius: 4
-      color: control.pressed ? "#888" : "#eee"
+      color: "#eee"
       opacity: 0.9
     }
   }

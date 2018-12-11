@@ -27,7 +27,7 @@ class VisItem : public GLItem {
   explicit VisItem(QQuickItem* parent = 0);
 
  signals:
-  void roundForParticleAt(Node node);
+  void stepForParticleAt(Node node);
   void inspectParticle(QString text);
 
  public slots:
@@ -35,7 +35,7 @@ class VisItem : public GLItem {
   void focusOnCenterOfMass();
   void setWindowSize(int width, int height);
   void focusOn(Node node);
-  void setZoom(float zoom);
+  void setZoom(double zoom);
   void saveScreenshot(QString filePath);
 
  protected slots:

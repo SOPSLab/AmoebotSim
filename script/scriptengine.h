@@ -1,5 +1,5 @@
-#ifndef SCRIPTENGINE_H
-#define SCRIPTENGINE_H
+#ifndef AMOEBOTSIM_SCRIPT_SCRIPTENGINE_H_
+#define AMOEBOTSIM_SCRIPT_SCRIPTENGINE_H_
 
 #include <QJSEngine>
 #include <QObject>
@@ -10,22 +10,21 @@
 
 class ScriptInterface;
 
-class ScriptEngine : public QObject
-{
-    Q_OBJECT
-public:
-    ScriptEngine(Simulator& sim, VisItem* vis = nullptr);
+class ScriptEngine : public QObject {
+  Q_OBJECT
+ public:
+  ScriptEngine(Simulator& sim, VisItem* vis = nullptr);
 
-signals:
-    void log(const QString msg, bool error = false);
+ signals:
+  void log(const QString msg, bool error = false);
 
-public slots:
-    void executeCommand(const QString cmd);
-    void runScript(const QString scriptFilePath);
+ public slots:
+  void executeCommand(const QString cmd);
+  void runScript(const QString scriptFilePath);
 
-private:
-    QJSEngine engine;
-    ScriptInterface* scriptInterface;
+ private:
+  QJSEngine engine;
+  ScriptInterface* scriptInterface;
 };
 
-#endif // SCRIPTENGINE_H
+#endif  // AMOEBOTSIM_SCRIPT_SCRIPTENGINE_H_

@@ -1,79 +1,74 @@
 #include <QMutexLocker>
 
-#include "script/scriptinterface.h"
-#include "core/simulator.h"
 #include "alg/legacy/legacysystem.h"
-Simulator::Simulator()
-{
-    roundTimer.setInterval(100);
-    connect(&roundTimer, &QTimer::timeout, this, &Simulator::round);
+#include "core/simulator.h"
+#include "script/scriptinterface.h"
+
+Simulator::Simulator() {
+  stepTimer.setInterval(100);
+  connect(&stepTimer, &QTimer::timeout, this, &Simulator::step);
 }
 
-Simulator::~Simulator()
-{
-    roundTimer.stop();
+Simulator::~Simulator() {
+  stepTimer.stop();
 }
 
-void Simulator::setSystem(std::shared_ptr<System> _system)
-{
-    roundTimer.stop();
-    emit stopped();
+void Simulator::setSystem(std::shared_ptr<System> _system) {
+  stepTimer.stop();
+  emit stopped();
 
-    system = _system;
-    emit systemChanged(system);
+  system = _system;
+  emit systemChanged(system);
 }
 
-std::shared_ptr<System> Simulator::getSystem() const
-{
-    return system;
+std::shared_ptr<System> Simulator::getSystem() const {
+  return system;
 }
 
-void Simulator::round()
-{
-    QMutexLocker locker(&system->mutex);
+void Simulator::start() {
+  stepTimer.start();
+  emit started();
+}
+
+void Simulator::stop() {
+  stepTimer.stop();
+  emit stopped();
+}
+
+void Simulator::step() {
+  QMutexLocker locker(&system->mutex);
+  system->activate();
+
+  if (system->hasTerminated()) {
+    stop();
+  }
+}
+
+void Simulator::stepForParticleAt(Node node) {
+  QMutexLocker locker(&system->mutex);
+  system->activateParticleAt(node);
+}
+
+void Simulator::setStepDuration(int ms) {
+  stepTimer.setInterval(ms);
+  emit stepDurationChanged(ms);
+}
+
+void Simulator::runUntilTermination() {
+  QMutexLocker locker(&system->mutex);
+  while (!system->hasTerminated()) {
     system->activate();
-
-    if(system->hasTerminated()) {
-        stop();
-    }
+  }
 }
 
-void Simulator::roundForParticleAt(Node node)
-{
-    QMutexLocker locker(&system->mutex);
-    system->activateParticleAt(node);
+void Simulator::saveScreenshotSetup(const QString filePath) {
+  emit systemChanged(system);
+  emit saveScreenshot(filePath);
 }
 
-void Simulator::runUntilTermination()
-{
-    QMutexLocker locker(&system->mutex);
-    while(!system->hasTerminated()) {
-        system->activate();
-    }
-}
-
-void Simulator::start()
-{
-    roundTimer.start();
-    emit started();
-}
-
-void Simulator::stop()
-{
-    roundTimer.stop();
-    emit stopped();
-}
-
-void Simulator::saveScreenshotSetup(const QString filePath)
-{
-    emit systemChanged(system);
-    emit saveScreenshot(filePath);
-}
-
-int Simulator::numParticles() const
-{
-    QMutexLocker locker(&system->mutex);
-    return system->size();
+int Simulator::numParticles() const {
+  QMutexLocker locker(&system->mutex);
+  return system->size();
 }
 
 int Simulator::numObjects() const
@@ -82,34 +77,27 @@ int Simulator::numObjects() const
     return system->numObjects();
 }
 
-int Simulator::numMovements() const
-{
-    QMutexLocker locker(&system->mutex);
-    return system->numMovements();
+int Simulator::numMovements() const {
+  QMutexLocker locker(&system->mutex);
+  return system->numMovements();
 }
 
-int Simulator::numRounds() const
-{
-    QMutexLocker locker(&system->mutex);
-    return system->numRounds();
+int Simulator::numRounds() const {
+  QMutexLocker locker(&system->mutex);
+  return system->numRounds();
 }
-int Simulator::leaderElectionRounds() const
-{
-    QMutexLocker locker(&system->mutex);
-    return system->leaderElectionRounds();
+
+int Simulator::leaderElectionRounds() const {
+  QMutexLocker locker(&system->mutex);
+  return system->leaderElectionRounds();
 }
-int Simulator::weakBounds() const
-{
-    QMutexLocker locker(&system->mutex);
-    return system->weakBounds();
+
+int Simulator::weakBounds() const {
+  QMutexLocker locker(&system->mutex);
+  return system->weakBounds();
 }
-int Simulator::strongBounds() const
-{
-    QMutexLocker locker(&system->mutex);
-    return system->strongBounds();
-}
-void Simulator::setRoundDuration(int ms)
-{
-    roundTimer.setInterval(ms);
-    emit roundDurationChanged(ms);
+
+int Simulator::strongBounds() const {
+  QMutexLocker locker(&system->mutex);
+  return system->strongBounds();
 }
