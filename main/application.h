@@ -1,5 +1,5 @@
-#ifndef APPLICATION_H
-#define APPLICATION_H
+#ifndef AMOEBOTSIM_MAIN_APPLICATION_H_
+#define AMOEBOTSIM_MAIN_APPLICATION_H_
 
 #include <memory>
 
@@ -22,4 +22,4 @@ class Application : public QGuiApplication {
   std::shared_ptr<ScriptEngine> scriptEngine;
 };
 
-#endif // APPLICATION_H
+#endif  // AMOEBOTSIM_MAIN_APPLICATION_H_

@@ -1,5 +1,5 @@
-#ifndef GLItem_H
-#define GLItem_H
+#ifndef AMOEBOTSIM_UI_GITEM_H_
+#define AMOEBOTSIM_UI_GITEM_H_
 
 #include <QQuickItem>
 
@@ -37,4 +37,4 @@ class GLItem : public QQuickItem {
   bool initialized;
 };
 
-#endif // GLItem_H
+#endif  // AMOEBOTSIM_UI_GITEM_H_

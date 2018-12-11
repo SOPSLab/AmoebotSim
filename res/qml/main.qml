@@ -208,12 +208,11 @@ ApplicationWindow {
 
       ComboBox {
         id: algorithmSelectBox
+        objectName: "algorithmSelectBox"
         anchors.top: parent.top
         anchors.topMargin: 10
         anchors.horizontalCenter: parent.horizontalCenter
         width: parent.width - 25
-
-        model: ["Select an Algorithm..."]
       }
 
       A_Button {

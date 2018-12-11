@@ -2,6 +2,7 @@
 #include <QTimer>
 
 #include "main/application.h"
+#include "ui/alg.h"
 #include "ui/visitem.h"
 
 // for evaluation, you can specify the path to a script here
@@ -33,6 +34,14 @@ Application::Application(int argc, char *argv[])
                 QMetaObject::invokeMethod(qmlRoot, "inspectParticle", Q_ARG(QVariant, text));
             }
     );
+
+    // Populate algorithm selection combo box with algorithm names.
+    AlgorithmList algorithms;
+    qDebug() << "Built algorithm list.";
+    auto algbox = qmlRoot->findChild<QObject*>("algorithmSelectBox");
+    qDebug() << "Found algorithm select box: " << (algbox);
+    algbox->setProperty("model", QVariant::fromValue(algorithms.getAlgNames()));
+    qDebug() << "Set property.";
 
     // setup connections between GUI and Simulator
     connect(&sim, &Simulator::systemChanged, vis, &VisItem::systemChanged);
