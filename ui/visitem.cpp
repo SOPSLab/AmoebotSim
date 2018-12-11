@@ -47,7 +47,8 @@ void VisItem::focusOnCenterOfMass() {
     }
   }
 
-  view.setFocusPos(sum / numNodes);
+  // Include offset for the sidebar.
+  view.setFocusPos((sum / numNodes) + QPointF(4, 0));
 }
 
 void VisItem::setWindowSize(int width, int height) {
