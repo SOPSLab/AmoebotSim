@@ -1,4 +1,9 @@
 // Defines a object, which is a single node of a solid object.
+//
+// NOTE: Objects do not count as particles, and as such, methods such as
+//       nbrAtLabel and labelOfFirstNbrWithProperty will not detect Objects.
+//       See accompanying methods (hasObjectAtLabel and labelOfFirstObjectNbr)
+//       for ways to detect Object entities.
 
 #ifndef AMOEBOTSIM_SIM_OBJECT_H
 #define AMOEBOTSIM_SIM_OBJECT_H
@@ -7,8 +12,7 @@
 
 class Object {
  public:
-  // Constructs a new particle with a node position for its head and a global
-  // compass direction from its head to its tail (-1 if contracted).
+  // Constructs an Object entity positioned at the given Node
   Object(const Node& node = Node());
 
   Node node;
