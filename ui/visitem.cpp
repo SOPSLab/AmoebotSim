@@ -262,8 +262,8 @@ void VisItem::drawFromParticleTex(int index, const QPointF& pos)
     // these values are a consequence of how the particle texture was created
     static constexpr int texSize = 8;
     // The expression (90.0f / 96.0f) is done to handle the conversion between
-    //   90 dpi and 96 dpi that Inkscape does when exporting the particle.svg as
-    //   as particle.png
+    // 90 dpi and 96 dpi that Inkscape does when exporting the particle.svg as
+    // as particle.png
     static constexpr float invTexSize = (90.0f / 96.0f) / texSize;
     static constexpr float halfQuadSideLength = 256.0f / 220.0f;
 
@@ -295,7 +295,7 @@ void VisItem::drawObjects()
 
 void VisItem::drawObject(const Object& t)
 {
-    auto pos = nodeToWorldCoord(t.node);
+    auto pos = nodeToWorldCoord(t._node);
     glfn->glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
     drawFromParticleTex(39, pos);
 }

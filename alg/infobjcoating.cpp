@@ -32,7 +32,7 @@ void InfObjCoatingParticle::activate() {
   } else {  // Particle is contracted.
     if (state == State::Inactive) {
       // Inactive particles need to first join the spanning tree.
-      if (labelOfFirstObjectNbr() != -1) {
+      if (hasObjectNbr()) {
         state = State::Leader;
         moveDir = nextSurfaceDir();
         return;
@@ -42,7 +42,7 @@ void InfObjCoatingParticle::activate() {
         return;
       }
     } else if (state == State::Follower) {
-      if (labelOfFirstObjectNbr() != -1) {
+      if (hasObjectNbr()) {
         // If a follower has followed its spanning tree to the surface, become a
         // leader, removing follow direction and calculating move direction.
         state = State::Leader;

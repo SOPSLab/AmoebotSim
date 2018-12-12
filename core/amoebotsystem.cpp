@@ -71,11 +71,11 @@ void AmoebotSystem::insert(AmoebotParticle* particle) {
 }
 
 void AmoebotSystem::insert(Object* object) {
-  Q_ASSERT(objectMap.find(object->node) == objectMap.end());
-  Q_ASSERT(particleMap.find(object->node) == particleMap.end());
+  Q_ASSERT(objectMap.find(object->_node) == objectMap.end());
+  Q_ASSERT(particleMap.find(object->_node) == particleMap.end());
 
   objects.push_back(object);
-  objectMap[object->node] = object;
+  objectMap[object->_node] = object;
 }
 
 void AmoebotSystem::registerMovement(unsigned int num) {

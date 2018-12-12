@@ -154,6 +154,10 @@ bool AmoebotParticle::hasObjectAtLabel(int label) const {
   return system.objectMap.find(neighboringNode) != system.objectMap.end();
 }
 
+bool AmoebotParticle::hasObjectNbr() const {
+  return labelOfFirstObjectNbr() != -1;
+}
+
 int AmoebotParticle::labelOfFirstObjectNbr(int startLabel) const {
   const int labelLimit = isContracted() ? 6 : 10;
   for (int labelOffset = 0; labelOffset < labelLimit; labelOffset++) {

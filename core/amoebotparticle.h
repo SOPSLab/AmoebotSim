@@ -1,5 +1,10 @@
 // Defines a particle that complies with the properties and constraints of the
 // amoebot model, but is independent of any particular algorithm.
+//
+// Note about the Object entity (see object.h and object.cpp):
+// Objects are not treated as members of the particle system; however,
+// neighboring particles are able to detect neighboring objects using the
+// functions defined below (e.g., hasObjectAtLabel and hasObjectNbr)
 
 #ifndef AMOEBOTSIM_ALG_AMOEBOTPARTICLE_H
 #define AMOEBOTSIM_ALG_AMOEBOTPARTICLE_H
@@ -88,6 +93,7 @@ class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
 
   // Function for checking the existence of a neighboring object
   bool hasObjectAtLabel(int label) const;
+  bool hasObjectNbr() const;
 
   // Function for returning the label of the first port incident to a
   // neighboring object, starting at the (optionally) specified label and

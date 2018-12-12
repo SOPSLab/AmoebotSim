@@ -598,7 +598,7 @@ ConvexHullSystem::ConvexHullSystem(int numParticles, int numObjects, double hole
 
     Node maxNode = Node(0,0);
     for(auto &object : objects) {
-        if (maxNode < object->node) maxNode = object->node;
+        if (maxNode < object->_node) maxNode = object->_node;
     }
 
     leader = new ConvexHullParticle(Node(maxNode.x, maxNode.y + 1), -1, randDir(), *this,

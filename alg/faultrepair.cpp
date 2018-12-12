@@ -46,7 +46,7 @@ void FaultRepairParticle::activate() {
 
     if (state == State::Idle) {
       // Idle particles need to first join the spanning tree.
-      if (labelOfFirstObjectNbr() != -1 || hasNbrInState({State::Finished})) {
+      if (hasObjectNbr() || hasNbrInState({State::Finished})) {
         state = State::Root;
         moveDir = nextSurfaceDir();
         surfaceVec = moveDir;
@@ -57,7 +57,7 @@ void FaultRepairParticle::activate() {
         return;
       }
     } else if (state == State::Follower) {
-      if (labelOfFirstObjectNbr() != -1 || hasNbrInState({State::Finished})) {
+      if (hasObjectNbr() || hasNbrInState({State::Finished})) {
         // If a follower has followed its spanning tree to the surface, become a
         // root, removing follow direction and calculating move direction.
         state = State::Root;
