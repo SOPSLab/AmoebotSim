@@ -20,6 +20,15 @@ void Algorithm::setSignature(QString signature) {
   _signature = signature;
 }
 
+QStringList Algorithm::getParameterNames() const {
+  QStringList names;
+  for (auto parameter : _parameters) {
+    names.append(parameter.second);
+  }
+
+  return names;
+}
+
 void Algorithm::addParameter(QString type, QString parameter) {
   _parameters.push_back(std::make_pair(type, parameter));
 }
@@ -156,9 +165,21 @@ AlgorithmList::AlgorithmList() {
 
 QStringList AlgorithmList::getAlgNames() const {
   QStringList names;
-
   for (Algorithm alg : _algorithms) {
     names.append(alg.getName());
+  }
+  names.sort();
+
+  return names;
+}
+
+QStringList AlgorithmList::getParameterNames(QString algName) const {
+  QStringList names;
+  for (Algorithm alg : _algorithms) {
+    if (alg.getName().compare(algName) == 0) {
+      names = alg.getParameterNames();
+      break;
+    }
   }
 
   return names;

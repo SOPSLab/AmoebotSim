@@ -8,7 +8,9 @@
 
 #include "core/simulator.h"
 #include "script/scriptengine.h"
+#include "ui/alg.h"
 #include "ui/commandhistorymanager.h"
+#include "ui/parameterlistmodel.h"
 
 class Application : public QGuiApplication {
   Q_OBJECT
@@ -20,6 +22,8 @@ class Application : public QGuiApplication {
   Simulator sim;
   CommandHistoryManager commandHistoryManager;
   std::shared_ptr<ScriptEngine> scriptEngine;
+  AlgorithmList algs;
+  ParameterListModel parameterModel;
 };
 
 #endif  // AMOEBOTSIM_MAIN_APPLICATION_H_

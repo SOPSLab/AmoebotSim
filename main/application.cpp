@@ -1,8 +1,10 @@
+#include <memory>
+
 #include <QDebug>
+#include <QQmlContext>
 #include <QTimer>
 
 #include "main/application.h"
-#include "ui/alg.h"
 #include "ui/visitem.h"
 
 // for evaluation, you can specify the path to a script here
@@ -15,6 +17,7 @@ Application::Application(int argc, char *argv[])
   if (scriptPath == "") {
     // Setup GUI.
     qmlRegisterType<VisItem>("VisItem", 1, 0, "VisItem");
+    engine.rootContext()->setContextProperty("parameterModel", &parameterModel);
     engine.load(QUrl(QStringLiteral("qrc:///qml/main.qml")));
     auto qmlRoot = engine.rootObjects().first();
     auto vis = qmlRoot->findChild<VisItem*>();
@@ -36,12 +39,14 @@ Application::Application(int argc, char *argv[])
     );
 
     // Populate algorithm selection combo box with algorithm names.
-    AlgorithmList algorithms;
-    qDebug() << "Built algorithm list.";
     auto algbox = qmlRoot->findChild<QObject*>("algorithmSelectBox");
-    qDebug() << "Found algorithm select box: " << (algbox);
-    algbox->setProperty("model", QVariant::fromValue(algorithms.getAlgNames()));
-    qDebug() << "Set property.";
+    algbox->setProperty("model", QVariant::fromValue(algs.getAlgNames()));
+
+    // Set the parameter list model's algorithms and assign it to the parameter
+    // list view.
+    parameterModel.setAlgorithmList(&algs);
+    connect(qmlRoot, SIGNAL(algSelected(QString)),
+            &parameterModel, SLOT(updateAlgParameters(QString)));
 
     // setup connections between GUI and Simulator
     connect(&sim, &Simulator::systemChanged, vis, &VisItem::systemChanged);

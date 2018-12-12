@@ -47,8 +47,8 @@ void VisItem::focusOnCenterOfMass() {
     }
   }
 
-  // Include offset for the sidebar.
-  view.setFocusPos((sum / numNodes) + QPointF(4, 0));
+  // Include offset for the sidebar. TODO: make this more dynamic.
+  view.setFocusPos((sum / numNodes) + QPointF(5, 0));
 }
 
 void VisItem::setWindowSize(int width, int height) {
@@ -324,6 +324,9 @@ QPointF VisItem::windowCoordToWorldCoord(const QPointF& windowCoord) {
 
 void VisItem::mousePressEvent(QMouseEvent* e) {
   if (e->buttons() & Qt::LeftButton) {
+    // Return keyboard focus to the main screen.
+    forceActiveFocus();
+
     if (e->modifiers() & Qt::ControlModifier) {
       translating = false;
       auto clickedNode = worldCoordToNode(windowCoordToWorldCoord(e->localPos()));

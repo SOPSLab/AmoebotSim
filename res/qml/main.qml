@@ -19,6 +19,8 @@ ApplicationWindow {
     vis.height = height
   }
 
+  signal algSelected(string algName)
+
   signal start()
   signal stop()
   signal step()
@@ -85,6 +87,30 @@ ApplicationWindow {
 
   VisItem {
     id: vis
+    focus: true
+    Keys.onPressed: {
+      if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
+        resultField.visible = false
+        resultFieldFade.running = false
+        commandField.visible = true
+        commandField.forceActiveFocus()
+        event.accepted = true
+      } else if (event.modifiers & Qt.ControlModifier) {
+        if (event.key === Qt.Key_B) {
+          sidebar.visible = !sidebar.visible
+          event.accepted = true
+        } else if (event.key === Qt.Key_E) {
+          (startStopButton.text === "Start") ? start() : stop()
+          event.accepted = true
+        } else if (event.key === Qt.Key_D) {
+          step()
+          event.accepted = true
+        } else if (event.key === Qt.Key_F) {
+          vis.focusOnCenterOfMass()
+          event.accepted = true
+        }
+      }
+    }
   }
 
   A_Inspector {
@@ -111,7 +137,7 @@ ApplicationWindow {
     anchors.leftMargin: 10
     anchors.bottom: vis.bottom
     anchors.bottomMargin: 10
-    width: sidebar.visible ? vis.width - 320 : vis.width - 20
+    width: sidebar.visible ? vis.width - (sidebar.width + 30) : vis.width - 20
     height: 30
 
     A_TextField {
@@ -127,12 +153,12 @@ ApplicationWindow {
             executeCommand(text)
           }
           text = ""
-          fieldLayout.forceActiveFocus()
+          vis.forceActiveFocus()
           event.accepted = true
         } else if (event.key === Qt.Key_Escape) {
           visible = false
           text = ""
-          fieldLayout.forceActiveFocus()
+          vis.forceActiveFocus()
           commandFieldReset()
           event.accepted = true
         } else if (event.key === Qt.Key_Up) {
@@ -167,250 +193,232 @@ ApplicationWindow {
         }
       }
     }
-
-    focus: true
-    Keys.onPressed: {
-      if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
-        resultField.visible = false
-        resultFieldFade.running = false
-        commandField.visible = true
-        commandField.forceActiveFocus()
-        event.accepted = true
-      } else if (event.modifiers & Qt.ControlModifier) {
-        if (event.key === Qt.Key_B) {
-          sidebar.visible = !sidebar.visible
-          event.accepted = true
-        } else if (event.key === Qt.Key_E) {
-          (startStopButton.text === "Start") ? start() : stop()
-          event.accepted = true
-        } else if (event.key === Qt.Key_D) {
-          step()
-          event.accepted = true
-        } else if (event.key === Qt.Key_F) {
-          vis.focusOnCenterOfMass()
-          event.accepted = true
-        }
-      }
-    }
   }
 
   ColumnLayout {
     id: sidebar
-    spacing: 3
+    spacing: 10
     anchors.right: vis.right
-    width: 270
-    height: vis.height
+    anchors.top: vis.top
+    anchors.bottom: vis.bottom
+    anchors.margins: 10
+    width: 280
+    height: vis.height - 20
 
-    Rectangle {
+    ComboBox {
+      id: algorithmSelectBox
+      objectName: "algorithmSelectBox"
       Layout.preferredWidth: parent.width
-      Layout.fillHeight: true
-      color: "transparent"
+      Layout.preferredHeight: 35
 
-      ComboBox {
-        id: algorithmSelectBox
-        objectName: "algorithmSelectBox"
-        anchors.top: parent.top
-        anchors.topMargin: 10
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: parent.width - 25
-      }
-
-      A_Button {
-        id: instantiateButton
-        text: "Instantiate"
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 10
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: parent.width - 25
+      onCurrentIndexChanged: {
+        algSelected(currentText)
       }
     }
 
-    Rectangle {
+    ScrollView {
+      id: parameterView
       Layout.preferredWidth: parent.width
-      Layout.preferredHeight: 180
+      Layout.preferredHeight: 105
+      verticalScrollBarPolicy: Qt.ScrollBarAlwaysOn
+
+      ListView {
+        id: parameterList
+        objectName: "parameterList"
+        anchors.fill: parent
+        model: parameterModel
+        delegate: Row {
+          Text {
+            id: parameterText
+            width: 200
+            text: model.parameterName + ": "
+          }
+
+          A_ResponseField {
+            width: sidebar.width - 30 - parameterText.width
+          }
+        }
+      }
+    }
+
+    A_Button {
+      id: instantiateButton
+      text: "Instantiate"
+      Layout.preferredWidth: parent.width
+    }
+
+    Rectangle {
+      id: fillRectangle
+      Layout.preferredWidth: parent.width
+      Layout.fillHeight: true
       color: "transparent"
+    }
 
-      RowLayout {
-        id: roundsRow
-        anchors.top: parent.top
-        anchors.topMargin: 10
-        anchors.left: parent.left
-        anchors.leftMargin: 10
+    RowLayout {
+      id: roundsRow
+      Layout.bottomMargin: 15
 
-        Rectangle {
-          Layout.preferredWidth: 70
+      Rectangle {
+        Layout.preferredWidth: 70
 
-          Text {
-            anchors.left: parent.left
-            text: "Rounds:"
-          }
-        }
-
-        Rectangle {
-          Layout.preferredWidth: 25
-
-          Text {
-            id: numRoundsText
-            anchors.left: parent.left
-            text: "0"
-          }
+        Text {
+          anchors.left: parent.left
+          text: "Rounds:"
         }
       }
 
-      RowLayout {
-        id: movesRow
-        anchors.top: roundsRow.bottom
-        anchors.topMargin: 25
-        anchors.left: parent.left
-        anchors.leftMargin: 10
+      Rectangle {
+        Layout.preferredWidth: 25
 
-        Rectangle {
-          Layout.preferredWidth: 70
-
-          Text {
-            anchors.left: parent.left
-            text: "Moves:"
-          }
+        Text {
+          id: numRoundsText
+          anchors.left: parent.left
+          text: "0"
         }
+      }
+    }
 
-        Rectangle {
-          Layout.preferredWidth: 25
+    RowLayout {
+      id: movesRow
+      Layout.bottomMargin: 20
 
-          Text {
-            id: numMovesText
-            anchors.left: parent.left
-            text: "0"
-          }
+      Rectangle {
+        Layout.preferredWidth: 70
+
+        Text {
+          anchors.left: parent.left
+          text: "Moves:"
         }
       }
 
-      RowLayout {
-        id: stepDurationRow
-        anchors.top: movesRow.bottom
-        anchors.topMargin: 30
-        anchors.left: parent.left
-        anchors.leftMargin: 10
+      Rectangle {
+        Layout.preferredWidth: 25
 
-        Rectangle {
-          Layout.preferredWidth: 130
-
-          Text {
-            anchors.left: parent.left
-            text: "Step Duration:"
-          }
+        Text {
+          id: numMovesText
+          anchors.left: parent.left
+          text: "0"
         }
+      }
+    }
 
-        Rectangle {
-          Layout.preferredWidth: 30
+    RowLayout {
+      id: stepDurationRow
+      Layout.bottomMargin: 15
 
-          Text {
-            id: stepDurationText
-            anchors.left: parent.left
-            text: ""
-          }
+      Rectangle {
+        Layout.preferredWidth: 130
+
+        Text {
+          anchors.left: parent.left
+          text: "Step Duration:"
         }
       }
 
-      Slider {
-        id: stepDurationSlider
-        objectName: "stepDurationSlider"
-        anchors.top: stepDurationRow.bottom
-        anchors.topMargin: 30
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: parent.width - 25
+      Rectangle {
+        Layout.preferredWidth: 30
 
-        orientation: Qt.Horizontal
-        minimumValue: 1.0
-        maximumValue: 100.0
-        stepSize: 0.0
-        updateValueWhileDragging: true
-        value: 1.0
+        Text {
+          id: stepDurationText
+          anchors.left: parent.left
+          text: ""
+        }
+      }
+    }
 
-        signal stepDurationChanged(int value)
-        property bool setterDisabled: false
-        property bool callbackDisabled: false
+    Slider {
+      id: stepDurationSlider
+      objectName: "stepDurationSlider"
+      Layout.preferredWidth: parent.width
 
-        onValueChanged: {
-          if (!callbackDisabled) {
-            stepDurationChanged(transferFunc(value))
-            stepDurationText.text = transferFunc(value) + " ms"
-          }
+      orientation: Qt.Horizontal
+      minimumValue: 1.0
+      maximumValue: 100.0
+      stepSize: 0.0
+      updateValueWhileDragging: true
+      value: 1.0
+
+      signal stepDurationChanged(int value)
+      property bool setterDisabled: false
+      property bool callbackDisabled: false
+
+      onValueChanged: {
+        if (!callbackDisabled) {
+          stepDurationChanged(transferFunc(value))
+          stepDurationText.text = transferFunc(value) + " ms"
+        }
+      }
+
+      // When changing the step duration "value" via slider, disable the
+      // "setStepDuration" function because it is always called when "value"
+      // changes. This is because "onValueChanged" calls "stepDurationChanged",
+      // which in turn calls "setStepDuration". We break this cycle by disabling
+      // the latter.
+      onPressedChanged: {
+        setterDisabled = !setterDisabled
+      }
+
+      // When setting the ms value via console this setter is called. This
+      // setter changes the value of the slider which results in a call of
+      // "onValueChanged". As explained above, this creates a call cycle that we
+      // break by disabling the callback "onValueChanged" for this value change.
+      function setStepDuration(ms) {
+        if (!setterDisabled) {
+          callbackDisabled = true
+          value = invTransferFunc(ms)
+          callbackDisabled = false
+          stepDurationText.text = ms + " ms"
+        }
+      }
+
+      function transferFunc(val){
+        var ms;
+        var b = Math.pow(0.2, 1/49)
+        var a = 100 * Math.pow(5, 1/49)
+        if (val >= 50) {
+          ms = (-0.4 * val) + 40
+        } else {
+          ms = a * Math.pow(b, val)
         }
 
-        // When changing the step duration "value" via slider, disable the
-        // "setStepDuration" function because it is always called when "value"
-        // changes. This is because "onValueChanged" calls
-        // "stepDurationChanged", which in turn calls "setStepDuration". We
-        // break this cycle by disabling the latter.
-        onPressedChanged: {
-          setterDisabled = !setterDisabled
+        return Math.round(ms)
+      }
+
+      function invTransferFunc(ms){
+        var val;
+        var a = 100 * Math.pow(5, 1/49)
+        if (ms <= 20) {
+          val = (-2.5 * ms) + 100
+        } else {
+          val = (49 / Math.log(5)) * Math.log(a / ms)
         }
 
-        // When setting the ms value via console this setter is called. This
-        // setter changes the value of the slider which results in a call of
-        // "onValueChanged". As explained above, this creates a call cycle
-        // that we break by disabling the callback "onValueChanged" for this
-        // value change.
-        function setStepDuration(ms) {
-          if (!setterDisabled) {
-            callbackDisabled = true
-            value = invTransferFunc(ms)
-            callbackDisabled = false
-            stepDurationText.text = ms + " ms"
-          }
-        }
+        return val
+      }
+    }
 
-        function transferFunc(val){
-          var ms;
-          var b = Math.pow(0.2, 1/49)
-          var a = 100 * Math.pow(5, 1/49)
-          if (val >= 50) {
-            ms = (-0.4 * val) + 40
+    RowLayout {
+      id: controlButtonRow
+      spacing: 15
+      Layout.preferredWidth: parent.width
+
+      A_Button {
+        id: startStopButton
+        text: "Start"
+        onClicked: {
+          if (text == "Start") {
+            start()
           } else {
-            ms = a * Math.pow(b, val)
+            stop()
           }
-
-          return Math.round(ms)
-        }
-
-        function invTransferFunc(ms){
-          var val;
-          var a = 100 * Math.pow(5, 1/49)
-          if (ms <= 20) {
-            val = (-2.5 * ms) + 100
-          } else {
-            val = (49 / Math.log(5)) * Math.log(a / ms)
-          }
-
-          return val
         }
       }
 
-      RowLayout {
-        id: controlButtonRow
-        spacing: 15
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 10
-        anchors.horizontalCenter: parent.horizontalCenter
-
-        A_Button {
-          id: startStopButton
-          text: "Start"
-          onClicked: {
-            if (text == "Start") {
-              start()
-            } else {
-              stop()
-            }
-          }
-        }
-
-        A_Button {
-          id: stepButton
-          text: "Step"
-          onClicked: {
-            step()
-          }
+      A_Button {
+        id: stepButton
+        text: "Step"
+        onClicked: {
+          step()
         }
       }
     }

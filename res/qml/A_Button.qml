@@ -5,7 +5,7 @@ import QtQuick.Controls.Styles 1.1
 Button {
   style: ButtonStyle {
     background: Rectangle {
-      implicitWidth: 115
+      implicitWidth: 130
       implicitHeight: 30
       border.width: 1
       border.color: "#888"
