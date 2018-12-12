@@ -11,7 +11,7 @@ class ParameterListModel : public QStringListModel {
  public:
   enum roleTypes {
     PARAM_NAME = Qt::UserRole + 1,
-    PARAM_COUNT
+    PARAM_VALUE
   };
 
   // Constructs a parameter list model with a reference to the algorithms list.
@@ -20,9 +20,12 @@ class ParameterListModel : public QStringListModel {
   // Set the parameter list model's algorithm list.
   void setAlgorithmList(AlgorithmList* algs);
 
-  // Overrides to return the parameter name at the given index as a QVariant.
+  // Overrides to return the parameter name at the given index as a QVariant and
+  // set the parameter value at the given index.
   QHash<int, QByteArray> roleNames() const;
   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+  bool setData(const QModelIndex &index, const QVariant &value,
+               int role = Qt::EditRole);
 
  public slots:
   // Updates this model's internal string list to be the list of parameter names
@@ -31,6 +34,7 @@ class ParameterListModel : public QStringListModel {
 
  private:
   AlgorithmList * _algs;
+  QStringList _values;
 };
 
 #endif  // AMOEBOTSIM_UI_PARAMETERLISTMODEL_H_

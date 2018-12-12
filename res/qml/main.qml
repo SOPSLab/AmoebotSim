@@ -1,6 +1,8 @@
 import QtQuick 2.2
 import QtQuick.Controls 1.4
+import QtQuick.Controls.Styles 1.1
 import QtQuick.Layouts 1.1
+
 import VisItem 1.0
 
 ApplicationWindow {
@@ -20,6 +22,7 @@ ApplicationWindow {
   }
 
   signal algSelected(string algName)
+  signal instantiate()
 
   signal start()
   signal stop()
@@ -226,6 +229,7 @@ ApplicationWindow {
         id: parameterList
         objectName: "parameterList"
         anchors.fill: parent
+
         model: parameterModel
         delegate: Row {
           Text {
@@ -234,8 +238,19 @@ ApplicationWindow {
             text: model.parameterName + ": "
           }
 
-          A_ResponseField {
+          TextField {
             width: sidebar.width - 30 - parameterText.width
+            style: TextFieldStyle {
+              background: Rectangle {
+                implicitHeight: 30
+                border.width: 1
+                border.color: "#888"
+                color: "#eee"
+                opacity: 0.9
+              }
+            }
+
+            onEditingFinished: model.parameterValue = text
           }
         }
       }
@@ -245,6 +260,11 @@ ApplicationWindow {
       id: instantiateButton
       text: "Instantiate"
       Layout.preferredWidth: parent.width
+
+      onClicked: {
+        vis.forceActiveFocus()
+        instantiate()
+      }
     }
 
     Rectangle {
@@ -260,7 +280,6 @@ ApplicationWindow {
 
       Rectangle {
         Layout.preferredWidth: 70
-
         Text {
           anchors.left: parent.left
           text: "Rounds:"
@@ -269,7 +288,6 @@ ApplicationWindow {
 
       Rectangle {
         Layout.preferredWidth: 25
-
         Text {
           id: numRoundsText
           anchors.left: parent.left
@@ -284,7 +302,6 @@ ApplicationWindow {
 
       Rectangle {
         Layout.preferredWidth: 70
-
         Text {
           anchors.left: parent.left
           text: "Moves:"
@@ -293,7 +310,6 @@ ApplicationWindow {
 
       Rectangle {
         Layout.preferredWidth: 25
-
         Text {
           id: numMovesText
           anchors.left: parent.left
@@ -308,7 +324,6 @@ ApplicationWindow {
 
       Rectangle {
         Layout.preferredWidth: 130
-
         Text {
           anchors.left: parent.left
           text: "Step Duration:"
@@ -317,7 +332,6 @@ ApplicationWindow {
 
       Rectangle {
         Layout.preferredWidth: 30
-
         Text {
           id: stepDurationText
           anchors.left: parent.left
@@ -405,21 +419,13 @@ ApplicationWindow {
       A_Button {
         id: startStopButton
         text: "Start"
-        onClicked: {
-          if (text == "Start") {
-            start()
-          } else {
-            stop()
-          }
-        }
+        onClicked: (text == "Start") ? start() : stop()
       }
 
       A_Button {
         id: stepButton
         text: "Step"
-        onClicked: {
-          step()
-        }
+        onClicked: step()
       }
     }
   }
