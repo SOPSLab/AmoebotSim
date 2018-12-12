@@ -19,7 +19,6 @@
 class FaultRepairParticle : public AmoebotParticle {
  public:
   enum class State {
-    Object,    // Special state for object particles.
     Idle,      // Initial state.
     Follower,  // Active but not yet on the surface.
     Root,      // Moving along the surface.

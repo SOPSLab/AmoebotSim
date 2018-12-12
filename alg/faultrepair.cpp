@@ -15,8 +15,8 @@ FaultRepairParticle::FaultRepairParticle(const Node head,
     moveDir(-1) {}
 
 void FaultRepairParticle::activate() {
-  // Objects and finished particles do nothing.
-  if (state == State::Object || state == State::Finished) {
+  // Finished particles do nothing.
+  if (state == State::Finished) {
     return;
   }
 
@@ -46,7 +46,7 @@ void FaultRepairParticle::activate() {
 
     if (state == State::Idle) {
       // Idle particles need to first join the spanning tree.
-      if (hasNbrInState({State::Object, State::Finished})) {
+      if (hasObjectNbr() || hasNbrInState({State::Finished})) {
         state = State::Root;
         moveDir = nextSurfaceDir();
         surfaceVec = moveDir;
@@ -57,7 +57,7 @@ void FaultRepairParticle::activate() {
         return;
       }
     } else if (state == State::Follower) {
-      if (hasNbrInState({State::Object, State::Finished})) {
+      if (hasObjectNbr() || hasNbrInState({State::Finished})) {
         // If a follower has followed its spanning tree to the surface, become a
         // root, removing follow direction and calculating move direction.
         state = State::Root;
@@ -106,7 +106,6 @@ void FaultRepairParticle::activate() {
 
 int FaultRepairParticle::headMarkColor() const {
   switch(state) {
-    case State::Object:   return 0x000000;
     case State::Idle:     return -1;
     case State::Follower: return 0x0000ff;
     case State::Root:     return 0xff0000;
@@ -133,9 +132,7 @@ QString FaultRepairParticle::inspectionText() const {
   text += "  globalTailDir: " + QString::number(globalTailDir) + "\n\n";
   text += "Local Info:\n";
   text += "  state: ";
-  if (state == State::Object) {
-    text += "object\n";
-  } else if (state == State::Idle) {
+  if (state == State::Idle) {
     text += "idle\n";
   } else if (state == State::Follower) {
     text += "follower\n";
@@ -186,8 +183,8 @@ bool FaultRepairParticle::hasFollowerChild() const {
 }
 
 bool FaultRepairParticle::nbrIsObject(int port) const {
-  return hasNbrAtLabel(port) && (nbrAtLabel(port).state == State::Object ||
-                                 nbrAtLabel(port).state == State::Finished);
+  return hasObjectAtLabel(port) ||
+      (hasNbrAtLabel(port) && nbrAtLabel(port).state == State::Finished);
 }
 
 bool FaultRepairParticle::isInTunnel() const {
@@ -234,8 +231,10 @@ bool FaultRepairParticle::isAtDeadEnd() const {
 int FaultRepairParticle::nextSurfaceDir() const {
   Q_ASSERT(state == State::Root);
 
-  int dir = labelOfFirstNbrInState({State::Object, State::Finished},
-                                   (moveDir + 1) % 6);
+  int dir = labelOfFirstNbrInState({State::Finished}, (moveDir + 1) % 6);
+  if (dir == -1) {
+    dir = labelOfFirstObjectNbr((moveDir + 1) % 6);
+  }
   while (nbrIsObject(dir)) {
     dir = (dir + 5) % 6;
   }
@@ -256,8 +255,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
   Node objPos;
   for(int i = 0; i < 20; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, randDir(), *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -268,8 +266,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 10; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 0, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -279,8 +276,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 6; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 4, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -290,8 +286,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 2; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 3, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -301,8 +296,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 4; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 1, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -312,8 +306,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 6; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 3, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -323,8 +316,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 10; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 4, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -334,8 +326,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 10; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 0, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -345,8 +336,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 2; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 5, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -356,8 +346,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 2; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 3, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -367,8 +356,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 6; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 5, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -378,8 +366,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 12; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 1, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -389,8 +376,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 6; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 5, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -400,8 +386,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 6; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 1, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -411,8 +396,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i <2; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 0, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -422,8 +406,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 6; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 4, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -433,8 +416,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 8; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 0, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -444,8 +426,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 4; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 2, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -455,8 +436,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 8; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 0, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -466,8 +446,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 10; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 2, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -477,8 +456,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 10; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, 0, *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -488,8 +466,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
 
   for(int i = 0; i < 20; i++) {
     // Insert a new object particle at the given position.
-    insert(new FaultRepairParticle(objPos, -1, randDir(), *this,
-                                     FaultRepairParticle::State::Object));
+    insert(new Object(objPos));
     objNodes.insert(objPos);
 
     // Calculate the next object position, avoiding 'tunnels'. Do this using
@@ -551,8 +528,7 @@ bool FaultRepairSystem::hasTerminated() const {
   // Algorithm is terminated if all particles are finished.
   for (auto p : particles) {
     auto frp = dynamic_cast<FaultRepairParticle*>(p);
-    if (frp->state != FaultRepairParticle::State::Object
-        && frp->state != FaultRepairParticle::State::Finished) {
+    if (frp->state != FaultRepairParticle::State::Finished) {
       return false;
     }
   }

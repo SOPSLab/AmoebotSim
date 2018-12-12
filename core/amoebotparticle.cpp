@@ -32,7 +32,7 @@ int AmoebotParticle::tailMarkDir() const {
 bool AmoebotParticle::canExpand(int label) const {
   Q_ASSERT(0 <= label && label < 6);
 
-  return (isContracted() && !hasNbrAtLabel(label) && !hasTileAtLabel(label));
+  return (isContracted() && !hasNbrAtLabel(label) && !hasObjectAtLabel(label));
 }
 
 void AmoebotParticle::expand(int label) {
@@ -149,9 +149,25 @@ bool AmoebotParticle::hasTailAtLabel(int label) {
   return neighbor.tail() == nbrNodeReachedViaLabel(label);
 }
 
-bool AmoebotParticle::hasTileAtLabel(int label) const {
+bool AmoebotParticle::hasObjectAtLabel(int label) const {
   const Node neighboringNode = nbrNodeReachedViaLabel(label);
-  return system.tileMap.find(neighboringNode) != system.tileMap.end();
+  return system.objectMap.find(neighboringNode) != system.objectMap.end();
+}
+
+bool AmoebotParticle::hasObjectNbr() const {
+  return labelOfFirstObjectNbr() != -1;
+}
+
+int AmoebotParticle::labelOfFirstObjectNbr(int startLabel) const {
+  const int labelLimit = isContracted() ? 6 : 10;
+  for (int labelOffset = 0; labelOffset < labelLimit; labelOffset++) {
+    const int label = (startLabel + labelOffset) % labelLimit;
+    if (hasObjectAtLabel(label)) {
+      return label;
+    }
+  }
+
+  return -1;
 }
 
 void AmoebotParticle::putToken(std::shared_ptr<Token> token) {

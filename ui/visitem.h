@@ -13,7 +13,7 @@
 #include "core/system.h"
 #include "ui/glitem.h"
 #include "ui/view.h"
-#include "core/tile.h"
+#include "core/object.h"
 #include "alg/convexhull.h"
 
 class QMouseEvent;
@@ -53,8 +53,8 @@ protected:
     void drawBorders(const Particle& p);
     void drawBorderPoints(const Particle& p);
     void drawFromParticleTex(int index, const QPointF& pos);
-    void drawTiles();
-    void drawTile(const Tile& t);
+    void drawObjects();
+    void drawObject(const Object& t);
     void drawConvexHull();
 
     static QPointF nodeToWorldCoord(const Node& node);

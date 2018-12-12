@@ -35,7 +35,7 @@ public slots:
     void saveScreenshotSetup(const QString filePath);
 
     int numParticles() const;
-    int numTiles() const;
+    int numObjects() const;
     int numMovements() const;
     int numRounds() const;
     int leaderElectionRounds() const;

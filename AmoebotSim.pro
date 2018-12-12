@@ -21,7 +21,7 @@ HEADERS += \
     core/amoebotparticle.h \
     core/amoebotsystem.h \
     core/localparticle.h \
-    core/tile.h \
+    core/object.h \
     ui/glitem.h \
     ui/commandhistorymanager.h \
     ui/visitem.h \
@@ -76,8 +76,8 @@ SOURCES += \
     alg/line.cpp \
     core/amoebotparticle.cpp \
     core/amoebotsystem.cpp \
-    core/tile.cpp \
     core/localparticle.cpp \
+    core/object.cpp \
     alg/legacy/boundedobjcoating.cpp \
     alg/legacy/universalcoating.cpp \
     alg/legacy/leaderelectiondemo.cpp \

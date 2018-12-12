@@ -124,7 +124,7 @@ void VisItem::paint() {
       drawConvexHull();
     }
 
-    drawTiles();
+    drawObjects();
   }
 }
 
@@ -261,7 +261,10 @@ void VisItem::drawFromParticleTex(int index, const QPointF& pos)
 {
     // these values are a consequence of how the particle texture was created
     static constexpr int texSize = 8;
-    static constexpr float invTexSize = 1.0f / texSize;
+    // The expression (90.0f / 96.0f) is done to handle the conversion between
+    // 90 dpi and 96 dpi that Inkscape does when exporting the particle.svg as
+    // as particle.png
+    static constexpr float invTexSize = (90.0f / 96.0f) / texSize;
     static constexpr float halfQuadSideLength = 256.0f / 220.0f;
 
     const float column = index % texSize;
@@ -278,23 +281,23 @@ void VisItem::drawFromParticleTex(int index, const QPointF& pos)
     glfn->glVertex2f(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
 }
 
-void VisItem::drawTiles()
+void VisItem::drawObjects()
 {
     glfn->glBegin(GL_QUADS);
 
-    std::deque<Tile*> tiles = system->getTiles();
-    for(auto t : tiles) {
-        drawTile(*t);
+    std::deque<Object*> objects = system->getObjects();
+    for(auto t : objects) {
+        drawObject(*t);
     }
 
     glfn->glEnd();
 }
 
-void VisItem::drawTile(const Tile& t)
+void VisItem::drawObject(const Object& t)
 {
-    auto pos = nodeToWorldCoord(t.node);
+    auto pos = nodeToWorldCoord(t._node);
     glfn->glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-    drawFromParticleTex(14, pos);
+    drawFromParticleTex(39, pos);
 }
 
 void VisItem::drawConvexHull()

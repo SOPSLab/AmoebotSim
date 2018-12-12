@@ -1,6 +1,6 @@
 // Algorithm to construct the convex hull.
 //
-// Run with convexhull(#particles, #tiles) on the simulator command line.
+// Run with convexhull(#particles, #objects) on the simulator command line.
 
 #ifndef AMOEBOTSIM_ALG_CONVEXHULL_H
 #define AMOEBOTSIM_ALG_CONVEXHULL_H
@@ -120,7 +120,7 @@ class ConvexHullSystem : public AmoebotSystem  {
  public:
   ConvexHullParticle* leader;
 
-  ConvexHullSystem(int numParticles = 50, int numTiles = 300,
+  ConvexHullSystem(int numParticles = 50, int numObjects = 300,
                    double holeProb = 0.2);
 
   virtual std::vector<Node> getConvexHullApproximate() const;

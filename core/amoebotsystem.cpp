@@ -12,11 +12,11 @@ AmoebotSystem::~AmoebotSystem() {
 
   particles.clear();
 
-  for (auto t : tiles) {
+  for (auto t : objects) {
     delete t;
   }
 
-  tiles.clear();
+  objects.clear();
 }
 
 void AmoebotSystem::activate() {
@@ -37,16 +37,16 @@ unsigned int AmoebotSystem::size() const {
   return particles.size();
 }
 
-unsigned int AmoebotSystem::numTiles() const {
-  return tiles.size();
+unsigned int AmoebotSystem::numObjects() const {
+  return objects.size();
 }
 
 const Particle& AmoebotSystem::at(int i) const {
   return *particles.at(i);
 }
 
-const std::deque<Tile*>& AmoebotSystem::getTiles() const {
-    return tiles;
+const std::deque<Object*>& AmoebotSystem::getObjects() const {
+    return objects;
 }
 
 unsigned int AmoebotSystem::numMovements() const {
@@ -59,7 +59,7 @@ unsigned int AmoebotSystem::numRounds() const {
 
 void AmoebotSystem::insert(AmoebotParticle* particle) {
   Q_ASSERT(particleMap.find(particle->head) == particleMap.end());
-  Q_ASSERT(tileMap.find(particle->head) == tileMap.end());
+  Q_ASSERT(objectMap.find(particle->head) == objectMap.end());
   Q_ASSERT(!particle->isExpanded() ||
            particleMap.find(particle->tail()) == particleMap.end());
 
@@ -70,12 +70,12 @@ void AmoebotSystem::insert(AmoebotParticle* particle) {
   }
 }
 
-void AmoebotSystem::insert(Tile* tile) {
-  Q_ASSERT(tileMap.find(tile->node) == tileMap.end());
-  Q_ASSERT(particleMap.find(tile->node) == particleMap.end());
+void AmoebotSystem::insert(Object* object) {
+  Q_ASSERT(objectMap.find(object->_node) == objectMap.end());
+  Q_ASSERT(particleMap.find(object->_node) == particleMap.end());
 
-  tiles.push_back(tile);
-  tileMap[tile->node] = tile;
+  objects.push_back(object);
+  objectMap[object->_node] = object;
 }
 
 void AmoebotSystem::registerMovement(unsigned int num) {

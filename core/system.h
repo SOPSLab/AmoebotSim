@@ -11,7 +11,7 @@
 
 #include "core/node.h"
 #include "core/particle.h"
-#include "core/tile.h"
+#include "core/object.h"
 
 class System;
 
@@ -49,15 +49,15 @@ class System {
   // system subclasses.
   virtual unsigned int size() const = 0;
 
-  // Returns the number of tiles in the system.
-  virtual unsigned int numTiles() const = 0;
+  // Returns the number of objects in the system.
+  virtual unsigned int numObjects() const = 0;
 
   // Returns a reference to the particle at the specified index. Must be
   // overridden by any system subclasses.
   virtual const Particle& at(int i) const = 0;
 
-  // Returns a reference to the tile list.
-  virtual const std::deque<Tile*>& getTiles() const = 0;
+  // Returns a reference to the object list.
+  virtual const std::deque<Object*>& getObjects() const = 0;
 
   // STL-like begin and end functions for particle-accessing iterators.
   SystemIterator begin() const;
