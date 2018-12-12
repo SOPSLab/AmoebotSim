@@ -250,8 +250,9 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
   std::set<Node> objNodes;  // Nodes occupied by object.
   std::set<Node> particleNodes;  // Nodes occupied by non-object particles.
 
-  int surface = numParticles > 100 ? 80 : numParticles > 50 ? numParticles * 2 / 3 : 50;
+  int surface = numParticles > 100 ? numParticles * 3 / 5 : 50;
   int depth = -(surface / 3);
+  int stretch = numParticles / 10;
 
   for (int i = 0; i < surface; i++) {
     for (int j = 0; j > depth; j--) {
@@ -263,13 +264,13 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
   int randHeight = randInt(0, -(depth + 2));
   int prevHeight = 0, currHeight = 0;
   for (auto pos = objNodes.begin(); pos != objNodes.end(); ) {
-    if ((pos->y == 0 && (pos->x <= 9 || pos->x >= surface - 10)) ||
-        pos->x == 9 || pos->x == surface - 10 ||
-        (pos->y == depth + 1 && pos->x > 9 && pos->x < surface - 10)) {
+    if ((pos->y == 0 && (pos->x <= stretch - 1 || pos->x >= surface - stretch)) ||
+        pos->x == stretch - 1 || pos->x == surface - stretch ||
+        (pos->y == depth + 1 && pos->x > stretch - 1 && pos->x < surface - stretch)) {
       insert(new Object(*pos));
       ++pos;
     } else {
-      if (pos->y != 0 && (pos->x <= 9 || pos->x >= surface - 10)) {
+      if (pos->y != 0 && (pos->x <= stretch - 1 || pos->x >= surface - stretch)) {
         objNodes.erase(pos++);
         continue;
       } else {
@@ -304,7 +305,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
             if (rand >= 7) {
               if (!(nbrStatus[0] && !nbrStatus[1] && nbrStatus[2]) &&
                   (nbrStatus[0] || nbrStatus[1] || nbrStatus[2])) {
-                if (pos->x == surface - 11 && !nbrStatus[2]) {
+                if (pos->x == surface - stretch - 1 && !nbrStatus[2]) {
                   objNodes.erase(pos++);
                 } else {
                   insert(new Object(*pos));
