@@ -250,230 +250,366 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
   std::set<Node> objNodes;  // Nodes occupied by object.
   std::set<Node> particleNodes;  // Nodes occupied by non-object particles.
 
-  // Instantiate the object as a single line with turns. "Infinite" in this case
-  // just means the object's surface is longer than the number of particles.
-  Node objPos;
-  for(int i = 0; i < 20; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+  int surface = numParticles > 100 ? 80 : numParticles > 50 ? numParticles * 2 / 3 : 50;
+  int depth = -(surface / 3);
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    int offset = (randInt(2, 5) + 3) % 6;
-    objPos = objPos.nodeInDir(offset);
+  for (int i = 0; i < surface; i++) {
+    for (int j = 0; j > depth; j--) {
+      Node* node = new Node(i, j);
+      objNodes.insert(*node);
+    }
   }
 
-  for(int i = 0; i < 10; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(0);
+  int randHeight = randInt(0, -(depth + 2));
+  int prevHeight = 0, currHeight = 0;
+  for (auto pos = objNodes.begin(); pos != objNodes.end(); ) {
+    if ((pos->y == 0 && (pos->x <= 9 || pos->x >= surface - 10)) ||
+        pos->x == 9 || pos->x == surface - 10 ||
+        (pos->y == depth + 1 && pos->x > 9 && pos->x < surface - 10)) {
+      insert(new Object(*pos));
+      ++pos;
+    } else {
+      if (pos->y != 0 && (pos->x <= 9 || pos->x >= surface - 10)) {
+        objNodes.erase(pos++);
+        continue;
+      } else {
+        int checkHeight = 0;
+        while (checkHeight < -(depth + 1)) {
+          bool nbrStatus[] = {false, false, false};
+          for (int i = 2; i <= 4; i++) {
+            nbrStatus[i - 2] =
+                objNodes.find(pos->nodeInDir(i)) != objNodes.end();
+          }
+          if (checkHeight < randHeight) {
+            if (nbrStatus[0] && !nbrStatus[1] && nbrStatus[2]) {
+              while (checkHeight < randHeight) {
+                objNodes.erase(pos++);
+                checkHeight++;
+                if (prevHeight > 0) {
+                  prevHeight--;
+                }
+              }
+            } else {
+              insert(new Object(*pos));
+              ++pos;
+              checkHeight++;
+              currHeight = checkHeight;
+            }
+            if (prevHeight > 0) {
+              prevHeight--;
+            }
+          } else if (prevHeight > 0) {
+            prevHeight--;
+            int rand = randInt(0, 10);
+            if (rand >= 7) {
+              if (!(nbrStatus[0] && !nbrStatus[1] && nbrStatus[2]) &&
+                  (nbrStatus[0] || nbrStatus[1] || nbrStatus[2])) {
+                if (pos->x == surface - 11 && !nbrStatus[2]) {
+                  objNodes.erase(pos++);
+                } else {
+                  insert(new Object(*pos));
+                  ++pos;
+                }
+              } else {
+                objNodes.erase(pos++);
+              }
+              currHeight = checkHeight;
+            } else {
+              objNodes.erase(pos++);
+            }
+            checkHeight++;
+          } else {
+            ++pos;
+            checkHeight++;
+          }
+        }
+        randHeight = randInt(0, -(depth + 2));
+        prevHeight = currHeight;
+      }
+    }
   }
 
-  for(int i = 0; i < 6; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//  for (auto pos = objNodes.begin(); pos != objNodes.end(); ) {
+//    if ((pos->y == 0 && (pos->x <= 9 || pos->x >= surface - 10)) ||
+//        pos->x == 9 || pos->x == surface - 10 ||
+//        (pos->y == depth + 1 && pos->x > 9 && pos->x < surface - 10)) {
+//      insert(new FaultRepairParticle(*pos, -1, randDir(), *this,
+//                                     FaultRepairParticle::State::Object));
+//      ++pos;
+//    } else {
+//      if (pos->y != 0 && (pos->x <= 9 || pos->x >= surface - 10)) {
+//        objNodes.erase(pos++);
+//        continue;
+//      }
+//      int rand = randInt(0, 10);
+//      float randWeight = (rand + (10.0f * (depth - pos->y) / depth)) / 2.0f;
+//      if (randWeight > 6) {
+//        objNodes.erase(pos++);
+//      } else {
+//        bool hasNoNbrs = true;
+//        for (int i = 2; i <= 4; i++) {
+//          if (objNodes.find(pos->nodeInDir(i)) != objNodes.end()) {
+//            hasNoNbrs = false;
+//            break;
+//          }
+//        }
+//        if (hasNoNbrs) {
+//          objNodes.erase(pos++);
+//        } else {
+//          insert(new FaultRepairParticle(*pos, -1, randDir(), *this,
+//                                         FaultRepairParticle::State::Object));
+//          ++pos;
+//        }
+//      }
+//    }
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(4);
-  }
+//  // Instantiate the object as a single line with turns. "Infinite" in this case
+//  // just means the object's surface is longer than the number of particles.
+//  Node objPos;
+//  for(int i = 0; i < 20; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, randDir(), *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 2; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    int offset = (randInt(2, 5) + 3) % 6;
+//    objPos = objPos.nodeInDir(offset);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(3);
-  }
+//  for(int i = 0; i < 10; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 0, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 4; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(0);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(1);
-  }
+//  for(int i = 0; i < 6; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 4, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 6; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(4);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(3);
-  }
+//  for(int i = 0; i < 2; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 3, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 10; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(3);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(4);
-  }
+//  for(int i = 0; i < 4; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 1, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 10; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(1);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(0);
-  }
+//  for(int i = 0; i < 6; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 3, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 2; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(3);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(5);
-  }
+//  for(int i = 0; i < 10; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 4, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 2; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(4);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(3);
-  }
+//  for(int i = 0; i < 10; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 0, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 6; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(0);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(5);
-  }
+//  for(int i = 0; i < 2; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 5, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 12; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(5);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(1);
-  }
+//  for(int i = 0; i < 2; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 3, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 6; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(3);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(5);
-  }
+//  for(int i = 0; i < 6; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 5, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 6; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(5);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(1);
-  }
+//  for(int i = 0; i < 12; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 1, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i <2; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(1);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(0);
-  }
+//  for(int i = 0; i < 6; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 5, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 6; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(5);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(4);
-  }
+//  for(int i = 0; i < 6; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 1, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 8; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(1);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(0);
-  }
+//  for(int i = 0; i <2; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 0, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 4; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(0);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(2);
-  }
+//  for(int i = 0; i < 6; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 4, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 8; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(4);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(0);
-  }
+//  for(int i = 0; i < 8; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 0, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 10; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(0);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(2);
-  }
+//  for(int i = 0; i < 4; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 2, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 10; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(2);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(0);
-  }
+//  for(int i = 0; i < 8; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 0, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
 
-  for(int i = 0; i < 20; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(0);
+//  }
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    int offset = (randInt(2, 5) + 3) % 6;
-    objPos = objPos.nodeInDir(offset);
-  }
+//  for(int i = 0; i < 10; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 2, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
+
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(2);
+//  }
+
+//  for(int i = 0; i < 10; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, 0, *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
+
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    objPos = objPos.nodeInDir(0);
+//  }
+
+//  for(int i = 0; i < 20; i++) {
+//    // Insert a new object particle at the given position.
+//    insert(new FaultRepairParticle(objPos, -1, randDir(), *this,
+//                                     FaultRepairParticle::State::Object));
+//    objNodes.insert(objPos);
+
+//    // Calculate the next object position, avoiding 'tunnels'. Do this using
+//    // offsets: 5 is down-right, 0 is right, 1 is up-right.
+//    int offset = (randInt(2, 5) + 3) % 6;
+//    objPos = objPos.nodeInDir(offset);
+//  }
 
   // Construct a forest structure of particles connected to the surface. Begin
   // with unoccupied positions above/adjacent to the surface as candidates.
