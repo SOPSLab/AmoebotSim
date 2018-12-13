@@ -71,10 +71,9 @@ int Simulator::numParticles() const {
   return system->size();
 }
 
-int Simulator::numObjects() const
-{
-    QMutexLocker locker(&system->mutex);
-    return system->numObjects();
+int Simulator::numObjects() const {
+  QMutexLocker locker(&system->mutex);
+  return system->numObjects();
 }
 
 int Simulator::numMovements() const {

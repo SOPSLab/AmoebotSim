@@ -12,7 +12,6 @@
 #include "core/node.h"
 #include "core/particle.h"
 #include "core/system.h"
-#include "core/tile.h"
 #include "ui/glitem.h"
 #include "ui/view.h"
 #include "core/object.h"
@@ -24,7 +23,7 @@ class QWheelEvent;
 class VisItem : public GLItem {
   Q_OBJECT
  public:
-  explicit VisItem(QQuickItem* parent = 0);
+  explicit VisItem(QQuickItem* parent = nullptr);
 
  signals:
   void stepForParticleAt(Node node);
@@ -47,16 +46,16 @@ class VisItem : public GLItem {
  protected:
   void setupCamera();
 
-    void drawGrid();
-    void drawParticles();
-    void drawMarks(const Particle& p);
-    void drawParticle(const Particle& p);
-    void drawBorders(const Particle& p);
-    void drawBorderPoints(const Particle& p);
-    void drawFromParticleTex(int index, const QPointF& pos);
-    void drawObjects();
-    void drawObject(const Object& t);
-    void drawConvexHull();
+  void drawGrid();
+  void drawParticles();
+  void drawMarks(const Particle& p);
+  void drawParticle(const Particle& p);
+  void drawBorders(const Particle& p);
+  void drawBorderPoints(const Particle& p);
+  void drawFromParticleTex(int index, const QPointF& pos);
+  void drawObjects();
+  void drawObject(const Object& t);
+  void drawConvexHull();
 
   static QPointF nodeToWorldCoord(const Node& node);
   static Node worldCoordToNode(const QPointF& worldCord);

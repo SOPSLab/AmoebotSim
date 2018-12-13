@@ -240,15 +240,13 @@ void VisItem::drawBorderPoints(const Particle& p) {
   }
 }
 
-void VisItem::drawFromParticleTex(int index, const QPointF& pos)
-{
-    // these values are a consequence of how the particle texture was created
-    static constexpr int texSize = 8;
-    // The expression (90.0f / 96.0f) is done to handle the conversion between
-    // 90 dpi and 96 dpi that Inkscape does when exporting the particle.svg as
-    // as particle.png
-    static constexpr float invTexSize = (90.0f / 96.0f) / texSize;
-    static constexpr float halfQuadSideLength = 256.0f / 220.0f;
+void VisItem::drawFromParticleTex(int index, const QPointF& pos) {
+  // These values are a consequence of how the particle texture was created. The
+  // expression (90.0f / 96.0f) is done to handle the conversion between 90 dpi
+  // and 96 dpi that Inkscape does when exporting the particle.svg as a .png.
+  static constexpr int texSize = 8;
+  static constexpr double invTexSize = (90.0 / 96.0) / texSize;
+  static constexpr double halfQuadSideLength = 256.0 / 220.0;
 
   const double column = index % texSize;
   const double row = index / texSize;
@@ -264,23 +262,21 @@ void VisItem::drawFromParticleTex(int index, const QPointF& pos)
   glfn->glVertex2d(pos.x() - halfQuadSideLength, pos.y() + halfQuadSideLength);
 }
 
-void VisItem::drawObjects()
-{
-    glfn->glBegin(GL_QUADS);
+void VisItem::drawObjects() {
+  glfn->glBegin(GL_QUADS);
 
-    std::deque<Object*> objects = system->getObjects();
-    for(auto t : objects) {
-        drawObject(*t);
-    }
+  std::deque<Object*> objects = system->getObjects();
+  for(auto t : objects) {
+      drawObject(*t);
+  }
 
   glfn->glEnd();
 }
 
-void VisItem::drawObject(const Object& t)
-{
-    auto pos = nodeToWorldCoord(t._node);
-    glfn->glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-    drawFromParticleTex(39, pos);
+void VisItem::drawObject(const Object& t) {
+  auto pos = nodeToWorldCoord(t._node);
+  glfn->glColor4d(0.0, 0.0, 0.0, 1.0);
+  drawFromParticleTex(39, pos);
 }
 
 void VisItem::drawConvexHull() {

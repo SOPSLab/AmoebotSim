@@ -34,14 +34,13 @@ class Simulator : public QObject {
   void runUntilTermination();
   void saveScreenshotSetup(const QString filePath);
 
-    int numParticles() const;
-    int numObjects() const;
-    int numMovements() const;
-    int numRounds() const;
-    int leaderElectionRounds() const;
-    int weakBounds() const;
-    int strongBounds() const;
-    void setRoundDuration(int ms);
+  int numParticles() const;
+  int numObjects() const;
+  int numMovements() const;
+  int numRounds() const;
+  int leaderElectionRounds() const;
+  int weakBounds() const;
+  int strongBounds() const;
 
  protected:
   QTimer stepTimer;
