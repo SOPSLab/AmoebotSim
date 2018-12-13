@@ -78,7 +78,8 @@ class ScriptInterface : public QObject {
   void convexhull(const int numParticles = 20, const int numObjects = 200,
                   const double holeProb = 0.1);
   void edgedetect(const int numParticles = 10, int countValue = 250);
-  void faultrepair(const int numParticles = 100, const double holeProb = 0.2);
+  void faultrepair(const int numParticles = 100, const double holeProb = 0.2,
+                   const double branchFactor = 0.8);
   void holeelimination(const int numParticles = 100,
                        const double holeProb = 0.4);
   void infobjcoating(const int numParticles = 100, const double holeProb = 0.2);

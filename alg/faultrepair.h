@@ -1,8 +1,8 @@
 // Defines the particle system and composing particles for the Fault Repair
 // Algorithm created by Kevin Lough for his undergraduate honors thesis.
 //
-// Run with faultrepair(#particles, hole probability) on the simulator command
-// line.
+// Run with faultrepair(#particles, hole probability, branchFactor) on the
+// simulator command line.
 //
 // TODO: Choose a reasonable finite number and count upto that number of such
 //      particles as you pass over them. Reset the count if the surface vector
@@ -95,7 +95,11 @@ class FaultRepairSystem : public AmoebotSystem {
   // generated surface. Takes an optionally specified size (#particles) and a
   // hole probability. holeProb in [0,1] controls how "spread out" the system
   // is; closer to 0 is more compressed, closer to 1 is more expanded.
-  FaultRepairSystem(uint numParticles = 100, double holeProb = 0.2);
+  // branchFactor in [0,1] controls how likely branches will appear in the
+  // faults; closer to 0 results in fewer branching observed, and closer to 1
+  // results in more branching.
+  FaultRepairSystem(uint numParticles = 100, double holeProb = 0.2,
+                    double branchFactor = 0.8);
 
   // Checks whether or not the system has completed fault repair (all particles
   // are contracted and in the finished state).
