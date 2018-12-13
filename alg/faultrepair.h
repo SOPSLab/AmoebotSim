@@ -96,8 +96,8 @@ class FaultRepairSystem : public AmoebotSystem {
   // hole probability. holeProb in [0,1] controls how "spread out" the system
   // is; closer to 0 is more compressed, closer to 1 is more expanded.
   // branchFactor in [0,1] controls how likely branches will appear in the
-  // faults; closer to 0 results in fewer branching observed, and closer to 1
-  // results in more branching.
+  // faults; a value closer to 0 results in a lower probability of branching
+  // being observed, and a value closer to 1 results in a higher probability.
   FaultRepairSystem(uint numParticles = 100, double holeProb = 0.2,
                     double branchFactor = 0.8);
 

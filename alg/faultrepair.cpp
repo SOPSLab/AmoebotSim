@@ -257,7 +257,8 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb,
   // surface represents how wide the structure is, depth represents how
   // "deep" the structure will go, and stretch represents the length of the
   // beginning and end sides of the structure.
-  int surface = numParticles > 150 ? 50 : numParticles > 50 ? numParticles / 3 : 20;
+  int surface = numParticles > 150 ?
+        50 : numParticles > 50 ? numParticles / 3 : 20;
   int depth = -(surface / 3);
   int stretch = numParticles / 10;
 
@@ -271,12 +272,12 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb,
 
   // Define a set of variables that control the structure of the faults:
   // randHeight is a random integer representing how "tall" the fault will
-  // initially be. prevHeight represents the height of the last part of the
-  // previous fault (from left-to-right in order), which will be used to create
+  // initially be. prevHeight represents the height of the last Object of the
+  // previous fault (from left-to-right order), which will be used to create
   // branches in the fault structures. Finally, currHeight is used to keep track
-  // of the current height of the last part of the current fault, and will be
-  // stored later in prevHeight at the end of the generation of the current
-  // fault.
+  // of the current height of the last inserted Object of the current fault, and
+  // will be stored later in prevHeight at the end of the generation of the
+  // current fault.
   int randHeight = randInt(0, -(depth + 2));
   int prevHeight = 0, currHeight = 0;
   for (auto pos = objNodes.begin(); pos != objNodes.end(); ) {
@@ -284,9 +285,11 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb,
     // stretch, ending stretch, left boundary, right boundary, or bottom
     // boundary of the initial rectangle structure. If so, insert an Object at
     // that position node.
-    if ((pos->y == 0 && (pos->x <= stretch - 1 || pos->x >= surface + stretch)) ||
+    if ((pos->y == 0 &&
+         (pos->x <= stretch - 1 || pos->x >= surface + stretch)) ||
         pos->x == stretch - 1 || pos->x == surface + stretch ||
-        (pos->y == depth + 1 && pos->x > stretch - 1 && pos->x < surface + stretch)) {
+        (pos->y == depth + 1 &&
+         pos->x > stretch - 1 && pos->x < surface + stretch)) {
       insert(new Object(*pos));
       ++pos;
     // Check whether or not the current position node is located below the
@@ -326,12 +329,17 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb,
         // Check whether or not the current position node is located directly
         // next to the right boundary. If so, we check whether or not its
         // neighbor at position 4 is valid, and if not, we delete the current
-        // position node. This check is done to avoid holes in the structure.
+        // position node from objNodes. This check is done to avoid holes in the
+        // structure.
         if (pos->x == surface + stretch - 1 && (!nbrStatus[2])) {
           objNodes.erase(pos++);
           checkHeight++;
         // The actions below attempt to create a fault of the specified
-        // height from randHeight.
+        // height from randHeight. This is done by inserting Object entities
+        // into the position nodes (assuming the position nodes are valid, i.e.,
+        // still contained in objNodes) until checkHeight equals randHeight,
+        // if the current position node has valid neighbors, and inserting
+        // an Object at the node will not create a hole in the structure.
         } else if (checkHeight < randHeight) {
           if (hasNbr && !holeCheck) {
             insert(new Object(*pos));
@@ -352,15 +360,15 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb,
         // result in the branching behavior observed in fault creation.
         } else if (prevHeight > 0) {
           prevHeight--;
-          // Generate a random integer that we will check against 10 * the
-          // specified branching factor (from input). If the random integer
+          // Here, we Generate a random integer that we will check against 10 *
+          // the specified branching factor (from input). If the random integer
           // is less than the branching factor value * 10, then we will check
           // if there are neighboring particles to avoid having a floating
           // Object (an Object entity disconnected from the main structure).
           // If there are neighboring particles, we may insert; otherwise, we
           // delete the current position node from the list
           int rand = randInt(0, 10);
-          if (rand < 10 * branchFactor) {
+          if (rand > 10 * branchFactor) {
             if (hasNbr && !holeCheck) {
               insert(new Object(*pos));
               ++pos;
