@@ -242,7 +242,6 @@ int FaultRepairParticle::nextSurfaceDir() const {
   return dir;
 }
 
-// TODO: create a more dynamic surface generation.
 FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb,
                                      double branchFactor) {
   Q_ASSERT(numParticles > 0);
@@ -257,12 +256,11 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb,
   // surface represents how wide the structure is, depth represents how
   // "deep" the structure will go, and stretch represents the length of the
   // beginning and end sides of the structure.
-  int surface = numParticles > 150 ?
-        50 : numParticles > 50 ? numParticles / 3 : 20;
+  int surface = 7 * round(sqrt(numParticles)) / 2;
   int depth = -(surface / 3);
-  int stretch = numParticles / 10;
+  int stretch = round(sqrt(numParticles));
 
-  // Generate a 2x2 rectangle using the parameters defined previously
+  // Generate a rectangle using the parameters defined previously
   for (int i = 0; i < surface + 2 * stretch; i++) {
     for (int j = 0; j > depth; j--) {
       Node* node = new Node(i, j);
