@@ -296,10 +296,13 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb,
                                pos->x >= surface + stretch)) {
       objNodes.erase(pos++);
     } else { // Below details how the faults are constructed
-      // checkHeight used to keep track of the current height within the
+      // checkHeight is used to keep track of the current height within the
       // structure, and if it exceeds the maximum height, we move to the next
       // fault.
       int checkHeight = 0;
+      // We iterate from the bottom boundary up to the maximum height allowed
+      // for a single column in the structure, inserting Object entities for
+      // the fault as we go.
       while (checkHeight < -(depth + 1)) {
         // Generate a boolean array which contains the status of the 3 neighbors
         // of the current position node in the directions {2, 3, 4}. If the
