@@ -49,3 +49,17 @@ void ParameterListModel::updateAlgParameters(QString algName) {
     _values << "";
   }
 }
+
+void ParameterListModel::createCommand(QString algName) {
+  QString cmd;
+  cmd += _algs->getAlgSignature(algName) + "(";
+  for (int i = 0; i < _values.size(); ++i) {
+    cmd += _values[i];
+    if (i + 1 < _values.size()) {
+      cmd += ", ";
+    }
+  }
+  cmd += ")";
+
+  emit executeCommand(cmd);
+}

@@ -22,7 +22,7 @@ ApplicationWindow {
   }
 
   signal algSelected(string algName)
-  signal instantiate()
+  signal instantiate(string algName)
 
   signal start()
   signal stop()
@@ -263,7 +263,7 @@ ApplicationWindow {
 
       onClicked: {
         vis.forceActiveFocus()
-        instantiate()
+        instantiate(algorithmSelectBox.currentText)
       }
     }
 

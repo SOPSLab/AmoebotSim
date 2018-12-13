@@ -42,11 +42,13 @@ Application::Application(int argc, char *argv[])
     auto algbox = qmlRoot->findChild<QObject*>("algorithmSelectBox");
     algbox->setProperty("model", QVariant::fromValue(algs.getAlgNames()));
 
-    // Set the parameter list model's algorithms and assign it to the parameter
-    // list view.
+    // Set the parameter list model's algorithms and connect it to the signals
+    // from other UI elements.
     parameterModel.setAlgorithmList(&algs);
     connect(qmlRoot, SIGNAL(algSelected(QString)),
             &parameterModel, SLOT(updateAlgParameters(QString)));
+    connect(qmlRoot, SIGNAL(instantiate(QString)),
+            &parameterModel, SLOT(createCommand(QString)));
 
     // setup connections between GUI and Simulator
     connect(&sim, &Simulator::systemChanged, vis, &VisItem::systemChanged);
@@ -91,6 +93,7 @@ Application::Application(int argc, char *argv[])
             }
     );
     connect(qmlRoot, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
+    connect(&parameterModel, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
 
     // Set default step duration.
     sim.setStepDuration(0);

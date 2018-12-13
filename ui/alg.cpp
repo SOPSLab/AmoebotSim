@@ -173,6 +173,17 @@ QStringList AlgorithmList::getAlgNames() const {
   return names;
 }
 
+QString AlgorithmList::getAlgSignature(QString algName) const {
+  QString signature;
+  for (Algorithm alg : _algorithms) {
+    if (alg.getName().compare(algName) == 0) {
+      signature = alg.getSignature();
+    }
+  }
+
+  return signature;
+}
+
 QStringList AlgorithmList::getParameterNames(QString algName) const {
   QStringList names;
   for (Algorithm alg : _algorithms) {
