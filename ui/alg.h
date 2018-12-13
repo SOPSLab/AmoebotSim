@@ -19,11 +19,12 @@ class Algorithm {
   QString getSignature() const;
   void setSignature(QString signature);
 
-  // Returns a list of this algorithm's parameter names.
+  // Returns a list of this algorithm's parameter names or default values.
   QStringList getParameterNames() const;
+  QStringList getParameterDefaults() const;
 
-  // Adds a parameter to the algorithm of the given type and name.
-  void addParameter(QString type, QString parameter);
+  // Adds a parameter to the algorithm of the given name and default value.
+  void addParameter(QString parameter, QString defaultValue);
 
  private:
   QString _name;
@@ -43,8 +44,10 @@ class AlgorithmList {
   // Returns the algorithm signature of the given algorithm.
   QString getAlgSignature(QString algName) const;
 
-  // Returns a list of all parameter names of the given algorithm.
+  // Returns a list of all parameter names or default values of the given
+  // algorithm.
   QStringList getParameterNames(QString algName) const;
+  QStringList getParameterDefaults(QString algName) const;
 
  private:
   std::vector<Algorithm> _algorithms;

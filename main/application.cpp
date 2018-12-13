@@ -15,9 +15,12 @@ static const QString scriptPath = "";
 Application::Application(int argc, char *argv[])
   : QGuiApplication(argc, argv) {
   if (scriptPath == "") {
+    // Setup the parameter list model.
+    parameterModel.setAlgorithmList(&algs);
+    engine.rootContext()->setContextProperty("parameterModel", &parameterModel);
+
     // Setup GUI.
     qmlRegisterType<VisItem>("VisItem", 1, 0, "VisItem");
-    engine.rootContext()->setContextProperty("parameterModel", &parameterModel);
     engine.load(QUrl(QStringLiteral("qrc:///qml/main.qml")));
     auto qmlRoot = engine.rootObjects().first();
     auto vis = qmlRoot->findChild<VisItem*>();
@@ -42,9 +45,7 @@ Application::Application(int argc, char *argv[])
     auto algbox = qmlRoot->findChild<QObject*>("algorithmSelectBox");
     algbox->setProperty("model", QVariant::fromValue(algs.getAlgNames()));
 
-    // Set the parameter list model's algorithms and connect it to the signals
-    // from other UI elements.
-    parameterModel.setAlgorithmList(&algs);
+    // Connect the parameter list model to the UI elements that use it.
     connect(qmlRoot, SIGNAL(algSelected(QString)),
             &parameterModel, SLOT(updateAlgParameters(QString)));
     connect(qmlRoot, SIGNAL(instantiate(QString)),
