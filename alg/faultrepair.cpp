@@ -320,7 +320,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
             }
             checkHeight++;
           } else {
-            ++pos;
+            objNodes.erase(pos++);
             checkHeight++;
           }
         }
