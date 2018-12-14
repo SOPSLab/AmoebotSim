@@ -89,6 +89,7 @@ AlgorithmList::AlgorithmList() {
   _algorithms.push_back(Algorithm("Fault Repair", "faultrepair"));
   _algorithms.back().addParameter("# Particles", "100");
   _algorithms.back().addParameter("Hole Prob.", "0.2");
+  _algorithms.back().addParameter("Branching Factor", "0.8");
 
   // Hole Elimination.
   _algorithms.push_back(Algorithm("Hole Elimination", "holeelimination"));
