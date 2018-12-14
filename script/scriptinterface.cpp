@@ -69,20 +69,20 @@ void ScriptInterface::writeToFile(const QString filePath, const QString text) {
   file.close();
 }
 
-void ScriptInterface::round() {
-  sim.round();
+void ScriptInterface::step() {
+  sim.step();
 }
 
 void ScriptInterface::runUntilTermination() {
   sim.runUntilTermination();
 }
 
-void ScriptInterface::setRoundDuration(const int ms) {
+void ScriptInterface::setStepDuration(const int ms) {
   if (ms < 0) {
-    log("Round duration must be non-negative", true);
-    sim.setRoundDuration(0);
+    log("Step duration must be non-negative", true);
+    sim.setStepDuration(0);
   } else {
-    sim.setRoundDuration(ms);
+    sim.setStepDuration(ms);
   }
 }
 
@@ -139,19 +139,19 @@ void ScriptInterface::saveScreenshot(QString filePath) {
   sim.saveScreenshotSetup(filePath);
 }
 
-void ScriptInterface::filmSimulation(QString filePath, const int roundLimit) {
+void ScriptInterface::filmSimulation(QString filePath, const int stepLimit) {
   int fnameLen = 0;
-  int temp = roundLimit;
+  int temp = stepLimit;
   while (temp >= 10) {
     ++fnameLen;
     temp = temp % 10;
   }
 
   int i = 0;
-  while(!sim.getSystem()->hasTerminated() && i < roundLimit) {
+  while(!sim.getSystem()->hasTerminated() && i < stepLimit) {
     emit vis->beforeRendering();  // Updates GUI #rounds and #movements labels.
     saveScreenshot(filePath + pad(i,fnameLen) + QString(".png"));
-    round();
+    step();
     ++i;
   }
 }

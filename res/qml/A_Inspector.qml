@@ -3,11 +3,11 @@ import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.1
 
 Rectangle {
-    implicitWidth: 300
-    implicitHeight: 25
-    border.width: 1
-    border.color: "#888"
-    radius: 4
-    color: "#eee"
-    opacity: 0.9
+  implicitWidth: 300
+  implicitHeight: 25
+  border.width: 1
+  border.color: "#888"
+  radius: 4
+  color: "#eee"
+  opacity: 0.9
 }

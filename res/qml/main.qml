@@ -1,383 +1,432 @@
 import QtQuick 2.2
-import QtQuick.Controls 1.2
+import QtQuick.Controls 1.4
+import QtQuick.Controls.Styles 1.1
 import QtQuick.Layouts 1.1
+
 import VisItem 1.0
 
 ApplicationWindow {
-    id: appWindow
-    visible: true
-    color: "black"
-    minimumWidth: 800
-    minimumHeight: 600
-    title: "AmoebotSim"
+  id: appWindow
+  visible: true
+  color: "black"
+  minimumWidth: 900
+  minimumHeight: 600
+  title: "AmoebotSim"
 
-    onWidthChanged: {
-        vis.width = width
+  onWidthChanged: {
+    vis.width = width
+  }
+
+  onHeightChanged: {
+    vis.height = height
+  }
+
+  signal algSelected(string algName)
+  signal instantiate(string algName)
+
+  signal start()
+  signal stop()
+  signal step()
+  signal focusOnCenterOfMass()
+
+  signal executeCommand(string cmd)
+  signal commandFieldUp()
+  signal commandFieldDown()
+  signal commandFieldReset()
+
+  function log(msg, isError) {
+    commandField.visible = false
+    fieldLayout.forceActiveFocus()
+
+    resultField.text = msg
+    resultField.showsError = isError;
+    resultField.opacity = 1
+    resultField.visible = true
+    resultFieldFade.running = true
+  }
+
+  function setLabelStart() {
+    startStopButton.text = "Start"
+  }
+
+  function setLabelStop() {
+    startStopButton.text = "Stop"
+  }
+
+  function setCommand(cmd) {
+    commandField.text = cmd
+  }
+
+  function setNumMovements(num) {
+    numMovesText.text = num
+  }
+
+  function setNumRounds(num) {
+    numRoundsText.text = num
+  }
+
+  function setResolution(_width, _height) {
+    if (_width < appWindow.minimumWidth) {
+      appWindow.width = appWindow.minimumWidth
+    } else {
+      appWindow.width = _width
     }
 
-    onHeightChanged: {
-        vis.height = height
+    if (_height < appWindow.minimumHeight) {
+      appWindow.height = appWindow.minimumHeight
+    } else {
+      appWindow.height = _height
+    }
+  }
+
+  function inspectParticle(text) {
+    inspectorText.text = text
+    if (text !== "") {
+      inspector.visible = true
+    } else {
+      inspector.visible = false
+    }
+  }
+
+  VisItem {
+    id: vis
+    focus: true
+    Keys.onPressed: {
+      if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
+        resultField.visible = false
+        resultFieldFade.running = false
+        commandField.visible = true
+        commandField.forceActiveFocus()
+        event.accepted = true
+      } else if (event.modifiers & Qt.ControlModifier) {
+        if (event.key === Qt.Key_B) {
+          sidebar.visible = !sidebar.visible
+          event.accepted = true
+        } else if (event.key === Qt.Key_E) {
+          (startStopButton.text === "Start") ? start() : stop()
+          event.accepted = true
+        } else if (event.key === Qt.Key_D) {
+          step()
+          event.accepted = true
+        } else if (event.key === Qt.Key_F) {
+          vis.focusOnCenterOfMass()
+          event.accepted = true
+        }
+      }
+    }
+  }
+
+  A_Inspector {
+    id: inspector
+    visible: false
+    anchors.top: vis.top
+    anchors.left: vis.left
+    anchors.margins: 10
+    height: inspectorText.height + 20
+
+    Text {
+      id: inspectorText
+      anchors.margins: 10
+      anchors.top: parent.top
+      anchors.left: parent.left
+      color: "#000"
+      text: ""
+    }
+  }
+
+  Item {
+    id: fieldLayout
+    anchors.left: vis.left
+    anchors.leftMargin: 10
+    anchors.bottom: vis.bottom
+    anchors.bottomMargin: 10
+    width: sidebar.visible ? vis.width - (sidebar.width + 30) : vis.width - 20
+    height: 30
+
+    A_TextField {
+      id: commandField
+      visible: false
+      anchors.fill: parent
+
+      focus: true
+      Keys.onPressed: {
+        if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
+          visible = false
+          if (text != "") {
+            executeCommand(text)
+          }
+          text = ""
+          vis.forceActiveFocus()
+          event.accepted = true
+        } else if (event.key === Qt.Key_Escape) {
+          visible = false
+          text = ""
+          vis.forceActiveFocus()
+          commandFieldReset()
+          event.accepted = true
+        } else if (event.key === Qt.Key_Up) {
+          commandFieldUp()
+          event.accepted = true
+        } else if (event.key === Qt.Key_Down) {
+          commandFieldDown()
+          event.accepted = true
+        }
+      }
     }
 
-    signal start()
-    signal stop()
-    signal round()
-    signal focusOnCenterOfMass()
+    A_ResultTextField {
+      id: resultField
+      visible: false
+      opacity: 0
+      anchors.fill: parent
 
-    signal executeCommand(string cmd)
-    signal commandFieldUp()
-    signal commandFieldDown()
-    signal commandFieldReset()
+      SequentialAnimation {
+        id: resultFieldFade
+        running: false
 
-    function log(msg, isError)
-    {
-        commandField.visible = false
-        buttonRow.forceActiveFocus()
-
-        resultField.text = msg
-        resultField.showsError = isError;
-        resultField.opacity = 1
-        resultField.visible = true
-        resultFieldFade.running = true
-    }
-
-    function setLabelStart()
-    {
-        startStopButton.text = "start"
-    }
-
-    function setLabelStop()
-    {
-        startStopButton.text = "stop"
-    }
-
-    function setCommand(cmd)
-    {
-        commandField.text = cmd
-    }
-
-    function setNumMovements(num)
-    {
-        numMovementsText.text = num
-    }
-
-    function setNumRounds(num)
-    {
-        numRoundsText.text = num
-    }
-
-    function setResolution(_width, _height){
-        if(_width >= appWindow.minimumWidth){
-            appWindow.width = _width
-        } else {
-            appWindow.width = appWindow.minimumWidth
+        PauseAnimation {
+          duration: 5000
         }
 
-        if(_height >= appWindow.minimumHeight){
-            appWindow.height = _height
-        } else {
-            appWindow.height = appWindow.minimumHeight
+        NumberAnimation {
+          target: resultField
+          property: "opacity"
+          to: 0
+          duration: 1000
         }
+      }
+    }
+  }
+
+  ColumnLayout {
+    id: sidebar
+    spacing: 10
+    anchors.right: vis.right
+    anchors.top: vis.top
+    anchors.bottom: vis.bottom
+    anchors.margins: 10
+    width: 280
+    height: vis.height - 20
+
+    ComboBox {
+      id: algorithmSelectBox
+      objectName: "algorithmSelectBox"
+      Layout.preferredWidth: parent.width
+      Layout.preferredHeight: 35
+
+      onCurrentIndexChanged: {
+        algSelected(currentText)
+      }
     }
 
-    function inspectParticle(text)
-    {
-        inspectorText.text = text
-        if(text != "") {
-            inspector.visible = true
-        } else {
-            inspector.visible = false
+    ScrollView {
+      id: parameterView
+      Layout.preferredWidth: parent.width
+      Layout.preferredHeight: 105
+      verticalScrollBarPolicy: Qt.ScrollBarAlwaysOn
+
+      ListView {
+        id: parameterList
+        objectName: "parameterList"
+        anchors.fill: parent
+
+        model: parameterModel
+        delegate: Row {
+          Text {
+            id: parameterText
+            width: 200
+            text: model.parameterName + ": "
+          }
+
+          TextField {
+            width: sidebar.width - 30 - parameterText.width
+            style: TextFieldStyle {
+              background: Rectangle {
+                implicitHeight: 30
+                border.width: 1
+                border.color: "#888"
+                color: "#eee"
+                opacity: 0.9
+              }
+            }
+
+            onEditingFinished: model.parameterValue = text
+          }
         }
+      }
     }
 
-    VisItem {
-        id: vis
+    A_Button {
+      id: instantiateButton
+      text: "Instantiate"
+      Layout.preferredWidth: parent.width
+
+      onClicked: {
+        vis.forceActiveFocus()
+        instantiate(algorithmSelectBox.currentText)
+      }
     }
 
-    A_Inspector {
-        id: inspector
-        visible: false
-        anchors.top: vis.top
-        anchors.left: vis.left
-        anchors.margins: 10
-        height: inspectorText.height + 20
+    Rectangle {
+      id: fillRectangle
+      Layout.preferredWidth: parent.width
+      Layout.fillHeight: true
+      color: "transparent"
+    }
+
+    RowLayout {
+      id: roundsRow
+      Layout.bottomMargin: 15
+
+      Rectangle {
+        Layout.preferredWidth: 70
         Text {
-            id: inspectorText
-            anchors.margins: 10
-            anchors.top: parent.top
-            anchors.left: parent.left
-            color: "#000"
-            text: ""
+          anchors.left: parent.left
+          text: "Rounds:"
         }
+      }
+
+      Rectangle {
+        Layout.preferredWidth: 25
+        Text {
+          id: numRoundsText
+          anchors.left: parent.left
+          text: "0"
+        }
+      }
     }
 
     RowLayout {
-        id: roundsRow
-        anchors.right: vis.right
-        anchors.top: vis.top
-        anchors.rightMargin: 30
-        anchors.topMargin: 10
+      id: movesRow
+      Layout.bottomMargin: 20
 
-        Rectangle {
-            Layout.preferredWidth: 60
-            Text{
-                anchors.right: parent.right
-                text: "Rounds: "
-            }
+      Rectangle {
+        Layout.preferredWidth: 70
+        Text {
+          anchors.left: parent.left
+          text: "Moves:"
         }
-        Rectangle {
-            Layout.preferredWidth: 20
-            Text{
-                id: numRoundsText
-                anchors.left: parent.left
-                text: "0"
-            }
+      }
+
+      Rectangle {
+        Layout.preferredWidth: 25
+        Text {
+          id: numMovesText
+          anchors.left: parent.left
+          text: "0"
         }
+      }
     }
 
     RowLayout {
-        id: numMovementsRow
-        anchors.top: roundsRow.bottom
-        anchors.right: vis.right
-        anchors.rightMargin: 30
-        anchors.topMargin: 15
+      id: stepDurationRow
+      Layout.bottomMargin: 15
 
-        Rectangle {
-            Layout.preferredWidth: 60
-            Text{
-                anchors.right: parent.right
-                text: "Movements: "
-            }
+      Rectangle {
+        Layout.preferredWidth: 130
+        Text {
+          anchors.left: parent.left
+          text: "Step Duration:"
         }
-        Rectangle {
-            Layout.preferredWidth: 20
-            Text{
-                id: numMovementsText
-                anchors.left: parent.left
-                text: "0"
-            }
+      }
+
+      Rectangle {
+        Layout.preferredWidth: 30
+        Text {
+          id: stepDurationText
+          anchors.left: parent.left
+          text: ""
         }
+      }
     }
-
 
     Slider {
-        id: roundDurationSlider
-        objectName: "roundDurationSlider"
-        maximumValue: 100.0
-        minimumValue: 1.0
-        stepSize: 0.0
-        updateValueWhileDragging: true
-        value: 100.0
+      id: stepDurationSlider
+      objectName: "stepDurationSlider"
+      Layout.preferredWidth: parent.width
 
-        orientation: Qt.Vertical
-        implicitHeight: 300
-        anchors.bottom: buttonRow.top
-        anchors.right: vis.right
-        anchors.rightMargin: 25
-        anchors.bottomMargin: 10
+      orientation: Qt.Horizontal
+      minimumValue: 1.0
+      maximumValue: 100.0
+      stepSize: 0.0
+      updateValueWhileDragging: true
+      value: 1.0
 
-        signal roundDurationChanged(int value)
-        property bool setterDisabled: false;
-        property bool callbackDisabled: false;
+      signal stepDurationChanged(int value)
+      property bool setterDisabled: false
+      property bool callbackDisabled: false
 
-        onValueChanged: {
-            if(!callbackDisabled){
-                roundDurationChanged(transferFunc(value))
-                roundDurationText.text = transferFunc(value) + " ms"
-            }
+      onValueChanged: {
+        if (!callbackDisabled) {
+          stepDurationChanged(transferFunc(value))
+          stepDurationText.text = transferFunc(value) + " ms"
+        }
+      }
+
+      // When changing the step duration "value" via slider, disable the
+      // "setStepDuration" function because it is always called when "value"
+      // changes. This is because "onValueChanged" calls "stepDurationChanged",
+      // which in turn calls "setStepDuration". We break this cycle by disabling
+      // the latter.
+      onPressedChanged: {
+        setterDisabled = !setterDisabled
+      }
+
+      // When setting the ms value via console this setter is called. This
+      // setter changes the value of the slider which results in a call of
+      // "onValueChanged". As explained above, this creates a call cycle that we
+      // break by disabling the callback "onValueChanged" for this value change.
+      function setStepDuration(ms) {
+        if (!setterDisabled) {
+          callbackDisabled = true
+          value = invTransferFunc(ms)
+          callbackDisabled = false
+          stepDurationText.text = ms + " ms"
+        }
+      }
+
+      function transferFunc(val){
+        var ms;
+        var b = Math.pow(0.2, 1/49)
+        var a = 100 * Math.pow(5, 1/49)
+        if (val >= 50) {
+          ms = (-0.4 * val) + 40
+        } else {
+          ms = a * Math.pow(b, val)
         }
 
-        onPressedChanged: {
-            /**When changing the value via slider disable the "setRoundDuration" function
-            because it is always called when "value" changes. This is because
-            "onValueChanged" calls "roundDurationChanged" which results in a "setRoundDuration"
-            call. Therefore we break the cycle by disabling the latter.
-            **/
-            setterDisabled = !setterDisabled
+        return Math.round(ms)
+      }
+
+      function invTransferFunc(ms){
+        var val;
+        var a = 100 * Math.pow(5, 1/49)
+        if (ms <= 20) {
+          val = (-2.5 * ms) + 100
+        } else {
+          val = (49 / Math.log(5)) * Math.log(a / ms)
         }
 
-        function setRoundDuration(ms){
-            if(!setterDisabled){
-                /**When setting the ms value via console this setter is called. This setter
-                  changes the value of the slider which results in a call of "onValueChanged".
-                  As explained above, that function results in a call of this setter again.
-                  Therefore we break the cycle by disabling the callback "onValueChanged" for
-                  this value change.
-                **/
-                callbackDisabled = true
-                value = invTransferFunc(ms)
-                callbackDisabled = false
-                roundDurationText.text = ms + " ms"
-            }
-        }
-
-        function transferFunc(val){
-            var ms;
-            var b = Math.pow(0.2, 1/49)
-            var a = 100 * Math.pow(5, 1/49)
-            if( val >= 50){
-                ms = -0.4*val + 40
-            } else {
-                ms = a*Math.pow(b, val)
-            }
-            return Math.round(ms)
-        }
-
-        function invTransferFunc(ms){
-            var val;
-            var a = 100 * Math.pow(5, 1/49)
-            if( ms <= 20 ){
-                val = -2.5*ms + 100
-            } else {
-                val = (49/Math.log(5))*Math.log(a/ms)
-            }
-
-            return val
-        }
-
-        Text{
-            id: roundDurationText
-            text: ""
-            anchors.bottom: roundDurationSlider.top
-            anchors.bottomMargin: 10
-        }
+        return val
+      }
     }
 
-    Row {
-        id: buttonRow
-        spacing: 10
-        anchors.margins: 10
-        anchors.bottom: vis.bottom
-        anchors.right: vis.right
+    RowLayout {
+      id: controlButtonRow
+      spacing: 15
+      Layout.preferredWidth: parent.width
 
-        A_TextField {
-            id: commandField
-            visible: false
-            width: startStopButton.visible ? vis.width - 200 : vis.width - 20
+      A_Button {
+        id: startStopButton
+        text: "Start"
+        onClicked: (text == "Start") ? start() : stop()
+      }
 
-            focus: true
-            Keys.onPressed: {
-                if(event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
-                    visible = false
-                    if(text != "") {
-                        executeCommand(text)
-                    }
-                    text = ""
-                    buttonRow.forceActiveFocus()
-                    event.accepted = true
-                } else if(event.key === Qt.Key_Escape) {
-                    visible = false
-                    text = ""
-                    buttonRow.forceActiveFocus()
-                    commandFieldReset()
-                    event.accepted = true
-                } else if(event.key === Qt.Key_Up) {
-                    commandFieldUp()
-                    event.accepted = true
-                } else if(event.key === Qt.Key_Down) {
-                    commandFieldDown()
-                    event.accepted = true
-                }
-            }
-        }
-
-        A_ResultTextField {
-            id: resultField
-            visible: false
-            opacity: 0
-            width: startStopButton.visible ? vis.width - 200 : vis.width - 20
-
-            SequentialAnimation {
-                id: resultFieldFade
-                running: false
-
-                PauseAnimation {
-                    duration: 5000
-                }
-
-                NumberAnimation {
-                    target: resultField
-                    property: "opacity"
-                    to: 0
-                    duration: 1000
-                }
-            }
-        }
-
-        focus: true
-        property int ui_state: 0
-
-        Keys.onPressed: {
-            if(event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
-                resultField.visible = false
-                resultFieldFade.running = false
-                commandField.visible = true
-                commandField.forceActiveFocus()
-                event.accepted = true
-            } else if(event.key === Qt.Key_B && (event.modifiers & Qt.ControlModifier)) {
-                ui_state++
-                if(ui_state > 3) {
-                    ui_state = 0
-                }
-
-                if(ui_state == 0) { // all ui elements visible
-                    startStopButton.visible = true
-                    roundButton.visible = true
-                    roundDurationSlider.visible = true
-                    roundsRow.visible = true
-                    numMovementsRow.visible = true
-                }
-                else if(ui_state == 1) { // only start/stop and round buttons
-                    roundDurationSlider.visible = false
-                    roundsRow.visible = false
-                    numMovementsRow.visible = false
-                }
-                else if(ui_state == 2) { // only #rounds and #movement labels
-                    startStopButton.visible = false
-                    roundButton.visible = false
-                    roundsRow.visible = true
-                    numMovementsRow.visible = true
-                }
-                else if(ui_state == 3) { // none
-                    roundsRow.visible = false
-                    numMovementsRow.visible = false
-                }
-                event.accepted = true
-            } else if(event.key === Qt.Key_E && (event.modifiers & Qt.ControlModifier)) {
-                if(startStopButton.text === "start") {
-                    start()
-                } else {
-                    stop()
-                }
-                event.accepted = true
-            } else if(event.key === Qt.Key_D && (event.modifiers & Qt.ControlModifier)) {
-                round()
-                event.accepted = true
-            } else if(event.key === Qt.Key_F && (event.modifiers & Qt.ControlModifier)) {
-                vis.focusOnCenterOfMass()
-                event.accepted = true
-            }
-        }
-
-        A_Button {
-            id: startStopButton
-            text: "start"
-
-            onClicked: {
-                if(text == "start") {
-                    start()
-                } else {
-                    stop()
-                }
-            }
-        }
-
-        A_Button {
-            id: roundButton
-            text: "round"
-            onClicked: {
-                round()
-            }
-        }
+      A_Button {
+        id: stepButton
+        text: "Step"
+        onClicked: step()
+      }
     }
+  }
 }
