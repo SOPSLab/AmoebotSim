@@ -229,14 +229,17 @@ void ScriptInterface::edgedetect(const int numParticles, int countValue) {
   }
 }
 
-void ScriptInterface::faultrepair(const int numParticles,
-                                  const double holeProb) {
+void ScriptInterface::faultrepair(const int numParticles, const double holeProb,
+                                  const double branchFactor) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
     log("holeProb in [0,1] required", true);
+  } else if (branchFactor < 0 || branchFactor > 1) {
+    log("branchFactor in [0,1] required");
   } else {
-    sim.setSystem(std::make_shared<FaultRepairSystem>(numParticles, holeProb));
+    sim.setSystem(std::make_shared<FaultRepairSystem>(numParticles, holeProb,
+                                                      branchFactor));
   }
 }
 

@@ -242,237 +242,150 @@ int FaultRepairParticle::nextSurfaceDir() const {
   return dir;
 }
 
-// TODO: create a more dynamic surface generation.
-FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb) {
+FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb,
+                                     double branchFactor) {
   Q_ASSERT(numParticles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
+  Q_ASSERT(0 <= branchFactor && branchFactor <= 1);
 
   std::set<Node> objNodes;  // Nodes occupied by object.
   std::set<Node> particleNodes;  // Nodes occupied by non-object particles.
 
-  // Instantiate the object as a single line with turns. "Infinite" in this case
-  // just means the object's surface is longer than the number of particles.
-  Node objPos;
-  for(int i = 0; i < 20; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
+  // Define the initial structural variables of the "rectangle" representing
+  // the surface structure which will later contain faults.
+  // surface represents how wide the structure is, depth represents how
+  // "deep" the structure will go, and stretch represents the length of the
+  // beginning and end sides of the structure.
+  int surface = 7 * round(sqrt(numParticles)) / 2;
+  int depth = -(surface / 4);
+  int stretch = round(sqrt(numParticles));
 
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    int offset = (randInt(2, 5) + 3) % 6;
-    objPos = objPos.nodeInDir(offset);
+  // Generate a rectangle using the parameters defined previously
+  for (int i = 0; i < surface + 2 * stretch; i++) {
+    for (int j = 0; j > depth; j--) {
+      Node* node = new Node(i, j);
+      objNodes.insert(*node);
+    }
   }
 
-  for(int i = 0; i < 10; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(0);
-  }
-
-  for(int i = 0; i < 6; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(4);
-  }
-
-  for(int i = 0; i < 2; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(3);
-  }
-
-  for(int i = 0; i < 4; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(1);
-  }
-
-  for(int i = 0; i < 6; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(3);
-  }
-
-  for(int i = 0; i < 10; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(4);
-  }
-
-  for(int i = 0; i < 10; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(0);
-  }
-
-  for(int i = 0; i < 2; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(5);
-  }
-
-  for(int i = 0; i < 2; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(3);
-  }
-
-  for(int i = 0; i < 6; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(5);
-  }
-
-  for(int i = 0; i < 12; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(1);
-  }
-
-  for(int i = 0; i < 6; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(5);
-  }
-
-  for(int i = 0; i < 6; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(1);
-  }
-
-  for(int i = 0; i <2; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(0);
-  }
-
-  for(int i = 0; i < 6; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(4);
-  }
-
-  for(int i = 0; i < 8; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(0);
-  }
-
-  for(int i = 0; i < 4; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(2);
-  }
-
-  for(int i = 0; i < 8; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(0);
-  }
-
-  for(int i = 0; i < 10; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(2);
-  }
-
-  for(int i = 0; i < 10; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    objPos = objPos.nodeInDir(0);
-  }
-
-  for(int i = 0; i < 20; i++) {
-    // Insert a new object particle at the given position.
-    insert(new Object(objPos));
-    objNodes.insert(objPos);
-
-    // Calculate the next object position, avoiding 'tunnels'. Do this using
-    // offsets: 5 is down-right, 0 is right, 1 is up-right.
-    int offset = (randInt(2, 5) + 3) % 6;
-    objPos = objPos.nodeInDir(offset);
+  // Define a set of variables that control the structure of the faults:
+  // randHeight is a random integer representing how "tall" the fault will
+  // initially be. prevHeight represents the height of the last Object of the
+  // previous fault (from left-to-right order), which will be used to create
+  // branches in the fault structures. Finally, currHeight is used to keep track
+  // of the current height of the last inserted Object of the current fault, and
+  // will be stored later in prevHeight at the end of the generation of the
+  // current fault.
+  int randHeight = randInt(0, -(depth + 2));
+  int prevHeight = 0, currHeight = 0;
+  for (auto pos = objNodes.begin(); pos != objNodes.end(); ) {
+    // Check whether or not the current position node is a part of the beginning
+    // stretch, ending stretch, left boundary, right boundary, or bottom
+    // boundary of the initial rectangle structure. If so, insert an Object at
+    // that position node.
+    if ((pos->y == 0 &&
+         (pos->x <= stretch - 1 || pos->x >= surface + stretch)) ||
+        pos->x == stretch - 1 || pos->x == surface + stretch ||
+        (pos->y == depth + 1 &&
+         pos->x > stretch - 1 && pos->x < surface + stretch)) {
+      insert(new Object(*pos));
+      ++pos;
+    // Check whether or not the current position node is located below the
+    // beginning or ending stretches, and if so, delete them from the list of
+    // potential locations for objects.
+    } else if (pos->y != 0 && (pos->x <= stretch - 1 ||
+                               pos->x >= surface + stretch)) {
+      objNodes.erase(pos++);
+    } else { // Below details how the faults are constructed
+      // checkHeight is used to keep track of the current height within the
+      // structure, and if it exceeds the maximum height, we move to the next
+      // fault.
+      int checkHeight = 0;
+      // We iterate from the bottom boundary up to the maximum height allowed
+      // for a single column in the structure, inserting Object entities for
+      // the fault as we go.
+      while (checkHeight < -(depth + 1)) {
+        // Generate a boolean array which contains the status of the 3 neighbors
+        // of the current position node in the directions {2, 3, 4}. If the
+        // neighbors are in the system, their values are stored as true;
+        // otherwise, if the neighboring position nodes have been removed, they
+        // are stored as false
+        bool nbrStatus[] = {false, false, false};
+        for (int i = 2; i <= 4; i++) {
+          nbrStatus[i - 2] =
+              objNodes.find(pos->nodeInDir(i)) != objNodes.end();
+        }
+        // The two boolean variables below are used to determine whether or not
+        // to insert an Object at the current position node. holeCheck is used
+        // to avoid creating a "hole" in the resulting structure, i.e., an
+        // isolated opening in the structure which cannot be reached by
+        // particles because it is blocked from the particles by Object
+        // entities. hasNbr is used to determine whether or not the current
+        // position node has valid neighboring position nodes.
+        bool holeCheck = nbrStatus[0] && !nbrStatus[1] && nbrStatus[2];
+        bool hasNbr = nbrStatus[0] || nbrStatus[1] || nbrStatus[2];
+        // Check whether or not the current position node is located directly
+        // next to the right boundary. If so, we check whether or not its
+        // neighbor at position 4 is valid, and if not, we delete the current
+        // position node from objNodes. This check is done to avoid holes in the
+        // structure.
+        if (pos->x == surface + stretch - 1 && (!nbrStatus[2])) {
+          objNodes.erase(pos++);
+          checkHeight++;
+        // The actions below attempt to create a fault of the specified
+        // height from randHeight. This is done by inserting Object entities
+        // into the position nodes (assuming the position nodes are valid, i.e.,
+        // still contained in objNodes) until checkHeight equals randHeight,
+        // if the current position node has valid neighbors, and inserting
+        // an Object at the node will not create a hole in the structure.
+        } else if (checkHeight < randHeight) {
+          if (hasNbr && !holeCheck) {
+            insert(new Object(*pos));
+            ++pos;
+            checkHeight++;
+            currHeight = checkHeight;
+          } else {
+            objNodes.erase(pos++);
+            checkHeight++;
+          }
+          if (prevHeight > 0) {
+            prevHeight--;
+          }
+        // The actions below will insert Objects depending on the height of
+        // the previous fault. The rationale here is that, if the previous fault
+        // had inserted objects near our current height, then the current
+        // position node is a possible position to insert an Object. This will
+        // result in the branching behavior observed in fault creation.
+        } else if (prevHeight > 0) {
+          prevHeight--;
+          // Here, we Generate a random integer that we will check against 10 *
+          // the specified branching factor (from input). If the random integer
+          // is less than the branching factor value * 10, then we will check
+          // if there are neighboring particles to avoid having a floating
+          // Object (an Object entity disconnected from the main structure).
+          // If there are neighboring particles, we may insert; otherwise, we
+          // delete the current position node from the list
+          int rand = randInt(0, 10);
+          if (rand > 10 * branchFactor) {
+            if (hasNbr && !holeCheck) {
+              insert(new Object(*pos));
+              ++pos;
+              currHeight = checkHeight;
+            } else {
+              objNodes.erase(pos++);
+            }
+          } else {
+            objNodes.erase(pos++);
+          }
+          checkHeight++;
+        } else {
+          objNodes.erase(pos++);
+          checkHeight++;
+        }
+      }
+      randHeight = randInt(0, -(depth + 2));
+      prevHeight = currHeight;
+    }
   }
 
   // Construct a forest structure of particles connected to the surface. Begin
