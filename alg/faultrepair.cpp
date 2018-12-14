@@ -257,7 +257,7 @@ FaultRepairSystem::FaultRepairSystem(uint numParticles, double holeProb,
   // "deep" the structure will go, and stretch represents the length of the
   // beginning and end sides of the structure.
   int surface = 7 * round(sqrt(numParticles)) / 2;
-  int depth = -(surface / 3);
+  int depth = -(surface / 4);
   int stretch = round(sqrt(numParticles));
 
   // Generate a rectangle using the parameters defined previously
