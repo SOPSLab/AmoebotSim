@@ -47,8 +47,7 @@ void VisItem::focusOnCenterOfMass() {
     }
   }
 
-  // Include offset for the sidebar. TODO: make this more dynamic.
-  view.setFocusPos((sum / numNodes) + QPointF(5, 0));
+  view.setFocusPos(sum / numNodes);
 }
 
 void VisItem::setWindowSize(int width, int height) {

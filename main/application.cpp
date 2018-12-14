@@ -41,9 +41,12 @@ Application::Application(int argc, char *argv[])
             }
     );
 
-    // Populate algorithm selection combo box with algorithm names.
-    auto algbox = qmlRoot->findChild<QObject*>("algorithmSelectBox");
-    algbox->setProperty("model", QVariant::fromValue(algs.getAlgNames()));
+    // Populate algorithm selection combo box with algorithm names and set its
+    // initial value.
+    auto algBox = qmlRoot->findChild<QObject*>("algorithmSelectBox");
+    QStringList names = algs.getAlgNames();
+    algBox->setProperty("model", QVariant::fromValue(names));
+    algBox->setProperty("currentIndex", names.indexOf("Basic Shape Formation"));
 
     // Connect the parameter list model to the UI elements that use it.
     connect(qmlRoot, SIGNAL(algSelected(QString)),
