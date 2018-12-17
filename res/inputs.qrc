@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>inputs/matrix2_1.txt</file>
+        <file>inputs/matrix2_2.txt</file>
+        <file>inputs/matrix2_3.txt</file>
+    </qresource>
+</RCC>
