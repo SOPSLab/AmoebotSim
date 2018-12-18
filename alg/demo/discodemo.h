@@ -9,7 +9,7 @@
 // available in the wiki:
 // [https://bitbucket.org/gmyr/amoebotsim/wiki/Code%20Tutorials].
 //
-// Run on the simulator command line using discodemo(#particles).
+// Run on the simulator command line using discodemo(#particles, counter max).
 
 #ifndef AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
 #define AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
@@ -31,9 +31,10 @@ class DiscoDemoParticle : public AmoebotParticle {
 
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
-  // for its local compass, a system that it belongs to, and an initial state.
+  // for its local compass, a system that it belongs to, and a maximum value for
+  // its counter.
   DiscoDemoParticle(const Node head, const int globalTailDir,
-                    const int orientation, AmoebotSystem& system, State state,
+                    const int orientation, AmoebotSystem& system,
                     const int counterMax);
 
   // Executes one particle activation.
@@ -57,7 +58,7 @@ class DiscoDemoParticle : public AmoebotParticle {
   // Member variables.
   State _state;
   int _counter;
-  const int _counter_max;
+  const int _counterMax;
 
  private:
   friend class DiscoDemoSystem;

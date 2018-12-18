@@ -6,19 +6,20 @@
 
 DiscoDemoParticle::DiscoDemoParticle(const Node head, const int globalTailDir,
                                      const int orientation,
-                                     AmoebotSystem& system, State state,
+                                     AmoebotSystem& system,
                                      const int counterMax)
     : AmoebotParticle(head, globalTailDir, orientation, system),
-      _state(state),
       _counter(counterMax),
-      _counter_max(counterMax) {}
+      _counterMax(counterMax) {
+  _state = getRandColor();
+}
 
 void DiscoDemoParticle::activate() {
   // First decrement the particle's counter. If it's zero, reset the counter and
   // get a new color.
   _counter--;
   if (_counter == 0) {
-    _counter = _counter_max;
+    _counter = _counterMax;
     _state = getRandColor();
   }
 
@@ -90,18 +91,17 @@ DiscoDemoSystem::DiscoDemoSystem(unsigned int numParticles, int counterMax) {
   // regular hexagon, the hexagon should have side length 1.4*sqrt(# particles).
   int sideLen = static_cast<int>(std::round(1.4 * std::sqrt(numParticles)));
   Node boundNode(0, 0);
-  for (int i = 0; i < 6; ++i) {
-    for (int j = 0; j < sideLen; ++j) {
+  for (int dir = 0; dir < 6; ++dir) {
+    for (int i = 0; i < sideLen; ++i) {
       insert(new Object(boundNode));
-      boundNode = boundNode.nodeInDir(i);
+      boundNode = boundNode.nodeInDir(dir);
     }
   }
 
   // Let s be the bounding hexagon side length. When the hexagon is created as
   // above, the nodes (x,y) strictly within the hexagon have (i) -s < x < s,
   // (ii) 0 < y < 2s, and (iii) 0 < x+y < 2s. Choose interior nodes at random to
-  // place contracted particles, ensuring at most one particle is placed at each
-  // node. Particles are placed with randomly chosen colors.
+  // place particles, ensuring at most one particle is placed at each node.
   std::set<Node> occupied;
   while (occupied.size() < numParticles) {
     // First, choose an x and y position at random from the (i) and (ii) bounds.
@@ -109,13 +109,10 @@ DiscoDemoSystem::DiscoDemoSystem(unsigned int numParticles, int counterMax) {
     int y = randInt(1, 2 * sideLen);
     Node node(x, y);
 
-    // If the node satisfies (iii) and is currently unoccupied, place a particle
-    // there with a random state.
+    // If the node satisfies (iii) and is unoccupied, place a particle there.
     if (0 < x + y && x + y < 2 * sideLen
         && occupied.find(node) == occupied.end()) {
-      auto state = static_cast<DiscoDemoParticle::State>(randInt(0, 7));
-      insert(new DiscoDemoParticle(node, -1, randDir(), *this, state,
-                                   counterMax));
+      insert(new DiscoDemoParticle(node, -1, randDir(), *this, counterMax));
       occupied.insert(node);
     }
   }
