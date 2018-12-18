@@ -3,6 +3,7 @@
 #include <QTime>
 #include <math.h>
 
+#include "alg/demo/discodemo.h"
 #include "alg/demo/pulldemo.h"
 #include "alg/demo/tokendemo.h"
 #include "alg/legacy/boundedobjcoating.h"
@@ -153,6 +154,16 @@ void ScriptInterface::filmSimulation(QString filePath, const int stepLimit) {
     saveScreenshot(filePath + pad(i,fnameLen) + QString(".png"));
     step();
     ++i;
+  }
+}
+
+void ScriptInterface::discodemo(const int numParticles, const int counterMax) {
+  if (numParticles <= 0) {
+    log("# particles must be > 0", true);
+  } else if (counterMax <= 0) {
+    log("counterMax must be > 0", true);
+  } else {
+    sim.setSystem(std::make_shared<DiscoDemoSystem>(numParticles));
   }
 }
 

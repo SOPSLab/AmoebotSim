@@ -9,6 +9,7 @@ QMAKE_INFO_PLIST = res/Info.plist
 win32:RC_FILE = res/AmoebotSim.rc
 
 HEADERS += \
+    alg/demo/discodemo.h \
     alg/demo/pulldemo.h \
     alg/demo/tokendemo.h \
     alg/legacy/algorithm.h \
@@ -65,6 +66,7 @@ HEADERS += \
     ui/visitem.h
 
 SOURCES += \
+    alg/demo/discodemo.cpp \
     alg/demo/pulldemo.cpp \
     alg/demo/tokendemo.cpp \
     alg/legacy/algorithm.cpp \
