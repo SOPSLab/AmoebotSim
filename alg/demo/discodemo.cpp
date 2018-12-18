@@ -26,7 +26,7 @@ void DiscoDemoParticle::activate() {
   // Next, handle movement. If the particle is contracted, choose a random
   // direction to try to expand towards, but only do so if the node in that
   // direction is unoccupied. Otherwise, if the particle is expanded, simply
-  // contract.
+  // contract its tail.
   if (isContracted()) {
     int expandDir = randDir();
     if (canExpand(expandDir)) {

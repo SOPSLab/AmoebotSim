@@ -9,7 +9,7 @@
 // available in the wiki:
 // [https://bitbucket.org/gmyr/amoebotsim/wiki/Code%20Tutorials].
 //
-// Run on the simulator command line using discodemo(#particles, counter max).
+// Run on the simulator command line using discodemo(# particles, counter max).
 
 #ifndef AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
 #define AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
