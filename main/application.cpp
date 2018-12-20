@@ -1,5 +1,3 @@
-#include <memory>
-
 #include <QDebug>
 #include <QQmlContext>
 #include <QTimer>

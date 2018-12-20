@@ -205,6 +205,7 @@ QString AlgorithmList::getAlgSignature(QString algName) const {
   for (Algorithm alg : _algorithms) {
     if (alg.getName().compare(algName) == 0) {
       signature = alg.getSignature();
+      break;
     }
   }
 
