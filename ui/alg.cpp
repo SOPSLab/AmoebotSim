@@ -46,6 +46,11 @@ AlgorithmList::AlgorithmList() {
   /* DEMO ALGORITHMS */
 
   // Demo: Pull Handovers.
+  _algorithms.push_back(Algorithm("Demo: Disco", "discodemo"));
+  _algorithms.back().addParameter("# Particles", "30");
+  _algorithms.back().addParameter("Counter Max", "5");
+
+  // Demo: Pull Handovers.
   _algorithms.push_back(Algorithm("Demo: Pull Handovers", "pulldemo"));
 
   // Demo: Pull Handovers.

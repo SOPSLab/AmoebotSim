@@ -66,6 +66,7 @@ class ScriptInterface : public QObject {
 
   // Non-legacy demonstration algorithm instance commands. Documentation for
   // foo() can be found in alg/demo/foo.h.
+  void discodemo(const int numParticles = 30, const int counterMax = 5);
   void pulldemo();
   void tokendemo(const int numParticles = 200, const double holeProb = 0.2);
 
