@@ -14,8 +14,10 @@ Application::Application(int argc, char *argv[])
   : QGuiApplication(argc, argv) {
   if (scriptPath == "") {
     // Setup the parameter list model.
-    parameterModel.setAlgorithmList(&algs);
-    engine.rootContext()->setContextProperty("parameterModel", &parameterModel);
+    algs = new AlgorithmList();
+    parameterModel = new ParameterListModel();
+    parameterModel->setAlgorithmList(algs);
+    engine.rootContext()->setContextProperty("parameterModel", parameterModel);
 
     // Setup GUI.
     qmlRegisterType<VisItem>("VisItem", 1, 0, "VisItem");
@@ -42,15 +44,15 @@ Application::Application(int argc, char *argv[])
     // Populate algorithm selection combo box with algorithm names and set its
     // initial value.
     auto algBox = qmlRoot->findChild<QObject*>("algorithmSelectBox");
-    QStringList names = algs.getAlgNames();
+    QStringList names = algs->getAlgNames();
     algBox->setProperty("model", QVariant::fromValue(names));
     algBox->setProperty("currentIndex", names.indexOf("Basic Shape Formation"));
 
     // Connect the parameter list model to the UI elements that use it.
     connect(qmlRoot, SIGNAL(algSelected(QString)),
-            &parameterModel, SLOT(updateAlgParameters(QString)));
+            parameterModel, SLOT(updateAlgParameters(QString)));
     connect(qmlRoot, SIGNAL(instantiate(QString)),
-            &parameterModel, SLOT(createCommand(QString)));
+            parameterModel, SLOT(createCommand(QString)));
 
     // setup connections between GUI and Simulator
     connect(&sim, &Simulator::systemChanged, vis, &VisItem::systemChanged);
@@ -95,7 +97,7 @@ Application::Application(int argc, char *argv[])
             }
     );
     connect(qmlRoot, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
-    connect(&parameterModel, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
+    connect(parameterModel, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
 
     // Set default step duration.
     sim.setStepDuration(0);
