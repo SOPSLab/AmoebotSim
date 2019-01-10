@@ -15,8 +15,7 @@ Application::Application(int argc, char *argv[])
   if (scriptPath == "") {
     // Setup the parameter list model.
     algs = new AlgorithmList();
-    parameterModel = new ParameterListModel();
-    parameterModel->setAlgorithmList(algs);
+    parameterModel = new ParameterListModel(nullptr, algs);
     engine.rootContext()->setContextProperty("parameterModel", parameterModel);
 
     // Setup GUI.
@@ -103,7 +102,7 @@ Application::Application(int argc, char *argv[])
     sim.setStepDuration(0);
   } else {
     scriptEngine = std::make_shared<ScriptEngine>(sim, nullptr);
-    connect(scriptEngine.get(),  &ScriptEngine::log, [](const QString msg, const bool isError){ Q_UNUSED(isError); qDebug() << msg; });
+    connect(scriptEngine.get(), &ScriptEngine::log, [](const QString msg, const bool isError){ Q_UNUSED(isError); qDebug() << msg; });
     scriptEngine->executeCommand("runScript(\"" + scriptPath + "\")");
     // create one shot timer that quits the application once the script is executed
     // this has to be done in this convoluted way since quit does not seem to have any effect until the event loop runs

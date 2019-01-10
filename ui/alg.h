@@ -50,7 +50,7 @@ class AlgorithmList {
   QStringList getParameterDefaults(QString algName) const;
 
  private:
-  std::vector<Algorithm> _algorithms;
+  std::vector<Algorithm*> _algorithms;
 };
 
 #endif  // AMOEBOTSIM_UI_ALGORITHM_H_
