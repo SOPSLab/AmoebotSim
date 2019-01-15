@@ -32,7 +32,6 @@ HEADERS += \
     alg/line.h \
     alg/matrix.h \
     alg/matrix2.h \
-    alg/rectangle.h \
     alg/ring.h \
     alg/shapeformation.h \
     alg/sierpinski.h \
@@ -82,7 +81,6 @@ SOURCES += \
     alg/line.cpp \
     alg/matrix.cpp \
     alg/matrix2.cpp \
-    alg/rectangle.cpp \
     alg/ring.cpp \
     alg/shapeformation.cpp \
     alg/sierpinski.cpp \

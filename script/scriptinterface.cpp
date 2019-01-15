@@ -23,7 +23,6 @@
 #include "alg/line.h"
 #include "alg/matrix.h"
 #include "alg/matrix2.h"
-#include "alg/rectangle.h"
 #include "alg/shapeformation.h"
 #include "alg/sierpinski.h"
 #include "alg/swarmseparation.h"
@@ -284,16 +283,6 @@ void ScriptInterface::matrix(const int numParticles, int countValue,
                                                   whichStream));
   } else if (mode == 1) {
     sim.setSystem(std::make_shared<MatrixSystem>(numParticles, countValue));
-  }
-}
-
-void ScriptInterface::rectangle(const int numParticles, const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<RectangleSystem>(numParticles, holeProb));
   }
 }
 
