@@ -34,7 +34,6 @@ HEADERS += \
     alg/matrix2.h \
     alg/ring.h \
     alg/shapeformation.h \
-    alg/sierpinski.h \
     alg/swarmseparation.h \
     core/amoebotparticle.h \
     core/amoebotsystem.h \
@@ -83,7 +82,6 @@ SOURCES += \
     alg/matrix2.cpp \
     alg/ring.cpp \
     alg/shapeformation.cpp \
-    alg/sierpinski.cpp \
     alg/swarmseparation.cpp \
     core/amoebotparticle.cpp \
     core/amoebotsystem.cpp \
