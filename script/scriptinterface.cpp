@@ -24,7 +24,6 @@
 #include "alg/matrix.h"
 #include "alg/matrix2.h"
 #include "alg/shapeformation.h"
-#include "alg/sierpinski.h"
 #include "alg/swarmseparation.h"
 
 #include "script/scriptinterface.h"
@@ -314,17 +313,6 @@ void ScriptInterface::shapeformation(const int numParticles,
   } else {
     sim.setSystem(std::make_shared<ShapeFormationSystem>(numParticles, holeProb,
                                                          mode));
-  }
-}
-
-void ScriptInterface::sierpinski(const int numParticles,
-                                 const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<SierpinskiSystem>(numParticles, holeProb));
   }
 }
 

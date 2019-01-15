@@ -124,11 +124,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back()->addParameter("Hole Prob.", "0.2");
   _algorithms.back()->addParameter("Shape", "\"h\"");
 
-  // Sierpinski. TODO: better algorithm name.
-  _algorithms.push_back(new Algorithm("Sierpinski", "sierpinski"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
-
   // Swarm Separation.
   _algorithms.push_back(new Algorithm("Swarm Separation", "swarmseparation"));
   _algorithms.back()->addParameter("# Particles", "200");

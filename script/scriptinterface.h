@@ -89,7 +89,6 @@ class ScriptInterface : public QObject {
   void ring(const int numParticles = 100, const double holeProb = 0.0);
   void shapeformation(const int numParticles = 200, const double holeProb = 0.2,
                       const QString mode = "h");
-  void sierpinski(const int numParticles = 200, const double holeProb = 0.2);
   void swarmseparation(const int numParticles = 200, const double c_rand = 0.7,
                        const double c_repulse = 0.5);
 
