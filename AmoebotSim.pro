@@ -26,7 +26,6 @@ HEADERS += \
     alg/convexhull.h \
     alg/edgedetect.h \
     alg/faultrepair.h \
-    alg/holeelimination.h \
     alg/infobjcoating.h \
     alg/line.h \
     alg/matrix.h \
@@ -73,7 +72,6 @@ SOURCES += \
     alg/convexhull.cpp \
     alg/edgedetect.cpp \
     alg/faultrepair.cpp \
-    alg/holeelimination.cpp \
     alg/infobjcoating.cpp \
     alg/line.cpp \
     alg/matrix.cpp \

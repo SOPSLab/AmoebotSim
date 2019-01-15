@@ -17,7 +17,6 @@
 #include "alg/convexhull.h"
 #include "alg/edgedetect.h"
 #include "alg/faultrepair.h"
-#include "alg/holeelimination.h"
 #include "alg/infobjcoating.h"
 #include "alg/line.h"
 #include "alg/matrix.h"
@@ -223,18 +222,6 @@ void ScriptInterface::faultrepair(const int numParticles, const double holeProb,
   } else {
     sim.setSystem(std::make_shared<FaultRepairSystem>(numParticles, holeProb,
                                                       branchFactor));
-  }
-}
-
-void ScriptInterface::holeelimination(const int numParticles,
-                                      const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<HoleEliminationSystem>(numParticles,
-                                                          holeProb));
   }
 }
 

@@ -86,11 +86,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back().addParameter("Hole Prob.", "0.2");
   _algorithms.back().addParameter("Branching Factor", "0.8");
 
-  // Hole Elimination.
-  _algorithms.push_back(Algorithm("Hole Elimination", "holeelimination"));
-  _algorithms.back().addParameter("# Particles", "100");
-  _algorithms.back().addParameter("Hole Prob.", "0.4");
-
   // Infinite Object Coating.
   _algorithms.push_back(Algorithm("Infinite Object Coating", "infobjcoating"));
   _algorithms.back().addParameter("# Particles", "100");
