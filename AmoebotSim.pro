@@ -23,7 +23,6 @@ HEADERS += \
     alg/legacy/universalcoating.h \
     alg/aggregation.h \
     alg/compression.h \
-    alg/edgedetect.h \
     alg/infobjcoating.h \
     alg/line.h \
     alg/ring.h \
@@ -65,7 +64,6 @@ SOURCES += \
     alg/legacy/universalcoating.cpp \
     alg/aggregation.cpp \
     alg/compression.cpp \
-    alg/edgedetect.cpp \
     alg/infobjcoating.cpp \
     alg/line.cpp \
     alg/ring.cpp \
