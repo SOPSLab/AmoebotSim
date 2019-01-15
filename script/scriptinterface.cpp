@@ -17,8 +17,6 @@
 #include "alg/edgedetect.h"
 #include "alg/infobjcoating.h"
 #include "alg/line.h"
-#include "alg/matrix.h"
-#include "alg/matrix2.h"
 #include "alg/shapeformation.h"
 #include "alg/swarmseparation.h"
 
@@ -214,19 +212,6 @@ void ScriptInterface::line(const int numParticles, const double holeProb) {
     log("holeProb in [0,1] required", true);
   } else {
     sim.setSystem(std::make_shared<LineSystem>(numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::matrix(const int numParticles, int countValue,
-                             int whichStream, const int mode) {
-  // TODO: check for constraints on countValue and whichStream.
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (mode == 0) {
-    sim.setSystem(std::make_shared<Matrix2System>(numParticles, countValue,
-                                                  whichStream));
-  } else if (mode == 1) {
-    sim.setSystem(std::make_shared<MatrixSystem>(numParticles, countValue));
   }
 }
 
