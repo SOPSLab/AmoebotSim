@@ -21,7 +21,6 @@ HEADERS += \
     alg/legacy/legacyparticle.h \
     alg/legacy/movement.h \
     alg/legacy/universalcoating.h \
-    alg/2sitecbridge.h \
     alg/adder.h \
     alg/aggregation.h \
     alg/compaction.h \
@@ -41,7 +40,6 @@ HEADERS += \
     alg/shapeformation.h \
     alg/sierpinski.h \
     alg/swarmseparation.h \
-    alg/twositeebridge.h \
     core/amoebotparticle.h \
     core/amoebotsystem.h \
     core/localparticle.h \
@@ -76,7 +74,6 @@ SOURCES += \
     alg/legacy/legacyparticle.cpp \
     alg/legacy/legacysystem.cpp \
     alg/legacy/universalcoating.cpp \
-    alg/2sitecbridge.cpp \
     alg/adder.cpp \
     alg/aggregation.cpp \
     alg/compaction.cpp \
@@ -96,7 +93,6 @@ SOURCES += \
     alg/shapeformation.cpp \
     alg/sierpinski.cpp \
     alg/swarmseparation.cpp \
-    alg/twositeebridge.cpp \
     core/amoebotparticle.cpp \
     core/amoebotsystem.cpp \
     core/localparticle.cpp \
