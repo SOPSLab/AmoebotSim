@@ -116,11 +116,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back().addParameter("# Particles", "100");
   _algorithms.back().addParameter("Hole Prob.", "0.0");
 
-  // Line Sorting. TODO: better algorithm name.
-  _algorithms.push_back(Algorithm("Line Sorting", "linesort"));
-  _algorithms.back().addParameter("# Particles", "200");
-  _algorithms.back().addParameter("Hole Prob.", "0.2");
-
   // Matrix. TODO: better algorithm name, better parameter names.
   _algorithms.push_back(Algorithm("Matrix", "matrix"));
   _algorithms.back().addParameter("# Particles", "10");
