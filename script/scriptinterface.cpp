@@ -12,7 +12,6 @@
 #include "alg/legacy/legacysystem.h"
 #include "alg/ring.h"
 #include "alg/legacy/universalcoating.h"
-#include "alg/adder.h"
 #include "alg/aggregation.h"
 #include "alg/compaction.h"
 #include "alg/compression.h"
@@ -174,15 +173,6 @@ void ScriptInterface::tokendemo(const int numParticles, const double holeProb) {
     log("holeProb in [0,1] required", true);
   } else {
     sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::adder(const int numParticles, int countValue) {
-  // TODO: check on any constraints on countValue.
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else {
-    sim.setSystem(std::make_shared<AdderSystem>(numParticles, countValue));
   }
 }
 

@@ -21,7 +21,6 @@ HEADERS += \
     alg/legacy/legacyparticle.h \
     alg/legacy/movement.h \
     alg/legacy/universalcoating.h \
-    alg/adder.h \
     alg/aggregation.h \
     alg/compaction.h \
     alg/compression.h \
@@ -72,7 +71,6 @@ SOURCES += \
     alg/legacy/legacyparticle.cpp \
     alg/legacy/legacysystem.cpp \
     alg/legacy/universalcoating.cpp \
-    alg/adder.cpp \
     alg/aggregation.cpp \
     alg/compaction.cpp \
     alg/compression.cpp \

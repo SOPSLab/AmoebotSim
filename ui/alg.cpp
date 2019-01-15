@@ -60,11 +60,6 @@ AlgorithmList::AlgorithmList() {
 
   /* ALGORITHMS */
 
-  // Adder. TODO: better algorithm name, better "count value" parameter.
-  _algorithms.push_back(new Algorithm("Adder", "adder"));
-  _algorithms.back()->addParameter("# Particles", "10");
-  _algorithms.back()->addParameter("countValue", "250");
-
   // Aggregation.
   _algorithms.push_back(new Algorithm("Swarm Aggregation", "aggregation"));
   _algorithms.back()->addParameter("# Particles", "2");
