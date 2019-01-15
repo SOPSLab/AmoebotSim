@@ -16,7 +16,6 @@
 #include "alg/compression.h"
 #include "alg/convexhull.h"
 #include "alg/edgedetect.h"
-#include "alg/faultrepair.h"
 #include "alg/infobjcoating.h"
 #include "alg/line.h"
 #include "alg/matrix.h"
@@ -208,20 +207,6 @@ void ScriptInterface::edgedetect(const int numParticles, int countValue) {
     log("# particles must be > 0", true);
   } else {
     sim.setSystem(std::make_shared<EdgeDetectSystem>(numParticles, countValue));
-  }
-}
-
-void ScriptInterface::faultrepair(const int numParticles, const double holeProb,
-                                  const double branchFactor) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else if (branchFactor < 0 || branchFactor > 1) {
-    log("branchFactor in [0,1] required");
-  } else {
-    sim.setSystem(std::make_shared<FaultRepairSystem>(numParticles, holeProb,
-                                                      branchFactor));
   }
 }
 
