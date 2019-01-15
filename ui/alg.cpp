@@ -113,11 +113,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back()->addParameter("whichStream", "3");
   _algorithms.back()->addParameter("mode", "0");
 
-  // Rectangle. TODO: better algorithm name.
-  _algorithms.push_back(new Algorithm("Rectangle", "rectangle"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
-
   // Ring Formation.
   _algorithms.push_back(new Algorithm("Ring Formation", "ring"));
   _algorithms.back()->addParameter("# Particles", "100");
