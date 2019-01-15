@@ -76,7 +76,6 @@ class ScriptInterface : public QObject {
   void compression(const int numParticles = 100, const double lambda = 4.0);
   void infobjcoating(const int numParticles = 100, const double holeProb = 0.2);
   void line(const int numParticles = 100, const double holeProb = 0.0);
-  void ring(const int numParticles = 100, const double holeProb = 0.0);
   void shapeformation(const int numParticles = 200, const double holeProb = 0.2,
                       const QString mode = "h");
   void swarmseparation(const int numParticles = 200, const double c_rand = 0.7,
