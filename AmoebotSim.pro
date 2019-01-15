@@ -32,7 +32,6 @@ HEADERS += \
     alg/infobjcoating.h \
     alg/ising.h \
     alg/line.h \
-    alg/linesort.h \
     alg/matrix.h \
     alg/matrix2.h \
     alg/rectangle.h \
@@ -85,7 +84,6 @@ SOURCES += \
     alg/infobjcoating.cpp \
     alg/ising.cpp \
     alg/line.cpp \
-    alg/linesort.cpp \
     alg/matrix.cpp \
     alg/matrix2.cpp \
     alg/rectangle.cpp \
