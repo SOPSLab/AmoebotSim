@@ -45,15 +45,15 @@ void Algorithm::addParameter(QString parameter, QString defaultValue) {
 AlgorithmList::AlgorithmList() {
   /* DEMO ALGORITHMS */
 
-  // Demo: Pull Handovers.
-  _algorithms.push_back(Algorithm("Demo: Disco", "discodemo"));
-  _algorithms.back().addParameter("# Particles", "30");
-  _algorithms.back().addParameter("Counter Max", "5");
+  // Demo: Disco, a first tutorial.
+  _algorithms.push_back(new Algorithm("Demo: Disco", "discodemo"));
+  _algorithms.back()->addParameter("# Particles", "30");
+  _algorithms.back()->addParameter("Counter Max", "5");
 
   // Demo: Pull Handovers.
-  _algorithms.push_back(Algorithm("Demo: Pull Handovers", "pulldemo"));
+  _algorithms.push_back(new Algorithm("Demo: Pull Handovers", "pulldemo"));
 
-  // Demo: Pull Handovers.
+  // Demo: Token Passing.
   _algorithms.push_back(new Algorithm("Demo: Token Passing", "tokendemo"));
   _algorithms.back()->addParameter("# Particles", "200");
   _algorithms.back()->addParameter("Hole Prob.", "0.2");
