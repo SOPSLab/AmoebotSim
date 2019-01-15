@@ -11,11 +11,10 @@
 static const QString scriptPath = "";
 
 Application::Application(int argc, char *argv[])
-  : QGuiApplication(argc, argv) {
+    : QGuiApplication(argc, argv) {
   if (scriptPath == "") {
     // Setup the parameter list model.
-    algs = new AlgorithmList();
-    parameterModel = new ParameterListModel(nullptr, algs);
+    parameterModel = new ParameterListModel();
     engine.rootContext()->setContextProperty("parameterModel", parameterModel);
 
     // Setup GUI.
@@ -43,7 +42,7 @@ Application::Application(int argc, char *argv[])
     // Populate algorithm selection combo box with algorithm names and set its
     // initial value.
     auto algBox = qmlRoot->findChild<QObject*>("algorithmSelectBox");
-    QStringList names = algs->getAlgNames();
+    QStringList names = parameterModel->getAlgorithmList()->getAlgNames();
     algBox->setProperty("model", QVariant::fromValue(names));
     algBox->setProperty("currentIndex", names.indexOf("Basic Shape Formation"));
 

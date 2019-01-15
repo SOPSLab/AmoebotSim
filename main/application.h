@@ -22,7 +22,6 @@ class Application : public QGuiApplication {
   Simulator sim;
   CommandHistoryManager commandHistoryManager;
   std::shared_ptr<ScriptEngine> scriptEngine;
-  AlgorithmList* algs;
   ParameterListModel* parameterModel;
 };
 

@@ -1,8 +1,8 @@
 #include "ui/alg.h"
 
-Algorithm::Algorithm(QString name, QString signature) :
-  _name(name),
-  _signature(signature) {}
+Algorithm::Algorithm(QString name, QString signature)
+    : _name(name),
+      _signature(signature) {}
 
 QString Algorithm::getName() const {
   return _name;
@@ -188,6 +188,10 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back()->addParameter("Object Radius", "5");
   _algorithms.back()->addParameter("# Particles", "50");
   _algorithms.back()->addParameter("Hole Prob.", "0.2");
+}
+
+AlgorithmList::~AlgorithmList() {
+  _algorithms.erase(_algorithms.begin(), _algorithms.end());
 }
 
 QStringList AlgorithmList::getAlgNames() const {

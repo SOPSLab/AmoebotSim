@@ -38,6 +38,9 @@ class AlgorithmList {
   // mirrors ScriptInterface).
   AlgorithmList();
 
+  // Destructs the Algorithms that are contained in this list.
+  virtual ~AlgorithmList();
+
   // Returns a list of all the algorithm's names in this list.
   QStringList getAlgNames() const;
 
