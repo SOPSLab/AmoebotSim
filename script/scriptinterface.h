@@ -74,8 +74,6 @@ class ScriptInterface : public QObject {
   // found in alg/foo.h.
   void aggregation(const int numParticles = 2);
   void compression(const int numParticles = 100, const double lambda = 4.0);
-  void convexhull(const int numParticles = 20, const int numObjects = 200,
-                  const double holeProb = 0.1);
   void edgedetect(const int numParticles = 10, int countValue = 250);
   void infobjcoating(const int numParticles = 100, const double holeProb = 0.2);
   void line(const int numParticles = 100, const double holeProb = 0.0);

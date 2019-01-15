@@ -69,12 +69,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back()->addParameter("# Particles", "100");
   _algorithms.back()->addParameter("Lambda", "4.0");
 
-  // Convex Hull Formation.
-  _algorithms.push_back(new Algorithm("Convex Hull Formation", "convexhull"));
-  _algorithms.back()->addParameter("# Particles", "20");
-  _algorithms.back()->addParameter("# Objects", "200");
-  _algorithms.back()->addParameter("Hole Prob.", "0.1");
-
   // Edge Detection. TODO: better algorithm name, better "countValue" parameter.
   _algorithms.push_back(new Algorithm("Edge Detection", "edgedetect"));
   _algorithms.back()->addParameter("# Particles", "10");

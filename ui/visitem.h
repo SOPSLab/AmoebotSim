@@ -8,14 +8,12 @@
 #include <QString>
 #include <QTimer>
 
-#include "alg/convexhull.h"
 #include "core/node.h"
 #include "core/particle.h"
 #include "core/system.h"
 #include "ui/glitem.h"
 #include "ui/view.h"
 #include "core/object.h"
-#include "alg/convexhull.h"
 
 class QMouseEvent;
 class QWheelEvent;
@@ -55,7 +53,6 @@ class VisItem : public GLItem {
   void drawFromParticleTex(int index, const QPointF& pos);
   void drawObjects();
   void drawObject(const Object& t);
-  void drawConvexHull();
 
   static QPointF nodeToWorldCoord(const Node& node);
   static Node worldCoordToNode(const QPointF& worldCord);

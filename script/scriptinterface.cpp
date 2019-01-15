@@ -14,7 +14,6 @@
 #include "alg/legacy/universalcoating.h"
 #include "alg/aggregation.h"
 #include "alg/compression.h"
-#include "alg/convexhull.h"
 #include "alg/edgedetect.h"
 #include "alg/infobjcoating.h"
 #include "alg/line.h"
@@ -184,20 +183,6 @@ void ScriptInterface::compression(const int numParticles, const double lambda) {
     log("# particles must be > 0", true);
   } else {
     sim.setSystem(std::make_shared<CompressionSystem>(numParticles, lambda));
-  }
-}
-
-void ScriptInterface::convexhull(const int numParticles, const int numObjects,
-                                 const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (numObjects <= 0) {
-    log("# object objects must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<ConvexHullSystem>(numParticles, numObjects,
-                                                     holeProb));
   }
 }
 

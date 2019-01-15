@@ -105,16 +105,6 @@ void VisItem::paint() {
 
     drawParticles();
 
-    // Draw Convex Hull Appproximate only if the convex hull algorithm is simulated
-    if (system->size() >= 1 and std::dynamic_pointer_cast<ConvexHullSystem>(system)) {
-      glfn->glEnable( GL_LINE_SMOOTH );
-      glfn->glEnable( GL_POLYGON_SMOOTH );
-      glfn->glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
-      glfn->glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
-
-      drawConvexHull();
-    }
-
     drawObjects();
   }
 }
@@ -276,27 +266,6 @@ void VisItem::drawObject(const Object& t) {
   auto pos = nodeToWorldCoord(t._node);
   glfn->glColor4d(0.0, 0.0, 0.0, 1.0);
   drawFromParticleTex(39, pos);
-}
-
-void VisItem::drawConvexHull() {
-  std::vector<Node> convexVertices = std::dynamic_pointer_cast<ConvexHullSystem>(system)->getConvexHullApproximate();
-
-  glfn->glDisable(GL_TEXTURE_2D);
-  glfn->glColor4d(0.2, 0.2, 0.2, 0.5);
-
-  glfn->glLineWidth(5.0f);
-
-  for (uint i = 0; i < 6; i++) {
-    auto start_w = nodeToWorldCoord(convexVertices[i]);
-    auto end_w = nodeToWorldCoord(convexVertices[((i + 1) % 6)]);
-
-    glfn->glBegin(GL_LINES);
-    glfn->glVertex2d(start_w.x(), start_w.y());
-    glfn->glVertex2d(end_w.x(), end_w.y());
-    glfn->glEnd();
-  }
-
-  glfn->glEnable(GL_TEXTURE_2D);
 }
 
 QPointF VisItem::nodeToWorldCoord(const Node& node) {
