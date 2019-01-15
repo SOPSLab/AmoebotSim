@@ -22,7 +22,6 @@ HEADERS += \
     alg/legacy/movement.h \
     alg/legacy/universalcoating.h \
     alg/aggregation.h \
-    alg/compaction.h \
     alg/compression.h \
     alg/convexhull.h \
     alg/edgedetect.h \
@@ -70,7 +69,6 @@ SOURCES += \
     alg/legacy/legacysystem.cpp \
     alg/legacy/universalcoating.cpp \
     alg/aggregation.cpp \
-    alg/compaction.cpp \
     alg/compression.cpp \
     alg/convexhull.cpp \
     alg/edgedetect.cpp \
