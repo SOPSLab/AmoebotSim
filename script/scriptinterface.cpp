@@ -16,7 +16,6 @@
 #include "alg/infobjcoating.h"
 #include "alg/line.h"
 #include "alg/shapeformation.h"
-#include "alg/swarmseparation.h"
 
 #include "script/scriptinterface.h"
 #include "core/node.h"
@@ -222,21 +221,6 @@ void ScriptInterface::shapeformation(const int numParticles,
   } else {
     sim.setSystem(std::make_shared<ShapeFormationSystem>(numParticles, holeProb,
                                                          mode));
-  }
-}
-
-void ScriptInterface::swarmseparation(const int numParticles,
-                                      const double c_rand,
-                                      const double c_repulse) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (c_rand < 0) {
-    log("c_rand >= 0 required", true);
-  } else if (c_repulse < 0) {
-    log("c_repulse >= 0 required", true);
-  } else {
-    sim.setSystem(std::make_shared<SwarmSeparationSystem>(numParticles, c_rand,
-                                                          c_repulse));
   }
 }
 

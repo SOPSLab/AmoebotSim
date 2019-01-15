@@ -85,12 +85,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back()->addParameter("Hole Prob.", "0.2");
   _algorithms.back()->addParameter("Shape", "\"h\"");
 
-  // Swarm Separation.
-  _algorithms.push_back(new Algorithm("Swarm Separation", "swarmseparation"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("c_rand", "0.7");
-  _algorithms.back()->addParameter("c_repulse", "0.5");
-
   /* LEGACY ALGORITHMS */
 
   // Bounded Object Coating.
