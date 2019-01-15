@@ -84,13 +84,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back()->addParameter("# Particles", "100");
   _algorithms.back()->addParameter("Hole Prob.", "0.0");
 
-  // Matrix. TODO: better algorithm name, better parameter names.
-  _algorithms.push_back(new Algorithm("Matrix", "matrix"));
-  _algorithms.back()->addParameter("# Particles", "10");
-  _algorithms.back()->addParameter("countValue", "250");
-  _algorithms.back()->addParameter("whichStream", "3");
-  _algorithms.back()->addParameter("mode", "0");
-
   // Ring Formation.
   _algorithms.push_back(new Algorithm("Ring Formation", "ring"));
   _algorithms.back()->addParameter("# Particles", "100");

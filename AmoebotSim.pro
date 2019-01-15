@@ -26,8 +26,6 @@ HEADERS += \
     alg/edgedetect.h \
     alg/infobjcoating.h \
     alg/line.h \
-    alg/matrix.h \
-    alg/matrix2.h \
     alg/ring.h \
     alg/shapeformation.h \
     alg/swarmseparation.h \
@@ -70,8 +68,6 @@ SOURCES += \
     alg/edgedetect.cpp \
     alg/infobjcoating.cpp \
     alg/line.cpp \
-    alg/matrix.cpp \
-    alg/matrix2.cpp \
     alg/ring.cpp \
     alg/shapeformation.cpp \
     alg/swarmseparation.cpp \

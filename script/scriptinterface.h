@@ -77,8 +77,6 @@ class ScriptInterface : public QObject {
   void edgedetect(const int numParticles = 10, int countValue = 250);
   void infobjcoating(const int numParticles = 100, const double holeProb = 0.2);
   void line(const int numParticles = 100, const double holeProb = 0.0);
-  void matrix(const int numParticles = 10, int countValue = 250,
-              int whichStream = 3, const int mode = 0);
   void ring(const int numParticles = 100, const double holeProb = 0.0);
   void shapeformation(const int numParticles = 200, const double holeProb = 0.2,
                       const QString mode = "h");
