@@ -96,12 +96,6 @@ class ScriptInterface : public QObject {
   void sierpinski(const int numParticles = 200, const double holeProb = 0.2);
   void swarmseparation(const int numParticles = 200, const double c_rand = 0.7,
                        const double c_repulse = 0.5);
-  void twositecbridge(const int numParticles = 100, const double lambda = 4.0,
-                      const double alpha = 1.0);
-  void twositeebridge(const int numParticles = 200,
-                      const double explambda = 2.0,
-                      const double complambda = 4.0,
-                      const double siteDistance = 1.25);
 
   // Legacy algorithm instance commands. Documentation for foo() can be found in
   // alg/legacy/foo.h.

@@ -12,7 +12,6 @@
 #include "alg/legacy/legacysystem.h"
 #include "alg/ring.h"
 #include "alg/legacy/universalcoating.h"
-#include "alg/2sitecbridge.h"
 #include "alg/adder.h"
 #include "alg/aggregation.h"
 #include "alg/compaction.h"
@@ -31,7 +30,6 @@
 #include "alg/shapeformation.h"
 #include "alg/sierpinski.h"
 #include "alg/swarmseparation.h"
-#include "alg/twositeebridge.h"
 
 #include "script/scriptinterface.h"
 #include "core/node.h"
@@ -384,40 +382,6 @@ void ScriptInterface::swarmseparation(const int numParticles,
   } else {
     sim.setSystem(std::make_shared<SwarmSeparationSystem>(numParticles, c_rand,
                                                           c_repulse));
-  }
-}
-
-void ScriptInterface::twositecbridge(const int numParticles,
-                                     const double lambda,
-                                     const double alpha) {
-  if (numParticles < 5) {
-    log("# particles must be >= 5", true);
-  } else if (lambda <= 1) {
-    log("lambda > 1 required", true);
-  } else if (alpha < 1) {
-    log("alpha >= 1 required", true);
-  } else {
-    sim.setSystem(std::make_shared<TwoSiteCBridgeSystem>(numParticles, lambda,
-                                                         alpha));
-  }
-}
-
-void ScriptInterface::twositeebridge(const int numParticles,
-                                     const double explambda,
-                                     const double complambda,
-                                     const double siteDistance) {
-  if (numParticles < 5) {
-    log("# particles must be >= 5", true);
-  } else if (explambda <= 0 || explambda >= 2.17) {
-    log("expansion lambda must be > 0 and < 2.17", true);
-  } else if (complambda <= 3.42) {
-    log("compression lambda must be > 3.42", true);
-  } else if (siteDistance <= 1 || siteDistance > sqrt(numParticles)) {
-    log("site distance factor must be > 1 and < sqrt(#particles)", true);
-  } else {
-    sim.setSystem(std::make_shared<TwoSiteEBridgeSystem>(numParticles,
-                                                         explambda, complambda,
-                                                         siteDistance));
   }
 }
 

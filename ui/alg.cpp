@@ -155,19 +155,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back()->addParameter("c_rand", "0.7");
   _algorithms.back()->addParameter("c_repulse", "0.5");
 
-  // 2-Site Connected Bridging.
-  _algorithms.push_back(new Algorithm("2-Site C-Bridging", "twositecbridge"));
-  _algorithms.back()->addParameter("# Particles", "100");
-  _algorithms.back()->addParameter("Lambda", "4.0");
-  _algorithms.back()->addParameter("Alpha", "1.0");
-
-  // 2-Site Exploration Bridging.
-  _algorithms.push_back(new Algorithm("2-Site E-Bridging", "twositeebridge"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("Expansion Lambda", "2.0");
-  _algorithms.back()->addParameter("Compression Lambda", "4.0");
-  _algorithms.back()->addParameter("Site Dist.", "1.25");
-
   /* LEGACY ALGORITHMS */
 
   // Bounded Object Coating.
