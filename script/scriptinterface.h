@@ -78,8 +78,6 @@ class ScriptInterface : public QObject {
   void line(const int numParticles = 100, const double holeProb = 0.0);
   void shapeformation(const int numParticles = 200, const double holeProb = 0.2,
                       const QString mode = "h");
-  void swarmseparation(const int numParticles = 200, const double c_rand = 0.7,
-                       const double c_repulse = 0.5);
 
   // Legacy algorithm instance commands. Documentation for foo() can be found in
   // alg/legacy/foo.h.
