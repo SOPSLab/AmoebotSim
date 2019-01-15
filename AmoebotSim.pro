@@ -25,7 +25,6 @@ HEADERS += \
     alg/compression.h \
     alg/infobjcoating.h \
     alg/line.h \
-    alg/ring.h \
     alg/shapeformation.h \
     alg/swarmseparation.h \
     core/amoebotparticle.h \
@@ -66,7 +65,6 @@ SOURCES += \
     alg/compression.cpp \
     alg/infobjcoating.cpp \
     alg/line.cpp \
-    alg/ring.cpp \
     alg/shapeformation.cpp \
     alg/swarmseparation.cpp \
     core/amoebotparticle.cpp \

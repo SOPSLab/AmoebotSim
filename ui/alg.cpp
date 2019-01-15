@@ -79,11 +79,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back().addParameter("# Particles", "100");
   _algorithms.back().addParameter("Hole Prob.", "0.0");
 
-  // Ring Formation.
-  _algorithms.push_back(Algorithm("Ring Formation", "ring"));
-  _algorithms.back().addParameter("# Particles", "100");
-  _algorithms.back().addParameter("Hole Prob.", "0.0");
-
   // Basic Shape Formation.
   _algorithms.push_back(Algorithm("Basic Shape Formation", "shapeformation"));
   _algorithms.back().addParameter("# Particles", "200");

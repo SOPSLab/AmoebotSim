@@ -10,7 +10,6 @@
 #include "alg/legacy/leaderelection.h"
 #include "alg/legacy/leaderelectiondemo.h"
 #include "alg/legacy/legacysystem.h"
-#include "alg/ring.h"
 #include "alg/legacy/universalcoating.h"
 #include "alg/aggregation.h"
 #include "alg/compression.h"
@@ -202,16 +201,6 @@ void ScriptInterface::line(const int numParticles, const double holeProb) {
     log("holeProb in [0,1] required", true);
   } else {
     sim.setSystem(std::make_shared<LineSystem>(numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::ring(const int numParticles, const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<RingSystem>(numParticles, holeProb));
   }
 }
 
