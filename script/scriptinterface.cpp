@@ -14,7 +14,6 @@
 #include "alg/legacy/universalcoating.h"
 #include "alg/aggregation.h"
 #include "alg/compression.h"
-#include "alg/edgedetect.h"
 #include "alg/infobjcoating.h"
 #include "alg/line.h"
 #include "alg/shapeformation.h"
@@ -181,15 +180,6 @@ void ScriptInterface::compression(const int numParticles, const double lambda) {
     log("# particles must be > 0", true);
   } else {
     sim.setSystem(std::make_shared<CompressionSystem>(numParticles, lambda));
-  }
-}
-
-void ScriptInterface::edgedetect(const int numParticles, int countValue) {
-  // TODO: check for constraints on countValue.
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else {
-    sim.setSystem(std::make_shared<EdgeDetectSystem>(numParticles, countValue));
   }
 }
 

@@ -69,11 +69,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back().addParameter("# Particles", "100");
   _algorithms.back().addParameter("Lambda", "4.0");
 
-  // Edge Detection. TODO: better algorithm name, better "countValue" parameter.
-  _algorithms.push_back(Algorithm("Edge Detection", "edgedetect"));
-  _algorithms.back().addParameter("# Particles", "10");
-  _algorithms.back().addParameter("countValue", "250");
-
   // Infinite Object Coating.
   _algorithms.push_back(Algorithm("Infinite Object Coating", "infobjcoating"));
   _algorithms.back().addParameter("# Particles", "100");
