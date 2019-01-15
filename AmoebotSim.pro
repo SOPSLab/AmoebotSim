@@ -21,7 +21,6 @@ HEADERS += \
     alg/legacy/legacyparticle.h \
     alg/legacy/movement.h \
     alg/legacy/universalcoating.h \
-    alg/aggregation.h \
     alg/compression.h \
     alg/infobjcoating.h \
     alg/line.h \
@@ -60,7 +59,6 @@ SOURCES += \
     alg/legacy/legacyparticle.cpp \
     alg/legacy/legacysystem.cpp \
     alg/legacy/universalcoating.cpp \
-    alg/aggregation.cpp \
     alg/compression.cpp \
     alg/infobjcoating.cpp \
     alg/line.cpp \
