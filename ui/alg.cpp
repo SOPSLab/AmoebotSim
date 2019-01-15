@@ -106,11 +106,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back()->addParameter("# Particles", "100");
   _algorithms.back()->addParameter("Hole Prob.", "0.2");
 
-  // Ising Model.
-  _algorithms.push_back(new Algorithm("Ising Model", "ising"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("Beta", "0.2");
-
   // Line Formation.
   _algorithms.push_back(new Algorithm("Line Formation", "line"));
   _algorithms.back()->addParameter("# Particles", "100");

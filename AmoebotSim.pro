@@ -30,7 +30,6 @@ HEADERS += \
     alg/faultrepair.h \
     alg/holeelimination.h \
     alg/infobjcoating.h \
-    alg/ising.h \
     alg/line.h \
     alg/matrix.h \
     alg/matrix2.h \
@@ -82,7 +81,6 @@ SOURCES += \
     alg/faultrepair.cpp \
     alg/holeelimination.cpp \
     alg/infobjcoating.cpp \
-    alg/ising.cpp \
     alg/line.cpp \
     alg/matrix.cpp \
     alg/matrix2.cpp \

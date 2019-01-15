@@ -21,7 +21,6 @@
 #include "alg/faultrepair.h"
 #include "alg/holeelimination.h"
 #include "alg/infobjcoating.h"
-#include "alg/ising.h"
 #include "alg/line.h"
 #include "alg/matrix.h"
 #include "alg/matrix2.h"
@@ -272,15 +271,6 @@ void ScriptInterface::infobjcoating(const int numParticles,
   } else {
     sim.setSystem(std::make_shared<InfObjCoatingSystem>(numParticles,
                                                         holeProb));
-  }
-}
-
-void ScriptInterface::ising(const int numParticles, const double beta) {
-  // TODO: check on any constraints for beta.
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else {
-    sim.setSystem(std::make_shared<IsingSystem>(numParticles, beta));
   }
 }
 
