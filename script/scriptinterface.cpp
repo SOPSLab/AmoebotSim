@@ -13,7 +13,6 @@
 #include "alg/ring.h"
 #include "alg/legacy/universalcoating.h"
 #include "alg/aggregation.h"
-#include "alg/compaction.h"
 #include "alg/compression.h"
 #include "alg/convexhull.h"
 #include "alg/edgedetect.h"
@@ -179,17 +178,6 @@ void ScriptInterface::aggregation(const int numParticles) {
     log("# particles must be > 0", true);
   } else {
     sim.setSystem(std::make_shared<AggregateSystem>(numParticles));
-  }
-}
-
-void ScriptInterface::compaction(const int numParticles,
-                                 const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<CompactionSystem>(numParticles, holeProb));
   }
 }
 

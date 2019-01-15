@@ -64,11 +64,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.push_back(Algorithm("Swarm Aggregation", "aggregation"));
   _algorithms.back().addParameter("# Particles", "2");
 
-  // Compaction.
-  _algorithms.push_back(Algorithm("Compaction", "compaction"));
-  _algorithms.back().addParameter("# Particles", "100");
-  _algorithms.back().addParameter("Hole Prob.", "0.4");
-
   // Compression.
   _algorithms.push_back(Algorithm("Compression", "compression"));
   _algorithms.back().addParameter("# Particles", "100");
