@@ -80,12 +80,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back()->addParameter("# Particles", "10");
   _algorithms.back()->addParameter("countValue", "250");
 
-  // Fault Repair.
-  _algorithms.push_back(new Algorithm("Fault Repair", "faultrepair"));
-  _algorithms.back()->addParameter("# Particles", "100");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
-  _algorithms.back()->addParameter("Branching Factor", "0.8");
-
   // Infinite Object Coating.
   _algorithms.push_back(new Algorithm("Infinite Object Coating", "infobjcoating"));
   _algorithms.back()->addParameter("# Particles", "100");
