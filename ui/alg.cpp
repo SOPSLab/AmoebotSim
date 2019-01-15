@@ -60,10 +60,6 @@ AlgorithmList::AlgorithmList() {
 
   /* ALGORITHMS */
 
-  // Aggregation.
-  _algorithms.push_back(Algorithm("Swarm Aggregation", "aggregation"));
-  _algorithms.back().addParameter("# Particles", "2");
-
   // Compression.
   _algorithms.push_back(Algorithm("Compression", "compression"));
   _algorithms.back().addParameter("# Particles", "100");

@@ -11,7 +11,6 @@
 #include "alg/legacy/leaderelectiondemo.h"
 #include "alg/legacy/legacysystem.h"
 #include "alg/legacy/universalcoating.h"
-#include "alg/aggregation.h"
 #include "alg/compression.h"
 #include "alg/infobjcoating.h"
 #include "alg/line.h"
@@ -162,14 +161,6 @@ void ScriptInterface::tokendemo(const int numParticles, const double holeProb) {
     log("holeProb in [0,1] required", true);
   } else {
     sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::aggregation(const int numParticles) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else {
-    sim.setSystem(std::make_shared<AggregateSystem>(numParticles));
   }
 }
 
