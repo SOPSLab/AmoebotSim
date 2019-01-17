@@ -15,10 +15,13 @@ class ParameterListModel : public QStringListModel {
   };
 
   // Constructs a parameter list model with a reference to the algorithms list.
-  ParameterListModel(QObject* parent = nullptr, AlgorithmList* algs = nullptr);
+  ParameterListModel(QObject* parent = nullptr);
 
-  // Set the parameter list model's algorithm list.
-  void setAlgorithmList(AlgorithmList* algs);
+  // Destructs the algorithm list this parameter list model contains.
+  virtual ~ParameterListModel();
+
+  // Get the parameter list model's algorithm list.
+  AlgorithmList * getAlgorithmList();
 
   // Overrides to return the parameter name at the given index as a QVariant and
   // set the parameter value at the given index.

@@ -8,7 +8,7 @@ static constexpr double zoomAttenuation = 500.0;
 
 View::View() :
   mutex(QMutex::Recursive),
-  _viewportWidth(600),
+  _viewportWidth(900),
   _viewportHeight(600),
   _zoom(zoomInit) {}
 

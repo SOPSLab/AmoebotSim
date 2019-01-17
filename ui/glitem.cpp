@@ -1,4 +1,3 @@
-#include <QOpenGLFunctions_2_0>
 #include <QQuickWindow>
 #include <QSurfaceFormat>
 

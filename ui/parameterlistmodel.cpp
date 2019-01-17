@@ -1,11 +1,16 @@
 #include "ui/parameterlistmodel.h"
 
-ParameterListModel::ParameterListModel(QObject* parent, AlgorithmList* algs) :
-  QStringListModel(parent),
-  _algs(algs) {}
+ParameterListModel::ParameterListModel(QObject* parent)
+    : QStringListModel(parent) {
+  _algs = new AlgorithmList();
+}
 
-void ParameterListModel::setAlgorithmList(AlgorithmList* algs) {
-  _algs = algs;
+ParameterListModel::~ParameterListModel() {
+  delete _algs;
+}
+
+AlgorithmList * ParameterListModel::getAlgorithmList() {
+  return _algs;
 }
 
 QHash<int, QByteArray> ParameterListModel::roleNames() const {

@@ -1,8 +1,8 @@
 #include "ui/alg.h"
 
-Algorithm::Algorithm(QString name, QString signature) :
-  _name(name),
-  _signature(signature) {}
+Algorithm::Algorithm(QString name, QString signature)
+    : _name(name),
+      _signature(signature) {}
 
 QString Algorithm::getName() const {
   return _name;
@@ -45,68 +45,72 @@ void Algorithm::addParameter(QString parameter, QString defaultValue) {
 AlgorithmList::AlgorithmList() {
   /* DEMO ALGORITHMS */
 
-  // Demo: Pull Handovers.
-  _algorithms.push_back(Algorithm("Demo: Disco", "discodemo"));
-  _algorithms.back().addParameter("# Particles", "30");
-  _algorithms.back().addParameter("Counter Max", "5");
+  // Demo: Disco, a first tutorial.
+  _algorithms.push_back(new Algorithm("Demo: Disco", "discodemo"));
+  _algorithms.back()->addParameter("# Particles", "30");
+  _algorithms.back()->addParameter("Counter Max", "5");
 
   // Demo: Pull Handovers.
-  _algorithms.push_back(Algorithm("Demo: Pull Handovers", "pulldemo"));
+  _algorithms.push_back(new Algorithm("Demo: Pull Handovers", "pulldemo"));
 
-  // Demo: Pull Handovers.
-  _algorithms.push_back(Algorithm("Demo: Token Passing", "tokendemo"));
-  _algorithms.back().addParameter("# Particles", "200");
-  _algorithms.back().addParameter("Hole Prob.", "0.2");
+  // Demo: Token Passing.
+  _algorithms.push_back(new Algorithm("Demo: Token Passing", "tokendemo"));
+  _algorithms.back()->addParameter("# Particles", "200");
+  _algorithms.back()->addParameter("Hole Prob.", "0.2");
 
   /* ALGORITHMS */
 
   // Compression.
-  _algorithms.push_back(Algorithm("Compression", "compression"));
-  _algorithms.back().addParameter("# Particles", "100");
-  _algorithms.back().addParameter("Lambda", "4.0");
+  _algorithms.push_back(new Algorithm("Compression", "compression"));
+  _algorithms.back()->addParameter("# Particles", "100");
+  _algorithms.back()->addParameter("Lambda", "4.0");
 
   // Infinite Object Coating.
-  _algorithms.push_back(Algorithm("Infinite Object Coating", "infobjcoating"));
-  _algorithms.back().addParameter("# Particles", "100");
-  _algorithms.back().addParameter("Hole Prob.", "0.2");
+  _algorithms.push_back(new Algorithm("Infinite Object Coating", "infobjcoating"));
+  _algorithms.back()->addParameter("# Particles", "100");
+  _algorithms.back()->addParameter("Hole Prob.", "0.2");
 
   // Line Formation.
-  _algorithms.push_back(Algorithm("Line Formation", "line"));
-  _algorithms.back().addParameter("# Particles", "100");
-  _algorithms.back().addParameter("Hole Prob.", "0.0");
+  _algorithms.push_back(new Algorithm("Line Formation", "line"));
+  _algorithms.back()->addParameter("# Particles", "100");
+  _algorithms.back()->addParameter("Hole Prob.", "0.0");
 
   // Basic Shape Formation.
-  _algorithms.push_back(Algorithm("Basic Shape Formation", "shapeformation"));
-  _algorithms.back().addParameter("# Particles", "200");
-  _algorithms.back().addParameter("Hole Prob.", "0.2");
-  _algorithms.back().addParameter("Shape", "\"h\"");
+  _algorithms.push_back(new Algorithm("Basic Shape Formation", "shapeformation"));
+  _algorithms.back()->addParameter("# Particles", "200");
+  _algorithms.back()->addParameter("Hole Prob.", "0.2");
+  _algorithms.back()->addParameter("Shape", "\"h\"");
 
   /* LEGACY ALGORITHMS */
 
   // Bounded Object Coating.
-  _algorithms.push_back(Algorithm("Bounded Object Coating", "boundedobjcoating"));
-  _algorithms.back().addParameter("# Objects", "100");
-  _algorithms.back().addParameter("# Particles", "50");
-  _algorithms.back().addParameter("Hole Prob.", "0.2");
+  _algorithms.push_back(new Algorithm("Bounded Object Coating", "boundedobjcoating"));
+  _algorithms.back()->addParameter("# Objects", "100");
+  _algorithms.back()->addParameter("# Particles", "50");
+  _algorithms.back()->addParameter("Hole Prob.", "0.2");
 
   // Leader Election.
-  _algorithms.push_back(Algorithm("Leader Election", "leaderelection"));
-  _algorithms.back().addParameter("# Particles", "100");
+  _algorithms.push_back(new Algorithm("Leader Election", "leaderelection"));
+  _algorithms.back()->addParameter("# Particles", "100");
 
   // Leader Election Demo.
-  _algorithms.push_back(Algorithm("Leader Election Demo", "leaderelectiondemo"));
+  _algorithms.push_back(new Algorithm("Leader Election Demo", "leaderelectiondemo"));
 
   // Universal Coating.
-  _algorithms.push_back(Algorithm("Universal Coating", "universalcoating"));
-  _algorithms.back().addParameter("Object Radius", "5");
-  _algorithms.back().addParameter("# Particles", "50");
-  _algorithms.back().addParameter("Hole Prob.", "0.2");
+  _algorithms.push_back(new Algorithm("Universal Coating", "universalcoating"));
+  _algorithms.back()->addParameter("Object Radius", "5");
+  _algorithms.back()->addParameter("# Particles", "50");
+  _algorithms.back()->addParameter("Hole Prob.", "0.2");
+}
+
+AlgorithmList::~AlgorithmList() {
+  _algorithms.erase(_algorithms.begin(), _algorithms.end());
 }
 
 QStringList AlgorithmList::getAlgNames() const {
   QStringList names;
-  for (Algorithm alg : _algorithms) {
-    names.append(alg.getName());
+  for (auto alg : _algorithms) {
+    names.append(alg->getName());
   }
   names.sort();
 
@@ -115,9 +119,10 @@ QStringList AlgorithmList::getAlgNames() const {
 
 QString AlgorithmList::getAlgSignature(QString algName) const {
   QString signature;
-  for (Algorithm alg : _algorithms) {
-    if (alg.getName().compare(algName) == 0) {
-      signature = alg.getSignature();
+  for (auto alg : _algorithms) {
+    if (alg->getName().compare(algName) == 0) {
+      signature = alg->getSignature();
+      break;
     }
   }
 
@@ -126,9 +131,9 @@ QString AlgorithmList::getAlgSignature(QString algName) const {
 
 QStringList AlgorithmList::getParameterNames(QString algName) const {
   QStringList names;
-  for (Algorithm alg : _algorithms) {
-    if (alg.getName().compare(algName) == 0) {
-      names = alg.getParameterNames();
+  for (auto alg : _algorithms) {
+    if (alg->getName().compare(algName) == 0) {
+      names = alg->getParameterNames();
       break;
     }
   }
@@ -138,9 +143,9 @@ QStringList AlgorithmList::getParameterNames(QString algName) const {
 
 QStringList AlgorithmList::getParameterDefaults(QString algName) const {
   QStringList defaults;
-  for (Algorithm alg : _algorithms) {
-    if (alg.getName().compare(algName) == 0) {
-      defaults = alg.getParameterDefaults();
+  for (auto alg : _algorithms) {
+    if (alg->getName().compare(algName) == 0) {
+      defaults = alg->getParameterDefaults();
       break;
     }
   }

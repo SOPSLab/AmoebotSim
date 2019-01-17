@@ -217,6 +217,11 @@ ApplicationWindow {
       onCurrentIndexChanged: {
         algSelected(currentText)
       }
+
+      style: ComboBoxStyle {
+        // Black for the current text is default on Windows, but not on macOS.
+        textColor: "black"
+      }
     }
 
     ScrollView {
