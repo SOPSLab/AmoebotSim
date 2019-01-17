@@ -72,36 +72,11 @@ class ScriptInterface : public QObject {
 
   // Non-legacy algorithm instance commands. Documentation for foo() can be
   // found in alg/foo.h.
-  void adder(const int numParticles = 10, int countValue = 250);
-  void aggregation(const int numParticles = 2);
-  void compaction(const int numParticles = 100, const double holdProb = 0.4);
   void compression(const int numParticles = 100, const double lambda = 4.0);
-  void convexhull(const int numParticles = 20, const int numObjects = 200,
-                  const double holeProb = 0.1);
-  void edgedetect(const int numParticles = 10, int countValue = 250);
-  void faultrepair(const int numParticles = 100, const double holeProb = 0.2,
-                   const double branchFactor = 0.8);
-  void holeelimination(const int numParticles = 100,
-                       const double holeProb = 0.4);
   void infobjcoating(const int numParticles = 100, const double holeProb = 0.2);
-  void ising(const int numParticles = 200, const double beta = 0.2);
   void line(const int numParticles = 100, const double holeProb = 0.0);
-  void linesort(const int numParticles = 200, const double holeProb = 0.2);
-  void matrix(const int numParticles = 10, int countValue = 250,
-              int whichStream = 3, const int mode = 0);
-  void rectangle(const int numParticles = 200, const double holeProb = 0.2);
-  void ring(const int numParticles = 100, const double holeProb = 0.0);
   void shapeformation(const int numParticles = 200, const double holeProb = 0.2,
                       const QString mode = "h");
-  void sierpinski(const int numParticles = 200, const double holeProb = 0.2);
-  void swarmseparation(const int numParticles = 200, const double c_rand = 0.7,
-                       const double c_repulse = 0.5);
-  void twositecbridge(const int numParticles = 100, const double lambda = 4.0,
-                      const double alpha = 1.0);
-  void twositeebridge(const int numParticles = 200,
-                      const double explambda = 2.0,
-                      const double complambda = 4.0,
-                      const double siteDistance = 1.25);
 
   // Legacy algorithm instance commands. Documentation for foo() can be found in
   // alg/legacy/foo.h.

@@ -21,27 +21,10 @@ HEADERS += \
     alg/legacy/legacyparticle.h \
     alg/legacy/movement.h \
     alg/legacy/universalcoating.h \
-    alg/2sitecbridge.h \
-    alg/adder.h \
-    alg/aggregation.h \
-    alg/compaction.h \
     alg/compression.h \
-    alg/convexhull.h \
-    alg/edgedetect.h \
-    alg/faultrepair.h \
-    alg/holeelimination.h \
     alg/infobjcoating.h \
-    alg/ising.h \
     alg/line.h \
-    alg/linesort.h \
-    alg/matrix.h \
-    alg/matrix2.h \
-    alg/rectangle.h \
-    alg/ring.h \
     alg/shapeformation.h \
-    alg/sierpinski.h \
-    alg/swarmseparation.h \
-    alg/twositeebridge.h \
     core/amoebotparticle.h \
     core/amoebotsystem.h \
     core/localparticle.h \
@@ -76,27 +59,10 @@ SOURCES += \
     alg/legacy/legacyparticle.cpp \
     alg/legacy/legacysystem.cpp \
     alg/legacy/universalcoating.cpp \
-    alg/2sitecbridge.cpp \
-    alg/adder.cpp \
-    alg/aggregation.cpp \
-    alg/compaction.cpp \
     alg/compression.cpp \
-    alg/convexhull.cpp \
-    alg/edgedetect.cpp \
-    alg/faultrepair.cpp \
-    alg/holeelimination.cpp \
     alg/infobjcoating.cpp \
-    alg/ising.cpp \
     alg/line.cpp \
-    alg/linesort.cpp \
-    alg/matrix.cpp \
-    alg/matrix2.cpp \
-    alg/rectangle.cpp \
-    alg/ring.cpp \
     alg/shapeformation.cpp \
-    alg/sierpinski.cpp \
-    alg/swarmseparation.cpp \
-    alg/twositeebridge.cpp \
     core/amoebotparticle.cpp \
     core/amoebotsystem.cpp \
     core/localparticle.cpp \

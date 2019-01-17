@@ -60,81 +60,18 @@ AlgorithmList::AlgorithmList() {
 
   /* ALGORITHMS */
 
-  // Adder. TODO: better algorithm name, better "count value" parameter.
-  _algorithms.push_back(new Algorithm("Adder", "adder"));
-  _algorithms.back()->addParameter("# Particles", "10");
-  _algorithms.back()->addParameter("countValue", "250");
-
-  // Aggregation.
-  _algorithms.push_back(new Algorithm("Swarm Aggregation", "aggregation"));
-  _algorithms.back()->addParameter("# Particles", "2");
-
-  // Compaction.
-  _algorithms.push_back(new Algorithm("Compaction", "compaction"));
-  _algorithms.back()->addParameter("# Particles", "100");
-  _algorithms.back()->addParameter("Hole Prob.", "0.4");
-
   // Compression.
   _algorithms.push_back(new Algorithm("Compression", "compression"));
   _algorithms.back()->addParameter("# Particles", "100");
   _algorithms.back()->addParameter("Lambda", "4.0");
-
-  // Convex Hull Formation.
-  _algorithms.push_back(new Algorithm("Convex Hull Formation", "convexhull"));
-  _algorithms.back()->addParameter("# Particles", "20");
-  _algorithms.back()->addParameter("# Objects", "200");
-  _algorithms.back()->addParameter("Hole Prob.", "0.1");
-
-  // Edge Detection. TODO: better algorithm name, better "countValue" parameter.
-  _algorithms.push_back(new Algorithm("Edge Detection", "edgedetect"));
-  _algorithms.back()->addParameter("# Particles", "10");
-  _algorithms.back()->addParameter("countValue", "250");
-
-  // Fault Repair.
-  _algorithms.push_back(new Algorithm("Fault Repair", "faultrepair"));
-  _algorithms.back()->addParameter("# Particles", "100");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
-  _algorithms.back()->addParameter("Branching Factor", "0.8");
-
-  // Hole Elimination.
-  _algorithms.push_back(new Algorithm("Hole Elimination", "holeelimination"));
-  _algorithms.back()->addParameter("# Particles", "100");
-  _algorithms.back()->addParameter("Hole Prob.", "0.4");
 
   // Infinite Object Coating.
   _algorithms.push_back(new Algorithm("Infinite Object Coating", "infobjcoating"));
   _algorithms.back()->addParameter("# Particles", "100");
   _algorithms.back()->addParameter("Hole Prob.", "0.2");
 
-  // Ising Model.
-  _algorithms.push_back(new Algorithm("Ising Model", "ising"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("Beta", "0.2");
-
   // Line Formation.
   _algorithms.push_back(new Algorithm("Line Formation", "line"));
-  _algorithms.back()->addParameter("# Particles", "100");
-  _algorithms.back()->addParameter("Hole Prob.", "0.0");
-
-  // Line Sorting. TODO: better algorithm name.
-  _algorithms.push_back(new Algorithm("Line Sorting", "linesort"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
-
-  // Matrix. TODO: better algorithm name, better parameter names.
-  _algorithms.push_back(new Algorithm("Matrix", "matrix"));
-  _algorithms.back()->addParameter("# Particles", "10");
-  _algorithms.back()->addParameter("countValue", "250");
-  _algorithms.back()->addParameter("whichStream", "3");
-  _algorithms.back()->addParameter("mode", "0");
-
-  // Rectangle. TODO: better algorithm name.
-  _algorithms.push_back(new Algorithm("Rectangle", "rectangle"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
-
-  // Ring Formation.
-  _algorithms.push_back(new Algorithm("Ring Formation", "ring"));
   _algorithms.back()->addParameter("# Particles", "100");
   _algorithms.back()->addParameter("Hole Prob.", "0.0");
 
@@ -143,30 +80,6 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back()->addParameter("# Particles", "200");
   _algorithms.back()->addParameter("Hole Prob.", "0.2");
   _algorithms.back()->addParameter("Shape", "\"h\"");
-
-  // Sierpinski. TODO: better algorithm name.
-  _algorithms.push_back(new Algorithm("Sierpinski", "sierpinski"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
-
-  // Swarm Separation.
-  _algorithms.push_back(new Algorithm("Swarm Separation", "swarmseparation"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("c_rand", "0.7");
-  _algorithms.back()->addParameter("c_repulse", "0.5");
-
-  // 2-Site Connected Bridging.
-  _algorithms.push_back(new Algorithm("2-Site C-Bridging", "twositecbridge"));
-  _algorithms.back()->addParameter("# Particles", "100");
-  _algorithms.back()->addParameter("Lambda", "4.0");
-  _algorithms.back()->addParameter("Alpha", "1.0");
-
-  // 2-Site Exploration Bridging.
-  _algorithms.push_back(new Algorithm("2-Site E-Bridging", "twositeebridge"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("Expansion Lambda", "2.0");
-  _algorithms.back()->addParameter("Compression Lambda", "4.0");
-  _algorithms.back()->addParameter("Site Dist.", "1.25");
 
   /* LEGACY ALGORITHMS */
 

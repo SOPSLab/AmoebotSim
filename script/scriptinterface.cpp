@@ -10,28 +10,11 @@
 #include "alg/legacy/leaderelection.h"
 #include "alg/legacy/leaderelectiondemo.h"
 #include "alg/legacy/legacysystem.h"
-#include "alg/ring.h"
 #include "alg/legacy/universalcoating.h"
-#include "alg/2sitecbridge.h"
-#include "alg/adder.h"
-#include "alg/aggregation.h"
-#include "alg/compaction.h"
 #include "alg/compression.h"
-#include "alg/convexhull.h"
-#include "alg/edgedetect.h"
-#include "alg/faultrepair.h"
-#include "alg/holeelimination.h"
 #include "alg/infobjcoating.h"
-#include "alg/ising.h"
 #include "alg/line.h"
-#include "alg/linesort.h"
-#include "alg/matrix.h"
-#include "alg/matrix2.h"
-#include "alg/rectangle.h"
 #include "alg/shapeformation.h"
-#include "alg/sierpinski.h"
-#include "alg/swarmseparation.h"
-#include "alg/twositeebridge.h"
 
 #include "script/scriptinterface.h"
 #include "core/node.h"
@@ -181,88 +164,11 @@ void ScriptInterface::tokendemo(const int numParticles, const double holeProb) {
   }
 }
 
-void ScriptInterface::adder(const int numParticles, int countValue) {
-  // TODO: check on any constraints on countValue.
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else {
-    sim.setSystem(std::make_shared<AdderSystem>(numParticles, countValue));
-  }
-}
-
-void ScriptInterface::aggregation(const int numParticles) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else {
-    sim.setSystem(std::make_shared<AggregateSystem>(numParticles));
-  }
-}
-
-void ScriptInterface::compaction(const int numParticles,
-                                 const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<CompactionSystem>(numParticles, holeProb));
-  }
-}
-
 void ScriptInterface::compression(const int numParticles, const double lambda) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
   } else {
     sim.setSystem(std::make_shared<CompressionSystem>(numParticles, lambda));
-  }
-}
-
-void ScriptInterface::convexhull(const int numParticles, const int numObjects,
-                                 const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (numObjects <= 0) {
-    log("# object objects must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<ConvexHullSystem>(numParticles, numObjects,
-                                                     holeProb));
-  }
-}
-
-void ScriptInterface::edgedetect(const int numParticles, int countValue) {
-  // TODO: check for constraints on countValue.
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else {
-    sim.setSystem(std::make_shared<EdgeDetectSystem>(numParticles, countValue));
-  }
-}
-
-void ScriptInterface::faultrepair(const int numParticles, const double holeProb,
-                                  const double branchFactor) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else if (branchFactor < 0 || branchFactor > 1) {
-    log("branchFactor in [0,1] required");
-  } else {
-    sim.setSystem(std::make_shared<FaultRepairSystem>(numParticles, holeProb,
-                                                      branchFactor));
-  }
-}
-
-void ScriptInterface::holeelimination(const int numParticles,
-                                      const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<HoleEliminationSystem>(numParticles,
-                                                          holeProb));
   }
 }
 
@@ -278,15 +184,6 @@ void ScriptInterface::infobjcoating(const int numParticles,
   }
 }
 
-void ScriptInterface::ising(const int numParticles, const double beta) {
-  // TODO: check on any constraints for beta.
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else {
-    sim.setSystem(std::make_shared<IsingSystem>(numParticles, beta));
-  }
-}
-
 void ScriptInterface::line(const int numParticles, const double holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
@@ -294,49 +191,6 @@ void ScriptInterface::line(const int numParticles, const double holeProb) {
     log("holeProb in [0,1] required", true);
   } else {
     sim.setSystem(std::make_shared<LineSystem>(numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::linesort(const int numParticles, const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<LineSortSystem>(numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::matrix(const int numParticles, int countValue,
-                             int whichStream, const int mode) {
-  // TODO: check for constraints on countValue and whichStream.
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (mode == 0) {
-    sim.setSystem(std::make_shared<Matrix2System>(numParticles, countValue,
-                                                  whichStream));
-  } else if (mode == 1) {
-    sim.setSystem(std::make_shared<MatrixSystem>(numParticles, countValue));
-  }
-}
-
-void ScriptInterface::rectangle(const int numParticles, const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<RectangleSystem>(numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::ring(const int numParticles, const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<RingSystem>(numParticles, holeProb));
   }
 }
 
@@ -358,66 +212,6 @@ void ScriptInterface::shapeformation(const int numParticles,
   } else {
     sim.setSystem(std::make_shared<ShapeFormationSystem>(numParticles, holeProb,
                                                          mode));
-  }
-}
-
-void ScriptInterface::sierpinski(const int numParticles,
-                                 const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<SierpinskiSystem>(numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::swarmseparation(const int numParticles,
-                                      const double c_rand,
-                                      const double c_repulse) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (c_rand < 0) {
-    log("c_rand >= 0 required", true);
-  } else if (c_repulse < 0) {
-    log("c_repulse >= 0 required", true);
-  } else {
-    sim.setSystem(std::make_shared<SwarmSeparationSystem>(numParticles, c_rand,
-                                                          c_repulse));
-  }
-}
-
-void ScriptInterface::twositecbridge(const int numParticles,
-                                     const double lambda,
-                                     const double alpha) {
-  if (numParticles < 5) {
-    log("# particles must be >= 5", true);
-  } else if (lambda <= 1) {
-    log("lambda > 1 required", true);
-  } else if (alpha < 1) {
-    log("alpha >= 1 required", true);
-  } else {
-    sim.setSystem(std::make_shared<TwoSiteCBridgeSystem>(numParticles, lambda,
-                                                         alpha));
-  }
-}
-
-void ScriptInterface::twositeebridge(const int numParticles,
-                                     const double explambda,
-                                     const double complambda,
-                                     const double siteDistance) {
-  if (numParticles < 5) {
-    log("# particles must be >= 5", true);
-  } else if (explambda <= 0 || explambda >= 2.17) {
-    log("expansion lambda must be > 0 and < 2.17", true);
-  } else if (complambda <= 3.42) {
-    log("compression lambda must be > 3.42", true);
-  } else if (siteDistance <= 1 || siteDistance > sqrt(numParticles)) {
-    log("site distance factor must be > 1 and < sqrt(#particles)", true);
-  } else {
-    sim.setSystem(std::make_shared<TwoSiteEBridgeSystem>(numParticles,
-                                                         explambda, complambda,
-                                                         siteDistance));
   }
 }
 
