@@ -1,14 +1,13 @@
 #ifndef AMOEBOTSIM_UI_GITEM_H_
 #define AMOEBOTSIM_UI_GITEM_H_
 
+#include <QOpenGLFunctions_2_0>
 #include <QQuickItem>
-
-class QOpenGLFunctions_2_0;
 
 class GLItem : public QQuickItem {
   Q_OBJECT
  public:
-  explicit GLItem(QQuickItem* parent = 0);
+  explicit GLItem(QQuickItem* parent = nullptr);
 
  signals:
   void beforeRendering();
