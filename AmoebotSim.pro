@@ -46,7 +46,8 @@ HEADERS += \
     ui/glitem.h \
     ui/parameterlistmodel.h \
     ui/view.h \
-    ui/visitem.h
+    ui/visitem.h \
+    alg/leaderelection.h
 
 SOURCES += \
     alg/demo/discodemo.cpp \
@@ -80,7 +81,8 @@ SOURCES += \
     ui/glitem.cpp \
     ui/parameterlistmodel.cpp \
     ui/view.cpp \
-    ui/visitem.cpp
+    ui/visitem.cpp \
+    alg/leaderelection.cpp
 
 RESOURCES += \
     res/inputs.qrc \
