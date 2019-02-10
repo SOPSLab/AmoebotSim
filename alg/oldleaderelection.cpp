@@ -50,6 +50,8 @@ void LeaderElectionParticle::activate() {
     }
     if (isSurrounded) {
       state = State::Finished;
+    } else {
+      state = State::Candidate;
     }
   } else if (state == State::Candidate) {
     // Check whether or not all of the particle's agents have been demoted
@@ -107,6 +109,8 @@ QString LeaderElectionParticle::inspectionText() const {
       default:            return "no state";
     }
   }();
+  text += "\n";
+  text += "number of agents: " + QString::number(agents.size()) + "\n";
   text += "\n";
 
   return text;
@@ -207,6 +211,9 @@ void LeaderElectionParticle::LeaderElectionAgent::setSubPhaseColor() {
 
 void LeaderElectionParticle::LeaderElectionAgent::paintFrontSegment(
     const int color) {
+  // Must use localToGlobalDir method to reconcile the difference between the
+  // local orientation of the particle and the global orientation used by
+  // drawing
   int tempDir = candidateParticle->localToGlobalDir(agentDir);
   int tempNextDir = candidateParticle->localToGlobalDir(nextAgentDir);
   while (tempDir != (tempNextDir + 1) % 6) {
@@ -220,6 +227,9 @@ void LeaderElectionParticle::LeaderElectionAgent::paintFrontSegment(
 
 void LeaderElectionParticle::LeaderElectionAgent::paintBackSegment(
     const int color) {
+  // Must use localToGlobalDir method to reconcile the difference between the
+  // local orientation of the particle and the global orientation used by
+  // drawing
   candidateParticle->borderColorLabels.at(
         3 * candidateParticle->localToGlobalDir(agentDir) + 1) = color;
 }
