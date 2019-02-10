@@ -49,6 +49,11 @@ class LeaderElectionParticle : public AmoebotParticle {
   // to snapshot the current values of this particle's memory at runtime.
   virtual QString inspectionText() const;
 
+  // Returns the borderColors and borderPointColors arrays associated with the
+  // particle to draw the cycle for leader election.
+  virtual std::array<int, 18> borderColors() const;
+  virtual std::array<int, 6> borderPointColors() const;
+
   // Gets a reference to the neighboring particle incident to the specified port
   // label. Crashes if no such particle exists at this label; consider using
   // hasNbrAtLabel() first if unsure.
@@ -66,10 +71,8 @@ class LeaderElectionParticle : public AmoebotParticle {
   // Checks whether this particle is occupying the next position to be filled.
   bool canFinish() const;
 
-  // Returns the borderColors and borderPointColors arrays associated with the
-  // particle to draw the cycle for leader election.
-  virtual std::array<int, 18> borderColors() const;
-  virtual std::array<int, 6> borderPointColors() const;
+  int getNextAgentDir(const int agentDir) const;
+  int getPrevAgentDir(const int agentDir) const;
  private:
   friend class LeaderElectionSystem;
   class LeaderElectionAgent {
@@ -82,9 +85,10 @@ class LeaderElectionParticle : public AmoebotParticle {
 
    LeaderElectionAgent();
 
-   int local_id;
-   unsigned agentDir, nextAgentDir, prevAgentDir;
-   State state = State::Idle;
+   int localId;
+   int agentDir, nextAgentDir, prevAgentDir;
+   State agentState;
+   SubPhase subPhase;
    LeaderElectionParticle* candidateParticle;
 
    void activate();
@@ -100,12 +104,9 @@ class LeaderElectionParticle : public AmoebotParticle {
  protected:
   State state;
   unsigned currentAgent;
-  std::vector<LeaderElectionAgent> agents;
+  std::vector<LeaderElectionAgent*> agents;
   std::array<int, 18> borderColorLabels;
   std::array<int, 6> borderPointColorLabels;
-
-  unsigned getNextAgentDir(int agentDir) const;
-  unsigned getPrevAgentDir(int agentDir) const;
 
   struct LeaderElectionToken : public Token {
    int origin;
@@ -141,7 +142,7 @@ class LeaderElectionSystem : public AmoebotSystem {
   // size (#particles), hole probability, and shape to form. holeProb in [0,1]
   // controls how "spread out" the system is; closer to 0 is more compressed,
   // closer to 1 is more expanded.
-  LeaderElectionSystem(int numParticles = 200, double holeProb = 0.2);
+  LeaderElectionSystem(int numParticles = 100, double holeProb = 0.2);
 
   // Checks whether or not the system's run of the ShapeFormation formation
   // algorithm has terminated (all particles in state Finish).

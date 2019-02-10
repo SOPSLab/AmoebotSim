@@ -14,6 +14,7 @@
 #include "alg/compression.h"
 #include "alg/infobjcoating.h"
 #include "alg/line.h"
+#include "alg/oldleaderelection.h"
 #include "alg/shapeformation.h"
 
 #include "script/scriptinterface.h"
@@ -191,6 +192,18 @@ void ScriptInterface::line(const int numParticles, const double holeProb) {
     log("holeProb in [0,1] required", true);
   } else {
     sim.setSystem(std::make_shared<LineSystem>(numParticles, holeProb));
+  }
+}
+
+void ScriptInterface::oldleaderelection(const int numParticles,
+                                         const double holeProb) {
+  if (numParticles <= 0) {
+    log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    log("holeProb in [0,1] required", true);
+  } else {
+    sim.setSystem(std::make_shared<LeaderElectionSystem>(numParticles,
+                                                         holeProb));
   }
 }
 

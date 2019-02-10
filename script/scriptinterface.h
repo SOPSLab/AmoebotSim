@@ -77,6 +77,8 @@ class ScriptInterface : public QObject {
   void line(const int numParticles = 100, const double holeProb = 0.0);
   void shapeformation(const int numParticles = 200, const double holeProb = 0.2,
                       const QString mode = "h");
+  void oldleaderelection(const int numParticles = 100,
+                          const double holeProb = 0.2);
 
   // Legacy algorithm instance commands. Documentation for foo() can be found in
   // alg/legacy/foo.h.
