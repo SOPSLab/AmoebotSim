@@ -1,14 +1,8 @@
 // Defines the particle system and composing particles for the General
-// Leader Election Algorithm as alluded to in 'An Algorithmic Framework for Shape
-// Formation Problems in Self-Organizing Particle Systems'
-// [arxiv.org/abs/1504.00744].
+// Leader Election Algorithm as alluded to in 'Leader Election and Shape
+// Formation with Self-Organizing Programmable Matter'
+// [https://arxiv.org/abs/1503.07991].
 //
-// Run with shapeformation(#particles, hole probability, mode)
-// on the simulator command line.
-// mode == "h" --> hexagon formation
-// mode == "s" --> square formation
-// mode == "t1" --> vertex triangle formation
-// mode == "t2" --> center triangle formation
 
 #ifndef AMOEBOTSIM_ALG_LEADERELECTION_H
 #define AMOEBOTSIM_ALG_LEADERELECTION_H
@@ -72,34 +66,73 @@ class LeaderElectionParticle : public AmoebotParticle {
   // Checks whether this particle is occupying the next position to be filled.
   bool canFinish() const;
 
- protected:
-  State state;
-  // Tokens for Candidate Elimination via Segment Comparison
-  struct SegmentLeadToken : public Token {};
-  struct PassiveSegmentToken : public Token {};
-  struct ActiveSegmentToken : public Token {};
-  struct PassiveSegmentCleanToken : public Token {};
-  struct ActiveSegmentCleanToken : public Token {};
-  struct FinalSegmentCleanToken : public Token {};
-
-  // Tokens for Coin Flipping and Candidate Transferal
-  struct CandidacyAnnounceToken : public Token {};
-  struct CandidacyAckToken : public Token {};
-
-  // Tokens for Solitude Verification
-  struct SolitudeActiveToken : public Token {};
-  struct SolitudePositiveXToken : public Token {};
-  struct SolitudePositiveYToken : public Token {};
-  struct SolitudeNegativeXToken : public Token {};
-  struct SolitudeNegativeYToken : public Token {};
-
-  // Token for Border Testing
-  struct BorderTestToken : public Token {};
+  // Returns the borderColors and borderPointColors arrays associated with the
+  // particle to draw the cycle for leader election.
+  virtual std::array<int, 18> borderColors() const;
+  virtual std::array<int, 6> borderPointColors() const;
  private:
   friend class LeaderElectionSystem;
   class LeaderElectionAgent {
+  public:
+   enum class SubPhase {
+     SegmentComparison = 0,
+     CoinFlipping,
+     SolitudeVerification
+   };
 
+   LeaderElectionAgent();
+
+   int local_id;
+   unsigned agentDir, nextAgentDir, prevAgentDir;
+   State state = State::Idle;
+   LeaderElectionParticle* candidateParticle;
+
+   void activate();
+   void setStateColor();
+   void setSubPhaseColor();
+
+   // Methods responsible for painting the borders which will act as physical
+   // representations of the cycle for leader election
+   void paintFrontSegment(const int color);
+   void paintBackSegment(const int color);
   };
+
+ protected:
+  State state;
+  unsigned currentAgent;
+  std::vector<LeaderElectionAgent> agents;
+  std::array<int, 18> borderColorLabels;
+  std::array<int, 6> borderPointColorLabels;
+
+  unsigned getNextAgentDir(int agentDir) const;
+  unsigned getPrevAgentDir(int agentDir) const;
+
+  struct LeaderElectionToken : public Token {
+   int origin;
+  };
+
+  // Tokens for Candidate Elimination via Segment Comparison
+  struct SegmentLeadToken : public LeaderElectionToken {};
+  struct PassiveSegmentToken : public LeaderElectionToken {};
+  struct ActiveSegmentToken : public LeaderElectionToken {};
+  struct PassiveSegmentCleanToken : public LeaderElectionToken {};
+  struct ActiveSegmentCleanToken : public LeaderElectionToken {};
+  struct FinalSegmentCleanToken : public LeaderElectionToken {};
+
+  // Tokens for Coin Flipping and Candidate Transferal
+  struct CandidacyAnnounceToken : public LeaderElectionToken {};
+  struct CandidacyAckToken : public LeaderElectionToken {};
+
+  // Tokens for Solitude Verification
+  struct SolitudeActiveToken : public LeaderElectionToken {};
+  struct SolitudePositiveXToken : public LeaderElectionToken {};
+  struct SolitudePositiveYToken : public LeaderElectionToken {};
+  struct SolitudeNegativeXToken : public LeaderElectionToken {};
+  struct SolitudeNegativeYToken : public LeaderElectionToken {};
+
+  // Token for Border Testing
+  struct BorderTestToken : public LeaderElectionToken {};
+
 };
 
 class LeaderElectionSystem : public AmoebotSystem {
@@ -107,21 +140,12 @@ class LeaderElectionSystem : public AmoebotSystem {
   // Constructs a system of ShapeFormationParticles with an optionally specified
   // size (#particles), hole probability, and shape to form. holeProb in [0,1]
   // controls how "spread out" the system is; closer to 0 is more compressed,
-  // closer to 1 is more expanded. The current shapes accepted are...
-  //   "h"  --> hexagon
-  //   "s"  --> square
-  //   "t1" --> vertex triangle
-  //   "t2" --> center triangle
-  LeaderElectionSystem(int numParticles = 200, double holeProb = 0.2,
-                       QString mode = "h");
+  // closer to 1 is more expanded.
+  LeaderElectionSystem(int numParticles = 200, double holeProb = 0.2);
 
   // Checks whether or not the system's run of the ShapeFormation formation
   // algorithm has terminated (all particles in state Finish).
   bool hasTerminated() const override;
-
-  // Returns a set of strings containing the current accepted modes of
-  // Shapeformation.
-  static std::set<QString> getAcceptedModes();
 };
 
 #endif  // AMOEBOTSIM_ALG_LEADERELECTION_H

@@ -47,7 +47,7 @@ HEADERS += \
     ui/parameterlistmodel.h \
     ui/view.h \
     ui/visitem.h \
-    alg/leaderelection.h
+    alg/oldleaderelection.h
 
 SOURCES += \
     alg/demo/discodemo.cpp \
@@ -82,7 +82,7 @@ SOURCES += \
     ui/parameterlistmodel.cpp \
     ui/view.cpp \
     ui/visitem.cpp \
-    alg/leaderelection.cpp
+    alg/oldleaderelection.cpp
 
 RESOURCES += \
     res/inputs.qrc \

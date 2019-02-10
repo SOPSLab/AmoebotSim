@@ -3,7 +3,7 @@
 #include <set>
 #include <vector>
 
-#include "alg/leaderelection.h"
+#include "alg/oldleaderelection.h"
 
 LeaderElectionParticle::LeaderElectionParticle(const Node head,
                                                const int globalTailDir,
@@ -16,17 +16,42 @@ LeaderElectionParticle::LeaderElectionParticle(const Node head,
 }
 
 void LeaderElectionParticle::activate() {
+  if (state == State::Finished && !hasToken<LeaderElectionToken>()) {
+    return;
+  } else if (state == State::Finished && hasToken<LeaderElectionToken>()) {
+    // pass token onto the next particle (based on clockwise direction of cycle)
+  } else if (state == State::Idle) {
+    for (int i = 0; i < 6; i++) {
+      if (!hasNbrAtLabel(i) && hasNbrAtLabel((i + 1) % 6)) {
+        Q_ASSERT(agents.size() <= 3);
+        // Insert agent into vector with defined parameters
+      }
+    }
+  } else if (state == State::Candidate) {
+    // Check whether or not all of the particle's agents have been demoted
+    // If this is the case, then the particle is considered "Finished"
+    bool isFinished = true;
 
+    for (unsigned i = 0; i < agents.size(); i++) {
+      if (agents.at(i).state != State::Demoted) {
+        isFinished = false;
+        break;
+      }
+    }
+
+    if (isFinished) {
+      state = State::Finished;
+      return;
+    }
+
+//    agents.at(currentAgent).activate();
+    currentAgent = (currentAgent + 1) % agents.size();
+  }
 }
 
 int LeaderElectionParticle::headMarkColor() const {
-  switch(state) {
-    case State::Candidate:   return 0x00ff00;
-    case State::SoleCandidate: return 0x0000ff;
-    case State::Idle:   return -1;
-    case State::Leader: return 0xffff00;
-    case State::Finished: return 0xff0000;
-    default: return -1;
+  if (state == State::Leader) {
+    return 0xff0000;
   }
 
   return -1;
@@ -63,6 +88,14 @@ QString LeaderElectionParticle::inspectionText() const {
   return text;
 }
 
+std::array<int, 18> LeaderElectionParticle::borderColors() const {
+  return borderColorLabels;
+}
+
+std::array<int, 6> LeaderElectionParticle::borderPointColors() const {
+  return borderPointColorLabels;
+}
+
 LeaderElectionParticle& LeaderElectionParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<LeaderElectionParticle>(label);
 }
@@ -90,9 +123,24 @@ bool LeaderElectionParticle::canFinish() const {
   return false;
 }
 
-LeaderElectionSystem::LeaderElectionSystem(int numParticles, double holeProb,
-                                           QString mode) {
-  Q_ASSERT(mode == "h" || mode == "s" || mode == "t1" || mode == "t2");
+void LeaderElectionParticle::LeaderElectionAgent::paintFrontSegment(
+    const int color) {
+  unsigned tempDir = agentDir;
+  while (tempDir != (nextAgentDir + 1) % 6) {
+      if ((tempDir + 5) % 6 != nextAgentDir) {
+          candidateParticle->borderColorLabels.at((3 * tempDir + 17) % 18) =
+              color;
+      }
+      tempDir = (tempDir + 5) % 6;
+  }
+}
+
+void LeaderElectionParticle::LeaderElectionAgent::paintBackSegment(
+    const int color) {
+  candidateParticle->borderColorLabels.at(3 * agentDir + 1) = color;
+}
+
+LeaderElectionSystem::LeaderElectionSystem(int numParticles, double holeProb) {
   Q_ASSERT(numParticles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
 
@@ -151,16 +199,11 @@ bool LeaderElectionSystem::hasTerminated() const {
 
   for (auto p : particles) {
     auto hp = dynamic_cast<LeaderElectionParticle*>(p);
-    if (hp->state != LeaderElectionParticle::State::Seed &&
-        hp->state != LeaderElectionParticle::State::Finish) {
+    if (hp->state != LeaderElectionParticle::State::Leader &&
+        hp->state != LeaderElectionParticle::State::Finished) {
       return false;
     }
   }
 
   return true;
-}
-
-std::set<QString> LeaderElectionSystem::getAcceptedModes() {
-  std::set<QString> set = {"h", "t1", "t2", "s"};
-  return set;
 }
