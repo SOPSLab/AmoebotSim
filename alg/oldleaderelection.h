@@ -73,6 +73,93 @@ class LeaderElectionParticle : public AmoebotParticle {
 
   int getNextAgentDir(const int agentDir) const;
   int getPrevAgentDir(const int agentDir) const;
+
+  int getNumberOfNbrs() const;
+
+ protected:
+  struct LeaderElectionToken : public Token {
+   int origin;
+  };
+
+  // Tokens for Candidate Elimination via Segment Comparison
+  struct SegmentLeadToken : public LeaderElectionToken {
+    SegmentLeadToken(int origin = -1) {
+      this->origin = origin;
+    }
+  };
+  struct PassiveSegmentToken : public LeaderElectionToken {
+    bool isFinal;
+    PassiveSegmentToken(int origin = -1, bool isFinal = false) {
+      this->origin = origin;
+      this->isFinal = isFinal;
+    }
+  };
+  struct ActiveSegmentToken : public LeaderElectionToken {
+    bool isFinal;
+    ActiveSegmentToken(int origin = -1, bool isFinal = false) {
+      this->origin = origin;
+      this->isFinal = isFinal;
+    }
+  };
+  struct PassiveSegmentCleanToken : public LeaderElectionToken {
+    PassiveSegmentCleanToken(int origin = -1) {
+      this->origin = origin;
+    }
+  };
+  struct ActiveSegmentCleanToken : public LeaderElectionToken {
+    ActiveSegmentCleanToken(int origin = -1) {
+      this->origin = origin;
+    }
+  };
+  struct FinalSegmentCleanToken : public LeaderElectionToken {
+    bool hasCoveredCandidate;
+    FinalSegmentCleanToken(int origin = -1, bool hasCovered = false) {
+      this->origin = origin;
+      this->hasCoveredCandidate = hasCovered;
+    }
+  };
+
+  // Tokens for Coin Flipping and Candidate Transferal
+  struct CandidacyAnnounceToken : public LeaderElectionToken {
+    CandidacyAnnounceToken(int origin = -1) {
+      this->origin = origin;
+    }
+  };
+  struct CandidacyAckToken : public LeaderElectionToken {
+    CandidacyAckToken(int origin = -1) {
+      this->origin = origin;
+    }
+  };
+
+  // Tokens for Solitude Verification
+  struct SolitudeActiveToken : public LeaderElectionToken {
+    SolitudeActiveToken(int origin = -1) {
+      this->origin = origin;
+    }
+  };
+  struct SolitudePositiveXToken : public LeaderElectionToken {
+    SolitudePositiveXToken(int origin = -1) {
+      this->origin = origin;
+    }
+  };
+  struct SolitudePositiveYToken : public LeaderElectionToken {
+    SolitudePositiveYToken(int origin = -1) {
+      this->origin = origin;
+    }
+  };
+  struct SolitudeNegativeXToken : public LeaderElectionToken {
+    SolitudeNegativeXToken(int origin = -1) {
+      this->origin = origin;
+    }
+  };
+  struct SolitudeNegativeYToken : public LeaderElectionToken {
+    SolitudeNegativeYToken(int origin = -1) {
+      this->origin = origin;
+    }
+  };
+
+  // Token for Border Testing
+  struct BorderTestToken : public LeaderElectionToken {};
  private:
   friend class LeaderElectionSystem;
   class LeaderElectionAgent {
@@ -80,7 +167,8 @@ class LeaderElectionParticle : public AmoebotParticle {
    enum class SubPhase {
      SegmentComparison = 0,
      CoinFlipping,
-     SolitudeVerification
+     SolitudeVerification,
+     BoundaryTesting
    };
 
    LeaderElectionAgent();
@@ -90,8 +178,32 @@ class LeaderElectionParticle : public AmoebotParticle {
    State agentState;
    SubPhase subPhase;
    LeaderElectionParticle* candidateParticle;
+   // Variables for Segment Comparison
+   bool comparingSegment = false;
+   bool isCoveredCandidate = false;
+   bool absorbedActiveToken = false;
+
+   // Variables for Coin Flipping and Candidacy Transferral
+   bool gotAnnounceInCompare = false;
+   bool gotAnnounceBeforeAck = false;
+   bool waitingForTransferAck = false;
 
    void activate();
+
+   void activeClean(int agentDir);
+   void passiveClean(int agentDir);
+
+   template <class TokenType>
+   bool hasAgentToken(int agentDir);
+   template <class TokenType>
+   std::shared_ptr<TokenType> peekAgentToken(int agentDir);
+   template <class TokenType>
+   std::shared_ptr<TokenType> takeAgentToken(int agentDir);
+   template <class TokenType>
+   void passAgentToken(int agentDir);
+   template <class TokenType>
+   void passAgentToken(int agentDir, bool opt);
+
    void setStateColor();
    void setSubPhaseColor();
 
@@ -107,33 +219,6 @@ class LeaderElectionParticle : public AmoebotParticle {
   std::vector<LeaderElectionAgent*> agents;
   std::array<int, 18> borderColorLabels;
   std::array<int, 6> borderPointColorLabels;
-
-  struct LeaderElectionToken : public Token {
-   int origin;
-  };
-
-  // Tokens for Candidate Elimination via Segment Comparison
-  struct SegmentLeadToken : public LeaderElectionToken {};
-  struct PassiveSegmentToken : public LeaderElectionToken {};
-  struct ActiveSegmentToken : public LeaderElectionToken {};
-  struct PassiveSegmentCleanToken : public LeaderElectionToken {};
-  struct ActiveSegmentCleanToken : public LeaderElectionToken {};
-  struct FinalSegmentCleanToken : public LeaderElectionToken {};
-
-  // Tokens for Coin Flipping and Candidate Transferal
-  struct CandidacyAnnounceToken : public LeaderElectionToken {};
-  struct CandidacyAckToken : public LeaderElectionToken {};
-
-  // Tokens for Solitude Verification
-  struct SolitudeActiveToken : public LeaderElectionToken {};
-  struct SolitudePositiveXToken : public LeaderElectionToken {};
-  struct SolitudePositiveYToken : public LeaderElectionToken {};
-  struct SolitudeNegativeXToken : public LeaderElectionToken {};
-  struct SolitudeNegativeYToken : public LeaderElectionToken {};
-
-  // Token for Border Testing
-  struct BorderTestToken : public LeaderElectionToken {};
-
 };
 
 class LeaderElectionSystem : public AmoebotSystem {

@@ -1,4 +1,5 @@
 #include <QtGlobal>
+#include <QtDebug>
 
 #include <set>
 #include <vector>
@@ -13,66 +14,71 @@ LeaderElectionParticle::LeaderElectionParticle(const Node head,
                                                AmoebotSystem& system,
                                                State state)
   : AmoebotParticle(head, globalTailDir, orientation, system),
-    state(state) {
+    state(state),
+    currentAgent(0) {
   borderColorLabels.fill(-1);
   borderPointColorLabels.fill(-1);
 }
 
 void LeaderElectionParticle::activate() {
-  if (state == State::Finished && !hasToken<LeaderElectionToken>()) {
-    return;
-  } else if (state == State::Finished && hasToken<LeaderElectionToken>()) {
-    // pass token onto the next particle (based on clockwise direction of cycle)
+  if (state == State::Demoted && hasToken<LeaderElectionToken>()) {
+    agents.at(currentAgent)->activate();
+    currentAgent = (currentAgent + 1) % agents.size();
   } else if (state == State::Idle) {
-    bool isSurrounded = true;
-    for (int dir = 0; dir < 6; dir++) {
-      int agentId = 0;
-      if (!hasNbrAtLabel(dir) && hasNbrAtLabel((dir + 1) % 6)) {
-        Q_ASSERT(agentId < 3);
-        isSurrounded = false;
-
-        LeaderElectionAgent* agent = new LeaderElectionAgent();
-        agent->candidateParticle = this;
-        agent->localId = agentId + 1;
-        agent->agentDir = dir;
-        agent->nextAgentDir = getNextAgentDir(dir);
-        agent->prevAgentDir = getPrevAgentDir(dir);
-        agent->agentState = State::Candidate;
-        agent->subPhase = LeaderElectionAgent::SubPhase::SegmentComparison;
-        agent->setStateColor();
-
-        agent->paintBackSegment(0x696969);
-        agent->paintFrontSegment(0x696969);
-
-        agents.push_back(agent);
-        agentId++;
-      }
-    }
-    if (isSurrounded) {
+    int numNbrs = getNumberOfNbrs();
+    if (numNbrs == 0) {
+      state = State::Leader;
+      return;
+    } else if (numNbrs == 6) {
       state = State::Finished;
     } else {
+      for (int dir = 0; dir < 6; dir++) {
+        int agentId = 0;
+        if (!hasNbrAtLabel(dir) && hasNbrAtLabel((dir + 1) % 6)) {
+          Q_ASSERT(agentId < 3);
+
+          LeaderElectionAgent* agent = new LeaderElectionAgent();
+          agent->candidateParticle = this;
+          agent->localId = agentId + 1;
+          agent->agentDir = dir;
+          agent->nextAgentDir = getNextAgentDir(dir);
+          agent->prevAgentDir = getPrevAgentDir(dir);
+          agent->agentState = State::Candidate;
+          agent->subPhase = LeaderElectionAgent::SubPhase::SegmentComparison;
+          agent->setStateColor();
+
+          agent->paintBackSegment(0x696969);
+          agent->paintFrontSegment(0x696969);
+
+          agents.push_back(agent);
+          agentId++;
+        }
+      }
       state = State::Candidate;
+      return;
     }
   } else if (state == State::Candidate) {
     // Check whether or not all of the particle's agents have been demoted
     // If this is the case, then the particle is considered "Finished"
-    bool isFinished = true;
+    bool isDemoted = true;
 
     for (unsigned i = 0; i < agents.size(); i++) {
       if (agents.at(i)->agentState != State::Demoted) {
-        isFinished = false;
+        isDemoted = false;
         break;
       }
     }
 
-    if (isFinished) {
-      state = State::Finished;
+    if (isDemoted) {
+      state = State::Demoted;
       return;
     }
 
-//    agents.at(currentAgent)->activate();
+    agents.at(currentAgent)->activate();
     currentAgent = (currentAgent + 1) % agents.size();
   }
+
+  return;
 }
 
 int LeaderElectionParticle::headMarkColor() const {
@@ -175,6 +181,16 @@ int LeaderElectionParticle::getPrevAgentDir(const int agentDir) const {
   Q_ASSERT(false);
   return -1;
 }
+
+int LeaderElectionParticle::getNumberOfNbrs() const {
+  int count = 0;
+  for (int dir = 0; dir < 6; dir++) {
+    if (hasNbrAtLabel(dir)) {
+      count++;
+    }
+  }
+  return count;
+}
 //----------------------------END PARTICLE CODE----------------------------
 
 //----------------------------BEGIN AGENT CODE----------------------------
@@ -189,12 +205,245 @@ LeaderElectionParticle::LeaderElectionAgent::LeaderElectionAgent() :
 {}
 
 void LeaderElectionParticle::LeaderElectionAgent::activate() {
-  return;
+  if (agentState == State::Candidate) {
+    if (hasAgentToken<ActiveSegmentCleanToken>(nextAgentDir)) {
+      activeClean(nextAgentDir);
+    }
+    if (hasAgentToken<PassiveSegmentCleanToken>(prevAgentDir)) {
+      passiveClean(prevAgentDir);
+      paintBackSegment(0x696969);
+    }
+    if (hasAgentToken<SegmentLeadToken>(prevAgentDir)) {
+      takeAgentToken<SegmentLeadToken>(prevAgentDir);
+      passAgentToken<PassiveSegmentToken>(prevAgentDir, true);
+      paintBackSegment(0x696969);
+    }
+    if (hasAgentToken<ActiveSegmentToken>(nextAgentDir)) {
+      if (!absorbedActiveToken) {
+        if (takeAgentToken<ActiveSegmentToken>(nextAgentDir)->isFinal) {
+          passAgentToken<FinalSegmentCleanToken>(nextAgentDir, true);
+        } else {
+          if (hasAgentToken<PassiveSegmentToken>(nextAgentDir)) {
+            takeAgentToken<PassiveSegmentToken>(nextAgentDir);
+            paintFrontSegment(0x696969);
+          }
+          passAgentToken<PassiveSegmentCleanToken>(nextAgentDir);
+          if (hasAgentToken<FinalSegmentCleanToken>(prevAgentDir)) {
+            takeAgentToken<FinalSegmentCleanToken>(prevAgentDir);
+          }
+          passAgentToken<ActiveSegmentCleanToken>(prevAgentDir);
+          absorbedActiveToken = true;
+          isCoveredCandidate = true;
+          agentState = State::Demoted;
+          setStateColor();
+          return;
+        }
+      } else {
+        passAgentToken<ActiveSegmentToken>(prevAgentDir);
+      }
+    }
+    if (hasAgentToken<CandidacyAnnounceToken>(prevAgentDir)) {
+      takeAgentToken<CandidacyAnnounceToken>(prevAgentDir);
+      passAgentToken<CandidacyAckToken>(prevAgentDir);
+      paintBackSegment(0x696969);
+      if (waitingForTransferAck) {
+        gotAnnounceBeforeAck = true;
+      } else {
+        gotAnnounceInCompare = true;
+      }
+    }
+
+
+    if (subPhase == SubPhase::SegmentComparison) {
+      if (hasAgentToken<PassiveSegmentToken>(nextAgentDir)) {
+        bool isFinalCheck =
+            takeAgentToken<PassiveSegmentToken>(nextAgentDir)->isFinal;
+        passAgentToken<ActiveSegmentToken>(prevAgentDir, isFinalCheck);
+        if (isFinalCheck) {
+          paintFrontSegment(0x696969);
+        }
+      } else if (hasAgentToken<FinalSegmentCleanToken>(prevAgentDir)) {
+        bool coveredCandidateCheck =
+            takeAgentToken<FinalSegmentCleanToken>(prevAgentDir)->
+            hasCoveredCandidate;
+        if (!coveredCandidateCheck && !gotAnnounceInCompare) {
+          agentState = State::Demoted;
+          setStateColor();
+        } else {
+          subPhase = SubPhase::CoinFlipping;
+          setStateColor();
+        }
+        comparingSegment = false;
+        gotAnnounceInCompare = false;
+        return;
+      } else if (!comparingSegment) {
+        passAgentToken<SegmentLeadToken>(nextAgentDir);
+        paintFrontSegment(0xff0000);
+        comparingSegment = true;
+      }
+    } else if (subPhase == SubPhase::CoinFlipping) {
+      if (hasAgentToken<CandidacyAckToken>(nextAgentDir)) {
+        takeAgentToken<CandidacyAckToken>(nextAgentDir);
+        paintFrontSegment(0x696969);
+        subPhase = SubPhase::SolitudeVerification;
+        if (!gotAnnounceBeforeAck) {
+          agentState = State::Demoted;
+        }
+        setStateColor();
+        waitingForTransferAck = false;
+        gotAnnounceBeforeAck = false;
+        return;
+      } else if (!waitingForTransferAck && randBool()) {
+        passAgentToken<CandidacyAnnounceToken>(nextAgentDir);
+        paintFrontSegment(0xffa500);
+        waitingForTransferAck = true;
+      }
+    } else if (subPhase == SubPhase::SolitudeVerification) {
+
+    } else if (subPhase == SubPhase::BoundaryTesting) {
+
+    }
+  } else if (agentState == State::Demoted) {
+    if (hasAgentToken<PassiveSegmentCleanToken>(prevAgentDir)) {
+      passiveClean(prevAgentDir);
+      passAgentToken<PassiveSegmentCleanToken>(nextAgentDir);
+      paintBackSegment(0x696969);
+      paintFrontSegment(0x696969);
+    }
+    if (hasAgentToken<ActiveSegmentCleanToken>(nextAgentDir)) {
+      activeClean(nextAgentDir);
+      passAgentToken<ActiveSegmentCleanToken>(prevAgentDir);
+    }
+    if (hasAgentToken<SegmentLeadToken>(prevAgentDir)) {
+      takeAgentToken<SegmentLeadToken>(prevAgentDir);
+      passAgentToken<SegmentLeadToken>(nextAgentDir);
+      passAgentToken<PassiveSegmentToken>(prevAgentDir);
+      paintBackSegment(0xff0000);
+      paintFrontSegment(0xff0000);
+    }
+    if (hasAgentToken<PassiveSegmentToken>(nextAgentDir)) {
+      bool isFinal = takeAgentToken<PassiveSegmentToken>(nextAgentDir)->isFinal;
+      passAgentToken<PassiveSegmentToken>(prevAgentDir, isFinal);
+      paintFrontSegment(0x696969);
+      paintBackSegment(0x696969);
+    }
+    if (hasAgentToken<ActiveSegmentToken>(nextAgentDir)) {
+      if (!absorbedActiveToken) {
+        if (takeAgentToken<ActiveSegmentToken>(nextAgentDir)->isFinal) {
+          passAgentToken<FinalSegmentCleanToken>(nextAgentDir);
+        } else {
+          absorbedActiveToken = true;
+        }
+      } else {
+        bool isFinal =
+            takeAgentToken<ActiveSegmentToken>(nextAgentDir)->isFinal;
+        passAgentToken<ActiveSegmentToken>(prevAgentDir, isFinal);
+      }
+    }
+    if (hasAgentToken<FinalSegmentCleanToken>(prevAgentDir)) {
+      peekAgentToken<FinalSegmentCleanToken>(prevAgentDir)->hasCoveredCandidate
+          = isCoveredCandidate;
+      absorbedActiveToken = false;
+      isCoveredCandidate = false;
+      takeAgentToken<FinalSegmentCleanToken>(prevAgentDir);
+      passAgentToken<FinalSegmentCleanToken>(nextAgentDir);
+    }
+
+    if (hasAgentToken<CandidacyAnnounceToken>(prevAgentDir)) {
+      takeAgentToken<CandidacyAnnounceToken>(prevAgentDir);
+      passAgentToken<CandidacyAnnounceToken>(nextAgentDir);
+      paintBackSegment(0xffa500);
+      paintFrontSegment(0xffa500);
+    }
+    if (hasAgentToken<CandidacyAckToken>(nextAgentDir)) {
+      takeAgentToken<CandidacyAckToken>(nextAgentDir);
+      passAgentToken<CandidacyAckToken>(prevAgentDir);
+      paintFrontSegment(0x696969);
+      paintBackSegment(0x696969);
+    }
+  }
+}
+
+void LeaderElectionParticle::LeaderElectionAgent::activeClean(int agentDir) {
+  if (hasAgentToken<ActiveSegmentToken>(agentDir)) {
+    takeAgentToken<ActiveSegmentToken>(agentDir);
+  }
+  takeAgentToken<ActiveSegmentCleanToken>(agentDir);
+  absorbedActiveToken = false;
+}
+
+void LeaderElectionParticle::LeaderElectionAgent::passiveClean(int agentDir) {
+  if (hasAgentToken<PassiveSegmentToken>(agentDir)) {
+    takeAgentToken<PassiveSegmentToken>(agentDir);
+  }
+  takeAgentToken<PassiveSegmentCleanToken>(agentDir);
+}
+
+template <class TokenType>
+bool LeaderElectionParticle::LeaderElectionAgent::hasAgentToken(int agentDir) {
+  auto prop = [agentDir](const std::shared_ptr<TokenType> token) {
+    return token->origin == agentDir;
+  };
+  return candidateParticle->hasToken<TokenType>(prop);
+}
+
+template <class TokenType>
+std::shared_ptr<TokenType>
+LeaderElectionParticle::LeaderElectionAgent::peekAgentToken(int agentDir) {
+  auto prop = [agentDir](const std::shared_ptr<TokenType> token) {
+    return token->origin == agentDir;
+  };
+  return candidateParticle->peekAtToken<TokenType>(prop);
+}
+
+template <class TokenType>
+std::shared_ptr<TokenType>
+LeaderElectionParticle::LeaderElectionAgent::takeAgentToken(int agentDir) {
+  auto prop = [agentDir](const std::shared_ptr<TokenType> token) {
+    return token->origin == agentDir;
+  };
+  return candidateParticle->takeToken<TokenType>(prop);
+}
+
+template <class TokenType>
+void LeaderElectionParticle::LeaderElectionAgent::passAgentToken(int agentDir) {
+  LeaderElectionParticle* nbr = &candidateParticle->nbrAtLabel(agentDir);
+  int origin = -1;
+  for (int i = 0; i < 6; i++) {
+    if (nbr->hasNbrAtLabel(i) && &nbr->nbrAtLabel(i) == candidateParticle) {
+      origin = i;
+      break;
+    }
+  }
+  Q_ASSERT(origin != -1);
+  nbr->putToken(std::make_shared<TokenType>(origin));
+}
+
+template <class TokenType>
+void LeaderElectionParticle::LeaderElectionAgent::passAgentToken(int agentDir,
+                                                                 bool opt) {
+  LeaderElectionParticle* nbr = &candidateParticle->nbrAtLabel(agentDir);
+  int origin = -1;
+  for (int i = 0; i < 6; i++) {
+    if (nbr->hasNbrAtLabel(i) && &nbr->nbrAtLabel(i) == candidateParticle) {
+      origin = i;
+      break;
+    }
+  }
+  Q_ASSERT(origin != -1);
+  nbr->putToken(std::make_shared<TokenType>(origin, opt));
 }
 
 void LeaderElectionParticle::LeaderElectionAgent::setStateColor() {
+  int globalizedDir = candidateParticle->localToGlobalDir(agentDir);
   if (agentState == State::Candidate) {
     setSubPhaseColor();
+  } else if (agentState == State::Demoted) {
+    candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x696969;
+  } else if (agentState == State::SoleCandidate) {
+
+  } else if (agentState == State::Leader) {
+
   }
 }
 
@@ -206,6 +455,8 @@ void LeaderElectionParticle::LeaderElectionAgent::setSubPhaseColor() {
     candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xffa500;
   } else if (subPhase == SubPhase::SolitudeVerification) {
     candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x00bfff;
+  } else if (subPhase == SubPhase::BoundaryTesting) {
+    candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xffff00;
   }
 }
 

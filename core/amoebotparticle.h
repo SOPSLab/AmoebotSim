@@ -121,6 +121,16 @@ class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
   template<class TokenType>
   std::shared_ptr<TokenType> takeToken();
 
+  // Overloaded functions for peekAtToken and takeToken have been provided
+  // in case there is a specific token of type TokenType that is being searched
+  // for that must satisfy a particular property requirement
+  template<class TokenType>
+  std::shared_ptr<TokenType> peekAtToken(
+      std::function<bool(const std::shared_ptr<TokenType>)> propertyCheck) const;
+  template<class TokenType>
+  std::shared_ptr<TokenType> takeToken(
+      std::function<bool(const std::shared_ptr<TokenType>)> propertyCheck);
+
   // Functions for basic token-related information. countTokens returns the
   // number of tokens of the specified type this particle has in its collection.
   // hasToken checks whether this particle has at least one token of the given
@@ -129,6 +139,13 @@ class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
   int countTokens() const;
   template<class TokenType>
   bool hasToken() const;
+
+  // An overloaded function of hasToken has been provided in case there is a
+  // specific token of type TokenType that is being searched for that must
+  // satisfy a particular property requirement
+  template<class TokenType>
+  bool hasToken(std::function<bool(const std::shared_ptr<TokenType>)>
+                propertyCheck) const;
 
   AmoebotSystem& system;
  private:
@@ -190,6 +207,34 @@ std::shared_ptr<TokenType> AmoebotParticle::takeToken() {
 }
 
 template<class TokenType>
+std::shared_ptr<TokenType> AmoebotParticle::peekAtToken(
+    std::function<bool(const std::shared_ptr<TokenType>)> propertyCheck) const {
+  for (unsigned int i = 0; i < tokens.size(); i++) {
+    std::shared_ptr<TokenType> token =
+        std::dynamic_pointer_cast<TokenType>(tokens[i]);
+    if (token != nullptr && propertyCheck(token)) {
+      return token;
+    }
+  }
+  Q_ASSERT(false);
+}
+
+template<class TokenType>
+std::shared_ptr<TokenType> AmoebotParticle::takeToken(
+    std::function<bool(const std::shared_ptr<TokenType>)> propertyCheck) {
+  for (unsigned int i = 0; i < tokens.size(); i++) {
+    std::shared_ptr<TokenType> token =
+        std::dynamic_pointer_cast<TokenType>(tokens[i]);
+    if (token != nullptr && propertyCheck(token)) {
+      std::swap(tokens[0], tokens[i]);
+      tokens.pop_front();
+      return token;
+    }
+  }
+  Q_ASSERT(false);
+}
+
+template<class TokenType>
 int AmoebotParticle::countTokens() const {
   int count = 0;
   for (unsigned int i = 0; i < tokens.size(); i++) {
@@ -208,6 +253,19 @@ bool AmoebotParticle::hasToken() const {
     std::shared_ptr<TokenType> token =
         std::dynamic_pointer_cast<TokenType>(tokens[i]);
     if (token != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
+template<class TokenType>
+bool AmoebotParticle::hasToken(
+    std::function<bool(const std::shared_ptr<TokenType>)> propertyCheck) const {
+  for (unsigned int i = 0; i < tokens.size(); i++) {
+    std::shared_ptr<TokenType> token =
+        std::dynamic_pointer_cast<TokenType>(tokens[i]);
+    if (token != nullptr && propertyCheck(token)) {
       return true;
     }
   }
