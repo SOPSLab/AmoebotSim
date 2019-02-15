@@ -252,7 +252,9 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
         gotAnnounceInCompare = true;
       }
     }
-
+    if (hasAgentToken<SolitudeActiveToken>(prevAgentDir)) {
+      passAgentToken<SolitudeActiveToken>(prevAgentDir, takeAgentToken<SolitudeActiveToken>(prevAgentDir));
+    }
 
     if (subPhase == SubPhase::SegmentComparison) {
       if (hasAgentToken<PassiveSegmentToken>(nextAgentDir)) {
@@ -299,9 +301,24 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
         waitingForTransferAck = true;
       }
     } else if (subPhase == SubPhase::SolitudeVerification) {
-
-    } else if (subPhase == SubPhase::BoundaryTesting) {
-
+      if (!createdLead) {
+        passAgentToken<SolitudeActiveToken>(nextAgentDir,
+                                            encodeVector(std::make_pair(1,0)),
+                                            localId);
+        paintFrontSegment(0x00bfff);
+        createdLead = true;
+      } else if (hasAgentToken<SolitudeActiveToken>(nextAgentDir)) {
+        bool isSole =
+            peekAgentToken<SolitudeActiveToken>(nextAgentDir)->isSoleCandidate;
+        int id = takeAgentToken<SolitudeActiveToken>(nextAgentDir)->local_id;
+        if (isSole && localId == id) {
+          agentState = State::SoleCandidate;
+        } else {
+          subPhase = SubPhase::SegmentComparison;
+        }
+        createdLead = false;
+        return;
+      }
     }
   } else if (agentState == State::Demoted) {
     if (hasAgentToken<PassiveSegmentCleanToken>(prevAgentDir)) {
@@ -361,6 +378,11 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
       paintFrontSegment(0x696969);
       paintBackSegment(0x696969);
     }
+    if (hasAgentToken<SolitudeActiveToken>(prevAgentDir)) {
+      if (!hasAgentToken<SolitudeVectorToken>)
+    }
+  } else if (agentState == State::SoleCandidate) {
+
   }
 }
 
@@ -377,6 +399,36 @@ void LeaderElectionParticle::LeaderElectionAgent::passiveClean(int agentDir) {
     takeAgentToken<PassiveSegmentToken>(agentDir);
   }
   takeAgentToken<PassiveSegmentCleanToken>(agentDir);
+}
+
+int LeaderElectionParticle::LeaderElectionAgent::encodeVector(
+    std::pair<int, int> vector) const {
+  int x = vector.first == -1 ? 2 : vector.first;
+  int y = vector.second == -1 ? 2 : vector.second;
+  return 10 * x + y;
+}
+
+std::pair<int, int> LeaderElectionParticle::LeaderElectionAgent::decodeVector(
+    int code) {
+  int x = code / 10 == 2 ? -1 : code / 10;
+  int y = code % 10 == 2 ? -1 : code % 10;
+  return std::make_pair(x, y);
+}
+
+std::pair<int, int> LeaderElectionParticle::LeaderElectionAgent::
+augmentDirVector(std::pair<int, int> vector, const int offset) {
+  const std::array<std::pair<int, int>, 6> vectors =
+  { std::make_pair(1, 0), std::make_pair(0, 1), std::make_pair(-1, 1),
+    std::make_pair(-1, 0), std::make_pair(0, -1), std::make_pair(1, -1) };
+
+  for (unsigned i = 0; i < vectors.size(); i++) {
+    if (vector == vectors.at(i)) {
+      return vectors.at((i + offset) % 6);
+    }
+  }
+
+  Q_ASSERT(false);
+  return std::make_pair(0, 0);
 }
 
 template <class TokenType>
@@ -434,6 +486,38 @@ void LeaderElectionParticle::LeaderElectionAgent::passAgentToken(int agentDir,
   nbr->putToken(std::make_shared<TokenType>(origin, opt));
 }
 
+template <class TokenType>
+void LeaderElectionParticle::LeaderElectionAgent::passAgentToken(int agentDir,
+                                                                 int vect,
+                                                                 int id) {
+  LeaderElectionParticle* nbr = &candidateParticle->nbrAtLabel(agentDir);
+  int origin = -1;
+  for (int i = 0; i < 6; i++) {
+    if (nbr->hasNbrAtLabel(i) && &nbr->nbrAtLabel(i) == candidateParticle) {
+      origin = i;
+      break;
+    }
+  }
+  Q_ASSERT(origin != -1);
+  nbr->putToken(std::make_shared<TokenType>(origin, vect, id));
+}
+
+template <class TokenType>
+void LeaderElectionParticle::LeaderElectionAgent::passAgentToken(int agentDir,
+                                                                 std::shared_ptr<TokenType> token) {
+  LeaderElectionParticle* nbr = &candidateParticle->nbrAtLabel(agentDir);
+  int origin = -1;
+  for (int i = 0; i < 6; i++) {
+    if (nbr->hasNbrAtLabel(i) && &nbr->nbrAtLabel(i) == candidateParticle) {
+      origin = i;
+      break;
+    }
+  }
+  Q_ASSERT(origin != -1);
+  token->origin = origin;
+  nbr->putToken(token);
+}
+
 void LeaderElectionParticle::LeaderElectionAgent::setStateColor() {
   int globalizedDir = candidateParticle->localToGlobalDir(agentDir);
   if (agentState == State::Candidate) {
@@ -455,8 +539,6 @@ void LeaderElectionParticle::LeaderElectionAgent::setSubPhaseColor() {
     candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xffa500;
   } else if (subPhase == SubPhase::SolitudeVerification) {
     candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x00bfff;
-  } else if (subPhase == SubPhase::BoundaryTesting) {
-    candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xffff00;
   }
 }
 

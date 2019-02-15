@@ -4,6 +4,13 @@
 // [https://arxiv.org/abs/1503.07991].
 //
 
+/**
+  TODO:
+  1) Overloaded function for passing tokens (passAgentToken(shared_ptr))
+  2) Solitude Verification
+  3) Boundary testing
+  */
+
 #ifndef AMOEBOTSIM_ALG_LEADERELECTION_H
 #define AMOEBOTSIM_ALG_LEADERELECTION_H
 
@@ -133,28 +140,46 @@ class LeaderElectionParticle : public AmoebotParticle {
 
   // Tokens for Solitude Verification
   struct SolitudeActiveToken : public LeaderElectionToken {
-    SolitudeActiveToken(int origin = -1) {
+    bool isSoleCandidate = false;
+    int generatedVector;
+    int local_id;
+    SolitudeActiveToken(int origin = -1, int vector = -1, int local_id = -1,
+                        bool isSole = false) {
       this->origin = origin;
+      this->generatedVector = vector;
+      this->local_id = local_id;
+      this->isSoleCandidate = isSole;
     }
   };
-  struct SolitudePositiveXToken : public LeaderElectionToken {
-    SolitudePositiveXToken(int origin = -1) {
+  struct SolitudeVectorToken : public LeaderElectionToken {
+    bool isSettled;
+  };
+
+  struct SolitudePositiveXToken : public SolitudeVectorToken {
+    SolitudePositiveXToken(int origin = -1, bool settled = false) {
       this->origin = origin;
+      this->isSettled = settled;
     }
   };
-  struct SolitudePositiveYToken : public LeaderElectionToken {
-    SolitudePositiveYToken(int origin = -1) {
+  struct SolitudePositiveYToken : public SolitudeVectorToken {
+    bool isSettled;
+    SolitudePositiveYToken(int origin = -1, bool settled = false) {
       this->origin = origin;
+      this->isSettled = settled;
     }
   };
-  struct SolitudeNegativeXToken : public LeaderElectionToken {
-    SolitudeNegativeXToken(int origin = -1) {
+  struct SolitudeNegativeXToken : public SolitudeVectorToken {
+    bool isSettled;
+    SolitudeNegativeXToken(int origin = -1, bool settled = false) {
       this->origin = origin;
+      this->isSettled = settled;
     }
   };
-  struct SolitudeNegativeYToken : public LeaderElectionToken {
-    SolitudeNegativeYToken(int origin = -1) {
+  struct SolitudeNegativeYToken : public SolitudeVectorToken {
+    bool isSettled;
+    SolitudeNegativeYToken(int origin = -1, bool settled = false) {
       this->origin = origin;
+      this->isSettled = settled;
     }
   };
 
@@ -167,8 +192,7 @@ class LeaderElectionParticle : public AmoebotParticle {
    enum class SubPhase {
      SegmentComparison = 0,
      CoinFlipping,
-     SolitudeVerification,
-     BoundaryTesting
+     SolitudeVerification
    };
 
    LeaderElectionAgent();
@@ -188,11 +212,20 @@ class LeaderElectionParticle : public AmoebotParticle {
    bool gotAnnounceBeforeAck = false;
    bool waitingForTransferAck = false;
 
+   // Variables for Solitude Verification
+   bool createdLead = false;
+
    void activate();
 
    void activeClean(int agentDir);
    void passiveClean(int agentDir);
 
+   int encodeVector(std::pair<int, int> vector) const;
+   std::pair<int, int> decodeVector(int code);
+   std::pair<int, int> augmentDirVector(std::pair<int, int> vector,
+                                        const int offset);
+
+   // Methods for passing tokens at the agent level
    template <class TokenType>
    bool hasAgentToken(int agentDir);
    template <class TokenType>
@@ -203,7 +236,13 @@ class LeaderElectionParticle : public AmoebotParticle {
    void passAgentToken(int agentDir);
    template <class TokenType>
    void passAgentToken(int agentDir, bool opt);
+   template <class TokenType>
+   void passAgentToken(int agentDir, int vect, int id);
+   template <class TokenType>
+   void passAgentToken(int agentDir, std::shared_ptr<TokenType> token);
 
+   // Methods responsible for rendering the agents onto the simulator with their
+   // colors changing based on the state and the subphase of the current agent
    void setStateColor();
    void setSubPhaseColor();
 
