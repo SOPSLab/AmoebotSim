@@ -21,10 +21,7 @@ LeaderElectionParticle::LeaderElectionParticle(const Node head,
 }
 
 void LeaderElectionParticle::activate() {
-  if (state == State::Demoted && hasToken<LeaderElectionToken>()) {
-    agents.at(currentAgent)->activate();
-    currentAgent = (currentAgent + 1) % agents.size();
-  } else if (state == State::Idle) {
+  if (state == State::Idle) {
     int numNbrs = getNumberOfNbrs();
     if (numNbrs == 0) {
       state = State::Leader;
@@ -58,24 +55,24 @@ void LeaderElectionParticle::activate() {
       return;
     }
   } else if (state == State::Candidate) {
-    // Check whether or not all of the particle's agents have been demoted
-    // If this is the case, then the particle is considered "Finished"
-    bool isDemoted = true;
+    agents.at(currentAgent)->activate();
+    currentAgent = (currentAgent + 1) % agents.size();
 
+    bool allFinished = true;
     for (unsigned i = 0; i < agents.size(); i++) {
-      if (agents.at(i)->agentState != State::Demoted) {
-        isDemoted = false;
-        break;
+      LeaderElectionAgent* agent = agents.at(i);
+      if (agent->agentState != State::Finished) {
+        allFinished = false;
+      }
+      if (agent->agentState == State::Leader) {
+        state = State::Leader;
+        return;
       }
     }
 
-    if (isDemoted) {
-      state = State::Demoted;
-      return;
+    if (allFinished) {
+      state = State::Finished;
     }
-
-    agents.at(currentAgent)->activate();
-    currentAgent = (currentAgent + 1) % agents.size();
   }
 
   return;
@@ -83,7 +80,7 @@ void LeaderElectionParticle::activate() {
 
 int LeaderElectionParticle::headMarkColor() const {
   if (state == State::Leader) {
-    return 0xff0000;
+    return 0x00ff00;
   }
 
   return -1;
@@ -118,26 +115,43 @@ QString LeaderElectionParticle::inspectionText() const {
   text += "\n";
   text += "number of agents: " + QString::number(agents.size()) + "\n";
   for (LeaderElectionAgent* agent : agents) {
-    text += "    agent dir: " + QString::number(agent->agentDir) + "\n    ";
     text += [agent](){
       switch(agent->agentState) {
-        case State::Demoted: return "demoted\n";
+        case State::Demoted: return "    demoted\n    ";
         case State::Candidate:
           switch(agent->subPhase) {
             case LeaderElectionParticle::LeaderElectionAgent::
-            SubPhase::SegmentComparison: return "segment comparison\n";
+            SubPhase::SegmentComparison: return "    segment comparison\n    ";
             case LeaderElectionParticle::LeaderElectionAgent::
-            SubPhase::CoinFlipping: return "coin flipping\n";
+            SubPhase::CoinFlipping: return "    coin flipping\n    ";
             case LeaderElectionParticle::LeaderElectionAgent::
-            SubPhase::SolitudeVerification: return "solitude verification\n";
+            SubPhase::SolitudeVerification:
+              return "    solitude verification\n    ";
           }
-        case State::SoleCandidate: return "sole candidate\n";
+        case State::SoleCandidate: return "    sole candidate\n    ";
         default: return "invalid\n";
       }
     }();
+    text += "    agent dir: " + QString::number(agent->agentDir) + "\n    ";
+    text += "    next agent dir: " + QString::number(agent->nextAgentDir) +
+        "\n    ";
+    text += "    prev agent dir: " + QString::number(agent->prevAgentDir) +
+        "\n";
   }
   text += "has leader election tokens: " +
       QString::number(hasToken<LeaderElectionToken>()) + "\n";
+  text += "has solitude active token: " +
+      QString::number(hasToken<SolitudeActiveToken>()) + "\n";
+  text += "has " + QString::number(countTokens<SolitudePositiveXToken>()) +
+      " positive x tokens\n";
+  text += "has " + QString::number(countTokens<SolitudeNegativeXToken>()) +
+      " negative x tokens\n";
+  text += "has " + QString::number(countTokens<SolitudePositiveYToken>()) +
+      " positive y tokens\n";
+  text += "has " + QString::number(countTokens<SolitudeNegativeYToken>()) +
+      " negative y tokens\n";
+  text += "has passive clean token: " +
+      QString::number(hasToken<PassiveSegmentCleanToken>()) + "\n";
   text += "\n";
 
   return text;
@@ -239,7 +253,8 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
     }
     if (hasAgentToken<SegmentLeadToken>(prevAgentDir)) {
       LeaderElectionAgent* prev = prevAgent();
-      if (!prev->hasAgentToken<PassiveSegmentToken>(prev->nextAgentDir)) {
+      if (prev != nullptr &&
+          !prev->hasAgentToken<PassiveSegmentToken>(prev->nextAgentDir)) {
         takeAgentToken<SegmentLeadToken>(prevAgentDir);
         passAgentToken<PassiveSegmentToken>(prevAgentDir, true);
         paintBackSegment(0x696969);
@@ -258,9 +273,12 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
           isCoveredCandidate = true;
           agentState = State::Demoted;
           setStateColor();
+          int globalizedDir = candidateParticle->localToGlobalDir(agentDir);
+          candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x000000;
           return;
         }
       } else {
+        Q_ASSERT(false);
         passAgentToken<ActiveSegmentToken>(prevAgentDir);
       }
     }
@@ -278,7 +296,8 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
     }
 
     // Solitude Verification
-    if (hasAgentToken<SolitudeActiveToken>(prevAgentDir)) {
+    if (hasAgentToken<SolitudeActiveToken>(prevAgentDir) &&
+        peekAgentToken<SolitudeActiveToken>(prevAgentDir)->local_id == -1) {
       peekAgentToken<SolitudeActiveToken>(prevAgentDir)->local_id = localId;
       passAgentToken<SolitudeActiveToken>
           (prevAgentDir, takeAgentToken<SolitudeActiveToken>(prevAgentDir));
@@ -303,8 +322,9 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
 
     if (subPhase == SubPhase::SegmentComparison) {
       if (hasAgentToken<PassiveSegmentToken>(nextAgentDir)) {
-        LeaderElectionAgent* next = nextAgent();
-        if (!next->hasAgentToken<ActiveSegmentToken>(next->nextAgentDir)) {
+        LeaderElectionAgent* prev = prevAgent();
+        if (prev != nullptr &&
+            !prev->hasAgentToken<ActiveSegmentToken>(prev->nextAgentDir)) {
           bool isFinalCheck =
               takeAgentToken<PassiveSegmentToken>(nextAgentDir)->isFinal;
           passAgentToken<ActiveSegmentToken>(prevAgentDir, isFinalCheck);
@@ -339,10 +359,12 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
         paintFrontSegment(0x696969);
         if (!gotAnnounceBeforeAck) {
           agentState = State::Demoted;
+          int globalizedDir = candidateParticle->localToGlobalDir(agentDir);
+          candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xffffff;
         } else {
           subPhase = SubPhase::SolitudeVerification;
+          setStateColor();
         }
-        setStateColor();
         waitingForTransferAck = false;
         gotAnnounceBeforeAck = false;
         return;
@@ -363,7 +385,10 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
             (std::make_shared<SolitudePositiveXToken>(nextAgentDir, true));
         paintFrontSegment(0x00bfff);
         createdLead = true;
-      } else if (hasAgentToken<SolitudeActiveToken>(nextAgentDir)) {
+        hasGeneratedTokens = true;
+      } else if (hasAgentToken<SolitudeActiveToken>(nextAgentDir) &&
+                 peekAgentToken<SolitudeActiveToken>
+                 (nextAgentDir)->local_id != -1) {
         int checkX = checkSolitudeXTokens();
         int checkY = checkSolitudeYTokens();
         bool isSole =
@@ -372,14 +397,15 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
         if (isSole && localId == id && checkX == 2 && checkY == 2) {
           agentState = State::SoleCandidate;
         } else if (checkX == 1 || checkY == 1) {
+          Q_ASSERT(false);
           return;
         } else {
           subPhase = SubPhase::SegmentComparison;
         }
         takeAgentToken<SolitudeActiveToken>(nextAgentDir);
         createdLead = false;
-        setStateColor();
         cleanSolitudeVerificationTokens();
+        setStateColor();
         return;
       }
     }
@@ -400,16 +426,18 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
           (prevAgentDir, takeAgentToken<ActiveSegmentCleanToken>(nextAgentDir));
     }
     if (hasAgentToken<SegmentLeadToken>(prevAgentDir) &&
-        !next->hasAgentToken<PassiveSegmentCleanToken>(next->prevAgentDir)) {
+        next != nullptr &&
+        !next->hasAgentToken<PassiveSegmentCleanToken>(next->prevAgentDir) &&
+        prev != nullptr &&
+        !prev->hasAgentToken<PassiveSegmentToken>(prev->nextAgentDir)) {
       passAgentToken<SegmentLeadToken>
           (nextAgentDir, takeAgentToken<SegmentLeadToken>(prevAgentDir));
       passAgentToken<PassiveSegmentToken>(prevAgentDir);
       paintBackSegment(0xff0000);
       paintFrontSegment(0xff0000);
     }
-    if (hasAgentToken<PassiveSegmentToken>(nextAgentDir) &&
-        !next->hasAgentToken<PassiveSegmentToken>(next->nextAgentDir) &&
-        !next->hasAgentToken<PassiveSegmentCleanToken>(next->nextAgentDir)) {
+    if (hasAgentToken<PassiveSegmentToken>(nextAgentDir) && prev != nullptr &&
+        !prev->hasAgentToken<PassiveSegmentToken>(prev->nextAgentDir)) {
       passAgentToken<PassiveSegmentToken>
           (prevAgentDir, takeAgentToken<PassiveSegmentToken>(nextAgentDir));
       paintFrontSegment(0x696969);
@@ -422,9 +450,10 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
         } else {
           absorbedActiveToken = true;
         }
-      } else if (!prev->hasAgentToken<ActiveSegmentToken>(prev->prevAgentDir) &&
+      } else if (prev != nullptr &&
+                 !prev->hasAgentToken<ActiveSegmentToken>(prev->nextAgentDir) &&
                  !prev->hasAgentToken<ActiveSegmentCleanToken>
-                 (prev->prevAgentDir)) {
+                 (prev->nextAgentDir)) {
         passAgentToken<ActiveSegmentToken>
             (prevAgentDir, takeAgentToken<ActiveSegmentToken>(nextAgentDir));
       }
@@ -442,7 +471,8 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
 
     // Coin Flipping Tokens
     if (hasAgentToken<CandidacyAnnounceToken>(prevAgentDir) &&
-        !next->hasAgentToken<PassiveSegmentCleanToken>(next->nextAgentDir)) {
+        next != nullptr &&
+        !next->hasAgentToken<PassiveSegmentCleanToken>(next->prevAgentDir)) {
       passAgentToken<CandidacyAnnounceToken>
           (nextAgentDir, takeAgentToken<CandidacyAnnounceToken>(prevAgentDir));
       paintBackSegment(0xffa500);
@@ -457,7 +487,10 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
 
     // Solitude Verification Tokens
     if (hasAgentToken<SolitudeActiveToken>(prevAgentDir) &&
-        !next->hasAgentToken<PassiveSegmentCleanToken>(next->prevAgentDir)) {
+        peekAgentToken<SolitudeActiveToken>(prevAgentDir)->local_id == -1 &&
+        next != nullptr &&
+        !next->hasAgentToken<PassiveSegmentCleanToken>(next->prevAgentDir) &&
+        !hasGeneratedTokens) {
       std::shared_ptr<SolitudeActiveToken> token =
           takeAgentToken<SolitudeActiveToken>(prevAgentDir);
       int codedVector = token->generatedVector;
@@ -497,7 +530,11 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
       paintBackSegment(0x00bfff);
       paintFrontSegment(0x00bfff);
       passAgentToken<SolitudeActiveToken>(nextAgentDir, token);
-    } else if (hasAgentToken<SolitudeActiveToken>(nextAgentDir)) {
+      hasGeneratedTokens = true;
+    } else if (hasAgentToken<SolitudeActiveToken>(nextAgentDir) &&
+               peekAgentToken<SolitudeActiveToken>
+               (nextAgentDir)->local_id != -1 &&
+               hasGeneratedTokens) {
       int checkX = checkSolitudeXTokens();
       int checkY = checkSolitudeYTokens();
       if ((checkX == 2 && checkY == 2) ||
@@ -514,56 +551,99 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
       }
     }
 
-    if (hasAgentToken<SolitudeNegativeXToken>(nextAgentDir)) {
-      LeaderElectionAgent* prev = prevAgent();
-      if (!prev->hasAgentToken<SolitudeNegativeXToken>(prev->nextAgentDir)) {
+    if (hasAgentToken<SolitudeNegativeXToken>(nextAgentDir) &&
+        !peekAgentToken<SolitudeNegativeXToken>(nextAgentDir)->isSettled &&
+        hasGeneratedTokens) {
+      if (prev != nullptr &&
+          !prev->hasAgentToken<SolitudeNegativeXToken>(prev->nextAgentDir)) {
         passAgentToken<SolitudeNegativeXToken>
             (prevAgentDir,
              takeAgentToken<SolitudeNegativeXToken>(nextAgentDir));
-      } else if (prev->peekAgentToken<SolitudeNegativeXToken>
+      } else if (prev != nullptr &&
+                 prev->peekAgentToken<SolitudeNegativeXToken>
                  (prev->nextAgentDir)->isSettled) {
         peekAgentToken<SolitudeNegativeXToken>(nextAgentDir)->isSettled = true;
       }
     }
 
-    if (hasAgentToken<SolitudePositiveXToken>(nextAgentDir)) {
-      LeaderElectionAgent* prev = prevAgent();
-      if (!prev->hasAgentToken<SolitudePositiveXToken>(prev->nextAgentDir)) {
+    if (hasAgentToken<SolitudePositiveXToken>(nextAgentDir) &&
+        !peekAgentToken<SolitudePositiveXToken>(nextAgentDir)->isSettled &&
+        hasGeneratedTokens) {
+      if (prev != nullptr &&
+          !prev->hasAgentToken<SolitudePositiveXToken>(prev->nextAgentDir)) {
         passAgentToken<SolitudePositiveXToken>
             (prevAgentDir,
              takeAgentToken<SolitudePositiveXToken>(nextAgentDir));
-      } else if (prev->peekAgentToken<SolitudePositiveXToken>
+      } else if (prev != nullptr &&
+                 prev->peekAgentToken<SolitudePositiveXToken>
                  (prev->nextAgentDir)->isSettled) {
         peekAgentToken<SolitudePositiveXToken>(nextAgentDir)->isSettled = true;
       }
     }
 
-    if (hasAgentToken<SolitudeNegativeYToken>(nextAgentDir)) {
-      LeaderElectionAgent* prev = prevAgent();
-      if (!prev->hasAgentToken<SolitudeNegativeYToken>(prev->nextAgentDir)) {
+    if (hasAgentToken<SolitudeNegativeYToken>(nextAgentDir) &&
+        !peekAgentToken<SolitudeNegativeYToken>(nextAgentDir)->isSettled &&
+        hasGeneratedTokens) {
+      if (prev != nullptr &&
+          !prev->hasAgentToken<SolitudeNegativeYToken>(prev->nextAgentDir)) {
         passAgentToken<SolitudeNegativeYToken>
             (prevAgentDir,
              takeAgentToken<SolitudeNegativeYToken>(nextAgentDir));
-      } else if (prev->peekAgentToken<SolitudeNegativeYToken>
+      } else if (prev != nullptr &&
+                 prev->peekAgentToken<SolitudeNegativeYToken>
                  (prev->nextAgentDir)->isSettled) {
         peekAgentToken<SolitudeNegativeYToken>(nextAgentDir)->isSettled = true;
       }
     }
 
-    if (hasAgentToken<SolitudePositiveYToken>(nextAgentDir)) {
-      LeaderElectionAgent* prev = prevAgent();
-      if (!prev->hasAgentToken<SolitudePositiveYToken>(prev->nextAgentDir)) {
+    if (hasAgentToken<SolitudePositiveYToken>(nextAgentDir) &&
+        !peekAgentToken<SolitudePositiveYToken>(nextAgentDir)->isSettled &&
+        hasGeneratedTokens) {
+      if (prev != nullptr &&
+          !prev->hasAgentToken<SolitudePositiveYToken>(prev->nextAgentDir)) {
         passAgentToken<SolitudePositiveYToken>
             (prevAgentDir,
              takeAgentToken<SolitudePositiveYToken>(nextAgentDir));
-      } else if (prev->peekAgentToken<SolitudePositiveYToken>
+      } else if (prev != nullptr &&
+                 prev->peekAgentToken<SolitudePositiveYToken>
                  (prev->nextAgentDir)->isSettled) {
         peekAgentToken<SolitudePositiveYToken>(nextAgentDir)->isSettled = true;
       }
     }
 
-  } else if (agentState == State::SoleCandidate) {
+    if (hasAgentToken<BorderTestToken>(prevAgentDir)) {
+      std::shared_ptr<BorderTestToken> token =
+          takeAgentToken<BorderTestToken>(prevAgentDir);
+      token->borderSum = addNextBorder(token->borderSum);
+      passAgentToken<BorderTestToken>(nextAgentDir, token);
+      paintBackSegment(-1);
+      paintFrontSegment(-1);
+      agentState = State::Finished;
+      setStateColor();
+    }
 
+  } else if (agentState == State::SoleCandidate) {
+    if (!testingBorder) {
+      std::shared_ptr<BorderTestToken> token =
+          std::make_shared<BorderTestToken>(prevAgentDir, addNextBorder(0));
+      passAgentToken(nextAgentDir, token);
+      paintFrontSegment(-1);
+      testingBorder = true;
+    } else if (hasAgentToken<BorderTestToken>(prevAgentDir) &&
+               peekAgentToken<BorderTestToken>(prevAgentDir)->borderSum != -1) {
+      int borderSum = takeAgentToken<BorderTestToken>(prevAgentDir)->borderSum;
+      paintBackSegment(-1);
+      if (borderSum == 1) {
+        agentState = State::Leader;
+      } else if (borderSum == 4) {
+        agentState = State::Finished;
+      } else {
+        Q_ASSERT(false);
+      }
+      setStateColor();
+      testingBorder = false;
+      return;
+    }
   }
 }
 
@@ -589,7 +669,8 @@ void LeaderElectionParticle::LeaderElectionAgent::passiveClean(bool first) {
   // If the current agent performing the passive clean is not the initial
   // candidate agent which generated the passive clean token
   if (!first) {
-    if (hasAgentToken<SolitudeActiveToken>(prevAgentDir)) {
+    if (hasAgentToken<SolitudeActiveToken>(prevAgentDir) &&
+        peekAgentToken<SolitudeActiveToken>(prevAgentDir)->local_id == -1) {
       takeAgentToken<SolitudeActiveToken>(prevAgentDir);
     }
     if (hasAgentToken<SegmentLeadToken>(prevAgentDir)) {
@@ -603,13 +684,16 @@ void LeaderElectionParticle::LeaderElectionAgent::passiveClean(bool first) {
       if (hasAgentToken<PassiveSegmentToken>(nextAgentDir)) {
         takeAgentToken<PassiveSegmentToken>(nextAgentDir);
       }
-      if (hasAgentToken<SolitudeActiveToken>(nextAgentDir)) {
+      if (hasAgentToken<SolitudeActiveToken>(nextAgentDir) &&
+          peekAgentToken<SolitudeActiveToken>(nextAgentDir)->local_id != -1) {
         takeAgentToken<SolitudeActiveToken>(nextAgentDir);
       }
       if (hasAgentToken<CandidacyAckToken>(nextAgentDir)) {
         takeAgentToken<CandidacyAckToken>(nextAgentDir);
       }
-      cleanSolitudeVerificationTokens();
+      if (hasGeneratedTokens) {
+        cleanSolitudeVerificationTokens();
+      }
     }
   } else { // Condition for the ex-candidate which generated the cleaning tokens
     if (hasAgentToken<PassiveSegmentToken>(nextAgentDir)) {
@@ -618,10 +702,13 @@ void LeaderElectionParticle::LeaderElectionAgent::passiveClean(bool first) {
     if (hasAgentToken<CandidacyAckToken>(nextAgentDir)) {
       takeAgentToken<CandidacyAckToken>(nextAgentDir);
     }
-    if (hasAgentToken<SolitudeActiveToken>(nextAgentDir)) {
+    if (hasAgentToken<SolitudeActiveToken>(nextAgentDir) &&
+        peekAgentToken<SolitudeActiveToken>(nextAgentDir)->local_id != -1) {
       takeAgentToken<SolitudeActiveToken>(nextAgentDir);
     }
-    cleanSolitudeVerificationTokens();
+    if (hasGeneratedTokens) {
+      cleanSolitudeVerificationTokens();
+    }
   }
   paintFrontSegment(0x696969);
   paintBackSegment(0x696969);
@@ -726,6 +813,19 @@ cleanSolitudeVerificationTokens() {
   }
   paintFrontSegment(0x696969);
   paintBackSegment(0x696969);
+  hasGeneratedTokens = false;
+}
+
+int LeaderElectionParticle::LeaderElectionAgent::addNextBorder(int currentSum) {
+  // adjust offset in modulo 6 to be compatible with modulo 5 computations
+  int offsetMod6 = (prevAgentDir + 3) % 6 - nextAgentDir;
+  if(4 <= offsetMod6 && offsetMod6 <= 5) {
+      offsetMod6 -= 6;
+  } else if(-5 <= offsetMod6 && offsetMod6 <= -3) {
+      offsetMod6 += 6;
+  }
+
+  return (currentSum + offsetMod6 + 5) % 5;
 }
 
 template <class TokenType>
@@ -835,7 +935,7 @@ LeaderElectionParticle::LeaderElectionAgent::nextAgent() const {
       return agent;
     }
   }
-  Q_ASSERT(false);
+  Q_ASSERT(nextNbr->agents.size() == 0);
   return nullptr;
 }
 
@@ -857,31 +957,48 @@ LeaderElectionParticle::LeaderElectionAgent::prevAgent() const {
       return agent;
     }
   }
-  Q_ASSERT(false);
+  Q_ASSERT(prevNbr->agents.size() == 0);
   return nullptr;
 }
 
 void LeaderElectionParticle::LeaderElectionAgent::setStateColor() {
   int globalizedDir = candidateParticle->localToGlobalDir(agentDir);
-  if (agentState == State::Candidate) {
-    setSubPhaseColor();
-  } else if (agentState == State::Demoted) {
-    candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x696969;
-  } else if (agentState == State::SoleCandidate) {
-    candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x00ff00;
-  } else if (agentState == State::Leader) {
-
+  switch (agentState) {
+    case State::Candidate:
+      setSubPhaseColor();
+      break;
+    case State::Demoted:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x696969;
+      break;
+    case State::SoleCandidate:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x00ff00;
+      break;
+    case State::Leader:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = -1;
+      break;
+    case State::Finished:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = -1;
+      break;
+    default:
+      break;
   }
 }
 
 void LeaderElectionParticle::LeaderElectionAgent::setSubPhaseColor() {
   int globalizedDir = candidateParticle->localToGlobalDir(agentDir);
-  if (subPhase == SubPhase::SegmentComparison) {
-    candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xff0000;
-  } else if (subPhase == SubPhase::CoinFlipping) {
-    candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xffa500;
-  } else if (subPhase == SubPhase::SolitudeVerification) {
-    candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x00bfff;
+  switch (subPhase) {
+    case SubPhase::SegmentComparison:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xff0000;
+      break;
+    case SubPhase::CoinFlipping:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xffa500;
+      break;
+    case SubPhase::SolitudeVerification:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x00bfff;
+      break;
+    default:
+      Q_ASSERT(false);
+      break;
   }
 }
 

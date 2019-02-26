@@ -180,7 +180,13 @@ class LeaderElectionParticle : public AmoebotParticle {
   };
 
   // Token for Border Testing
-  struct BorderTestToken : public LeaderElectionToken {};
+  struct BorderTestToken : public LeaderElectionToken {
+    int borderSum;
+    BorderTestToken(int origin = -1, int borderSum = -1) {
+      this->origin = origin;
+      this->borderSum = borderSum;
+    }
+  };
  private:
   friend class LeaderElectionSystem;
   class LeaderElectionAgent {
@@ -210,6 +216,10 @@ class LeaderElectionParticle : public AmoebotParticle {
 
    // Variables for Solitude Verification
    bool createdLead = false;
+   bool hasGeneratedTokens = false;
+
+   // Variables for Boundary Testing
+   bool testingBorder = false;
 
    void activate();
 
@@ -227,6 +237,8 @@ class LeaderElectionParticle : public AmoebotParticle {
    int checkSolitudeYTokens() const;
 
    void cleanSolitudeVerificationTokens();
+
+   int addNextBorder(int currentSum);
 
    // Methods for passing tokens at the agent level
    template <class TokenType>
