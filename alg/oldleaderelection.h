@@ -6,9 +6,8 @@
 
 /**
   TODO:
-  1) Overloaded function for passing tokens (passAgentToken(shared_ptr))
-  2) Solitude Verification
-  3) Boundary testing
+  1) Debugging
+  2) Boundary testing
   */
 
 #ifndef AMOEBOTSIM_ALG_LEADERELECTION_H
@@ -162,21 +161,18 @@ class LeaderElectionParticle : public AmoebotParticle {
     }
   };
   struct SolitudePositiveYToken : public SolitudeVectorToken {
-    bool isSettled;
     SolitudePositiveYToken(int origin = -1, bool settled = false) {
       this->origin = origin;
       this->isSettled = settled;
     }
   };
   struct SolitudeNegativeXToken : public SolitudeVectorToken {
-    bool isSettled;
     SolitudeNegativeXToken(int origin = -1, bool settled = false) {
       this->origin = origin;
       this->isSettled = settled;
     }
   };
   struct SolitudeNegativeYToken : public SolitudeVectorToken {
-    bool isSettled;
     SolitudeNegativeYToken(int origin = -1, bool settled = false) {
       this->origin = origin;
       this->isSettled = settled;
@@ -217,19 +213,26 @@ class LeaderElectionParticle : public AmoebotParticle {
 
    void activate();
 
-   void activeClean(int agentDir);
-   void passiveClean(int agentDir);
+   void activeClean(bool first);
+   void passiveClean(bool first);
 
    int encodeVector(std::pair<int, int> vector) const;
    std::pair<int, int> decodeVector(int code);
-   std::pair<int, int> augmentDirVector(std::pair<int, int> vector,
-                                        const int offset);
+   std::pair<int, int> augmentDirVector(std::pair<int, int> vector);
+
+   // 0 --> tokens are settled and there is a mismatch
+   // 1 --> tokens are not settled
+   // 2 --> tokens are settled and there is a match or neither tokens available
+   int checkSolitudeXTokens() const;
+   int checkSolitudeYTokens() const;
+
+   void cleanSolitudeVerificationTokens();
 
    // Methods for passing tokens at the agent level
    template <class TokenType>
-   bool hasAgentToken(int agentDir);
+   bool hasAgentToken(int agentDir) const;
    template <class TokenType>
-   std::shared_ptr<TokenType> peekAgentToken(int agentDir);
+   std::shared_ptr<TokenType> peekAgentToken(int agentDir) const;
    template <class TokenType>
    std::shared_ptr<TokenType> takeAgentToken(int agentDir);
    template <class TokenType>
@@ -240,6 +243,8 @@ class LeaderElectionParticle : public AmoebotParticle {
    void passAgentToken(int agentDir, int vect, int id);
    template <class TokenType>
    void passAgentToken(int agentDir, std::shared_ptr<TokenType> token);
+   LeaderElectionAgent* nextAgent() const;
+   LeaderElectionAgent* prevAgent() const;
 
    // Methods responsible for rendering the agents onto the simulator with their
    // colors changing based on the state and the subphase of the current agent
