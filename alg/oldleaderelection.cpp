@@ -169,29 +169,6 @@ LeaderElectionParticle& LeaderElectionParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<LeaderElectionParticle>(label);
 }
 
-int LeaderElectionParticle::labelOfFirstNbrInState(
-    std::initializer_list<State> states, int startLabel) const {
-  auto prop = [&](const LeaderElectionParticle& p) {
-    for (auto state : states) {
-      if (p.state == state) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  return labelOfFirstNbrWithProperty<LeaderElectionParticle>(prop, startLabel);
-}
-
-bool LeaderElectionParticle::hasNbrInState(std::initializer_list<State> states)
-    const {
-  return labelOfFirstNbrInState(states) != -1;
-}
-
-bool LeaderElectionParticle::canFinish() const {
-  return false;
-}
-
 int LeaderElectionParticle::getNextAgentDir(const int agentDir) const {
   Q_ASSERT(!hasNbrAtLabel(agentDir));
 
@@ -273,8 +250,6 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
           isCoveredCandidate = true;
           agentState = State::Demoted;
           setStateColor();
-          int globalizedDir = candidateParticle->localToGlobalDir(agentDir);
-          candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x000000;
           return;
         }
       } else {
@@ -339,8 +314,6 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
         if (!coveredCandidateCheck && !gotAnnounceInCompare) {
           agentState = State::Demoted;
           setStateColor();
-          int globalizedDir = candidateParticle->localToGlobalDir(agentDir);
-          candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xff00ff;
         } else {
           subPhase = SubPhase::CoinFlipping;
           setStateColor();
@@ -359,8 +332,6 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
         paintFrontSegment(0x696969);
         if (!gotAnnounceBeforeAck) {
           agentState = State::Demoted;
-          int globalizedDir = candidateParticle->localToGlobalDir(agentDir);
-          candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xffffff;
         } else {
           subPhase = SubPhase::SolitudeVerification;
           setStateColor();
