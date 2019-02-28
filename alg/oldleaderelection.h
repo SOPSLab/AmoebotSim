@@ -3,6 +3,10 @@
 // Formation with Self-Organizing Programmable Matter'
 // [https://arxiv.org/abs/1503.07991].
 //
+// Assumptions made by this implementation:
+// 1) Agents cannot have multiple instances of passive or active segment tokens,
+//    i.e., if an agent has a passive segment token, the agent before it in the
+//    cycle cannot pass another passive segment token to it.
 
 #ifndef AMOEBOTSIM_ALG_LEADERELECTION_H
 #define AMOEBOTSIM_ALG_LEADERELECTION_H
@@ -208,6 +212,16 @@ class LeaderElectionParticle : public AmoebotParticle {
    SubPhase subPhase;
    LeaderElectionParticle* candidateParticle;
 
+   // passedTokensDir is an int which will be used to determine whether or not
+   // an agent has passed a token in the prevAgentDir, nextAgentDir, or neither,
+   // i.e., the agent has not yet passed a token. This is done to maintain the
+   // rule that particles can only pass tokens to 1 other particle in a single
+   // activation.
+   // -1 --> no tokens have been passed yet
+   // 0 --> at least 1 token has been passed to the next agent in the cycle
+   // 1 --> at least 1 token has been pased to the previous agent in the cycle
+   int passedTokensDir = -1;
+
    // Variables for Segment Comparison
    // comparingSegment is a boolean which is used to keep track of whether or
    // not the current agent in the Segment Comparison subphase has generated
@@ -223,9 +237,17 @@ class LeaderElectionParticle : public AmoebotParticle {
    // not an agent has absorbed an active token. This is important for the
    // Segment Comparison subphase to keep track of whether or not to absorb
    // an active token or pass it along backwards according to the cycle.
+   // generatedCleanToken is a boolean used to determine whether or not the
+   // current agent generated a cleaning token (i.e., if it was a covered
+   // candidate which generated a cleaning token then demoted itself). This is
+   // needed because a particle cannot pass tokens to two different particles in
+   // a single activation, and because we need to pass cleaning tokens in two
+   // different directions (and hence, two different particles), we need this
+   // boolean to keep track to avoid performing active clean twice.
    bool comparingSegment = false;
    bool isCoveredCandidate = false;
    bool absorbedActiveToken = false;
+   bool generatedCleanToken = false;
 
    // Variables for Coin Flipping and Candidacy Transferral
    // gotAnnounceInCompare is a boolean which is used in the Segment Comparison
@@ -348,14 +370,14 @@ class LeaderElectionParticle : public AmoebotParticle {
 
 class LeaderElectionSystem : public AmoebotSystem {
  public:
-  // Constructs a system of ShapeFormationParticles with an optionally specified
+  // Constructs a system of LeaderElectionParticles with an optionally specified
   // size (#particles), hole probability, and shape to form. holeProb in [0,1]
   // controls how "spread out" the system is; closer to 0 is more compressed,
   // closer to 1 is more expanded.
   LeaderElectionSystem(int numParticles = 100, double holeProb = 0.2);
 
-  // Checks whether or not the system's run of the ShapeFormation formation
-  // algorithm has terminated (all particles in state Finish).
+  // Checks whether or not the system's run of the Leader Election algorithm has
+  // terminated (all particles in state Finished or Leader).
   bool hasTerminated() const override;
 };
 
