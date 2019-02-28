@@ -3,10 +3,10 @@
 // Formation with Self-Organizing Programmable Matter'
 // [https://arxiv.org/abs/1503.07991].
 //
-// Assumptions made by this implementation:
-// 1) Agents cannot have multiple instances of passive or active segment tokens,
-//    i.e., if an agent has a passive segment token, the agent before it in the
-//    cycle cannot pass another passive segment token to it.
+// Please note that this distributed implementation of the algorithm described
+// in the above paper has a chance of not working (which is related to the
+// Segment Comparison subphase); however, the centralized algorithm described in
+// the paper (which this distributed implementation is based on) is correct.
 
 #ifndef AMOEBOTSIM_ALG_LEADERELECTION_H
 #define AMOEBOTSIM_ALG_LEADERELECTION_H
@@ -134,13 +134,15 @@ class LeaderElectionParticle : public AmoebotParticle {
 
   // Tokens for Solitude Verification
   struct SolitudeActiveToken : public LeaderElectionToken {
-    bool isSoleCandidate = false;
-    int generatedVector;
+    bool isSoleCandidate;
+    std::pair<int, int> vector;
     int local_id;
-    SolitudeActiveToken(int origin = -1, int vector = -1, int local_id = -1,
-                        bool isSole = false) {
+    SolitudeActiveToken(int origin = -1,
+                        std::pair<int, int> vector = std::make_pair(1, 0),
+                        int local_id = -1,
+                        bool isSole = true) {
       this->origin = origin;
-      this->generatedVector = vector;
+      this->vector = vector;
       this->local_id = local_id;
       this->isSoleCandidate = isSole;
     }
@@ -299,15 +301,18 @@ class LeaderElectionParticle : public AmoebotParticle {
    void passiveClean(bool first);
 
    // Solitude Verification Methods
-   // The following functions are responsible for converting to a "local"
-   // coordinate system according to the orientation of the agent which has
-   // first generated the solitude active token. Afterwards, this orientation
-   // is tracked according to a value stored in the SolitudeActiveToken which
-   // is created and updated according to the values returned by the functions
-   // below.
-   int encodeVector(std::pair<int, int> vector) const;
-   std::pair<int, int> decodeVector(int code);
+   // augmentDirVector takes a <int, int> pair as a parameter, which represents
+   // the current vector stored in the solitude active token. This function then
+   // generates the next vector according to a local coordinate system (which is
+   // determined when a candidate agent in the Solitude Verification subphase
+   // generates the solitude active token) based on the vector stored in the
+   // solitude active token.
    std::pair<int, int> augmentDirVector(std::pair<int, int> vector);
+
+   // generateSolitudeVectorTokens generates the solitude vector tokens
+   // (SolitudePositiveXToken, SolitudeNegativeXToken, etc.) based on the given
+   // parameter vector.
+   void generateSolitudeVectorTokens(std::pair<int, int> vector);
 
    // The checkSolitudeXTokens and checkSolitudeYTokens are used to determine
    // the condition of the solitude vector tokens that an agent might own.
@@ -328,7 +333,7 @@ class LeaderElectionParticle : public AmoebotParticle {
    void cleanSolitudeVerificationTokens();
 
    // Boundary Testing methods
-   int addNextBorder(int currentSum);
+   int addNextBorder(int currentSum) const;
 
    // Methods for passing, taking, and checking the ownership of tokens at the
    // agent level
@@ -338,12 +343,6 @@ class LeaderElectionParticle : public AmoebotParticle {
    std::shared_ptr<TokenType> peekAgentToken(int agentDir) const;
    template <class TokenType>
    std::shared_ptr<TokenType> takeAgentToken(int agentDir);
-   template <class TokenType>
-   void passAgentToken(int agentDir);
-   template <class TokenType>
-   void passAgentToken(int agentDir, bool opt);
-   template <class TokenType>
-   void passAgentToken(int agentDir, int vect, int id);
    template <class TokenType>
    void passAgentToken(int agentDir, std::shared_ptr<TokenType> token);
    LeaderElectionAgent* nextAgent() const;

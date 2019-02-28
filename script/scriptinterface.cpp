@@ -7,14 +7,13 @@
 #include "alg/demo/pulldemo.h"
 #include "alg/demo/tokendemo.h"
 #include "alg/legacy/boundedobjcoating.h"
-#include "alg/legacy/leaderelection.h"
 #include "alg/legacy/leaderelectiondemo.h"
 #include "alg/legacy/legacysystem.h"
 #include "alg/legacy/universalcoating.h"
 #include "alg/compression.h"
 #include "alg/infobjcoating.h"
+#include "alg/leaderelection.h"
 #include "alg/line.h"
-#include "alg/oldleaderelection.h"
 #include "alg/shapeformation.h"
 
 #include "script/scriptinterface.h"
@@ -195,7 +194,7 @@ void ScriptInterface::line(const int numParticles, const double holeProb) {
   }
 }
 
-void ScriptInterface::oldleaderelection(const int numParticles,
+void ScriptInterface::leaderelection(const int numParticles,
                                          const double holeProb) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
@@ -239,14 +238,6 @@ void ScriptInterface::boundedobjcoating(const int numStaticParticles,
   } else {
     sim.setSystem(BoundedObjCoating::BoundedObjCoating::instance(
         numStaticParticles, numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::leaderelection(const uint numParticles) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else {
-    sim.setSystem(LeaderElection::LeaderElection::instance(numParticles));
   }
 }
 

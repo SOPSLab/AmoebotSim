@@ -74,17 +74,16 @@ class ScriptInterface : public QObject {
   // found in alg/foo.h.
   void compression(const int numParticles = 100, const double lambda = 4.0);
   void infobjcoating(const int numParticles = 100, const double holeProb = 0.2);
+  void leaderelection(const int numParticles = 100,
+                      const double holeProb = 0.2);
   void line(const int numParticles = 100, const double holeProb = 0.0);
   void shapeformation(const int numParticles = 200, const double holeProb = 0.2,
                       const QString mode = "h");
-  void oldleaderelection(const int numParticles = 100,
-                          const double holeProb = 0.2);
 
   // Legacy algorithm instance commands. Documentation for foo() can be found in
   // alg/legacy/foo.h.
   void boundedobjcoating(const int numStaticParticles, const int numParticles,
                          const double holeProb = 0.2);
-  void leaderelection(const uint numParticles = 100);
   void leaderelectiondemo();
   void universalcoating(const int staticParticlesRadius = 5,
                         const int numParticles = 50,
