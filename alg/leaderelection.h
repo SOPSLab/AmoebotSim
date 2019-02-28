@@ -215,14 +215,12 @@ class LeaderElectionParticle : public AmoebotParticle {
    LeaderElectionParticle* candidateParticle;
 
    // passedTokensDir is an int which will be used to determine whether or not
-   // an agent has passed a token in the prevAgentDir, nextAgentDir, or neither,
-   // i.e., the agent has not yet passed a token. This is done to maintain the
-   // rule that particles can only pass tokens to 1 other particle in a single
-   // activation.
-   // -1 --> no tokens have been passed yet
-   // 0 --> at least 1 token has been passed to the next agent in the cycle
-   // 1 --> at least 1 token has been pased to the previous agent in the cycle
-   int passedTokensDir = -1;
+   // an agent will pass tokens in the prevAgentDir or nextAgentDir.
+   // This is done to maintain the rule that particles can only pass tokens to 1
+   // other particle in a single activation.
+   // 0 --> tokens should be passed forwards in the cycle (nextAgentDir)
+   // 1 --> tokens should be passed backwards in the cycle (prevAgentDir)
+   int passTokensDir = -1;
 
    // Variables for Segment Comparison
    // comparingSegment is a boolean which is used to keep track of whether or
@@ -246,10 +244,16 @@ class LeaderElectionParticle : public AmoebotParticle {
    // a single activation, and because we need to pass cleaning tokens in two
    // different directions (and hence, two different particles), we need this
    // boolean to keep track to avoid performing active clean twice.
+   // hasPassiveCleaned and hasActiveCleaned are booleans to determine whether
+   // or not the current agent has cleaned its tokens according to which
+   // cleaning token it currently has. This is done because an agent might clean
+   // its tokens, but might not be able to pass the cleaning token in its
+   // current activation.
    bool comparingSegment = false;
    bool isCoveredCandidate = false;
    bool absorbedActiveToken = false;
    bool generatedCleanToken = false;
+   bool hasPassiveCleaned = false, hasActiveCleaned = false;
 
    // Variables for Coin Flipping and Candidacy Transferral
    // gotAnnounceInCompare is a boolean which is used in the Segment Comparison
