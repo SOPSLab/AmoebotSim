@@ -253,11 +253,17 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
     if (hasAgentToken<ActiveSegmentToken>(nextAgentDir) &&
         passTokensDir == 0) {
       if (!absorbedActiveToken) {
-        if (takeAgentToken<ActiveSegmentToken>(nextAgentDir)->isFinal) {
+        bool isFinal =
+            peekAgentToken<ActiveSegmentToken>(nextAgentDir)->isFinal;
+        LeaderElectionAgent* next = nextAgent();
+        if (isFinal) {
+          takeAgentToken<ActiveSegmentToken>(nextAgentDir);
           passAgentToken<FinalSegmentCleanToken>
               (nextAgentDir,
                std::make_shared<FinalSegmentCleanToken>(-1, true));
-        } else {
+        } else if (next != nullptr &&
+                   !next->hasAgentToken<PassiveSegmentCleanToken>
+                   (next->prevAgentDir)) {
           passAgentToken<PassiveSegmentCleanToken>
               (nextAgentDir, std::make_shared<PassiveSegmentCleanToken>());
           passiveClean(true);
@@ -418,28 +424,22 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
 
     // Segment Comparison Tokens
     if (hasAgentToken<PassiveSegmentCleanToken>(prevAgentDir)) {
-      if (!hasPassiveCleaned) {
-        passiveClean(false);
-      }
-      hasPassiveCleaned = true;
-      if (passTokensDir == 0) {
+      passiveClean(false);
+      if (passTokensDir == 0 && next != nullptr &&
+          !next->hasAgentToken<PassiveSegmentCleanToken>(next->prevAgentDir)) {
         passAgentToken<PassiveSegmentCleanToken>
             (nextAgentDir, takeAgentToken<PassiveSegmentCleanToken>
              (prevAgentDir));
-        hasPassiveCleaned = false;
       }
       paintBackSegment(0x696969);
       paintFrontSegment(0x696969);
     }
     if (hasAgentToken<ActiveSegmentCleanToken>(nextAgentDir)) {
-      if (!generatedCleanToken && !hasActiveCleaned) {
-        activeClean(false);
-        hasActiveCleaned = true;
-      }
-      if (passTokensDir == 1) {
+      activeClean(generatedCleanToken);
+      if (passTokensDir == 1 && prev != nullptr &&
+          !prev->hasAgentToken<ActiveSegmentCleanToken>(prev->nextAgentDir)) {
         passAgentToken<ActiveSegmentCleanToken>
             (prevAgentDir, takeAgentToken<ActiveSegmentCleanToken>(nextAgentDir));
-        hasActiveCleaned = false;
         generatedCleanToken = false;
       }
     }
@@ -478,7 +478,7 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
         } else {
           absorbedActiveToken = true;
         }
-      } else if (absorbedActiveToken &&
+      } else if (passTokensDir == 1 && absorbedActiveToken &&
                  prev != nullptr &&
                  !prev->hasAgentToken<ActiveSegmentToken>(prev->nextAgentDir) &&
                  !prev->hasAgentToken<ActiveSegmentCleanToken>

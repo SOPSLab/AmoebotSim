@@ -243,17 +243,11 @@ class LeaderElectionParticle : public AmoebotParticle {
    // needed because a particle cannot pass tokens to two different particles in
    // a single activation, and because we need to pass cleaning tokens in two
    // different directions (and hence, two different particles), we need this
-   // boolean to keep track to avoid performing active clean twice.
-   // hasPassiveCleaned and hasActiveCleaned are booleans to determine whether
-   // or not the current agent has cleaned its tokens according to which
-   // cleaning token it currently has. This is done because an agent might clean
-   // its tokens, but might not be able to pass the cleaning token in its
-   // current activation.
+   // boolean to avoid performing the incorrect active clean.
    bool comparingSegment = false;
    bool isCoveredCandidate = false;
    bool absorbedActiveToken = false;
    bool generatedCleanToken = false;
-   bool hasPassiveCleaned = false, hasActiveCleaned = false;
 
    // Variables for Coin Flipping and Candidacy Transferral
    // gotAnnounceInCompare is a boolean which is used in the Segment Comparison
@@ -354,11 +348,21 @@ class LeaderElectionParticle : public AmoebotParticle {
 
    // Methods responsible for rendering the agents onto the simulator with their
    // colors changing based on the state and the subphase of the current agent
+   // Red --> Candidate agent in Segment Comparison Subphase
+   // Yellow --> Candidate agent in Coin Flipping Subphase
+   // Blue --> Candidate agent in Solitude Verification Subphase
+   // Grey --> Demoted agent
+   // Green --> Sole candidate
    void setStateColor();
    void setSubPhaseColor();
 
    // Methods responsible for painting the borders which will act as physical
    // representations of the cycle for leader election
+   // Red --> Segment Comparison Phase
+   // Yellow --> Coin Flipping Phase
+   // Blue --> Solitude Verification Phase
+   // Grey --> No phase (or, alternatively, active phase of Segment Comparison
+   // phase
    void paintFrontSegment(const int color);
    void paintBackSegment(const int color);
   };
