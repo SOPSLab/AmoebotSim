@@ -1,0 +1,600 @@
+#include <QtGlobal>
+#include <QtDebug>
+
+#include <set>
+#include <vector>
+
+#include "alg/improvedleaderelection.h"
+
+//----------------------------BEGIN PARTICLE CODE----------------------------
+
+LeaderElectionParticle::LeaderElectionParticle(const Node head,
+                                               const int globalTailDir,
+                                               const int orientation,
+                                               AmoebotSystem& system,
+                                               State state)
+  : AmoebotParticle(head, globalTailDir, orientation, system),
+    state(state),
+    currentAgent(0) {
+  borderColorLabels.fill(-1);
+  borderPointColorLabels.fill(-1);
+}
+
+void LeaderElectionParticle::activate() {
+  if (state == State::Idle) {
+    // Determine the number of neighbors of the current particle.
+    // If there are no neighbors, then that means the particle is the only
+    // one in the system and should declare itself as the leader.
+    // If it is surrounded by 6 neighbors, then it cannot participate in
+    // leader election.
+    // Otherwise, the particle may participate in leader election and must
+    // generate agents to do so.
+    int numNbrs = getNumberOfNbrs();
+    if (numNbrs == 0) {
+      state = State::Leader;
+      return;
+    } else if (numNbrs == 6) {
+      state = State::Finished;
+    } else {
+      int agentId = 0;
+      for (int dir = 0; dir < 6; dir++) {
+        if (!hasNbrAtLabel(dir) && hasNbrAtLabel((dir + 1) % 6)) {
+          Q_ASSERT(agentId < 3);
+
+          LeaderElectionAgent* agent = new LeaderElectionAgent();
+          agent->candidateParticle = this;
+          agent->localId = agentId + 1;
+          agent->agentDir = dir;
+          agent->nextAgentDir = getNextAgentDir(dir);
+          agent->prevAgentDir = getPrevAgentDir(dir);
+          agent->agentState = State::Candidate;
+          agent->subPhase = LeaderElectionAgent::SubPhase::SegmentSetup;
+          agent->setStateColor();
+
+          agent->paintBackSegment(0x696969);
+          agent->paintFrontSegment(0x696969);
+
+          agents.push_back(agent);
+          agentId++;
+        }
+      }
+      state = State::Candidate;
+      return;
+    }
+  } else if (state == State::Candidate) {
+    agents.at(currentAgent)->activate();
+    currentAgent = (currentAgent + 1) % agents.size();
+
+    // The following is used by a particle in the candidate state to determine
+    // whether or not to declare itself as the Leader or declare itself to be in
+    // the Finished state depending on the state of its agents.
+    bool allFinished = true;
+    for (unsigned i = 0; i < agents.size(); i++) {
+      LeaderElectionAgent* agent = agents.at(i);
+      if (agent->agentState != State::Finished) {
+        allFinished = false;
+      }
+      if (agent->agentState == State::Leader) {
+        state = State::Leader;
+        return;
+      }
+    }
+
+    if (allFinished) {
+      state = State::Finished;
+    }
+  }
+
+  return;
+}
+
+int LeaderElectionParticle::headMarkColor() const {
+  if (state == State::Leader) {
+    return 0x00ff00;
+  }
+
+  return -1;
+}
+
+int LeaderElectionParticle::headMarkDir() const {
+  return -1;
+}
+
+int LeaderElectionParticle::tailMarkColor() const {
+  return headMarkColor();
+}
+
+QString LeaderElectionParticle::inspectionText() const {
+  QString text;
+  text += "head: (" + QString::number(head.x) + ", " + QString::number(head.y) +
+    ")\n";
+  text += "orientation: " + QString::number(orientation) + "\n";
+  text += "globalTailDir: " + QString::number(globalTailDir) + "\n";
+  text += "state: ";
+  text += [this](){
+    switch(state) {
+      case State::Idle:   return "idle";
+      case State::Candidate:   return "candidate";
+      case State::SoleCandidate: return "sole candidate";
+      case State::Demoted:   return "demoted";
+      case State::Leader: return "leader";
+      case State::Finished: return "finished";
+      default:            return "no state";
+    }
+  }();
+  text += "\n";
+  text += "number of agents: " + QString::number(agents.size()) + "\n";
+  for (LeaderElectionAgent* agent : agents) {
+    text += [agent](){
+      switch(agent->agentState) {
+        case State::Demoted: return "    demoted\n    ";
+        case State::Candidate:
+          switch(agent->subPhase) {
+            case LeaderElectionParticle::LeaderElectionAgent::
+            SubPhase::SegmentSetup: return "    segment setup\n    ";
+            case LeaderElectionParticle::LeaderElectionAgent::
+            SubPhase::IdentifierSetup: return "    identifier setup\n    ";
+            case LeaderElectionParticle::LeaderElectionAgent::
+            SubPhase::IdentifierComparison:
+              return "    identifer comparison\n    ";
+            case LeaderElectionParticle::LeaderElectionAgent::
+            SubPhase::SolitudeVerification:
+              return "    solitude verification\n    ";
+          }
+        case State::SoleCandidate: return "    sole candidate\n    ";
+        default: return "invalid\n";
+      }
+    }();
+    text += "    agent dir: " + QString::number(agent->agentDir) + "\n    ";
+    text += "    next agent dir: " + QString::number(agent->nextAgentDir) +
+        "\n    ";
+    text += "    prev agent dir: " + QString::number(agent->prevAgentDir) +
+        "\n";
+  }
+  text += "has leader election tokens: " +
+      QString::number(hasToken<LeaderElectionToken>()) + "\n";
+  text += "has solitude active token: " +
+      QString::number(hasToken<SolitudeActiveToken>()) + "\n";
+  text += "has " + QString::number(countTokens<SolitudePositiveXToken>()) +
+      " positive x tokens\n";
+  text += "has " + QString::number(countTokens<SolitudeNegativeXToken>()) +
+      " negative x tokens\n";
+  text += "has " + QString::number(countTokens<SolitudePositiveYToken>()) +
+      " positive y tokens\n";
+  text += "has " + QString::number(countTokens<SolitudeNegativeYToken>()) +
+      " negative y tokens\n";
+  text += "\n";
+
+  return text;
+}
+
+std::array<int, 18> LeaderElectionParticle::borderColors() const {
+  return borderColorLabels;
+}
+
+std::array<int, 6> LeaderElectionParticle::borderPointColors() const {
+  return borderPointColorLabels;
+}
+
+LeaderElectionParticle& LeaderElectionParticle::nbrAtLabel(int label) const {
+  return AmoebotParticle::nbrAtLabel<LeaderElectionParticle>(label);
+}
+
+int LeaderElectionParticle::getNextAgentDir(const int agentDir) const {
+  Q_ASSERT(!hasNbrAtLabel(agentDir));
+
+  for (int dir = 1; dir < 6; dir++) {
+    if (hasNbrAtLabel((agentDir - dir + 6) % 6)) {
+      return (agentDir - dir + 6) % 6;
+    }
+  }
+
+  Q_ASSERT(false);
+  return -1;
+}
+
+int LeaderElectionParticle::getPrevAgentDir(const int agentDir) const {
+  Q_ASSERT(!hasNbrAtLabel(agentDir));
+  for (int dir = 1; dir < 6; dir++) {
+    if (hasNbrAtLabel((agentDir + dir) % 6)) {
+      return (agentDir + dir) % 6;
+    }
+  }
+
+  Q_ASSERT(false);
+  return -1;
+}
+
+int LeaderElectionParticle::getNumberOfNbrs() const {
+  int count = 0;
+  for (int dir = 0; dir < 6; dir++) {
+    if (hasNbrAtLabel(dir)) {
+      count++;
+    }
+  }
+  return count;
+}
+//----------------------------END PARTICLE CODE----------------------------
+
+//----------------------------BEGIN AGENT CODE----------------------------
+
+LeaderElectionParticle::LeaderElectionAgent::LeaderElectionAgent() :
+  localId(-1),
+  agentDir(-1),
+  nextAgentDir(-1),
+  prevAgentDir(-1),
+  agentState(State::Idle),
+  candidateParticle(nullptr)
+{}
+
+void LeaderElectionParticle::LeaderElectionAgent::activate() {
+
+}
+
+std::pair<int, int> LeaderElectionParticle::LeaderElectionAgent::
+augmentDirVector(std::pair<int, int> vector) {
+  unsigned int offset = (nextAgentDir - ((prevAgentDir + 3) % 6) + 6) % 6;
+  const std::array<std::pair<int, int>, 6> vectors =
+  { std::make_pair(1, 0), std::make_pair(0, 1), std::make_pair(-1, 1),
+    std::make_pair(-1, 0), std::make_pair(0, -1), std::make_pair(1, -1) };
+
+  for (unsigned i = 0; i < vectors.size(); ++i) {
+    if (vector == vectors.at(i)) {
+      return vectors.at((i + offset) % 6);
+    }
+  }
+
+  Q_ASSERT(false);
+  return std::make_pair(0, 0);
+}
+
+void LeaderElectionParticle::LeaderElectionAgent::
+generateSolitudeVectorTokens(std::pair<int, int> vector) {
+  // We initialize the solitude vector tokens with an origin direction
+  // of nextAgentDir because this is the only direction from which these
+  // tokens can come from, so it does not matter whether or not these tokens
+  // were generated by the agent or if they were passed to the agent.
+  switch(vector.first) {
+    case -1:
+      candidateParticle->putToken
+          (std::make_shared<SolitudeNegativeXToken>(nextAgentDir, false));
+      break;
+    case 0:
+      break;
+    case 1:
+      candidateParticle->putToken
+          (std::make_shared<SolitudePositiveXToken>(nextAgentDir, false));
+      break;
+    default:
+      Q_ASSERT(false);
+      break;
+  }
+  switch(vector.second) {
+    case -1:
+      candidateParticle->putToken
+          (std::make_shared<SolitudeNegativeYToken>(nextAgentDir, false));
+      break;
+    case 0:
+      break;
+    case 1:
+      candidateParticle->putToken
+          (std::make_shared<SolitudePositiveYToken>(nextAgentDir, false));
+      break;
+    default:
+      Q_ASSERT(false);
+      break;
+  }
+}
+
+int LeaderElectionParticle::LeaderElectionAgent::checkSolitudeXTokens() const {
+  if (hasAgentToken<SolitudePositiveXToken>(nextAgentDir) &&
+      hasAgentToken<SolitudeNegativeXToken>(nextAgentDir)) {
+    if (peekAgentToken<SolitudePositiveXToken>(nextAgentDir)->isSettled &&
+        peekAgentToken<SolitudeNegativeXToken>(nextAgentDir)->isSettled) {
+      return 2;
+    } else {
+      return 1;
+    }
+  } else if (hasAgentToken<SolitudePositiveXToken>(nextAgentDir)) {
+    if (peekAgentToken<SolitudePositiveXToken>(nextAgentDir)->isSettled) {
+      return 0;
+    } else {
+      return 1;
+    }
+  } else if (hasAgentToken<SolitudeNegativeXToken>(nextAgentDir)) {
+    if (peekAgentToken<SolitudeNegativeXToken>(nextAgentDir)->isSettled) {
+      return 0;
+    } else {
+      return 1;
+    }
+  } else {
+    return 2;
+  }
+}
+
+int LeaderElectionParticle::LeaderElectionAgent::checkSolitudeYTokens() const {
+  if (hasAgentToken<SolitudePositiveYToken>(nextAgentDir) &&
+      hasAgentToken<SolitudeNegativeYToken>(nextAgentDir)) {
+    if (peekAgentToken<SolitudePositiveYToken>(nextAgentDir)->isSettled &&
+        peekAgentToken<SolitudeNegativeYToken>(nextAgentDir)->isSettled) {
+      return 2;
+    } else {
+      return 1;
+    }
+  } else if (hasAgentToken<SolitudePositiveYToken>(nextAgentDir)) {
+    if (peekAgentToken<SolitudePositiveYToken>(nextAgentDir)->isSettled) {
+      return 0;
+    } else {
+      return 1;
+    }
+  } else if (hasAgentToken<SolitudeNegativeYToken>(nextAgentDir)) {
+    if (peekAgentToken<SolitudeNegativeYToken>(nextAgentDir)->isSettled) {
+      return 0;
+    } else {
+      return 1;
+    }
+  } else {
+    return 2;
+  }
+}
+
+void LeaderElectionParticle::LeaderElectionAgent::
+cleanSolitudeVerificationTokens() {
+  if (hasAgentToken<SolitudePositiveXToken>(nextAgentDir)) {
+    takeAgentToken<SolitudePositiveXToken>(nextAgentDir);
+  }
+  if (hasAgentToken<SolitudePositiveYToken>(nextAgentDir)) {
+    takeAgentToken<SolitudePositiveYToken>(nextAgentDir);
+  }
+  if (hasAgentToken<SolitudeNegativeXToken>(nextAgentDir)) {
+    takeAgentToken<SolitudeNegativeXToken>(nextAgentDir);
+  }
+  if (hasAgentToken<SolitudeNegativeYToken>(nextAgentDir)) {
+    takeAgentToken<SolitudeNegativeYToken>(nextAgentDir);
+  }
+  paintFrontSegment(0x696969);
+  paintBackSegment(0x696969);
+  hasGeneratedTokens = false;
+}
+
+int LeaderElectionParticle::LeaderElectionAgent::
+addNextBorder(int currentSum) const {
+  // adjust offset in modulo 6 to be compatible with modulo 5 computations
+  int offsetMod6 = (prevAgentDir + 3) % 6 - nextAgentDir;
+  if(4 <= offsetMod6 && offsetMod6 <= 5) {
+      offsetMod6 -= 6;
+  } else if(-5 <= offsetMod6 && offsetMod6 <= -3) {
+      offsetMod6 += 6;
+  }
+
+  return (currentSum + offsetMod6 + 5) % 5;
+}
+
+template <class TokenType>
+bool LeaderElectionParticle::LeaderElectionAgent::
+hasAgentToken(int agentDir) const{
+    auto prop = [agentDir](const std::shared_ptr<TokenType> token) {
+      return token->origin == agentDir;
+    };
+    return candidateParticle->hasToken<TokenType>(prop);
+}
+
+template <class TokenType>
+std::shared_ptr<TokenType>
+LeaderElectionParticle::LeaderElectionAgent::
+peekAgentToken(int agentDir) const {
+  auto prop = [agentDir](const std::shared_ptr<TokenType> token) {
+    return token->origin == agentDir;
+  };
+  return candidateParticle->peekAtToken<TokenType>(prop);
+}
+
+template <class TokenType>
+std::shared_ptr<TokenType>
+LeaderElectionParticle::LeaderElectionAgent::takeAgentToken(int agentDir) {
+  auto prop = [agentDir](const std::shared_ptr<TokenType> token) {
+    return token->origin == agentDir;
+  };
+  return candidateParticle->takeToken<TokenType>(prop);
+}
+
+template <class TokenType>
+void LeaderElectionParticle::LeaderElectionAgent::
+passAgentToken(int agentDir, std::shared_ptr<TokenType> token) {
+  LeaderElectionParticle* nbr = &candidateParticle->nbrAtLabel(agentDir);
+  int origin = -1;
+  for (int i = 0; i < 6; i++) {
+    if (nbr->hasNbrAtLabel(i) && &nbr->nbrAtLabel(i) == candidateParticle) {
+      origin = i;
+      break;
+    }
+  }
+  Q_ASSERT(origin != -1);
+  token->origin = origin;
+  nbr->putToken(token);
+}
+
+LeaderElectionParticle::LeaderElectionAgent*
+LeaderElectionParticle::LeaderElectionAgent::nextAgent() const {
+  LeaderElectionParticle* nextNbr =
+      &candidateParticle->nbrAtLabel(nextAgentDir);
+  int originLabel = -1;
+  for (int i = 0; i < 6; i++) {
+    if (nextNbr->hasNbrAtLabel(i) &&
+        &nextNbr->nbrAtLabel(i) == candidateParticle) {
+      originLabel = i;
+      break;
+    }
+  }
+  Q_ASSERT(originLabel != -1);
+  for (LeaderElectionAgent* agent : nextNbr->agents) {
+    if (agent->prevAgentDir == originLabel) {
+      return agent;
+    }
+  }
+  Q_ASSERT(nextNbr->agents.size() == 0);
+  return nullptr;
+}
+
+LeaderElectionParticle::LeaderElectionAgent*
+LeaderElectionParticle::LeaderElectionAgent::prevAgent() const {
+  LeaderElectionParticle* prevNbr =
+      &candidateParticle->nbrAtLabel(prevAgentDir);
+  int originLabel = -1;
+  for (int i = 0; i < 6; i++) {
+    if (prevNbr->hasNbrAtLabel(i) &&
+        &prevNbr->nbrAtLabel(i) == candidateParticle) {
+      originLabel = i;
+      break;
+    }
+  }
+  Q_ASSERT(originLabel != -1);
+  for (LeaderElectionAgent* agent : prevNbr->agents) {
+    if (agent->nextAgentDir == originLabel) {
+      return agent;
+    }
+  }
+  Q_ASSERT(prevNbr->agents.size() == 0);
+  return nullptr;
+}
+
+void LeaderElectionParticle::LeaderElectionAgent::setStateColor() {
+  int globalizedDir = candidateParticle->localToGlobalDir(agentDir);
+  switch (agentState) {
+    case State::Candidate:
+      setSubPhaseColor();
+      break;
+    case State::Demoted:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x696969;
+      break;
+    case State::SoleCandidate:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x00ff00;
+      break;
+    case State::Leader:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = -1;
+      break;
+    case State::Finished:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = -1;
+      break;
+    default:
+      break;
+  }
+}
+
+void LeaderElectionParticle::LeaderElectionAgent::setSubPhaseColor() {
+  int globalizedDir = candidateParticle->localToGlobalDir(agentDir);
+  switch (subPhase) {
+    case SubPhase::SegmentSetup:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xff0000;
+      break;
+    case SubPhase::IdentifierSetup:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xffa500;
+      break;
+    case SubPhase::IdentifierComparison:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = 0xffff00;
+      break;
+    case SubPhase::SolitudeVerification:
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x00bfff;
+      break;
+    default:
+      Q_ASSERT(false);
+      break;
+  }
+}
+
+void LeaderElectionParticle::LeaderElectionAgent::paintFrontSegment(
+    const int color) {
+  // Must use localToGlobalDir method to reconcile the difference between the
+  // local orientation of the particle and the global orientation used by
+  // drawing
+  int tempDir = candidateParticle->localToGlobalDir(agentDir);
+  int tempNextDir = candidateParticle->localToGlobalDir(nextAgentDir);
+  while (tempDir != (tempNextDir + 1) % 6) {
+      if ((tempDir + 5) % 6 != tempNextDir) {
+          candidateParticle->borderColorLabels.at((3 * tempDir + 17) % 18) =
+              color;
+      }
+      tempDir = (tempDir + 5) % 6;
+  }
+}
+
+void LeaderElectionParticle::LeaderElectionAgent::paintBackSegment(
+    const int color) {
+  // Must use localToGlobalDir method to reconcile the difference between the
+  // local orientation of the particle and the global orientation used by
+  // drawing
+  candidateParticle->borderColorLabels.at(
+        3 * candidateParticle->localToGlobalDir(agentDir) + 1) = color;
+}
+
+//----------------------------END AGENT CODE----------------------------
+
+//----------------------------BEGIN SYSTEM CODE----------------------------
+
+LeaderElectionSystem::LeaderElectionSystem(int numParticles, double holeProb) {
+  Q_ASSERT(numParticles > 0);
+  Q_ASSERT(0 <= holeProb && holeProb <= 1);
+
+  // Insert the seed at (0,0).
+  insert(new LeaderElectionParticle(Node(0, 0), -1, randDir(), *this,
+                                    LeaderElectionParticle::State::Idle));
+  std::set<Node> occupied;
+  occupied.insert(Node(0, 0));
+
+  std::set<Node> candidates;
+  for (int i = 0; i < 6; ++i) {
+    candidates.insert(Node(0, 0).nodeInDir(i));
+  }
+
+  // Add inactive particles.
+  int numNonStaticParticles = 0;
+  while (numNonStaticParticles < numParticles && !candidates.empty()) {
+    // Pick random candidate.
+    int randIndex = randInt(0, candidates.size());
+    Node randomCandidate;
+    for (auto it = candidates.begin(); it != candidates.end(); ++it) {
+      if (randIndex == 0) {
+        randomCandidate = *it;
+        candidates.erase(it);
+        break;
+      } else {
+        randIndex--;
+      }
+    }
+
+    occupied.insert(randomCandidate);
+
+    // Add this candidate as a particle if not a hole.
+    if (randBool(1.0 - holeProb)) {
+      insert(new LeaderElectionParticle(randomCandidate, -1, randDir(), *this,
+                                        LeaderElectionParticle::State::Idle));
+      ++numNonStaticParticles;
+
+      // Add new candidates.
+      for (int i = 0; i < 6; ++i) {
+        auto neighbor = randomCandidate.nodeInDir(i);
+        if (occupied.find(neighbor) == occupied.end()) {
+          candidates.insert(neighbor);
+        }
+      }
+    }
+  }
+}
+
+bool LeaderElectionSystem::hasTerminated() const {
+  #ifdef QT_DEBUG
+    if (!isConnected(particles)) {
+      return true;
+    }
+  #endif
+
+  for (auto p : particles) {
+    auto hp = dynamic_cast<LeaderElectionParticle*>(p);
+    if (hp->state != LeaderElectionParticle::State::Leader &&
+        hp->state != LeaderElectionParticle::State::Finished) {
+      return false;
+    }
+  }
+
+  return true;
+}

@@ -13,6 +13,7 @@ HEADERS += \
     alg/demo/pulldemo.h \
     alg/demo/tokendemo.h \
     alg/compression.h \
+    alg/improvedleaderelection.h \
     alg/infobjcoating.h \
     alg/shapeformation.h \
     core/amoebotparticle.h \
@@ -40,6 +41,7 @@ SOURCES += \
     alg/demo/pulldemo.cpp \
     alg/demo/tokendemo.cpp \
     alg/compression.cpp \
+    alg/improvedleaderelection.cpp \
     alg/infobjcoating.cpp \
     alg/shapeformation.cpp \
     core/amoebotparticle.cpp \

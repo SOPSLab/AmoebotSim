@@ -130,8 +130,7 @@ class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
   // for that must satisfy a particular property requirement
   template<class TokenType>
   std::shared_ptr<TokenType> peekAtToken(
-      std::function<bool(const std::shared_ptr<TokenType>)>
-      propertyCheck) const;
+      std::function<bool(const std::shared_ptr<TokenType>)> propertyCheck) const;
   template<class TokenType>
   std::shared_ptr<TokenType> takeToken(
       std::function<bool(const std::shared_ptr<TokenType>)> propertyCheck);
