@@ -82,6 +82,41 @@ class LeaderElectionParticle : public AmoebotParticle {
    int origin;
   };
 
+  // Token for Identifier Setup
+  struct SetUpToken : public LeaderElectionToken {
+    bool initialize = true;
+    int reverseValue = -1;
+    SetUpToken(int origin = -1, bool initialize = true, int reverseVal = -1) {
+      this->origin = origin;
+      this->initialize = initialize;
+      this->reverseValue = reverseVal;
+    }
+  };
+
+  // Tokens for Identifier Comparison
+  struct DigitToken : public LeaderElectionToken {
+    int value = -1;
+    bool isActive = false;
+    DigitToken(int origin = -1, int value = -1, bool isActive = false) {
+      this->origin = origin;
+      this->value = value;
+      this->isActive = isActive;
+    }
+  };
+
+  struct DelimiterToken : public LeaderElectionToken {
+    int value = -1;
+    bool isActive = false;
+    bool isGreater = false;
+    DelimiterToken(int origin = -1, int value = -1, bool isActive = false,
+                   bool isGreater = false) {
+      this->origin = origin;
+      this->value = value;
+      this->isActive = isActive;
+      this->isGreater = isGreater;
+    }
+  };
+
   // Tokens for Solitude Verification
   struct SolitudeActiveToken : public LeaderElectionToken {
     bool isSoleCandidate;
@@ -172,6 +207,13 @@ class LeaderElectionParticle : public AmoebotParticle {
    // 0 --> tokens should be passed forwards in the cycle (nextAgentDir)
    // 1 --> tokens should be passed backwards in the cycle (prevAgentDir)
    int passTokensDir = -1;
+
+   // Keep track of whether or not the current agent was demoted due to identifier
+   // comparison
+   bool demotedFromComparison = false;
+   bool hasGeneratedSetupToken = false;
+   bool isActive = false;
+   int idValue = -1;
 
    // Variables for Solitude Verification
    // createdLead is a boolean which determines whether or not the current agent
