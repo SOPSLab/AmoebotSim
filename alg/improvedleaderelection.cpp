@@ -230,8 +230,27 @@ LeaderElectionParticle::LeaderElectionAgent::LeaderElectionAgent() :
 void LeaderElectionParticle::LeaderElectionAgent::activate() {
   passTokensDir = randInt(0, 2);
   if (agentState == State::Candidate) {
+    if (passTokensDir == 1 && hasAgentToken<SetUpToken>(prevAgentDir)) {
+      peekAgentToken<SetUpToken>(prevAgentDir)->initialize = false;
+      passAgentToken<SetUpToken>(prevAgentDir,
+                                 takeAgentToken<SetUpToken>(prevAgentDir));
+    }
 
-
+    if (hasAgentToken<SetUpToken>(nextAgentDir) && !hasGeneratedReverseToken) {
+      std::shared_ptr<SetUpToken> token =
+          takeAgentToken<SetUpToken>(nextAgentDir);
+      if (nextAgent()->agentState == State::Candidate) {
+        candidateParticle->putToken(
+              std::make_shared<DelimiterToken>(nextAgentDir, idValue));
+        hasGeneratedReverseToken = true;
+      } else if (passTokensDir == 0) {
+        candidateParticle->putToken(
+              std::make_shared<DigitToken>(nextAgentDir, token->reverseValue));
+        token->reverseValue = idValue;
+        passAgentToken<SetUpToken>(nextAgentDir, token);
+        hasGeneratedReverseToken = true;
+      }
+    }
     // Solitude Verification
     // Here we check whether or not the SolitudeActiveToken has a set local_id
     // to avoid the a possibility that the current agent might incorrectly
@@ -272,13 +291,11 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
         agentState = State::Demoted;
       }
     } else if (subPhase == SubPhase::IdentifierSetup) {
-      if (!hasGeneratedSetupToken) {
+      if (!hasGeneratedSetupToken && passTokensDir == 0) {
         passAgentToken<SetUpToken>(nextAgentDir,
                                    std::make_shared<SetUpToken>());
-        idValue = randInt(0,1);
+        idValue = randInt(0,2);
         hasGeneratedSetupToken = true;
-      } else {
-
       }
     } else if (subPhase == SubPhase::IdentifierComparison) {
 
@@ -320,10 +337,64 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
     LeaderElectionAgent* next = nextAgent();
     LeaderElectionAgent* prev = prevAgent();
 
-    if (passTokensDir == 0 &&
-        hasAgentToken<SetUpToken>(prevAgentDir) &&
-        peekAgentToken<SetUpToken>(prevAgentDir)->initialize) {
+    // Identifier Setup
+    if (passTokensDir == 1 && hasAgentToken<SetUpToken>(prevAgentDir) &&
+        peekAgentToken<SetUpToken>(prevAgentDir)->initialize &&
+        idValue == -1) {
+      idValue = randInt(0, 2);
+      passAgentToken<SetUpToken>(nextAgentDir,
+                                 takeAgentToken<SetUpToken>(prevAgentDir));
+    }
 
+    if (hasAgentToken<SetUpToken>(nextAgentDir)) {
+      std::shared_ptr<SetUpToken> token =
+          takeAgentToken<SetUpToken>(nextAgentDir);
+      if (prev != nullptr && prev->hasGeneratedTokens) {
+        if (next != nullptr && next->hasGeneratedTokens) {
+          candidateParticle->putToken(
+                std::make_shared<DigitToken>(nextAgentDir, idValue));
+          return;
+        } else if (next != nullptr && passTokensDir == 0) {
+          candidateParticle->putToken(
+                std::make_shared<DigitToken>(nextAgentDir,
+                                             token->reverseValue));
+          token->reverseValue = idValue;
+          passAgentToken<SetUpToken>(nextAgentDir, token);
+        }
+        hasGeneratedReverseToken = true;
+        return;
+      } else if (passTokensDir == 1 && prev != nullptr) {
+        if (next != nullptr && (next->agentState == State::Candidate ||
+                                next->hasGeneratedReverseToken)) {
+          token->reverseValue = idValue;
+        }
+        passAgentToken<SetUpToken>(prevAgentDir, token);
+      }
+    }
+
+    if (hasAgentToken<SetUpToken>(prevAgentDir) &&
+        !peekAgentToken<SetUpToken>(prevAgentDir)->initialize) {
+      std::shared_ptr<SetUpToken> token =
+          takeAgentToken<SetUpToken>(prevAgentDir);
+      if (next != nullptr && (next->agentState == State::Candidate ||
+                              next->hasGeneratedReverseToken)) {
+        if (next->agentState == State::Candidate) {
+          candidateParticle->putToken(
+                std::make_shared<DelimiterToken>(nextAgentDir,
+                                                 token->reverseValue));
+        } else {
+          candidateParticle->putToken(
+                std::make_shared<DigitToken>(nextAgentDir,
+                                             token->reverseValue));
+        }
+        hasGeneratedReverseToken = true;
+        if (prev != nullptr && !prev->hasGeneratedReverseToken &&
+            passTokensDir == 1) {
+          passAgentToken<SetUpToken>(prevAgentDir, token);
+        }
+      } else if (next != nullptr && passTokensDir == 0) {
+        passAgentToken<SetUpToken>(nextAgentDir, token);
+      }
     }
 
     // Solitude Verification Tokens

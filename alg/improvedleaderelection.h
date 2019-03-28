@@ -212,6 +212,7 @@ class LeaderElectionParticle : public AmoebotParticle {
    // comparison
    bool demotedFromComparison = false;
    bool hasGeneratedSetupToken = false;
+   bool hasGeneratedReverseToken = false;
    bool isActive = false;
    int idValue = -1;
 
