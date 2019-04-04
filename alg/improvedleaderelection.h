@@ -214,6 +214,11 @@ class LeaderElectionParticle : public AmoebotParticle {
    bool hasGeneratedSetupToken = false;
    bool hasGeneratedReverseToken = false;
    bool isActive = false;
+   // compareStatus
+   // -1 --> lessThan
+   // 0 --> equal
+   // 1 --> greaterThan
+   int compareStatus = -1;
    int idValue = -1;
 
    // Variables for Solitude Verification
@@ -234,6 +239,8 @@ class LeaderElectionParticle : public AmoebotParticle {
    // sole candidate has generated a border testing token to determine what
    // boundary it is on.
    bool testingBorder = false;
+
+   bool canPassComparisonToken() const;
 
    // The activate function is the LeaderElectionAgent equivalent of an
    // Amoebot Particle's activate function
@@ -284,6 +291,10 @@ class LeaderElectionParticle : public AmoebotParticle {
    std::shared_ptr<TokenType> takeAgentToken(int agentDir);
    template <class TokenType>
    void passAgentToken(int agentDir, std::shared_ptr<TokenType> token);
+
+   template <class TokenType>
+   int countAgentTokens(int agentDir) const;
+
    LeaderElectionAgent* nextAgent() const;
    LeaderElectionAgent* prevAgent() const;
 

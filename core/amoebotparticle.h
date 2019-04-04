@@ -144,12 +144,15 @@ class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
   template<class TokenType>
   bool hasToken() const;
 
-  // An overloaded function of hasToken has been provided in case there is a
-  // specific token of type TokenType that is being searched for that must
-  // satisfy a particular property requirement
+  // Overloaded functinos for countTokens and hasToken have been provided in
+  // case we wish to check or count the existence(s) of a particular token of
+  // TokenType satisfying a property requirement.
   template<class TokenType>
   bool hasToken(std::function<bool(const std::shared_ptr<TokenType>)>
                 propertyCheck) const;
+  template<class TokenType>
+  int countTokens(std::function<bool(const std::shared_ptr<TokenType>)>
+                  propertyCheck) const;
 
   AmoebotSystem& system;
  private:
@@ -245,6 +248,20 @@ int AmoebotParticle::countTokens() const {
     std::shared_ptr<TokenType> token =
         std::dynamic_pointer_cast<TokenType>(tokens[i]);
     if (token != nullptr) {
+      count++;
+    }
+  }
+  return count;
+}
+
+template<class TokenType>
+int AmoebotParticle::countTokens(
+    std::function<bool(const std::shared_ptr<TokenType>)> propertyCheck) const {
+  int count = 0;
+  for (unsigned int i = 0; i < tokens.size(); i++) {
+    std::shared_ptr<TokenType> token =
+        std::dynamic_pointer_cast<TokenType>(tokens[i]);
+    if (token != nullptr && propertyCheck(token)) {
       count++;
     }
   }

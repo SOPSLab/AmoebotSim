@@ -230,6 +230,8 @@ LeaderElectionParticle::LeaderElectionAgent::LeaderElectionAgent() :
 void LeaderElectionParticle::LeaderElectionAgent::activate() {
   passTokensDir = randInt(0, 2);
   if (agentState == State::Candidate) {
+
+    // Identifier Setup
     if (passTokensDir == 1 && hasAgentToken<SetUpToken>(prevAgentDir)) {
       peekAgentToken<SetUpToken>(prevAgentDir)->initialize = false;
       passAgentToken<SetUpToken>(prevAgentDir,
@@ -251,6 +253,42 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
         hasGeneratedReverseToken = true;
       }
     }
+
+    // Identifier Comparison
+    if (hasAgentToken<DigitToken>(nextAgentDir)) {
+      if (isActive && peekAgentToken<DigitToken>(nextAgentDir)->isActive) {
+        isActive = false;
+        peekAgentToken<DigitToken>(nextAgentDir)->isActive = false;
+        demotedFromComparison = true;
+      }
+      if (canPassComparisonToken()) {
+        peekAgentToken<DigitToken>(nextAgentDir)->isActive = true;
+        passAgentToken<DigitToken>(prevAgentDir,
+                                   takeAgentToken<DigitToken>(nextAgentDir));
+      }
+    }
+
+    if (hasAgentToken<DelimiterToken>(nextAgentDir)) {
+      if (isActive && peekAgentToken<DelimiterToken>(nextAgentDir)->isActive) {
+        int tokenValue = peekAgentToken<DelimiterToken>(nextAgentDir)->value;
+        compareStatus = idValue - tokenValue;
+        isActive = false;
+        peekAgentToken<DelimiterToken>(nextAgentDir)->isActive = false;
+        if (compareStatus == -1) {
+          demotedFromComparison = true;
+        } else if (compareStatus == 0) {
+          subPhase = SubPhase::SolitudeVerification;
+        }
+      }
+      if (canPassComparisonToken()) {
+        peekAgentToken<DelimiterToken>(nextAgentDir)->isActive = true;
+        passAgentToken<DelimiterToken>(prevAgentDir,
+                                       takeAgentToken<DelimiterToken>(
+                                         nextAgentDir));
+        isActive = true;
+      }
+    }
+
     // Solitude Verification
     // Here we check whether or not the SolitudeActiveToken has a set local_id
     // to avoid the a possibility that the current agent might incorrectly
@@ -296,9 +334,16 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
                                    std::make_shared<SetUpToken>());
         idValue = randInt(0,2);
         hasGeneratedSetupToken = true;
+        return;
+      } else if (hasGeneratedReverseToken) {
+        subPhase = SubPhase::IdentifierComparison;
+        return;
       }
     } else if (subPhase == SubPhase::IdentifierComparison) {
-
+      if (demotedFromComparison) {
+        agentState = State::Demoted;
+        return;
+      }
     } else if (subPhase == SubPhase::SolitudeVerification) {
       if (!createdLead && passTokensDir == 0) {
         passAgentToken<SolitudeActiveToken>
@@ -323,8 +368,10 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
           // that reach a candidate agent are settled
           Q_ASSERT(false);
           return;
-        } else {
+        } else if (!demotedFromComparison) {
           subPhase = SubPhase::IdentifierComparison;
+        } else if (demotedFromComparison) {
+          agentState = State::Demoted;
         }
         takeAgentToken<SolitudeActiveToken>(nextAgentDir);
         createdLead = false;
@@ -338,12 +385,18 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
     LeaderElectionAgent* prev = prevAgent();
 
     // Identifier Setup
-    if (passTokensDir == 1 && hasAgentToken<SetUpToken>(prevAgentDir) &&
-        peekAgentToken<SetUpToken>(prevAgentDir)->initialize &&
-        idValue == -1) {
-      idValue = randInt(0, 2);
-      passAgentToken<SetUpToken>(nextAgentDir,
-                                 takeAgentToken<SetUpToken>(prevAgentDir));
+    if (hasAgentToken<SetUpToken>(prevAgentDir) &&
+        peekAgentToken<SetUpToken>(prevAgentDir)->initialize) {
+      if (demotedFromComparison && passTokensDir == 1) {
+        peekAgentToken<SetUpToken>(prevAgentDir)->initialize = false;
+        passAgentToken<SetUpToken>(prevAgentDir,
+                                   takeAgentToken<SetUpToken>(prevAgentDir));
+      } else if (passTokensDir == 0) {
+        Q_ASSERT(idValue != -1);
+        idValue = randInt(0, 2);
+        passAgentToken<SetUpToken>(nextAgentDir,
+                                   takeAgentToken<SetUpToken>(prevAgentDir));
+      }
     }
 
     if (hasAgentToken<SetUpToken>(nextAgentDir)) {
@@ -394,6 +447,27 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
         }
       } else if (next != nullptr && passTokensDir == 0) {
         passAgentToken<SetUpToken>(nextAgentDir, token);
+      }
+    }
+
+    // Identifier Comparison
+    if (hasAgentToken<DigitToken>(nextAgentDir)) {
+      if (demotedFromComparison) {
+        if (canPassComparisonToken()) {
+          peekAgentToken<DigitToken>(nextAgentDir)->isActive = true;
+          passAgentToken<DigitToken>(prevAgentDir,
+                                     takeAgentToken<DigitToken>(nextAgentDir));
+        }
+      } else {
+
+      }
+    }
+
+    if (hasAgentToken<DelimiterToken>(nextAgentDir)) {
+      if (demotedFromComparison) {
+
+      } else {
+
       }
     }
 
@@ -515,7 +589,7 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
     if (!testingBorder) {
       std::shared_ptr<BorderTestToken> token =
           std::make_shared<BorderTestToken>(prevAgentDir, addNextBorder(0));
-      passAgentToken(nextAgentDir, token);
+      passAgentToken<BorderTestToken>(nextAgentDir, token);
       paintFrontSegment(-1);
       testingBorder = true;
     } else if (hasAgentToken<BorderTestToken>(prevAgentDir) &&
@@ -534,6 +608,21 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
       return;
     }
   }
+}
+
+bool LeaderElectionParticle::LeaderElectionAgent::
+canPassComparisonToken() const {
+  LeaderElectionAgent* prev = prevAgent();
+  if (prev == nullptr) {
+    return false;
+  }
+  int prevCountDigit = prev->countAgentTokens<DigitToken>(prev->nextAgentDir);
+  if ((prevCountDigit <= 2 ||
+      !prev->hasAgentToken<DelimiterToken>(prev->nextAgentDir)) &&
+      prev->hasGeneratedReverseToken && passTokensDir == 1) {
+    return true;
+  }
+  return false;
 }
 
 std::pair<int, int> LeaderElectionParticle::LeaderElectionAgent::
@@ -717,6 +806,15 @@ passAgentToken(int agentDir, std::shared_ptr<TokenType> token) {
   Q_ASSERT(origin != -1);
   token->origin = origin;
   nbr->putToken(token);
+}
+
+template <class TokenType>
+int LeaderElectionParticle::LeaderElectionAgent::
+countAgentTokens(int agentDir) const {
+  auto prop = [agentDir](const std::shared_ptr<TokenType> token) {
+    return token->origin == agentDir;
+  };
+  return candidateParticle->countTokens<TokenType>(prop);
 }
 
 LeaderElectionParticle::LeaderElectionAgent*
