@@ -439,7 +439,8 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
       if (passTokensDir == 1 && prev != nullptr &&
           !prev->hasAgentToken<ActiveSegmentCleanToken>(prev->nextAgentDir)) {
         passAgentToken<ActiveSegmentCleanToken>
-            (prevAgentDir, takeAgentToken<ActiveSegmentCleanToken>(nextAgentDir));
+            (prevAgentDir,
+             takeAgentToken<ActiveSegmentCleanToken>(nextAgentDir));
         generatedCleanToken = false;
       }
     }
