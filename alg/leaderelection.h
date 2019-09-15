@@ -7,15 +7,29 @@
 // in the above paper has a chance of not working (which is related to the
 // Segment Comparison subphase); however, the centralized algorithm described in
 // the paper (which this distributed implementation is based on) is correct.
+// Specifically, there is a possible order of activations when there are only
+// two candidates in the Segment Comparison phase, where both candidates will
+// demote themselves. This results in the boundary that the two candidates were
+// on to lack any leader.
+//
+// Also note that the Solitude Verification phase of this algorithm was adapted
+// from the Solitude Verification phase from the Improved Leader Election
+// algorithm (see 'Improved Leader Election for Self-Organizing Programmable
+// Matter' [https://arxiv.org/abs/1701.03616]). This decision was made because
+// the Solitude Verification phase in the Improved Leader Election algorithm
+// is significantly simpler than this version's, and both Solitude Verification
+// phases accomplish the same goals.
 
 #ifndef AMOEBOTSIM_ALG_LEADERELECTION_H
 #define AMOEBOTSIM_ALG_LEADERELECTION_H
 
+#include <QString>
+
+#include <set>
+
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
 
-#include <set>
-#include <QString>
 
 class LeaderElectionParticle : public AmoebotParticle {
  public:
@@ -30,9 +44,7 @@ class LeaderElectionParticle : public AmoebotParticle {
 
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
-  // for its local compass, a system which it belongs to, an initial state, a
-  // signal for determining turning directions (currently for vertex triangle
-  // and square construction), and a string to determine what shape to form.
+  // for its local compass, and a system which it belongs to.
   LeaderElectionParticle(const Node head, const int globalTailDir,
                          const int orientation, AmoebotSystem& system,
                          State state);
@@ -46,7 +58,6 @@ class LeaderElectionParticle : public AmoebotParticle {
   // when the particle is contracted. headMarkDir returns the label of the port
   // on which the black head marker is drawn.
   virtual int headMarkColor() const;
-  virtual int headMarkDir() const;
   virtual int tailMarkColor() const;
 
   // Returns the string to be displayed when this particle is inspected; used
@@ -65,7 +76,7 @@ class LeaderElectionParticle : public AmoebotParticle {
 
   // Returns the label associated with the direction which the next (resp.
   // previous) agent is according to the cycle that the agent is on (which is
-  // determined by the provided agentDir parameter)
+  // determined by the provided agentDir parameter).
   int getNextAgentDir(const int agentDir) const;
   int getPrevAgentDir(const int agentDir) const;
 
@@ -74,12 +85,12 @@ class LeaderElectionParticle : public AmoebotParticle {
   int getNumberOfNbrs() const;
 
  protected:
-  // The LeaderElectionToken struct provides a general framework of what a
-  // token under the General Leader Election algorithm behaves.
-  // origin is used to define the direction (label) from which a
-  // LeaderElectionToken has been sent from.
+  // The LeaderElectionToken struct provides a general framework of any token
+  // under the General Leader Election algorithm.
   struct LeaderElectionToken : public Token {
-   int origin;
+    // origin is used to define the direction (label) that a LeaderElectionToken
+    // was received from.
+    int origin;
   };
 
   // Tokens for Candidate Elimination via Segment Comparison
@@ -184,203 +195,187 @@ class LeaderElectionParticle : public AmoebotParticle {
       this->borderSum = borderSum;
     }
   };
+
  private:
   friend class LeaderElectionSystem;
 
   // The nested class LeaderElectionAgent is used to define the behavior for the
   // agents as described in the paper
   class LeaderElectionAgent {
-  public:
-   enum class SubPhase {
-     SegmentComparison = 0,
-     CoinFlipping,
-     SolitudeVerification
-   };
+   public:
+    enum class SubPhase {
+      SegmentComparison = 0,
+      CoinFlipping,
+      SolitudeVerification
+    };
 
-   LeaderElectionAgent();
+    LeaderElectionAgent();
 
-   // localId is an int which stores which id an agent has according to the
-   // particle which is associated with it. This localId value lies in [1,3]
-   int localId;
-   // agentDir stores the direction/label of the current agent according to the
-   // labelling scheme used by the particle that owns the current agent.
-   // nextAgentDir and prevAgentDir are store the direction/label of the next
-   // and previous (respectively) agents of the current agent according to the
-   // particle that owns the current agent and the direction of the boundary
-   // that the agent is on.
-   int agentDir, nextAgentDir, prevAgentDir;
+    // General variables in agent memory:
+    // The particle emulating this agent assigns it a localId in [1,3] to
+    // distinguish it from the other agents it may be emulating. From the
+    // particle's perspective, this agent is in local direction/label agentDir.
+    // The neighboring particle emulating the next (respectively, previous)
+    // agent on this agent's boundary is in local direction nextAgentDir
+    // (respectively, prevAgentDir). passTokensDir is used to determine if the
+    // agent should pass tokens toward nextAgentDir (if 0) or prevAgentDir (if
+    // 1). This is done to maintain the rule from direct write communication
+    // that a particle can only write into the memory of one of its neighbors in
+    // a single activation.
+    int localId;
+    int agentDir, nextAgentDir, prevAgentDir;
+    int passTokensDir = -1;
 
-   State agentState;
-   SubPhase subPhase;
-   LeaderElectionParticle* candidateParticle;
+    State agentState;
+    SubPhase subPhase;
+    LeaderElectionParticle* candidateParticle;
 
-   // passedTokensDir is an int which will be used to determine whether or not
-   // an agent will pass tokens in the prevAgentDir or nextAgentDir.
-   // This is done to maintain the rule that particles can only pass tokens to 1
-   // other particle in a single activation.
-   // 0 --> tokens should be passed forwards in the cycle (nextAgentDir)
-   // 1 --> tokens should be passed backwards in the cycle (prevAgentDir)
-   int passTokensDir = -1;
+    // Variables for Segment Comparison:
+    // comparingSegment is true if this agent is in the Segment Comparison
+    // subphase and has generated and passed a segment lead token along its
+    // front segment; it is false otherwise.
+    // isCoveredCandidate is set to true when this candidate agent is covered by
+    // another candidate and demotes itself; i.e., when it receives an active
+    // token from its front segment. This indicates to a later final segment
+    // clean token that the candidate that sent it covered another candidate in
+    // its Segment Comparison subphase.
+    // absorbedActiveToken is true if this agent has already absorbed an active
+    // token, which tells it whether to absorb active tokens or pass them
+    // backwards along the cycle in the Segment Comparison subphase.
+    // generatedCleanToken is true if this agent was covered and generated a
+    // cleaning token. This is needed because a particle can only write into the
+    // memory of one neighbor per activation, but it needs to pass cleaning
+    // tokens in both directions.
+    bool comparingSegment = false;
+    bool isCoveredCandidate = false;
+    bool absorbedActiveToken = false;
+    bool generatedCleanToken = false;
 
-   // Variables for Segment Comparison
-   // comparingSegment is a boolean which is used to keep track of whether or
-   // not the current agent in the Segment Comparison subphase has generated
-   // a segment lead token and passed it along its front segment.
-   // isCoveredCandidate is a boolean which is used for candidate agents in any
-   // subphase. If the candidate agent receives an active token which is from
-   // the nextAgentDir, it will set this boolean to true and demote itself.
-   // Afterwards, the final segment clean token that passes over a demoted agent
-   // which has a isCoveredCandidate value of "true" will indicate to the
-   // receiving candidate agent in the Segment Comparison subphase that it has
-   // covered a candidate agent in its segment comparison phase.
-   // absorbedActiveToken is a boolean which is used to keep track of whether or
-   // not an agent has absorbed an active token. This is important for the
-   // Segment Comparison subphase to keep track of whether or not to absorb
-   // an active token or pass it along backwards according to the cycle.
-   // generatedCleanToken is a boolean used to determine whether or not the
-   // current agent generated a cleaning token (i.e., if it was a covered
-   // candidate which generated a cleaning token then demoted itself). This is
-   // needed because a particle cannot pass tokens to two different particles in
-   // a single activation, and because we need to pass cleaning tokens in two
-   // different directions (and hence, two different particles), we need this
-   // boolean to avoid performing the incorrect active clean.
-   bool comparingSegment = false;
-   bool isCoveredCandidate = false;
-   bool absorbedActiveToken = false;
-   bool generatedCleanToken = false;
+    // Variables for Coin Flipping and Candidacy Transferal:
+    // gotAnnounceInCompare is set to true if this agent did not succeed in
+    // covering another candidate in its Segment Comparison subphase but was
+    // “saved” by a candidacy transferal; instead of demoting itself, it will
+    // proceed with the next subphase.
+    // gotAnnounceBeforeAck is set to true if this agent is in the Coin Flipping
+    // subphase and receives a candidate announcement token before it receives a
+    // candidate acknowledgement token; thus, instead of demoting itself, it
+    // will proceed with Solitude Verification.
+    // waitingForTransferAck is true if this agent generated a candidate
+    // announcement token in the Coin Flipping subphase but has not yet received
+    // an acknowledgement.
+    bool gotAnnounceInCompare = false;
+    bool gotAnnounceBeforeAck = false;
+    bool waitingForTransferAck = false;
 
-   // Variables for Coin Flipping and Candidacy Transferral
-   // gotAnnounceInCompare is a boolean which is used in the Segment Comparison
-   // subphase, where, in the case an agent has failed its segment comparison,
-   // but has gotten a candidate announcement token during its segment
-   // comparison, rather than demoting itself, the segment comparison agent will
-   // move onto the next subphase.
-   // gotAnnounceBeforeAck is a boolean which is used in the Coin Flipping
-   // subphase. It is flipped when an agent in the Coin Flipping subphase
-   // receives a candidate announcement token before it receives a candidate
-   // acknowledgement token, thus indicating that the agent should not demote
-   // itself and should instead move forwards to the Solitude Verification
-   // subphase.
-   // waitingForTransferAck is a boolean which is used to keep track of whether
-   // or not the current agent in the Coin Flipping subphase has generated a
-   // candidate announcement token or not.
-   bool gotAnnounceInCompare = false;
-   bool gotAnnounceBeforeAck = false;
-   bool waitingForTransferAck = false;
+    // Variables for Solitude Verification:
+    // createdLead is true if this agent generated a solitude active token and
+    // passed it forward during Solitude Verification.
+    // hasGeneratedTokens is true if this agent generated solitude vector tokens
+    // using the solitude active token. This is used to avoid incorrectly mixing
+    // tokens of different agents on the same particle in Solitude Verification.
+    bool createdLead = false;
+    bool hasGeneratedTokens = false;
 
-   // Variables for Solitude Verification
-   // createdLead is a boolean which determines whether or not the current agent
-   // has generated a solitude active token and passed it along its front
-   // segment.
-   // hasGeneratedTokens is a boolean which determines whether or not the
-   // current agent has generated solitude vector tokens using the solitude
-   // active token. This is necessary since there are cases where different
-   // agents on the same particle might have the same nextAgentDir as the
-   // other's prevAgentDir, so an incorrect token pass is avoided using this
-   // boolean variable.
-   bool createdLead = false;
-   bool hasGeneratedTokens = false;
+    // Variables for Boundary Testing:
+    // testingBorder is true if this agent is the sole candidate and has begun
+    // the Boundary Testing subphase.
+    bool testingBorder = false;
 
-   // Variables for Boundary Testing
-   // testingBorder is a boolean used to determine whether or not the current
-   // sole candidate has generated a border testing token to determine what
-   // boundary it is on.
-   bool testingBorder = false;
+    // The activate function is the LeaderElectionAgent equivalent of an
+    // Amoebot Particle's activate function
+    void activate();
 
-   // The activate function is the LeaderElectionAgent equivalent of an
-   // Amoebot Particle's activate function
-   void activate();
+    // Methods for token cleaning if a candidate is covered.
+    // The boolean parameter "first" is used to determine whether or not the
+    // cleaning agent is a covered candidate which has just absorbed an active
+    // token and must delete/clean its tokens for the first time.
+    void activeClean(bool first);
+    void passiveClean(bool first);
 
-   // Methods for token cleaning if a candidate is covered.
-   // The boolean parameter "first" is used to determine whether or not the
-   // cleaning agent is a covered candidate which has just absorbed an active
-   // token and must delete/clean its tokens for the first time.
-   void activeClean(bool first);
-   void passiveClean(bool first);
+    // Solitude Verification Methods
+    // augmentDirVector takes a <int, int> pair as a parameter, which represents
+    // the current vector stored in the solitude active token. This function
+    // then generates the next vector according to a local coordinate system
+    // (which is determined when a candidate agent in the Solitude Verification
+    // subphase generates the solitude active token) based on the vector stored
+    // in the solitude active token.
+    std::pair<int, int> augmentDirVector(std::pair<int, int> vector);
 
-   // Solitude Verification Methods
-   // augmentDirVector takes a <int, int> pair as a parameter, which represents
-   // the current vector stored in the solitude active token. This function then
-   // generates the next vector according to a local coordinate system (which is
-   // determined when a candidate agent in the Solitude Verification subphase
-   // generates the solitude active token) based on the vector stored in the
-   // solitude active token.
-   std::pair<int, int> augmentDirVector(std::pair<int, int> vector);
+    // generateSolitudeVectorTokens generates the solitude vector tokens
+    // (SolitudePositiveXToken, SolitudeNegativeXToken, etc.) based on the given
+    // parameter vector.
+    void generateSolitudeVectorTokens(std::pair<int, int> vector);
 
-   // generateSolitudeVectorTokens generates the solitude vector tokens
-   // (SolitudePositiveXToken, SolitudeNegativeXToken, etc.) based on the given
-   // parameter vector.
-   void generateSolitudeVectorTokens(std::pair<int, int> vector);
+    // The checkSolitudeXTokens and checkSolitudeYTokens are used to determine
+    // the condition of the solitude vector tokens that an agent might own.
+    // The functions will return a value contained in [0,2] depending on what
+    // condition the solitude vector tokens are in:
+    // 0 --> tokens are settled and there is a mismatch, i.e., the agent might
+    // have a positive x token (which as settled), but no corresponding negative
+    // x token.
+    // 1 --> at least one of the tokens is not settled
+    // 2 --> tokens are settled and there is a match or neither tokens are
+    // present on the current agent.
+    int checkSolitudeXTokens() const;
+    int checkSolitudeYTokens() const;
 
-   // The checkSolitudeXTokens and checkSolitudeYTokens are used to determine
-   // the condition of the solitude vector tokens that an agent might own.
-   // The functions will return a value contained in [0,2] depending on what
-   // condition the solitude vector tokens are in:
-   // 0 --> tokens are settled and there is a mismatch, i.e., the agent might
-   // have a positive x token (which as settled), but no corresponding negative
-   // x token.
-   // 1 --> at least one of the tokens is not settled
-   // 2 --> tokens are settled and there is a match or neither tokens are
-   // present on the current agent.
-   int checkSolitudeXTokens() const;
-   int checkSolitudeYTokens() const;
+    // The cleanSolitudeVerificationTokens function will clean the solitude
+    // vector tokens owned by a particular agent as well as paint the
+    // front and back segments gray
+    void cleanSolitudeVerificationTokens();
 
-   // The cleanSolitudeVerificationTokens function will clean the solitude
-   // vector tokens owned by a particular agent as well as paint the
-   // front and back segments gray
-   void cleanSolitudeVerificationTokens();
+    // Boundary Testing methods
+    int addNextBorder(int currentSum) const;
 
-   // Boundary Testing methods
-   int addNextBorder(int currentSum) const;
+    // Methods for passing, taking, and checking the ownership of tokens at the
+    // agent level
+    template <class TokenType>
+    bool hasAgentToken(int agentDir) const;
+    template <class TokenType>
+    std::shared_ptr<TokenType> peekAgentToken(int agentDir) const;
+    template <class TokenType>
+    std::shared_ptr<TokenType> takeAgentToken(int agentDir);
+    template <class TokenType>
+    void passAgentToken(int agentDir, std::shared_ptr<TokenType> token);
+    LeaderElectionAgent* nextAgent() const;
+    LeaderElectionAgent* prevAgent() const;
 
-   // Methods for passing, taking, and checking the ownership of tokens at the
-   // agent level
-   template <class TokenType>
-   bool hasAgentToken(int agentDir) const;
-   template <class TokenType>
-   std::shared_ptr<TokenType> peekAgentToken(int agentDir) const;
-   template <class TokenType>
-   std::shared_ptr<TokenType> takeAgentToken(int agentDir);
-   template <class TokenType>
-   void passAgentToken(int agentDir, std::shared_ptr<TokenType> token);
-   LeaderElectionAgent* nextAgent() const;
-   LeaderElectionAgent* prevAgent() const;
+    // Methods responsible for rendering the agents onto the simulator with
+    // their colors changing based on the state and the subphase of the current
+    // agent
+    // Red --> Candidate agent in Segment Comparison Subphase
+    // Yellow --> Candidate agent in Coin Flipping Subphase
+    // Blue --> Candidate agent in Solitude Verification Subphase
+    // Grey --> Demoted agent
+    // Green --> Sole candidate
+    void setStateColor();
+    void setSubPhaseColor();
 
-   // Methods responsible for rendering the agents onto the simulator with their
-   // colors changing based on the state and the subphase of the current agent
-   // Red --> Candidate agent in Segment Comparison Subphase
-   // Yellow --> Candidate agent in Coin Flipping Subphase
-   // Blue --> Candidate agent in Solitude Verification Subphase
-   // Grey --> Demoted agent
-   // Green --> Sole candidate
-   void setStateColor();
-   void setSubPhaseColor();
-
-   // Methods responsible for painting the borders which will act as physical
-   // representations of the cycle for leader election
-   // Red --> Segment Comparison Phase
-   // Yellow --> Coin Flipping Phase
-   // Blue --> Solitude Verification Phase
-   // Grey --> No phase (or, alternatively, active phase of Segment Comparison
-   // phase
-   void paintFrontSegment(const int color);
-   void paintBackSegment(const int color);
+    // Methods responsible for painting the borders which will act as physical
+    // representations of the cycle for leader election
+    // Red --> Segment Comparison Phase
+    // Yellow --> Coin Flipping Phase
+    // Blue --> Solitude Verification Phase
+    // Grey --> No phase (or, alternatively, active phase of Segment Comparison
+    // phase
+    void paintFrontSegment(const int color);
+    void paintBackSegment(const int color);
   };
 
- protected:
-  State state;
-  unsigned currentAgent;
-  std::vector<LeaderElectionAgent*> agents;
-  std::array<int, 18> borderColorLabels;
-  std::array<int, 6> borderPointColorLabels;
+  protected:
+   State state;
+   unsigned int currentAgent;
+   std::vector<LeaderElectionAgent*> agents;
+   std::array<int, 18> borderColorLabels;
+   std::array<int, 6> borderPointColorLabels;
 };
 
 class LeaderElectionSystem : public AmoebotSystem {
  public:
   // Constructs a system of LeaderElectionParticles with an optionally specified
-  // size (#particles), hole probability, and shape to form. holeProb in [0,1]
-  // controls how "spread out" the system is; closer to 0 is more compressed,
-  // closer to 1 is more expanded.
+  // size (#particles), and hole probability. holeProb in [0,1] controls how
+  // "spread out" the system is; closer to 0 is more compressed, closer to 1 is
+  // more expanded.
   LeaderElectionSystem(int numParticles = 100, double holeProb = 0.2);
 
   // Checks whether or not the system's run of the Leader Election algorithm has

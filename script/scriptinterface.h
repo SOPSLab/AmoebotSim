@@ -84,7 +84,6 @@ class ScriptInterface : public QObject {
   // alg/legacy/foo.h.
   void boundedobjcoating(const int numStaticParticles, const int numParticles,
                          const double holeProb = 0.2);
-  void leaderelectiondemo();
   void universalcoating(const int staticParticlesRadius = 5,
                         const int numParticles = 50,
                         const double holeProb = 0.2);

@@ -15,7 +15,6 @@ HEADERS += \
     alg/legacy/algorithm.h \
     alg/legacy/algorithmwithflags.h \
     alg/legacy/boundedobjcoating.h \
-    alg/legacy/leaderelectiondemo.h \
     alg/legacy/legacysystem.h \
     alg/legacy/legacyparticle.h \
     alg/legacy/movement.h \
@@ -54,7 +53,6 @@ SOURCES += \
     alg/demo/tokendemo.cpp \
     alg/legacy/algorithm.cpp \
     alg/legacy/boundedobjcoating.cpp \
-    alg/legacy/leaderelectiondemo.cpp \
     alg/legacy/legacyparticle.cpp \
     alg/legacy/legacysystem.cpp \
     alg/legacy/universalcoating.cpp \

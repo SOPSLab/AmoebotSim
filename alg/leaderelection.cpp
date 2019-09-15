@@ -96,16 +96,14 @@ int LeaderElectionParticle::headMarkColor() const {
   return -1;
 }
 
-int LeaderElectionParticle::headMarkDir() const {
-  return -1;
-}
-
 int LeaderElectionParticle::tailMarkColor() const {
   return headMarkColor();
 }
 
 QString LeaderElectionParticle::inspectionText() const {
   QString text;
+  QString indent = "    ";
+
   text += "head: (" + QString::number(head.x) + ", " + QString::number(head.y) +
     ")\n";
   text += "orientation: " + QString::number(orientation) + "\n";
@@ -113,40 +111,40 @@ QString LeaderElectionParticle::inspectionText() const {
   text += "state: ";
   text += [this](){
     switch(state) {
-      case State::Idle:   return "idle";
-      case State::Candidate:   return "candidate";
-      case State::SoleCandidate: return "sole candidate";
-      case State::Demoted:   return "demoted";
-      case State::Leader: return "leader";
-      case State::Finished: return "finished";
-      default:            return "no state";
+      case State::Idle:           return "idle";
+      case State::Candidate:      return "candidate";
+      case State::SoleCandidate:  return "sole candidate";
+      case State::Demoted:        return "demoted";
+      case State::Leader:         return "leader";
+      case State::Finished:       return "finished";
+      default:                    return "no state";
     }
   }();
   text += "\n";
   text += "number of agents: " + QString::number(agents.size()) + "\n";
   for (LeaderElectionAgent* agent : agents) {
-    text += [agent](){
+    text += [agent, indent](){
       switch(agent->agentState) {
-        case State::Demoted: return "    demoted\n    ";
+        case State::Demoted:        return indent + "demoted\n";
         case State::Candidate:
           switch(agent->subPhase) {
-            case LeaderElectionParticle::LeaderElectionAgent::
-            SubPhase::SegmentComparison: return "    segment comparison\n    ";
-            case LeaderElectionParticle::LeaderElectionAgent::
-            SubPhase::CoinFlipping: return "    coin flipping\n    ";
-            case LeaderElectionParticle::LeaderElectionAgent::
-            SubPhase::SolitudeVerification:
-              return "    solitude verification\n    ";
+            case LeaderElectionParticle::LeaderElectionAgent::SubPhase::
+            SegmentComparison:      return indent + "segment comparison\n";
+            case LeaderElectionParticle::LeaderElectionAgent::SubPhase::
+            CoinFlipping:           return indent + "coin flipping\n";
+            case LeaderElectionParticle::LeaderElectionAgent::SubPhase::
+            SolitudeVerification:   return indent + "solitude verification\n";
           }
-        case State::SoleCandidate: return "    sole candidate\n    ";
-        default: return "invalid\n";
+        case State::SoleCandidate:  return indent + "sole candidate\n";
+        default: return indent + "invalid\n";
       }
     }();
-    text += "    agent dir: " + QString::number(agent->agentDir) + "\n    ";
-    text += "    next agent dir: " + QString::number(agent->nextAgentDir) +
-        "\n    ";
-    text += "    prev agent dir: " + QString::number(agent->prevAgentDir) +
+    text += indent + indent + "agent dir: " + QString::number(agent->agentDir) +
         "\n";
+    text += indent + indent + "next agent dir: " +
+        QString::number(agent->nextAgentDir) + "\n";
+    text += indent + indent + "prev agent dir: " +
+        QString::number(agent->prevAgentDir) + "\n";
   }
   text += "has leader election tokens: " +
       QString::number(hasToken<LeaderElectionToken>()) + "\n";
@@ -194,6 +192,7 @@ int LeaderElectionParticle::getNextAgentDir(const int agentDir) const {
 
 int LeaderElectionParticle::getPrevAgentDir(const int agentDir) const {
   Q_ASSERT(!hasNbrAtLabel(agentDir));
+
   for (int dir = 1; dir < 6; dir++) {
     if (hasNbrAtLabel((agentDir + dir) % 6)) {
       return (agentDir + dir) % 6;
@@ -213,6 +212,7 @@ int LeaderElectionParticle::getNumberOfNbrs() const {
   }
   return count;
 }
+
 //----------------------------END PARTICLE CODE----------------------------
 
 //----------------------------BEGIN AGENT CODE----------------------------
@@ -223,8 +223,7 @@ LeaderElectionParticle::LeaderElectionAgent::LeaderElectionAgent() :
   nextAgentDir(-1),
   prevAgentDir(-1),
   agentState(State::Idle),
-  candidateParticle(nullptr)
-{}
+  candidateParticle(nullptr) {}
 
 void LeaderElectionParticle::LeaderElectionAgent::activate() {
   passTokensDir = randInt(0, 2);

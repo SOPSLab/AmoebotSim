@@ -7,7 +7,6 @@
 #include "alg/demo/pulldemo.h"
 #include "alg/demo/tokendemo.h"
 #include "alg/legacy/boundedobjcoating.h"
-#include "alg/legacy/leaderelectiondemo.h"
 #include "alg/legacy/legacysystem.h"
 #include "alg/legacy/universalcoating.h"
 #include "alg/compression.h"
@@ -239,10 +238,6 @@ void ScriptInterface::boundedobjcoating(const int numStaticParticles,
     sim.setSystem(BoundedObjCoating::BoundedObjCoating::instance(
         numStaticParticles, numParticles, holeProb));
   }
-}
-
-void ScriptInterface::leaderelectiondemo() {
-  sim.setSystem(LeaderElectionDemo::LeaderElectionDemo::instance());
 }
 
 void ScriptInterface::universalcoating(const int staticParticlesRadius,
