@@ -92,9 +92,7 @@ AlgorithmList::AlgorithmList() {
   // Leader Election.
   _algorithms.push_back(new Algorithm("Leader Election", "leaderelection"));
   _algorithms.back()->addParameter("# Particles", "100");
-
-  // Leader Election Demo.
-  _algorithms.push_back(new Algorithm("Leader Election Demo", "leaderelectiondemo"));
+  _algorithms.back()->addParameter("Hole Prob.", "0.2");
 
   // Universal Coating.
   _algorithms.push_back(new Algorithm("Universal Coating", "universalcoating"));

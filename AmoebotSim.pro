@@ -15,8 +15,6 @@ HEADERS += \
     alg/legacy/algorithm.h \
     alg/legacy/algorithmwithflags.h \
     alg/legacy/boundedobjcoating.h \
-    alg/legacy/leaderelection.h \
-    alg/legacy/leaderelectiondemo.h \
     alg/legacy/legacysystem.h \
     alg/legacy/legacyparticle.h \
     alg/legacy/movement.h \
@@ -46,7 +44,8 @@ HEADERS += \
     ui/glitem.h \
     ui/parameterlistmodel.h \
     ui/view.h \
-    ui/visitem.h
+    ui/visitem.h \
+    alg/leaderelection.h
 
 SOURCES += \
     alg/demo/discodemo.cpp \
@@ -54,8 +53,6 @@ SOURCES += \
     alg/demo/tokendemo.cpp \
     alg/legacy/algorithm.cpp \
     alg/legacy/boundedobjcoating.cpp \
-    alg/legacy/leaderelection.cpp \
-    alg/legacy/leaderelectiondemo.cpp \
     alg/legacy/legacyparticle.cpp \
     alg/legacy/legacysystem.cpp \
     alg/legacy/universalcoating.cpp \
@@ -80,7 +77,8 @@ SOURCES += \
     ui/glitem.cpp \
     ui/parameterlistmodel.cpp \
     ui/view.cpp \
-    ui/visitem.cpp
+    ui/visitem.cpp \
+    alg/leaderelection.cpp
 
 RESOURCES += \
     res/inputs.qrc \
