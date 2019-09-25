@@ -9,6 +9,7 @@
 // mode == "s" --> square formation
 // mode == "t1" --> vertex triangle formation
 // mode == "t2" --> center triangle formation
+// mode == "l" --> line formation
 
 #ifndef AMOEBOTSIM_ALG_SHAPEFORMATION_H
 #define AMOEBOTSIM_ALG_SHAPEFORMATION_H
@@ -110,6 +111,7 @@ class ShapeFormationSystem : public AmoebotSystem  {
   //   "s"  --> square
   //   "t1" --> vertex triangle
   //   "t2" --> center triangle
+  //   "l"  --> line  ***
   ShapeFormationSystem(int numParticles = 200, double holeProb = 0.2,
                        QString mode = "h");
 

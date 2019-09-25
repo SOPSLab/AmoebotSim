@@ -6,15 +6,16 @@
 #ifndef AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H
 #define AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H
 
-#include "alg/line.h"
+#include "alg/shapeformation.h"
 
-class TokenDemoParticle : public LineParticle {
+class TokenDemoParticle : public ShapeFormationParticle {
  public:
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
   // for its local compass, a system which it belongs to, and an initial state.
   TokenDemoParticle(const Node head, const int globalTailDir,
-                    const int orientation, AmoebotSystem& system, State state);
+                    const int orientation, AmoebotSystem& system, State state,
+                    const QString mode, int turnSignal);
 
   // Executes one particle activation.
   virtual void activate();
