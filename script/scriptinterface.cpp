@@ -11,6 +11,7 @@
 #include "alg/demo/pulldemo.h"
 #include "alg/demo/tokendemo.h"
 #include "alg/compression.h"
+#include "alg/improvedleaderelection.h"
 #include "alg/infobjcoating.h"
 #include "alg/leaderelection.h"
 #include "alg/shapeformation.h"
@@ -152,6 +153,18 @@ void ScriptInterface::compression(const int numParticles, const double lambda) {
     log("# particles must be > 0", true);
   } else {
     sim.setSystem(std::make_shared<CompressionSystem>(numParticles, lambda));
+  }
+}
+
+void ScriptInterface::improvedleaderelection(const int numParticles,
+                                             const double holeProb) {
+  if (numParticles <= 0) {
+    log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    log("holeProb in [0,1] required", true);
+  } else {
+    sim.setSystem(std::make_shared<ImprovedLeaderElectionSystem>(numParticles,
+                                                        holeProb));
   }
 }
 

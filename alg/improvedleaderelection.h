@@ -8,6 +8,19 @@
 // Segment Comparison subphase); however, the centralized algorithm described in
 // the paper (which this distributed implementation is based on) is correct.
 
+/**
+  TODO:
+  1) Check whether or not the template class is really necessary --> I think
+  I could definitely replace it with just a general Token class decl since
+  all of my tokens technically inherit from it
+  2) Randomly assign colors to agents + delimiter tokens when they enter
+  identifier comparison --> going to have to store this somewhere locally in
+  the agent 'cause it might alternate between solitude verification and
+  identifier comparison
+  3) Identifier comparison is messed up somewhere, somehow (and the coloring
+  scheme also seems to be incorrect
+  */
+
 #ifndef AMOEBOTSIM_ALG_IMPROVEDLEADERELECTION_H
 #define AMOEBOTSIM_ALG_IMPROVEDLEADERELECTION_H
 
@@ -16,6 +29,7 @@
 
 #include <set>
 #include <QString>
+#include <QDebug>
 
 class LeaderElectionParticle : public AmoebotParticle {
  public:
@@ -82,14 +96,30 @@ class LeaderElectionParticle : public AmoebotParticle {
    int origin;
   };
 
-  // Token for Identifier Setup
+  // Tokens for Identifier Setup
   struct SetUpToken : public LeaderElectionToken {
-    bool initialize = true;
-    int reverseValue = -1;
-    SetUpToken(int origin = -1, bool initialize = true, int reverseVal = -1) {
+    int comparisonColor = -1;
+    SetUpToken(int comparisonColor = -1, int origin = -1) {
+      this->comparisonColor = comparisonColor;
       this->origin = origin;
-      this->initialize = initialize;
-      this->reverseValue = reverseVal;
+    }
+  };
+
+  struct NextIDPassToken : public LeaderElectionToken {
+    int val = -1;
+    int comparisonColor = -1;
+    NextIDPassToken(int origin = -1, int val = -1, int comparisonColor = -1) {
+      this->origin = origin;
+      this->val = val;
+      this->comparisonColor = comparisonColor;
+    }
+  };
+
+  struct PrevIDPassToken : public LeaderElectionToken {
+    int val = -1;
+    PrevIDPassToken(int origin = -1, int val = -1) {
+      this->origin = origin;
+      this->val = val;
     }
   };
 
@@ -104,16 +134,21 @@ class LeaderElectionParticle : public AmoebotParticle {
     }
   };
 
+  // -1 --> Lesser
+  // 0 --> Equal
+  // 1 --> Greater
   struct DelimiterToken : public LeaderElectionToken {
-    int value = -1;
+    int value = 0;
     bool isActive = false;
-    bool isGreater = false;
-    DelimiterToken(int origin = -1, int value = -1, bool isActive = false,
-                   bool isGreater = false) {
+    int compare = -1;
+    int comparisonColor = -1;
+    DelimiterToken(int origin = -1, int comparisonColor = -1,
+                   int value = -1, bool isActive = false, int compare = 0) {
       this->origin = origin;
+      this->comparisonColor = comparisonColor;
       this->value = value;
       this->isActive = isActive;
-      this->isGreater = isGreater;
+      this->compare = compare;
     }
   };
 
@@ -170,7 +205,7 @@ class LeaderElectionParticle : public AmoebotParticle {
     }
   };
  private:
-  friend class LeaderElectionSystem;
+  friend class ImprovedLeaderElectionSystem;
 
   // The nested class LeaderElectionAgent is used to define the behavior for the
   // agents as described in the paper
@@ -220,6 +255,7 @@ class LeaderElectionParticle : public AmoebotParticle {
    // 1 --> greaterThan
    int compareStatus = -1;
    int idValue = -1;
+   int comparisonColor = randInt(0, 16777216);
 
    // Variables for Solitude Verification
    // createdLead is a boolean which determines whether or not the current agent
@@ -240,11 +276,12 @@ class LeaderElectionParticle : public AmoebotParticle {
    // boundary it is on.
    bool testingBorder = false;
 
-   bool canPassComparisonToken() const;
-
    // The activate function is the LeaderElectionAgent equivalent of an
    // Amoebot Particle's activate function
    void activate();
+
+   void cleanAllTokens();
+   bool canPassComparisonToken(bool isDelimiter) const;
 
    // Solitude Verification Methods
    // augmentDirVector takes a <int, int> pair as a parameter, which represents
@@ -327,13 +364,13 @@ class LeaderElectionParticle : public AmoebotParticle {
   std::array<int, 6> borderPointColorLabels;
 };
 
-class LeaderElectionSystem : public AmoebotSystem {
+class ImprovedLeaderElectionSystem : public AmoebotSystem {
  public:
   // Constructs a system of LeaderElectionParticles with an optionally specified
   // size (#particles), hole probability, and shape to form. holeProb in [0,1]
   // controls how "spread out" the system is; closer to 0 is more compressed,
   // closer to 1 is more expanded.
-  LeaderElectionSystem(int numParticles = 100, double holeProb = 0.2);
+  ImprovedLeaderElectionSystem(int numParticles = 100, double holeProb = 0.2);
 
   // Checks whether or not the system's run of the Leader Election algorithm has
   // terminated (all particles in state Finished or Leader).

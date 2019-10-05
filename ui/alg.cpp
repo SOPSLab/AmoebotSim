@@ -69,6 +69,11 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back()->addParameter("# Particles", "100");
   _algorithms.back()->addParameter("Lambda", "4.0");
 
+  // Improved Leader Election.
+  _algorithms.push_back(new Algorithm("Improved Leader Election", "improvedleaderelection"));
+  _algorithms.back()->addParameter("# Particles", "100");
+  _algorithms.back()->addParameter("Hole Prob.", "0.2");
+
   // Infinite Object Coating.
   _algorithms.push_back(new Algorithm("Infinite Object Coating", "infobjcoating"));
   _algorithms.back()->addParameter("# Particles", "100");
