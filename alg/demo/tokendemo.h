@@ -15,7 +15,7 @@ class TokenDemoParticle : public ShapeFormationParticle {
   // for its local compass, a system which it belongs to, and an initial state.
   TokenDemoParticle(const Node head, const int globalTailDir,
                     const int orientation, AmoebotSystem& system, State state,
-                    const QString mode, int turnSignal);
+                    const QString mode);
 
   // Executes one particle activation.
   virtual void activate();

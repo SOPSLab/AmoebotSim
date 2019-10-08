@@ -9,12 +9,10 @@ ShapeFormationParticle::ShapeFormationParticle(const Node head,
                                                const int globalTailDir,
                                                const int orientation,
                                                AmoebotSystem& system,
-                                               State state, const QString mode,
-                                               int turnSignal)
+                                               State state, const QString mode)
   : AmoebotParticle(head, globalTailDir, orientation, system),
     state(state),
     mode(mode),
-    turnSignal(turnSignal),
     constructionDir(-1),
     moveDir(-1),
     followDir(-1) {
@@ -309,8 +307,7 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, double holeProb,
 
   // Insert the seed at (0,0).
   insert(new ShapeFormationParticle(Node(0, 0), -1, randDir(), *this,
-                                    ShapeFormationParticle::State::Seed, mode,
-                                    0));
+                                    ShapeFormationParticle::State::Seed, mode));
   std::set<Node> occupied;
   occupied.insert(Node(0, 0));
 
@@ -341,7 +338,7 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, double holeProb,
     if (randBool(1.0 - holeProb)) {
       insert(new ShapeFormationParticle(randomCandidate, -1, randDir(), *this,
                                         ShapeFormationParticle::State::Idle,
-                                        mode, 0));
+                                        mode));
       ++numNonStaticParticles;
 
       // Add new candidates.

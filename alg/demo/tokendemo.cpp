@@ -4,8 +4,10 @@
 
 TokenDemoParticle::TokenDemoParticle(const Node head, const int globalTailDir,
                                      const int orientation,
-                                     AmoebotSystem& system, State state, const QString mode, int turnSignal)
-  : ShapeFormationParticle(head, globalTailDir, orientation, system, state, mode, turnSignal) {
+                                     AmoebotSystem& system, State state,
+                                     const QString mode)
+  : ShapeFormationParticle(head, globalTailDir, orientation, system, state,
+                           mode) {
   // Initialize the seed particle to hold three red tokens and two blue.
   if (state == State::Seed) {
     putToken(std::make_shared<RedToken>());
@@ -65,7 +67,7 @@ TokenDemoSystem::TokenDemoSystem(int numParticles, double holeProb) {
 
   // Insert the seed at (0, 0).
   insert(new TokenDemoParticle(Node(0, 0), -1, randDir(), *this,
-                               ShapeFormationParticle::State::Seed, "l", 0));
+                               ShapeFormationParticle::State::Seed, "l"));
 
   std::set<Node> occupied;
   occupied.insert(Node(0, 0));
@@ -96,7 +98,7 @@ TokenDemoSystem::TokenDemoSystem(int numParticles, double holeProb) {
     // Add this candidate as a particle if not a hole.
     if (randBool(1.0 - holeProb)) {
       insert(new TokenDemoParticle(randomCandidate, -1, randDir(), *this,
-                                   ShapeFormationParticle::State::Idle, "l", 0));
+                                   ShapeFormationParticle::State::Idle, "l"));
       numNonStaticParticles++;
 
       // Add new candidates.

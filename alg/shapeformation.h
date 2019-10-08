@@ -37,7 +37,7 @@ class ShapeFormationParticle : public AmoebotParticle {
   // and square construction), and a string to determine what shape to form.
   ShapeFormationParticle(const Node head, const int globalTailDir,
                          const int orientation, AmoebotSystem& system,
-                         State state, const QString mode, int turnSignal);
+                         State state, const QString mode);
 
   // Executes one particle activation.
   virtual void activate();
@@ -92,7 +92,7 @@ class ShapeFormationParticle : public AmoebotParticle {
  protected:
   State state;
   QString mode;
-  int turnSignal;
+  int turnSignal = 0;
   int constructionDir;
   int moveDir;
   int followDir;
@@ -111,7 +111,7 @@ class ShapeFormationSystem : public AmoebotSystem  {
   //   "s"  --> square
   //   "t1" --> vertex triangle
   //   "t2" --> center triangle
-  //   "l"  --> line  ***
+  //   "l"  --> line
   ShapeFormationSystem(int numParticles = 200, double holeProb = 0.2,
                        QString mode = "h");
 
