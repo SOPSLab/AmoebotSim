@@ -12,7 +12,9 @@ class TokenDemoParticle : public ShapeFormationParticle {
  public:
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
-  // for its local compass, a system which it belongs to, and an initial state.
+  // for its local compass, a system which it belongs to, an initial state, and
+  // a string to determine its shape formation mode ("l" for line formation,
+  // etc.).
   TokenDemoParticle(const Node head, const int globalTailDir,
                     const int orientation, AmoebotSystem& system, State state,
                     const QString mode);
