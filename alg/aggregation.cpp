@@ -13,13 +13,35 @@ AggregateParticle::AggregateParticle(const Node head, const int globalTailDir,
 
 void AggregateParticle::activate() {
   bool particleInSight = checkIfParticleInSight();
+  int probNum = 0;
+  // Using probabilities, a small amount of noise is added here:
+  // If a particle is in sight, rotate in place 98.5% of the time. The other
+  // 1.5% of times, move around the center of rotation.
   if (particleInSight) {
-    center = (center + 5) % 6;
-  } else {
-    int moveDir = (center + 1) % 6;
-    if (!hasNbrAtLabel(moveDir)) {
-      expand(moveDir);
-      contractTail();
+    probNum = randInt(0, 1000);
+    if (probNum < 985) {
+      center = (center + 5) % 6;
+    } else {
+      int moveDir = (center + 1) % 6;
+      if (!hasNbrAtLabel(moveDir)) {
+        expand(moveDir);
+        contractTail();
+        center = (center + 5) % 6;
+      }
+    }
+  }
+  // If a particle is not in sight, move around the center of rotation 98.5% of
+  // the time. The other 1.5% of times, rotate in place.
+  else {
+    probNum = randInt(0, 1000);
+    if (probNum < 985){
+      int moveDir = (center + 1) % 6;
+      if (!hasNbrAtLabel(moveDir)) {
+        expand(moveDir);
+        contractTail();
+        center = (center + 5) % 6;
+      }
+    } else {
       center = (center + 5) % 6;
     }
   }
