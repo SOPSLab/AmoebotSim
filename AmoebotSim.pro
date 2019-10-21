@@ -18,6 +18,7 @@ HEADERS += \
     core/amoebotparticle.h \
     core/amoebotsystem.h \
     core/localparticle.h \
+    core/metric.h \
     core/node.h \
     core/object.h \
     core/particle.h \
