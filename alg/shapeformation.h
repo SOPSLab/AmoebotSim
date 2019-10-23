@@ -3,8 +3,8 @@
 // Formation Problems in Self-Organizing Particle Systems'
 // [arxiv.org/abs/1504.00744].
 //
-// Run with shapeformation(#particles, hole probability, mode)
-// on the simulator command line.
+// Run with shapeformation(#particles, hole probability, mode) on the simulator
+// command line.
 // mode == "h" --> hexagon formation
 // mode == "s" --> square formation
 // mode == "t1" --> vertex triangle formation
@@ -32,9 +32,8 @@ class ShapeFormationParticle : public AmoebotParticle {
 
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
-  // for its local compass, a system which it belongs to, an initial state, a
-  // signal for determining turning directions (currently for vertex triangle
-  // and square construction), and a string to determine what shape to form.
+  // for its local compass, a system which it belongs to, an initial state, and
+  // a string to determine what shape to form.
   ShapeFormationParticle(const Node head, const int globalTailDir,
                          const int orientation, AmoebotSystem& system,
                          State state, const QString mode);
@@ -92,7 +91,7 @@ class ShapeFormationParticle : public AmoebotParticle {
  protected:
   State state;
   QString mode;
-  int turnSignal = 0;
+  int turnSignal;
   int constructionDir;
   int moveDir;
   int followDir;
