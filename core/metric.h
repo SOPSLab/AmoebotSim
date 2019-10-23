@@ -26,4 +26,13 @@ class Metric {
   std::vector<double> history;
 };
 
+class Rounds : Metric {
+
+
+};
+
+class Movements : Metric {
+
+};
+
 #endif // AMOEBOTSIM_SIM_METRIC_H
