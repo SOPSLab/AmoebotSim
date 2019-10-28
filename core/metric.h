@@ -4,16 +4,16 @@
 #ifndef AMOEBOTSIM_SIM_METRIC_H
 #define AMOEBOTSIM_SIM_METRIC_H
 
+#include <string>
 #include <vector>
-
-#include "core/amoebotsystem.h"
 
 class Measure {
  public:
 
   // Default constructor and deconstructor for the measure class.
-  Measure();
-  virtual ~Measure();
+  Measure() {}
+  virtual ~Measure() {}
+  class AmoebotSystem;
 
   // Virtual function to be overwritten to calculate the desired metric.
   virtual void calculate(AmoebotSystem system) = 0;
@@ -30,11 +30,11 @@ class Count {
   public:
 
     // Default constructor and deconstructor for the count class.
-    Count();
-    virtual ~Count();
+    Count() {}
+    virtual ~Count() {}
 
     // Virtual function to be overwritten to calculate the desired metric upon call
-    virtual void registerCount(AmoebotSystem System) = 0;
+    virtual void record() = 0;
 
     // The name will hold the actual property which will be observed in this metric
     // Value will represent the most latest occurrence of the metric

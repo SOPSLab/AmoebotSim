@@ -15,6 +15,7 @@
 
 #include "core/object.h"
 #include "core/system.h"
+#include "core/metric.h"
 #include "helper/randomnumbergenerator.h"
 
 // AmoebotParticle must be forward declared to avoid a cyclic dependency.
@@ -57,8 +58,8 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   // particles. numRounds returns the number of completed asynchronous rounds;
   // recall that an asynchronous round is complete when each particle has been
   // activated at least once.
-  unsigned int numMovements() const final;
-  unsigned int numRounds() const final;
+  unsigned int numMovements();
+  unsigned int numRounds();
 
   // Inserts a particle or a object, respectively, into the system. A particle can be contracted or
   // expanded. Fails if the respective node(s) are already occupied.
@@ -77,15 +78,54 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   void registerMovement(unsigned int num = 1);
   void registerActivation(AmoebotParticle* particle);
 
+  std::map<std::string, Count*> counts;
+  std::map<std::string, Measure*> measures;
+
  protected:
   std::vector<AmoebotParticle*> particles;
   std::map<Node, AmoebotParticle*> particleMap;
   std::set<AmoebotParticle*> activatedParticles;
   std::deque<Object*> objects;
   std::map<Node, Object*> objectMap;
+};
 
-  unsigned int _numMovements;
-  unsigned int _numRounds;
+class ActivationCount : public Count {
+public:
+  ActivationCount() {
+    value = 0;
+    name = "activation";
+  }
+  ~ActivationCount() {}
+  void record() {
+    value++;
+  }
+};
+
+class RoundCount : public Count {
+public:
+  RoundCount() {
+    value = 0;
+    name = "round";
+  }
+  ~RoundCount() {}
+  void record() {
+    value++;
+  }
+};
+
+class MoveCount : public Count {
+public:
+  MoveCount() {
+    value = 0;
+    name = "moves";
+  }
+  ~MoveCount() {}
+  void record() {
+    value++;
+  }
 };
 
 #endif  // AMOEBOTSIM_CORE_AMOEBOTSYSTEM_H_
+
+
+

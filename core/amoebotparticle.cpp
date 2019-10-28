@@ -47,7 +47,7 @@ void AmoebotParticle::expand(int label) {
   globalTailDir = (globalExpansionDir + 3) % 6;
   system.particleMap[head] = this;
 
-  system.registerMovement();
+  system.counts["move"]->record();
 }
 
 bool AmoebotParticle::canPush(int label) const {
@@ -73,7 +73,9 @@ void AmoebotParticle::push(int label) {
   }
   neighbor.globalTailDir = -1;
 
-  system.registerMovement(2);
+  system.counts["move"]->record();
+  system.counts["move"]->record();
+
   system.registerActivation(&neighbor);
 }
 
@@ -91,7 +93,7 @@ void AmoebotParticle::contractHead() {
   head = tail();
   globalTailDir = -1;
 
-  system.registerMovement();
+  system.counts["move"]->record();
 }
 
 void AmoebotParticle::contractTail() {
@@ -100,7 +102,7 @@ void AmoebotParticle::contractTail() {
   system.particleMap.erase(tail());
   globalTailDir = -1;
 
-  system.registerMovement();
+  system.counts["move"]->record();
 }
 
 bool AmoebotParticle::canPull(int label) const {
@@ -126,7 +128,9 @@ void AmoebotParticle::pull(int label) {
   neighbor.globalTailDir = globalPullDir;
   system.particleMap[handoverNode] = &neighbor;
 
-  system.registerMovement(2);
+  system.counts["move"]->record();
+  system.counts["move"]->record();
+
   system.registerActivation(&neighbor);
 }
 

@@ -7,22 +7,23 @@
 #include <QtGlobal>
 
 #include "core/amoebotparticle.h"
+#include <map>
+#include <iostream>
 
-AmoebotSystem::AmoebotSystem()
-  : _numMovements(0),
-    _numRounds(0) {}
+AmoebotSystem::AmoebotSystem() {
+  counts["round"] = new RoundCount();
+  counts["activation"] = new ActivationCount();
+  counts["move"] = new MoveCount();
+}
 
 AmoebotSystem::~AmoebotSystem() {
   for (auto p : particles) {
     delete p;
   }
-
   particles.clear();
-
   for (auto t : objects) {
     delete t;
   }
-
   objects.clear();
 }
 
@@ -56,12 +57,13 @@ const std::deque<Object*>& AmoebotSystem::getObjects() const {
     return objects;
 }
 
-unsigned int AmoebotSystem::numMovements() const {
-  return _numMovements;
+
+unsigned int AmoebotSystem::numMovements() {
+ return counts["move"]->value;
 }
 
-unsigned int AmoebotSystem::numRounds() const {
-  return _numRounds;
+unsigned int AmoebotSystem::numRounds() {
+ return counts["round"]->value;
 }
 
 void AmoebotSystem::insert(AmoebotParticle* particle) {
@@ -85,14 +87,18 @@ void AmoebotSystem::insert(Object* object) {
   objectMap[object->_node] = object;
 }
 
-void AmoebotSystem::registerMovement(unsigned int num) {
-  _numMovements += num;
-}
-
 void AmoebotSystem::registerActivation(AmoebotParticle* particle) {
+  counts["activation"]->record();
   activatedParticles.insert(particle);
   if(activatedParticles.size() == particles.size()) {
-    _numRounds++;
+    counts["round"]->record();
+    int roundNum = counts["round"]->value;
+    for(auto const& c : counts){
+      std::cout << c.second->name << " " << c.second->value << std::endl;
+      c.second->history.push_back(c.second->value);
+      c.second->value = 0;
+    }
+    counts["round"]->value = roundNum;
     activatedParticles.clear();
   }
 }
