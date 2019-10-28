@@ -18,9 +18,29 @@ LeaderElectionParticle::LeaderElectionParticle(const Node head,
     currentAgent(0) {
   borderColorLabels.fill(-1);
   borderPointColorLabels.fill(-1);
+  leaderSelected = false;
 }
 
 void LeaderElectionParticle::activate() {
+  if (leaderSelected) {
+    if (state != State::Finished && state != State::Leader) {
+      for (unsigned i = 0; i < agents.size(); i++) {
+        LeaderElectionAgent* agent = agents.at(i);
+        agent->agentState = State::Finished;
+        agent->setStateColor();
+        agent->cleanAllTokens();
+        agent->paintBackSegment(-1);
+        agent->paintFrontSegment(-1);
+      }
+      state = State::Finished;
+    }
+    for (int i = 0; i < 6; i++) {
+      if (hasNbrAtLabel(i)) {
+        nbrAtLabel(i).leaderSelected = true;
+      }
+    }
+  }
+
   if (state == State::Idle) {
     // Determine the number of neighbors of the current particle.
     // If there are no neighbors, then that means the particle is the only
@@ -90,6 +110,19 @@ void LeaderElectionParticle::activate() {
       agent->paintBackSegment(-1);
       agent->paintFrontSegment(-1);
     }
+  } else if (state == State::Leader) {
+    for (int i = 0; i < 6; i++) {
+      if (hasNbrAtLabel(i)) {
+        nbrAtLabel(i).leaderSelected = true;
+      }
+    }
+    leaderSelected = true;
+    for (unsigned i = 0; i < agents.size(); i++) {
+      LeaderElectionAgent* agent = agents.at(i);
+      agent->cleanAllTokens();
+      agent->paintBackSegment(-1);
+      agent->paintFrontSegment(-1);
+    }
   }
 
   return;
@@ -103,16 +136,13 @@ int LeaderElectionParticle::headMarkColor() const {
   return -1;
 }
 
-int LeaderElectionParticle::headMarkDir() const {
-  return -1;
-}
-
 int LeaderElectionParticle::tailMarkColor() const {
   return headMarkColor();
 }
 
 QString LeaderElectionParticle::inspectionText() const {
   QString text;
+  QString indent = "    ";
   text += "head: (" + QString::number(head.x) + ", " + QString::number(head.y) +
     ")\n";
   text += "orientation: " + QString::number(orientation) + "\n";
@@ -134,42 +164,48 @@ QString LeaderElectionParticle::inspectionText() const {
   for (LeaderElectionAgent* agent : agents) {
     int nextAgentDir = agent->nextAgentDir;
     int prevAgentDir = agent->prevAgentDir;
-    text += [agent](){
+    text += [agent, indent](){
       switch(agent->agentState) {
-        case State::Demoted: return "    demoted\n    ";
+        case State::Demoted: return indent + "demoted\n";
         case State::Candidate:
           switch(agent->subPhase) {
             case LeaderElectionParticle::LeaderElectionAgent::
-            SubPhase::SegmentSetup: return "    segment setup\n    ";
+            SubPhase::SegmentSetup: return indent + "segment setup\n";
             case LeaderElectionParticle::LeaderElectionAgent::
-            SubPhase::IdentifierSetup: return "    identifier setup\n    ";
+            SubPhase::IdentifierSetup: return indent + "identifier setup\n";
             case LeaderElectionParticle::LeaderElectionAgent::
             SubPhase::IdentifierComparison:
-              return "    identifer comparison\n    ";
+              return indent + "identifer comparison\n";
             case LeaderElectionParticle::LeaderElectionAgent::
             SubPhase::SolitudeVerification:
-              return "    solitude verification\n    ";
+              return indent + "solitude verification\n";
           }
-        case State::SoleCandidate: return "    sole candidate\n    ";
-        default: return "invalid\n";
+        case State::SoleCandidate: return indent + "sole candidate\n";
+        default: return indent + "invalid\n";
       }
     }();
-    text += "    agent dir: " + QString::number(agent->agentDir) + "\n    ";
-    text += "    next agent dir: " + QString::number(nextAgentDir) + "\n    ";
-    text += "    prev agent dir: " + QString::number(prevAgentDir) + "\n    ";
-    text += "    number of digit tokens: " +
+    text += indent + indent + "agent dir: " + QString::number(agent->agentDir) +
+        "\n";
+    text += indent + indent + "next agent dir: " +
+        QString::number(nextAgentDir) + "\n";
+    text += indent + indent + "prev agent dir: " +
+        QString::number(prevAgentDir) + "\n";
+    text += indent + indent + "number of digit tokens: " +
         QString::number(agent->countAgentTokens<DigitToken>(nextAgentDir)) +
-        "\n    ";
-    text += "    number of delimiter tokens: " +
+        "\n";
+    text += indent + indent + "number of delimiter tokens: " +
         QString::number(agent->countAgentTokens<DelimiterToken>(nextAgentDir)) +
-        "\n    ";
-    text += "    has generated reverse tokens: " +
-        QString::number(agent->hasGeneratedReverseToken) + "\n    ";
-    text += "    number of setup tokens: " +
+        "\n";
+    text += indent + indent + "has generated reverse tokens: " +
+        QString::number(agent->hasGeneratedReverseToken) + "\n";
+    text += indent + indent + "number of setup tokens: " +
         QString::number(agent->countAgentTokens<SetUpToken>(nextAgentDir) +
                         agent->countAgentTokens<SetUpToken>(prevAgentDir)) +
-        "\n    ";
-    text += "    id value: " + QString::number(agent->idValue) + "\n";
+        "\n";
+    text += indent + indent + "id value: " + QString::number(agent->idValue) +
+        "\n";
+    text += indent + indent + "compare status: " +
+        QString::number(agent->compareStatus) + "\n";
   }
   text += "has leader election tokens: " +
       QString::number(hasToken<LeaderElectionToken>()) + "\n";
@@ -183,6 +219,7 @@ QString LeaderElectionParticle::inspectionText() const {
       " positive y tokens\n";
   text += "has " + QString::number(countTokens<SolitudeNegativeYToken>()) +
       " negative y tokens\n";
+  text += "leader has been selected: " + QString::number(leaderSelected) + "\n";
   text += "\n";
 
   return text;
@@ -473,6 +510,8 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
 
     if (hasAgentToken<PrevIDPassToken>(nextAgentDir) &&
         !hasGeneratedReverseToken) {
+      Q_ASSERT(!demotedFromComparison);
+
       if (prev != nullptr && prev->hasGeneratedReverseToken) {
         if (next != nullptr && next->hasGeneratedReverseToken) {
           takeAgentToken<PrevIDPassToken>(nextAgentDir);
@@ -497,9 +536,7 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
       } else if (passTokensDir == 1 && prev != nullptr) {
         std::shared_ptr<PrevIDPassToken> token =
             takeAgentToken<PrevIDPassToken>(nextAgentDir);
-        if (next != nullptr && (next->agentState == State::Candidate ||
-                                next->hasGeneratedReverseToken ||
-                                next->demotedFromComparison)) {
+        if (token->val == -1) {
           token->val = idValue;
         }
         passAgentToken<PrevIDPassToken>(prevAgentDir, token);
@@ -570,6 +607,7 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
           int color =
               peekAgentToken<DelimiterToken>(nextAgentDir)->comparisonColor;
           peekAgentToken<DelimiterToken>(nextAgentDir)->isActive = true;
+          peekAgentToken<DelimiterToken>(nextAgentDir)->compare = 0;
           passAgentToken<DelimiterToken>(prevAgentDir,
                                         takeAgentToken<DelimiterToken>
                                         (nextAgentDir));
@@ -584,7 +622,9 @@ void LeaderElectionParticle::LeaderElectionAgent::activate() {
           isActive = false;
           peekAgentToken<DelimiterToken>(nextAgentDir)->isActive = false;
         }
-        peekAgentToken<DelimiterToken>(nextAgentDir)->compare = compareStatus;
+        if (compareStatus != 0) {
+          peekAgentToken<DelimiterToken>(nextAgentDir)->compare = compareStatus;
+        }
         if (canPassComparisonToken(true)) {
           int color =
               peekAgentToken<DelimiterToken>(nextAgentDir)->comparisonColor;
@@ -1015,7 +1055,7 @@ void LeaderElectionParticle::LeaderElectionAgent::setStateColor() {
       candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x00ff00;
       break;
     case State::Leader:
-      candidateParticle->borderPointColorLabels.at(globalizedDir) = 0x00ff00;
+      candidateParticle->borderPointColorLabels.at(globalizedDir) = -1;
       break;
     case State::Finished:
       candidateParticle->borderPointColorLabels.at(globalizedDir) = -1;

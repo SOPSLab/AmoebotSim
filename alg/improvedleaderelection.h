@@ -1,25 +1,17 @@
-// Defines the particle system and composing particles for the General
-// Leader Election Algorithm as alluded to in 'Leader Election and Shape
-// Formation with Self-Organizing Programmable Matter'
-// [https://arxiv.org/abs/1503.07991].
+// Defines the particle system and composing particles for the Improved
+// Leader Election Algorithm as alluded to in 'Improved Leader Election for
+// Self-Organizing Programmable Matter'
+// [https://arxiv.org/abs/1701.03616].
 //
-// Please note that this distributed implementation of the algorithm described
-// in the above paper has a chance of not working (which is related to the
-// Segment Comparison subphase); however, the centralized algorithm described in
-// the paper (which this distributed implementation is based on) is correct.
-
-/**
-  TODO:
-  1) Check whether or not the template class is really necessary --> I think
-  I could definitely replace it with just a general Token class decl since
-  all of my tokens technically inherit from it
-  2) Randomly assign colors to agents + delimiter tokens when they enter
-  identifier comparison --> going to have to store this somewhere locally in
-  the agent 'cause it might alternate between solitude verification and
-  identifier comparison
-  3) Identifier comparison is messed up somewhere, somehow (and the coloring
-  scheme also seems to be incorrect
-  */
+// A side remark about the algorithm is about an additional condition that may
+// cause the algorithm to fail to elect a leader (apart from the probability
+// that all agents elect to demote themselves in the Segment Setup phase):
+// In the Segment Setup phase, if the agents determine their agent states in
+// such a way that each candidate agent is either 1 demoted agent away from
+// one another, or directly next to each other, the algorithm will not progress
+// beyond the Identifier Comparison phase and fail to elect a leader. This may
+// be observed in cycles of smaller lengths (such as ones in the inner
+// boundary).
 
 #ifndef AMOEBOTSIM_ALG_IMPROVEDLEADERELECTION_H
 #define AMOEBOTSIM_ALG_IMPROVEDLEADERELECTION_H
@@ -43,10 +35,8 @@ class LeaderElectionParticle : public AmoebotParticle {
   };
 
   // Constructs a new particle with a node position for its head, a global
-  // compass direction from its head to its tail (-1 if contracted), an offset
-  // for its local compass, a system which it belongs to, an initial state, a
-  // signal for determining turning directions (currently for vertex triangle
-  // and square construction), and a string to determine what shape to form.
+   // compass direction from its head to its tail (-1 if contracted), an offset
+   // for its local compass, and a system which it belongs to.
   LeaderElectionParticle(const Node head, const int globalTailDir,
                          const int orientation, AmoebotSystem& system,
                          State state);
@@ -57,10 +47,8 @@ class LeaderElectionParticle : public AmoebotParticle {
   // Functions for altering a particle's cosmetic appearance; headMarkColor
   // (respectively, tailMarkColor) returns the color to be used for the ring
   // drawn around the head (respectively, tail) node. Tail color is not shown
-  // when the particle is contracted. headMarkDir returns the label of the port
-  // on which the black head marker is drawn.
+  // when the particle is contracted.
   virtual int headMarkColor() const;
-  virtual int headMarkDir() const;
   virtual int tailMarkColor() const;
 
   // Returns the string to be displayed when this particle is inspected; used
@@ -89,10 +77,10 @@ class LeaderElectionParticle : public AmoebotParticle {
 
  protected:
   // The LeaderElectionToken struct provides a general framework of what a
-  // token under the General Leader Election algorithm behaves.
-  // origin is used to define the direction (label) from which a
-  // LeaderElectionToken has been sent from.
+  // token under the Improved Leader Election algorithm behaves.
   struct LeaderElectionToken : public Token {
+    // origin is used to define the direction (label) from which a
+    // LeaderElectionToken has been sent from.
    int origin;
   };
 
@@ -134,13 +122,14 @@ class LeaderElectionParticle : public AmoebotParticle {
     }
   };
 
-  // -1 --> Lesser
-  // 0 --> Equal
-  // 1 --> Greater
+  // DelimiterToken carries the comparison values from the previous comparisons
+  // of agents with DigitTokens to gauge the compare the id segments of the
+  // different candidate agnets. The value stored in compare follows the same
+  // guidelines as in compareStatus (see below).
   struct DelimiterToken : public LeaderElectionToken {
     int value = 0;
     bool isActive = false;
-    int compare = -1;
+    int compare = 0;
     int comparisonColor = -1;
     DelimiterToken(int origin = -1, int comparisonColor = -1,
                    int value = -1, bool isActive = false, int compare = 0) {
@@ -220,76 +209,89 @@ class LeaderElectionParticle : public AmoebotParticle {
 
    LeaderElectionAgent();
 
-   // localId is an int which stores which id an agent has according to the
-   // particle which is associated with it. This localId value lies in [1,3]
+   // General variables in agent memory:
+   // The particle emulating this agent assigns it a localId in [1,3] to
+   // distinguish it from the other agents it may be emulating. From the
+   // particle's perspective, this agent is in local direction/label agentDir.
+   // The neighboring particle emulating the next (respectively, previous)
+   // agent on this agent's boundary is in local direction nextAgentDir
+   // (respectively, prevAgentDir). passTokensDir is used to determine if the
+   // agent should pass tokens toward nextAgentDir (if 0) or prevAgentDir (if
+   // 1). This is done to maintain the rule from direct write communication
+   // that a particle can only write into the memory of one of its neighbors in
+   // a single activation. demotedFromComparison is used to determine whether or
+   // not the current agent was originally a candidate, which may impact its
+   // behavior for phases such as Identifier Comparison.
    int localId;
-   // agentDir stores the direction/label of the current agent according to the
-   // labelling scheme used by the particle that owns the current agent.
-   // nextAgentDir and prevAgentDir are store the direction/label of the next
-   // and previous (respectively) agents of the current agent according to the
-   // particle that owns the current agent and the direction of the boundary
-   // that the agent is on.
    int agentDir, nextAgentDir, prevAgentDir;
+   int passTokensDir = -1;
+   bool demotedFromComparison = false;
 
    State agentState;
    SubPhase subPhase;
    LeaderElectionParticle* candidateParticle;
 
-   // passedTokensDir is an int which will be used to determine whether or not
-   // an agent will pass tokens in the prevAgentDir or nextAgentDir.
-   // This is done to maintain the rule that particles can only pass tokens to 1
-   // other particle in a single activation.
-   // 0 --> tokens should be passed forwards in the cycle (nextAgentDir)
-   // 1 --> tokens should be passed backwards in the cycle (prevAgentDir)
-   int passTokensDir = -1;
-
-   // Keep track of whether or not the current agent was demoted due to identifier
-   // comparison
-   bool demotedFromComparison = false;
+   // Variables for Identifier Setup:
+   // hasGeneratedSetupToken is used to determine whether or not the candidate
+   // agent has generated a SetupToken.
+   // hasGeneratedReverseToken is used to determine whether or not the agent
+   // has generated an id token for the corresponding candidate's segment.
    bool hasGeneratedSetupToken = false;
    bool hasGeneratedReverseToken = false;
-   bool isActive = false;
-   // compareStatus
-   // -1 --> lessThan
-   // 0 --> equal
-   // 1 --> greaterThan
+
+   // Variables for Identifier Comparison:
+   // compareStatus is used to store the difference between the current agent
+   // and the DigitToken that it has matched with. compareStatus is computed as
+   // the difference between the agent's digit value and the DigitToken's value,
+   // i.e., compareStatus = idValue - DigitToken.value, with the values
+   // representing the following relationships:
+   // -1 --> agent value less than token value
+   // 0 --> agent value equal to token value
+   // 1 --> agent value greater than token value
+   // idValue is used to store the agent's id value generated from the
+   // Identifier Setup Phase.
+   // comparisonColor is used to store the agent's identifying color for the
+   // Identifier Comparison Phase.
+   // isActive is used to determine whether or not the agent has matched with a
+   // DigitToken.
    int compareStatus = -1;
    int idValue = -1;
    int comparisonColor = randInt(0, 16777216);
+   bool isActive = false;
+
+   // canPassComparisonToken is a helper functino for the Identifier Comparison
+   // phase to determine whether or not the current agent may pass the
+   // Identifier Comparison token (Digit Token or Delimiter Token, determined
+   // by the boolean parameter).
+   bool canPassComparisonToken(bool isDelimiter) const;
 
    // Variables for Solitude Verification
-   // createdLead is a boolean which determines whether or not the current agent
-   // has generated a solitude active token and passed it along its front
-   // segment.
-   // hasGeneratedTokens is a boolean which determines whether or not the
-   // current agent has generated solitude vector tokens using the solitude
-   // active token. This is necessary since there are cases where different
-   // agents on the same particle might have the same nextAgentDir as the
-   // other's prevAgentDir, so an incorrect token pass is avoided using this
-   // boolean variable.
+   // createdLead is true if this agent generated a solitude active token and
+   // passed it forward during Solitude Verification.
+   // hasGeneratedTokens is true if this agent generated solitude vector tokens
+   // using the solitude active token. This is used to avoid incorrectly mixing
+   // tokens of different agents on the same particle in Solitude Verification.
    bool createdLead = false;
    bool hasGeneratedTokens = false;
 
    // Variables for Boundary Testing
-   // testingBorder is a boolean used to determine whether or not the current
-   // sole candidate has generated a border testing token to determine what
-   // boundary it is on.
+   // testingBorder is true if this agent is the sole candidate and has begun
+   // the Boundary Testing subphase.
    bool testingBorder = false;
 
    // The activate function is the LeaderElectionAgent equivalent of an
-   // Amoebot Particle's activate function
+   // Amoebot Particle's activate function.
    void activate();
 
    void cleanAllTokens();
-   bool canPassComparisonToken(bool isDelimiter) const;
 
    // Solitude Verification Methods
    // augmentDirVector takes a <int, int> pair as a parameter, which represents
-   // the current vector stored in the solitude active token. This function then
-   // generates the next vector according to a local coordinate system (which is
-   // determined when a candidate agent in the Solitude Verification subphase
-   // generates the solitude active token) based on the vector stored in the
-   // solitude active token.
+   // the current vector stored in the solitude active token. This function
+   // then generates the next vector according to a local coordinate system
+   // (which is determined when a candidate agent in the Solitude Verification
+   // subphase generates the solitude active token) based on the vector stored
+   // in the solitude active token.
    std::pair<int, int> augmentDirVector(std::pair<int, int> vector);
 
    // generateSolitudeVectorTokens generates the solitude vector tokens
@@ -312,14 +314,14 @@ class LeaderElectionParticle : public AmoebotParticle {
 
    // The cleanSolitudeVerificationTokens function will clean the solitude
    // vector tokens owned by a particular agent as well as paint the
-   // front and back segments gray
+   // front and back segments gray.
    void cleanSolitudeVerificationTokens();
 
    // Boundary Testing methods
    int addNextBorder(int currentSum) const;
 
    // Methods for passing, taking, and checking the ownership of tokens at the
-   // agent level
+   // agent level.
    template <class TokenType>
    bool hasAgentToken(int agentDir) const;
    template <class TokenType>
@@ -329,6 +331,7 @@ class LeaderElectionParticle : public AmoebotParticle {
    template <class TokenType>
    void passAgentToken(int agentDir, std::shared_ptr<TokenType> token);
 
+   // Method for counting the number of tokens at the agent level.
    template <class TokenType>
    int countAgentTokens(int agentDir) const;
 
@@ -336,22 +339,22 @@ class LeaderElectionParticle : public AmoebotParticle {
    LeaderElectionAgent* prevAgent() const;
 
    // Methods responsible for rendering the agents onto the simulator with their
-   // colors changing based on the state and the subphase of the current agent
-   // Red --> Candidate agent in Segment Comparison Subphase
-   // Yellow --> Candidate agent in Coin Flipping Subphase
-   // Blue --> Candidate agent in Solitude Verification Subphase
+   // colors changing based on the state and the subphase of the current agent.
+   // Yellow --> Identifier Setup
+   // Random Color (determined by comparisonColor) --> Identifier Comparison
+   // Blue --> Solitude Verification Subphase
    // Grey --> Demoted agent
    // Green --> Sole candidate
    void setStateColor();
    void setSubPhaseColor();
 
    // Methods responsible for painting the borders which will act as physical
-   // representations of the cycle for leader election
-   // Red --> Segment Comparison Phase
-   // Yellow --> Coin Flipping Phase
+   // representations of the cycle for leader election.
+   // Yellow --> Identifier Setup
+   // Random Color (determined by comparisonColor) --> DelimiterToken for
+   // Identifier Comparison
    // Blue --> Solitude Verification Phase
-   // Grey --> No phase (or, alternatively, active phase of Segment Comparison
-   // phase
+   // Grey --> No specific phase
    void paintFrontSegment(const int color);
    void paintBackSegment(const int color);
   };
@@ -362,6 +365,10 @@ class LeaderElectionParticle : public AmoebotParticle {
   std::vector<LeaderElectionAgent*> agents;
   std::array<int, 18> borderColorLabels;
   std::array<int, 6> borderPointColorLabels;
+
+  // leaderSelected is used to act as a signal for when a leader is selected to
+  // set all of the remaining particles to finished.
+  bool leaderSelected;
 };
 
 class ImprovedLeaderElectionSystem : public AmoebotSystem {

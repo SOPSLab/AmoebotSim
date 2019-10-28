@@ -205,8 +205,7 @@ std::shared_ptr<TokenType> AmoebotParticle::takeToken() {
     std::shared_ptr<TokenType> token =
         std::dynamic_pointer_cast<TokenType>(tokens[i]);
     if (token != nullptr) {
-      std::swap(tokens[0], tokens[i]);
-      tokens.pop_front();
+      tokens.erase(tokens.begin() + i);
       return token;
     }
   }
@@ -233,8 +232,7 @@ std::shared_ptr<TokenType> AmoebotParticle::takeToken(
     std::shared_ptr<TokenType> token =
         std::dynamic_pointer_cast<TokenType>(tokens[i]);
     if (token != nullptr && propertyCheck(token)) {
-      std::swap(tokens[0], tokens[i]);
-      tokens.pop_front();
+      tokens.erase(tokens.begin() + i);
       return token;
     }
   }
