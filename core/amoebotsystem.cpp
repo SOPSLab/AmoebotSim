@@ -10,6 +10,8 @@
 #include <fstream>
 #include <map>
 
+#include <QDir>
+
 AmoebotSystem::AmoebotSystem() {
   counts["round"] = new RoundCount();
   counts["activation"] = new ActivationCount();
@@ -101,7 +103,8 @@ void AmoebotSystem::endOfRound() {
 }
 
 void AmoebotSystem::exportData()  {
-  std::ofstream outFile("//Users//josephbriones//amoebotsim/metricData.csv");
+  std::string homePath = QDir::homePath().toStdString();
+  std::ofstream outFile(homePath + "/metricData.csv");
 
   for (auto &c : counts) {
     outFile << c.first << ", ";
