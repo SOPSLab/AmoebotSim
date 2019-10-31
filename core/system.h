@@ -71,6 +71,7 @@ class System {
   virtual unsigned int numRounds() const;
 
   virtual bool hasTerminated() const;
+  virtual void exportData();
 
  protected:
   // Checks whether the particle system forms one connected component.

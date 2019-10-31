@@ -7,16 +7,17 @@
 #include <string>
 #include <vector>
 
+class AmoebotSystem;
+
 class Measure {
  public:
 
   // Default constructor and deconstructor for the measure class.
   Measure() {}
   virtual ~Measure() {}
-  class AmoebotSystem;
 
   // Virtual function to be overwritten to calculate the desired metric.
-  virtual void calculate(AmoebotSystem system) = 0;
+  virtual void calculate(AmoebotSystem* system) = 0;
 
   // Frequency determines how often the metric is calculated during the
   // algorithm execution. A value of i would be executed every i round.

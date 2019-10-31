@@ -32,6 +32,11 @@ void Simulator::start() {
   emit started();
 }
 
+void Simulator::getData() {
+  QMutexLocker locker(&system->mutex);
+  system->exportData();
+}
+
 void Simulator::stop() {
   stepTimer.stop();
   emit stopped();

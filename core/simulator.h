@@ -31,6 +31,7 @@ class Simulator : public QObject {
   void stopped();
 
  public slots:
+  void getData();
   void start();
   void stop();
   void step();

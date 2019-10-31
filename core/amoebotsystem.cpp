@@ -9,6 +9,7 @@
 #include "core/amoebotparticle.h"
 #include <map>
 #include <iostream>
+#include <fstream>
 
 AmoebotSystem::AmoebotSystem() {
   counts["round"] = new RoundCount();
@@ -87,18 +88,46 @@ void AmoebotSystem::insert(Object* object) {
   objectMap[object->_node] = object;
 }
 
+void AmoebotSystem::endOfRound() {
+  int roundNum = counts["round"]->value;
+  for (auto const& c : counts) {
+    c.second->history.push_back(c.second->value);
+  }
+  for (auto const& m : measures) {
+    if (roundNum % m.second->frequency == 0) {
+      m.second->calculate(this);
+    }
+  }
+  counts["round"]->record();
+}
+
+void AmoebotSystem::exportData()  {
+  std::ofstream outFile("//Users//josephbriones//amoebotsim/metricData.csv");
+
+  for (auto &c : counts) {
+    outFile << c.first << ", ";
+    for (double roundVal : c.second->history) {
+      outFile << roundVal << ", ";
+    }
+    outFile << std::endl;
+  }
+
+  for (auto &m : measures) {
+    outFile << m.first << ", ";
+    for (double roundVal : m.second->history) {
+      outFile << roundVal << ", ";
+    }
+    outFile << std::endl;
+  }
+
+  outFile.close();
+}
+
 void AmoebotSystem::registerActivation(AmoebotParticle* particle) {
   counts["activation"]->record();
   activatedParticles.insert(particle);
   if(activatedParticles.size() == particles.size()) {
-    counts["round"]->record();
-    int roundNum = counts["round"]->value;
-    for(auto const& c : counts){
-      std::cout << c.second->name << " " << c.second->value << std::endl;
-      c.second->history.push_back(c.second->value);
-      c.second->value = 0;
-    }
-    counts["round"]->value = roundNum;
+    endOfRound();
     activatedParticles.clear();
   }
 }

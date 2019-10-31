@@ -31,6 +31,7 @@ ApplicationWindow {
   signal start()
   signal stop()
   signal step()
+  signal getData()
   signal focusOnCenterOfMass()
 
   signal executeCommand(string cmd)
@@ -114,6 +115,10 @@ ApplicationWindow {
           event.accepted = true
         } else if (event.key === Qt.Key_F) {
           vis.focusOnCenterOfMass()
+          event.accepted = true
+        }
+        else if (event.key === Qt.Key_M) {
+          data()
           event.accepted = true
         }
       }
@@ -423,20 +428,30 @@ ApplicationWindow {
 
     RowLayout {
       id: controlButtonRow
-      spacing: 15
+      spacing: 5
       Layout.preferredWidth: parent.width
 
       A_Button {
         id: startStopButton
+        implicitWidth: 80
         text: "Start"
         onClicked: (text == "Start") ? start() : stop()
       }
 
       A_Button {
         id: stepButton
+        implicitWidth: 80
         text: "Step"
         onClicked: step()
       }
+
+      A_Button {
+        id: dataButton
+        implicitWidth: 80
+        text: "Data"
+        onClicked: getData()
+      }
+
     }
   }
 }

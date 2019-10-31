@@ -64,6 +64,7 @@ Application::Application(int argc, char *argv[])
     connect(&sim, &Simulator::systemChanged, vis, &VisItem::systemChanged);
     connect(&sim, &Simulator::saveScreenshot, vis, &VisItem::saveScreenshot);
     connect(qmlRoot, SIGNAL(start()), &sim, SLOT(start()));
+    connect(qmlRoot, SIGNAL(getData()), &sim, SLOT(getData()));
     connect(qmlRoot, SIGNAL(stop()), &sim, SLOT(stop()));
     connect(qmlRoot, SIGNAL(step()), &sim, SLOT(step()));
     connect(&sim, &Simulator::started,

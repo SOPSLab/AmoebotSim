@@ -29,14 +29,15 @@ SystemIterator System::end() const {
   return SystemIterator(this, size());
 }
 
-unsigned int System::numMovements() const {
+unsigned int System::numMovements() {
   return 0;
 }
 
-unsigned int System::numRounds() const {
+unsigned int System::numRounds() {
   return 0;
 }
 
 bool System::hasTerminated() const {
   return false;
 }
+void System::exportData() {}

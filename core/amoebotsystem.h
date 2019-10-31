@@ -78,6 +78,9 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   void registerMovement(unsigned int num = 1);
   void registerActivation(AmoebotParticle* particle);
 
+  void endOfRound();
+  void exportData();
+
   std::map<std::string, Count*> counts;
   std::map<std::string, Measure*> measures;
 
