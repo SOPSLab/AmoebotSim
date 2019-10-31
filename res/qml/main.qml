@@ -118,7 +118,7 @@ ApplicationWindow {
           event.accepted = true
         }
         else if (event.key === Qt.Key_M) {
-          data()
+          getData()
           event.accepted = true
         }
       }
