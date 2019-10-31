@@ -78,11 +78,12 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   void registerMovement(unsigned int num = 1);
   void registerActivation(AmoebotParticle* particle);
 
+  // Function for signaling the end of a round, triggering the recording of
+  // counts and possible calculation of measures.
   void endOfRound();
-  void exportData();
 
-  std::map<std::string, Count*> counts;
-  std::map<std::string, Measure*> measures;
+  // Triggers the export of all metrics' history, written into a .csv file.
+  void exportData();
 
  protected:
   std::vector<AmoebotParticle*> particles;
@@ -90,6 +91,8 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   std::set<AmoebotParticle*> activatedParticles;
   std::deque<Object*> objects;
   std::map<Node, Object*> objectMap;
+  std::map<std::string, Count*> counts;
+  std::map<std::string, Measure*> measures;
 };
 
 class ActivationCount : public Count {

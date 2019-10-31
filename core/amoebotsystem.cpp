@@ -7,9 +7,8 @@
 #include <QtGlobal>
 
 #include "core/amoebotparticle.h"
-#include <map>
-#include <iostream>
 #include <fstream>
+#include <map>
 
 AmoebotSystem::AmoebotSystem() {
   counts["round"] = new RoundCount();
