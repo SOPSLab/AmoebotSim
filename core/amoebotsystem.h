@@ -96,7 +96,7 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
 };
 
 class ActivationCount : public Count {
-public:
+ public:
   ActivationCount() {
     value = 0;
     name = "activation";
@@ -108,7 +108,7 @@ public:
 };
 
 class RoundCount : public Count {
-public:
+ public:
   RoundCount() {
     value = 0;
     name = "round";
@@ -120,7 +120,7 @@ public:
 };
 
 class MoveCount : public Count {
-public:
+ public:
   MoveCount() {
     value = 0;
     name = "moves";

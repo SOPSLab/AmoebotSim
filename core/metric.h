@@ -19,11 +19,11 @@ class Measure {
   // Virtual function to be overwritten to calculate the desired metric.
   virtual void calculate(AmoebotSystem* system) = 0;
 
-  // Frequency determines how often the metric is calculated during the
+  // Frequency determines how often the measure is calculated during the
   // algorithm execution. A value of i would be executed every i round.
   int frequency;
 
-  // Vector to capture the value of the metric over time.
+  // Vector to capture the value of the measure each time it is calculated.
   std::vector<double> history;
 };
 
@@ -34,15 +34,16 @@ class Count {
     Count() {}
     virtual ~Count() {}
 
-    // Virtual function to be overwritten to calculate the desired metric upon call
+    // Virtual function to be overwritten to calculate the desired metric upon
+    // called.
     virtual void record() = 0;
 
-    // The name will hold the actual property which will be observed in this metric
-    // Value will represent the most latest occurrence of the metric
+    // The name will hold the name of the property being counted. Value will
+    // represent the total value of the current count.
     std::string name;
     int value;
 
-    // Vector to capture the value of the metric over time.
+    // Vector to capture the value of the count over each round.
     std::vector<double> history;
 };
 
