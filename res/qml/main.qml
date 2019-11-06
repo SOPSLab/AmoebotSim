@@ -62,12 +62,8 @@ ApplicationWindow {
     commandField.text = cmd
   }
 
-  function setNumMovements(num) {
-    numMovesText.text = num
-  }
-
-  function setNumRounds(num) {
-    numRoundsText.text = num
+  function setMetrics(metricInfo) {
+    metricList.model = metricInfo
   }
 
   function setResolution(_width, _height) {
@@ -289,47 +285,42 @@ ApplicationWindow {
       color: "transparent"
     }
 
-    RowLayout {
-      id: roundsRow
+
+    Rectangle {
+      Layout.preferredWidth: parent.width
+      Layout.preferredHeight: 65
       Layout.bottomMargin: 15
+      color: "transparent"
 
-      Rectangle {
-        Layout.preferredWidth: 70
-        Text {
-          anchors.left: parent.left
-          text: "Rounds:"
+      Component {
+        id: metricDelegate
+        RowLayout {
+          spacing: 15
+
+          Rectangle {
+            Layout.preferredWidth: 70
+            Text {
+              anchors.left: parent.left
+              text: model.modelData[0]
+            }
+          }
+
+          Rectangle {
+            Layout.preferredWidth: 25
+            Text {
+              anchors.left: parent.left
+              text: model.modelData[1]
+            }
+          }
         }
       }
 
-      Rectangle {
-        Layout.preferredWidth: 25
-        Text {
-          id: numRoundsText
-          anchors.left: parent.left
-          text: "0"
-        }
-      }
-    }
-
-    RowLayout {
-      id: movesRow
-      Layout.bottomMargin: 20
-
-      Rectangle {
-        Layout.preferredWidth: 70
-        Text {
-          anchors.left: parent.left
-          text: "Moves:"
-        }
-      }
-
-      Rectangle {
-        Layout.preferredWidth: 25
-        Text {
-          id: numMovesText
-          anchors.left: parent.left
-          text: "0"
-        }
+      ListView {
+        id: metricList
+        anchors.fill: parent
+        model: {}
+        delegate: metricDelegate
+        spacing: 20
       }
     }
 

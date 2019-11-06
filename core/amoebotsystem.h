@@ -53,13 +53,10 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   // Returns a reference to the object list.
   virtual const std::deque<Object*>& getObjects() const final;
 
-  // Functions for measuring the progress of the system. numMovements returns
-  // the total number of expansions and contractions performed by the system's
-  // particles. numRounds returns the number of completed asynchronous rounds;
-  // recall that an asynchronous round is complete when each particle has been
-  // activated at least once.
-  unsigned int numMovements();
-  unsigned int numRounds();
+  // Function for measuring the progress of the system. Returns a vector with
+  // various metrics about the system, represented by a pair with the metrics'
+  // name and its current value.
+  std::vector<std::pair<std::string, double>> metrics();
 
   // Inserts a particle or a object, respectively, into the system. A particle can be contracted or
   // expanded. Fails if the respective node(s) are already occupied.

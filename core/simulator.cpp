@@ -78,17 +78,17 @@ int Simulator::numParticles() const {
   return system->size();
 }
 
+QList<QVariant> Simulator::metrics() const {
+  QMutexLocker locker(&system->mutex);
+  std::vector<std::pair<std::string, double>> metricInfo = system->metrics();
+  QList<QVariant> data;
+  for(auto const& m: metricInfo) {
+    data.push_back(QVariant({QString::fromStdString(m.first), m.second}));
+  }
+  return data;
+}
+
 int Simulator::numObjects() const {
   QMutexLocker locker(&system->mutex);
   return system->numObjects();
-}
-
-int Simulator::numMovements() const {
-  QMutexLocker locker(&system->mutex);
-  return system->numMovements();
-}
-
-int Simulator::numRounds() const {
-  QMutexLocker locker(&system->mutex);
-  return system->numRounds();
 }

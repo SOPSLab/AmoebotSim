@@ -71,14 +71,6 @@ int ScriptInterface::getNumParticles() {
   return sim.numParticles();
 }
 
-int ScriptInterface::getNumMovements() {
-  return sim.numMovements();
-}
-
-int ScriptInterface::getNumRounds() {
-  return sim.numRounds();
-}
-
 void ScriptInterface::setWindowSize(int width, int height) {
   if(vis != nullptr) {
     vis->setWindowSize(width, height);

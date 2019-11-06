@@ -67,8 +67,7 @@ class System {
   // Signatures for functions measuring the progress of the system. These all
   // return default values at this level; see amoebotsystem.h for more detailed
   // documentation.
-  virtual unsigned int numMovements() const;
-  virtual unsigned int numRounds() const;
+  virtual std::vector<std::pair<std::string, double>> metrics();
 
   virtual bool hasTerminated() const;
   virtual void exportData();

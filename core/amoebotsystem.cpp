@@ -59,13 +59,15 @@ const std::deque<Object*>& AmoebotSystem::getObjects() const {
     return objects;
 }
 
-
-unsigned int AmoebotSystem::numMovements() {
- return counts["move"]->value;
-}
-
-unsigned int AmoebotSystem::numRounds() {
- return counts["round"]->value;
+std::vector<std::pair<std::string, double>> AmoebotSystem::metrics() {
+  std::vector<std::pair<std::string, double>> currentMetrics;
+  for (auto const& c : counts) {
+    currentMetrics.push_back(std::make_pair(c.first, c.second->value));
+  }
+  for (auto const& m : measures) {
+    currentMetrics.push_back(std::make_pair(m.first, m.second->history.back()));
+  }
+  return currentMetrics;
 }
 
 void AmoebotSystem::insert(AmoebotParticle* particle) {

@@ -32,12 +32,7 @@ Application::Application(int argc, char *argv[])
     auto slider = qmlRoot->findChild<QObject*>("stepDurationSlider");
     connect(vis, &VisItem::beforeRendering,
             [this, qmlRoot](){
-                QMetaObject::invokeMethod(qmlRoot, "setNumMovements", Q_ARG(QVariant, sim.numMovements()));
-            }
-    );
-    connect(vis, &VisItem::beforeRendering,
-            [this, qmlRoot](){
-                QMetaObject::invokeMethod(qmlRoot, "setNumRounds", Q_ARG(QVariant, sim.numRounds()));
+                QMetaObject::invokeMethod(qmlRoot, "setMetrics", Q_ARG(QVariant, QVariant::fromValue(sim.metrics())));
             }
     );
     connect(vis, &VisItem::inspectParticle,

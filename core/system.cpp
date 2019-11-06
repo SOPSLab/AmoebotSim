@@ -29,12 +29,8 @@ SystemIterator System::end() const {
   return SystemIterator(this, size());
 }
 
-unsigned int System::numMovements() {
-  return 0;
-}
-
-unsigned int System::numRounds() {
-  return 0;
+std::vector<std::pair<std::string, double>> System::metrics() {
+  return {};
 }
 
 bool System::hasTerminated() const {

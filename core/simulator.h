@@ -8,6 +8,7 @@
 #include <memory>
 
 #include <QObject>
+#include <QVariant>
 #include <QTimer>
 
 #include "core/system.h"
@@ -42,8 +43,7 @@ class Simulator : public QObject {
 
   int numParticles() const;
   int numObjects() const;
-  int numMovements() const;
-  int numRounds() const;
+  QList<QVariant>  metrics() const;
 
  protected:
   QTimer stepTimer;
