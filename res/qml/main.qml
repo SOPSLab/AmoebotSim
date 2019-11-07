@@ -245,6 +245,7 @@ ApplicationWindow {
 
           TextField {
             width: sidebar.width - 30 - parameterText.width
+            textColor: "black"
             style: TextFieldStyle {
               background: Rectangle {
                 implicitHeight: 30
