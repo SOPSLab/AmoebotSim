@@ -14,37 +14,95 @@ AggregateParticle::AggregateParticle(const Node head, const int globalTailDir,
 void AggregateParticle::activate() {
   bool particleInSight = checkIfParticleInSight();
   int probNum = 0;
-  // Using probabilities, a small amount of noise is added here:
-  // If a particle is in sight, rotate in place 98.5% of the time. The other
-  // 1.5% of times, move around the center of rotation.
+
+// // Original algorithm but with added randomness/probabilities
+//  if (particleInSight) {
+//    probNum = randInt(0, 1000);
+//    if (probNum < 1000) {
+//      center = (center + 5) % 6;
+//    } else {
+//      int moveDir = (center + 1) % 6;
+//      if (!hasNbrAtLabel(moveDir)) {
+//        expand(moveDir);
+//        contractTail();
+//        center = (center + 5) % 6;
+//      }
+//    }
+//  }
+//  else {
+//    probNum = randInt(0, 1000);
+//    if (probNum < 985){
+//      int moveDir = (center + 1) % 6;
+//      if (!hasNbrAtLabel(moveDir)) {
+//        expand(moveDir);
+//        contractTail();
+//        center = (center + 5) % 6;
+//      }
+//    } else {
+//      center = (center + 5) % 6;
+//    }
+//  }
+
+
+// // Original algorithm but with perturb variable
+//  if (particleInSight) {
+//    center = (center + 5) % 6;
+//    perturb = 6;
+//  }
+//  else if (perturb <= 0) {
+//    probNum = randInt(0, 1000);
+//    if (probNum < 985) {
+//      center = (center + 5) % 6;
+//    }
+//  }
+//  else {
+//    int moveDir = (center + 1) % 6;
+//    if (!hasNbrAtLabel(moveDir)) {
+//      expand(moveDir);
+//      contractTail();
+//      center = (center + 5) % 6;
+//    }
+//    perturb--;
+//  }
+
+
+// // Perturb method but with circular, sweeping motion
+//  if (particleInSight) {
+//    center = (center + 5) % 6;
+//    perturb = 6;
+//  }
+//  else if (perturb <= 0) {
+//    center = (center + 5) % 6;
+//  }
+//  else {
+//   int moveDir = (center + 3) % 6;
+//   if (!hasNbrAtLabel(moveDir)) {
+//     expand(moveDir);
+//     contractTail();
+//     center = (center + 5) % 6;
+//   }
+//   perturb--;
+//  }
+
+
+// Perturb method but everything counter-clockwise instead of clockwise
   if (particleInSight) {
-    probNum = randInt(0, 1000);
-    if (probNum < 985) {
-      center = (center + 5) % 6;
-    } else {
-      int moveDir = (center + 1) % 6;
-      if (!hasNbrAtLabel(moveDir)) {
-        expand(moveDir);
-        contractTail();
-        center = (center + 5) % 6;
-      }
-    }
+    center = (center + 1) % 6;
+    perturb = 6;
   }
-  // If a particle is not in sight, move around the center of rotation 98.5% of
-  // the time. The other 1.5% of times, rotate in place.
+  else if (perturb <= 0) {
+     center = (center + 1) % 6;
+  }
   else {
-    probNum = randInt(0, 1000);
-    if (probNum < 985){
-      int moveDir = (center + 1) % 6;
-      if (!hasNbrAtLabel(moveDir)) {
-        expand(moveDir);
-        contractTail();
-        center = (center + 5) % 6;
-      }
-    } else {
-      center = (center + 5) % 6;
-    }
+   int moveDir = (center + 1) % 6;
+   if (!hasNbrAtLabel(moveDir)) {
+     expand(moveDir);
+     contractTail();
+     center = (center + 1) % 6;
+   }
+   perturb--;
   }
+
 }
 
 int AggregateParticle::headMarkColor() const {

@@ -66,6 +66,7 @@ class AggregateParticle : public AmoebotParticle {
 
  protected:
   int center;
+  int perturb = 0;
   std::vector<AggregateParticle*> particles;
 
  private:
