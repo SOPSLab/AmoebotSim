@@ -42,15 +42,9 @@ class ScriptInterface : public QObject {
   // expansions and contractions executed by the particle system. getNumRounds
   // returns the number of asynchronous rounds completed by the particle system.
   // See amoebotsystem.h for further discussion.
-  // LEGACY: getLeaderElectionRounds, getWeakBound, and getStrongBound are only
-  // used in LegacySystem and should not be used going forward. TODO: remove
-  // after the matching functions in Simulator and System have been removed.
   int getNumParticles();
   int getNumMovements();
   int getNumRounds();
-  int getLeaderElectionRounds();
-  int getWeakBound();
-  int getStrongBound();
 
   // Visualization commands. focusOn centers the window at the given (x,y) node.
   // setZoom sets the zoom level of the window. saveScreenshot saves the current
@@ -64,14 +58,14 @@ class ScriptInterface : public QObject {
   void saveScreenshot(QString filePath = "");
   void filmSimulation(QString filePath, const int stepLimit);
 
-  // Non-legacy demonstration algorithm instance commands. Documentation for
-  // foo() can be found in alg/demo/foo.h.
+  // Demonstration algorithm instance commands. Documentation for foo() can be
+  // found in alg/demo/foo.h.
   void discodemo(const int numParticles = 30, const int counterMax = 5);
   void pulldemo();
   void tokendemo(const int numParticles = 200, const double holeProb = 0.2);
 
-  // Non-legacy algorithm instance commands. Documentation for foo() can be
-  // found in alg/foo.h.
+  // Algorithm instance commands. Documentation for foo() can be found in
+  // alg/foo.h.
   void compression(const int numParticles = 100, const double lambda = 4.0);
   void infobjcoating(const int numParticles = 100, const double holeProb = 0.2);
   void leaderelection(const int numParticles = 100,
@@ -79,19 +73,6 @@ class ScriptInterface : public QObject {
   void line(const int numParticles = 100, const double holeProb = 0.0);
   void shapeformation(const int numParticles = 200, const double holeProb = 0.2,
                       const QString mode = "h");
-
-  // Legacy algorithm instance commands. Documentation for foo() can be found in
-  // alg/legacy/foo.h.
-  void boundedobjcoating(const int numStaticParticles, const int numParticles,
-                         const double holeProb = 0.2);
-  void universalcoating(const int staticParticlesRadius = 5,
-                        const int numParticles = 50,
-                        const double holeProb = 0.2);
-
-  // Commands for universal coating competitive analysis. TODO: when bringing
-  // Universal Coating out of legacy, figure out what to do with these.
-  // int getUniversalCoatingWeakLowerBound();
-  // int getUniversalCoatingStrongLowerBound();
 
  private:
   ScriptEngine& engine;

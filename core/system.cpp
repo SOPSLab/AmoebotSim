@@ -37,18 +37,6 @@ unsigned int System::numRounds() const {
   return 0;
 }
 
-unsigned int System::leaderElectionRounds() const {
-  return 0;
-}
-
-unsigned int System::weakBounds() const {
-  return 0;
-}
-
-unsigned int System::strongBounds() const {
-  return 1;
-}
-
 bool System::hasTerminated() const {
   return false;
 }

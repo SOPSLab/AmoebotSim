@@ -1,6 +1,5 @@
 #include <QMutexLocker>
 
-#include "alg/legacy/legacysystem.h"
 #include "core/simulator.h"
 #include "script/scriptinterface.h"
 
@@ -84,19 +83,4 @@ int Simulator::numMovements() const {
 int Simulator::numRounds() const {
   QMutexLocker locker(&system->mutex);
   return system->numRounds();
-}
-
-int Simulator::leaderElectionRounds() const {
-  QMutexLocker locker(&system->mutex);
-  return system->leaderElectionRounds();
-}
-
-int Simulator::weakBounds() const {
-  QMutexLocker locker(&system->mutex);
-  return system->weakBounds();
-}
-
-int Simulator::strongBounds() const {
-  QMutexLocker locker(&system->mutex);
-  return system->strongBounds();
 }

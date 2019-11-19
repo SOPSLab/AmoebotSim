@@ -66,13 +66,8 @@ class System {
   // Signatures for functions measuring the progress of the system. These all
   // return default values at this level; see amoebotsystem.h for more detailed
   // documentation.
-  // LEGACY: leaderElectionRounds, weakBounds, and strongBounds are only used
-  // in LegacySystem and should not be used going forward. TODO: remove?
   virtual unsigned int numMovements() const;
   virtual unsigned int numRounds() const;
-  virtual unsigned int leaderElectionRounds() const;
-  virtual unsigned int weakBounds() const;
-  virtual unsigned int strongBounds() const;
 
   virtual bool hasTerminated() const;
 
