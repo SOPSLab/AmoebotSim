@@ -12,13 +12,6 @@ HEADERS += \
     alg/demo/discodemo.h \
     alg/demo/pulldemo.h \
     alg/demo/tokendemo.h \
-    alg/legacy/algorithm.h \
-    alg/legacy/algorithmwithflags.h \
-    alg/legacy/boundedobjcoating.h \
-    alg/legacy/legacysystem.h \
-    alg/legacy/legacyparticle.h \
-    alg/legacy/movement.h \
-    alg/legacy/universalcoating.h \
     alg/compression.h \
     alg/infobjcoating.h \
     alg/shapeformation.h \
@@ -30,11 +23,7 @@ HEADERS += \
     core/particle.h \
     core/simulator.h \
     core/system.h \
-    helper/bipartitematchinggraph.h \
-    helper/misc.h \
     helper/randomnumbergenerator.h \
-    helper/rect.h \
-    helper/universalcoatinghelper.h \
     main/application.h \
     script/scriptengine.h \
     script/scriptinterface.h \
@@ -50,11 +39,6 @@ SOURCES += \
     alg/demo/discodemo.cpp \
     alg/demo/pulldemo.cpp \
     alg/demo/tokendemo.cpp \
-    alg/legacy/algorithm.cpp \
-    alg/legacy/boundedobjcoating.cpp \
-    alg/legacy/legacyparticle.cpp \
-    alg/legacy/legacysystem.cpp \
-    alg/legacy/universalcoating.cpp \
     alg/compression.cpp \
     alg/infobjcoating.cpp \
     alg/shapeformation.cpp \

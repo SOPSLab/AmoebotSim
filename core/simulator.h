@@ -38,9 +38,6 @@ class Simulator : public QObject {
   int numObjects() const;
   int numMovements() const;
   int numRounds() const;
-  int leaderElectionRounds() const;
-  int weakBounds() const;
-  int strongBounds() const;
 
  protected:
   QTimer stepTimer;

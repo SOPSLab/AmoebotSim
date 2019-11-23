@@ -6,9 +6,6 @@
 #include "alg/demo/discodemo.h"
 #include "alg/demo/pulldemo.h"
 #include "alg/demo/tokendemo.h"
-#include "alg/legacy/boundedobjcoating.h"
-#include "alg/legacy/legacysystem.h"
-#include "alg/legacy/universalcoating.h"
 #include "alg/compression.h"
 #include "alg/infobjcoating.h"
 #include "alg/leaderelection.h"
@@ -16,10 +13,6 @@
 
 #include "script/scriptinterface.h"
 #include "core/node.h"
-
-// TODO: See comment in scriptinterface.h regarding universal coating competitve
-// analysis functions.
-// #include "helper/universalcoatinghelper.h"
 
 ScriptInterface::ScriptInterface(ScriptEngine &engine, Simulator& sim,
                                  VisItem *vis)
@@ -78,18 +71,6 @@ int ScriptInterface::getNumMovements() {
 
 int ScriptInterface::getNumRounds() {
   return sim.numRounds();
-}
-
-int ScriptInterface::getLeaderElectionRounds() {
-  return sim.leaderElectionRounds();
-}
-
-int ScriptInterface::getWeakBound() {
-  return sim.weakBounds();
-}
-
-int ScriptInterface::getStrongBound() {
-  return sim.strongBounds();
 }
 
 void ScriptInterface::setWindowSize(int width, int height) {
@@ -214,44 +195,6 @@ void ScriptInterface::shapeformation(const int numParticles,
                                                          mode));
   }
 }
-
-void ScriptInterface::boundedobjcoating(const int numStaticParticles,
-                                        const int numParticles,
-                                        const double holeProb) {
-  // TODO: check for constraints on numStaticParticles.
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(BoundedObjCoating::BoundedObjCoating::instance(
-        numStaticParticles, numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::universalcoating(const int staticParticlesRadius,
-                                       const int numParticles,
-                                       const double holeProb) {
-  // TODO: rename 'static particles' to 'object'.
-  if (staticParticlesRadius <= 0) {
-    log("radius of static particles must be > 0", true);
-  } else if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(UniversalCoating::UniversalCoating::instance(
-        staticParticlesRadius, numParticles, holeProb));
-  }
-}
-
-/* int ScriptInterface::getUniversalCoatingWeakLowerBound() {
-  return UniversalCoating::getWeakLowerBound(*sim.getSystem());
-}
-
-int ScriptInterface::getUniversalCoatingStrongLowerBound() {
-  return UniversalCoating::getStrongLowerBound(*sim.getSystem());
-} */
 
 QString ScriptInterface::pad(const int number, const int length) {
   QString str = "" + QString::number(number);

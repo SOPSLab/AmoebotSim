@@ -76,23 +76,9 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back()->addParameter("Hole Prob.", "0.2");
   _algorithms.back()->addParameter("Shape", "\"h\"");
 
-  /* LEGACY ALGORITHMS */
-
-  // Bounded Object Coating.
-  _algorithms.push_back(new Algorithm("Bounded Object Coating", "boundedobjcoating"));
-  _algorithms.back()->addParameter("# Objects", "100");
-  _algorithms.back()->addParameter("# Particles", "50");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
-
   // Leader Election.
   _algorithms.push_back(new Algorithm("Leader Election", "leaderelection"));
   _algorithms.back()->addParameter("# Particles", "100");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
-
-  // Universal Coating.
-  _algorithms.push_back(new Algorithm("Universal Coating", "universalcoating"));
-  _algorithms.back()->addParameter("Object Radius", "5");
-  _algorithms.back()->addParameter("# Particles", "50");
   _algorithms.back()->addParameter("Hole Prob.", "0.2");
 }
 
