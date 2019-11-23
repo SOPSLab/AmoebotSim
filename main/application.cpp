@@ -49,6 +49,7 @@ Application::Application(int argc, char *argv[])
     QStringList names = parameterModel->getAlgorithmList()->getAlgNames();
     algBox->setProperty("model", QVariant::fromValue(names));
     algBox->setProperty("currentIndex", names.indexOf("Basic Shape Formation"));
+    parameterModel->updateAlgParameters("Basic Shape Formation");
 
     // Connect the parameter list model to the UI elements that use it.
     connect(qmlRoot, SIGNAL(algSelected(QString)),
