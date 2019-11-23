@@ -38,14 +38,10 @@ class Particle {
   virtual int tailMarkGlobalDir() const;
 
   // Functions for altering the cosmetic appearance of the particle's border.
-  // LEGACY: currently, their only use is in the original leader election
-  // algorithm which only considers static, contracted particles. borderColors
-  // defines the colors for each of the 18 border segment configurations a
-  // particle may possibly use. borderPointColors defines the colors used for
-  // each of the 6 points on the border a particle may possibly be incident to.
-  // All colors are in 0xrrbbgg format; -1 indicates no color.
-  // TODO: these functions likely need to be either updated and better explained
-  // or removed entirely.
+  // borderColors defines the colors for each of the 18 border segment
+  // configurations a particle may possibly use. borderPointColors defines the
+  // colors used for each of the 6 points on the border a particle may possibly
+  // be incident to. All colors are in 0xrrbbgg format; -1 indicates no color.
   virtual std::array<int, 18> borderColors() const;
   virtual std::array<int, 6> borderPointColors() const;
 
