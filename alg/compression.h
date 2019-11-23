@@ -1,3 +1,7 @@
+/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+ * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
+ * notice can be found at the top of main/main.cpp. */
+
 // Defines the particle system and composing particles for the Compression
 // Algorithm as defined in 'A Markov Chain Algorithm for Compression in
 // Self-Organizing Particle Systems' [arxiv.org/abs/1603.07991]. In particular,
