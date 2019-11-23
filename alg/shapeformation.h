@@ -3,12 +3,13 @@
 // Formation Problems in Self-Organizing Particle Systems'
 // [arxiv.org/abs/1504.00744].
 //
-// Run with shapeformation(#particles, hole probability, mode)
-// on the simulator command line.
+// Run with shapeformation(#particles, hole probability, mode) on the simulator
+// command line.
 // mode == "h" --> hexagon formation
 // mode == "s" --> square formation
 // mode == "t1" --> vertex triangle formation
 // mode == "t2" --> center triangle formation
+// mode == "l" --> line formation
 
 #ifndef AMOEBOTSIM_ALG_SHAPEFORMATION_H
 #define AMOEBOTSIM_ALG_SHAPEFORMATION_H
@@ -31,12 +32,11 @@ class ShapeFormationParticle : public AmoebotParticle {
 
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
-  // for its local compass, a system which it belongs to, an initial state, a
-  // signal for determining turning directions (currently for vertex triangle
-  // and square construction), and a string to determine what shape to form.
+  // for its local compass, a system which it belongs to, an initial state, and
+  // a string to determine what shape to form.
   ShapeFormationParticle(const Node head, const int globalTailDir,
                          const int orientation, AmoebotSystem& system,
-                         State state, const QString mode, int turnSignal);
+                         State state, const QString mode);
 
   // Executes one particle activation.
   virtual void activate();
@@ -110,6 +110,7 @@ class ShapeFormationSystem : public AmoebotSystem  {
   //   "s"  --> square
   //   "t1" --> vertex triangle
   //   "t2" --> center triangle
+  //   "l"  --> line
   ShapeFormationSystem(int numParticles = 200, double holeProb = 0.2,
                        QString mode = "h");
 

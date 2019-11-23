@@ -21,7 +21,6 @@ HEADERS += \
     alg/legacy/universalcoating.h \
     alg/compression.h \
     alg/infobjcoating.h \
-    alg/line.h \
     alg/shapeformation.h \
     core/amoebotparticle.h \
     core/amoebotsystem.h \
@@ -58,7 +57,6 @@ SOURCES += \
     alg/legacy/universalcoating.cpp \
     alg/compression.cpp \
     alg/infobjcoating.cpp \
-    alg/line.cpp \
     alg/shapeformation.cpp \
     core/amoebotparticle.cpp \
     core/amoebotsystem.cpp \

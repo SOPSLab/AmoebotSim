@@ -9,12 +9,10 @@ ShapeFormationParticle::ShapeFormationParticle(const Node head,
                                                const int globalTailDir,
                                                const int orientation,
                                                AmoebotSystem& system,
-                                               State state, const QString mode,
-                                               int turnSignal)
+                                               State state, const QString mode)
   : AmoebotParticle(head, globalTailDir, orientation, system),
     state(state),
     mode(mode),
-    turnSignal(turnSignal),
     constructionDir(-1),
     moveDir(-1),
     followDir(-1) {
@@ -142,6 +140,8 @@ QString ShapeFormationParticle::inspectionText() const {
       return "vertex triangle";
     } else if (mode == "t2") {
       return "center triangle";
+    } else if (mode == "l") {
+      return "line";
     } else {
       return "ERROR";
     }
@@ -176,9 +176,16 @@ bool ShapeFormationParticle::hasNbrInState(std::initializer_list<State> states)
 
 int ShapeFormationParticle::constructionReceiveDir() const {
   auto prop = [&](const ShapeFormationParticle& p) {
-    return isContracted() &&
-           (p.state == State::Seed || p.state == State::Finish) &&
-           pointsAtMe(p, p.constructionDir);
+    if (p.mode == "l") {
+      return isContracted() &&
+          (p.state == State::Seed || p.state == State::Finish) &&
+          (pointsAtMe(p, p.constructionDir) ||
+           pointsAtMe(p, (p.constructionDir + 3) % 6));
+    } else {
+      return isContracted() &&
+          (p.state == State::Seed || p.state == State::Finish) &&
+          pointsAtMe(p, p.constructionDir);
+    }
   };
 
   return labelOfFirstNbrWithProperty<ShapeFormationParticle>(prop);
@@ -266,6 +273,8 @@ void ShapeFormationParticle::updateConstructionDir() {
          nbrAtLabel(constructionDir).state == State::Finish)) {
       constructionDir = (constructionDir + 2) % 6;
     }
+  } else if (mode == "l") {  // Line construction.
+    constructionDir = (constructionReceiveDir() + 3) % 6;
   } else {
     // This is executing in an invalid mode.
     Q_ASSERT(false);
@@ -292,14 +301,14 @@ bool ShapeFormationParticle::hasTailFollower() const {
 
 ShapeFormationSystem::ShapeFormationSystem(int numParticles, double holeProb,
                                            QString mode) {
-  Q_ASSERT(mode == "h" || mode == "s" || mode == "t1" || mode == "t2");
+  Q_ASSERT(mode == "h" || mode == "s" || mode == "t1" || mode == "t2" ||
+           mode == "l");
   Q_ASSERT(numParticles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
 
   // Insert the seed at (0,0).
   insert(new ShapeFormationParticle(Node(0, 0), -1, randDir(), *this,
-                                    ShapeFormationParticle::State::Seed, mode,
-                                    0));
+                                    ShapeFormationParticle::State::Seed, mode));
   std::set<Node> occupied;
   occupied.insert(Node(0, 0));
 
@@ -330,7 +339,7 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, double holeProb,
     if (randBool(1.0 - holeProb)) {
       insert(new ShapeFormationParticle(randomCandidate, -1, randDir(), *this,
                                         ShapeFormationParticle::State::Idle,
-                                        mode, 0));
+                                        mode));
       ++numNonStaticParticles;
 
       // Add new candidates.
@@ -363,6 +372,6 @@ bool ShapeFormationSystem::hasTerminated() const {
 }
 
 std::set<QString> ShapeFormationSystem::getAcceptedModes() {
-  std::set<QString> set = {"h", "t1", "t2", "s"};
+  std::set<QString> set = {"h", "t1", "t2", "s", "l"};
   return set;
 }

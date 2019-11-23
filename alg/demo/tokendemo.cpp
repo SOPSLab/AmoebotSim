@@ -4,8 +4,10 @@
 
 TokenDemoParticle::TokenDemoParticle(const Node head, const int globalTailDir,
                                      const int orientation,
-                                     AmoebotSystem& system, State state)
-  : LineParticle(head, globalTailDir, orientation, system, state) {
+                                     AmoebotSystem& system, State state,
+                                     const QString mode)
+  : ShapeFormationParticle(head, globalTailDir, orientation, system, state,
+                           mode) {
   // Initialize the seed particle to hold three red tokens and two blue.
   if (state == State::Seed) {
     putToken(std::make_shared<RedToken>());
@@ -17,7 +19,7 @@ TokenDemoParticle::TokenDemoParticle(const Node head, const int globalTailDir,
 }
 
 void TokenDemoParticle::activate() {
-  LineParticle::activate();
+  ShapeFormationParticle::activate();
 
   // If this particle is holding a token and is the seed or is finished, choose
   // a random seed or finished neighbor. If such a neighbor exists, take the
@@ -47,7 +49,7 @@ int TokenDemoParticle::headMarkColor() const {
 }
 
 QString TokenDemoParticle::inspectionText() const {
-  QString text = LineParticle::inspectionText();
+  QString text = ShapeFormationParticle::inspectionText();
   text += "numRedTokens: " + QString::number(countTokens<RedToken>());
   text += "\n";
   text += "numBlueTokens: " + QString::number(countTokens<BlueToken>());
@@ -65,7 +67,7 @@ TokenDemoSystem::TokenDemoSystem(int numParticles, double holeProb) {
 
   // Insert the seed at (0, 0).
   insert(new TokenDemoParticle(Node(0, 0), -1, randDir(), *this,
-                               LineParticle::State::Seed));
+                               ShapeFormationParticle::State::Seed, "l"));
 
   std::set<Node> occupied;
   occupied.insert(Node(0, 0));
@@ -96,7 +98,7 @@ TokenDemoSystem::TokenDemoSystem(int numParticles, double holeProb) {
     // Add this candidate as a particle if not a hole.
     if (randBool(1.0 - holeProb)) {
       insert(new TokenDemoParticle(randomCandidate, -1, randDir(), *this,
-                                   LineParticle::State::Idle));
+                                   ShapeFormationParticle::State::Idle, "l"));
       numNonStaticParticles++;
 
       // Add new candidates.
