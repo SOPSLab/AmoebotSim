@@ -1,12 +1,6 @@
-// Defines the particle system and composing particles for the Swarm Aggregation
-// Algorithm as defined in 'Self-organized aggregation without computation'
-// [journals.sagepub.com/doi/abs/10.1177/0278364914525244]. Note that this
-// implementation of swarm aggregation includes a small amount of noise,  which
-// is established through a probabilistic approach, and in this way, this
-// implementation differs slightly from the algorithm stated in the paper.
-// Because the environment in the simulator is discrete, as opposed to
-// continuous (as is the case with the robots in the paper), this noise must be
-// added in order to avoid individual clustering behavior.
+// Defines the particle system and composing particles for the swarm aggregation
+// algorithm as defined in 'Self-organized aggregation without computation'
+// [journals.sagepub.com/doi/abs/10.1177/0278364914525244].
 //
 // Run with aggregation(#particles) on the simulator command line.
 //

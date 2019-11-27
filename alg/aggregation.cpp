@@ -15,6 +15,7 @@ void AggregateParticle::activate() {
   bool particleInSight = checkIfParticleInSight();
   int probNum = 0;
 
+
 // // Original algorithm but with added randomness/probabilities
 //  if (particleInSight) {
 //    probNum = randInt(0, 1000);
@@ -102,6 +103,7 @@ void AggregateParticle::activate() {
    }
    perturb--;
   }
+
 
 }
 
