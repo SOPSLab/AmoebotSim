@@ -1,7 +1,7 @@
-// Copyright (C) 2018 Robert Gmyr, Joshua J. Daymude, and Kristian Hinnenthal
-// The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
-// notice can be found at the top of main/main.cpp.
-//
+/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+ * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
+ * notice can be found at the top of main/main.cpp. */
+
 // Defines the particle system and composing particles for the Disco code
 // tutorial, a first algorithm for new developers to AmoebotSim. Disco
 // demonstrates the basics of algorithm architecture, instantiating a particle

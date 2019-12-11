@@ -1,3 +1,7 @@
+/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+ * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
+ * notice can be found at the top of main/main.cpp. */
+
 // Defines a class representing nodes on the triangular lattice. The x-axis runs
 // left-right and the y-axis runs northeast-southwest.
 // The neighbors of a node are numbered ascendingy in clockwise order: 0=E, 1=NE, 2=NW, 3=W, 4=SW, 5=SE
