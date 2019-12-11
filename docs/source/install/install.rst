@@ -28,7 +28,7 @@ If you want to modify AmoebotSim's source code, either to experiment with your o
 Accessing the AmoebotSim Repository
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`AmoebotSim <todo>`_ is hosted as a public repository on GitHub.
+`AmoebotSim <https://github.com/jdaymude/AmoebotSim>`_ is hosted as a public repository on GitHub.
 However, only our SOPS Lab development team has push access, meaning that you won't be able to push your code changes directly.
 For those familiar with this paradigm, feel free to fork the AmoebotSim repository, clone your forked repository onto your machine, and go on to the next section.
 
@@ -48,9 +48,6 @@ This walkthrough will assume you're using GitKraken.
     * For "Where to clone to", specify the directory on your machine where you'd like AmoebotSim's source code to live. You may also optionally change the "Full Path".
     * Select "Clone the repo!" to finish the process. You may be prompted to enter your GitHub login credentials.
 #. AmoebotSim's source code should now be in the directory you specified.
-
-.. todo::
-    Add missing links.
 
 
 Installing Qt

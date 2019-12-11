@@ -137,10 +137,7 @@ FAQs
 Contact Us
 ----------
 
-If you can't find the answers you need in the documentation, feel free to open a `new issue <todo>`_ in GitHub or email us at sopslab@asu.edu (whichever is more appropriate for your question).
-
-.. todo::
-    Add a link to the GitHub repository once it's up.
+If you can't find the answers you need in the documentation, feel free to open a `new issue <https://github.com/jdaymude/AmoebotSim/issues>`_ in GitHub or email us at sopslab@asu.edu (whichever is more appropriate for your question).
 
 
 Changelog
