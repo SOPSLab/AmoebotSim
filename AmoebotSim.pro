@@ -63,7 +63,6 @@ SOURCES += \
     alg/leaderelection.cpp
 
 RESOURCES += \
-    res/inputs.qrc \
     res/qml.qrc \
     res/textures.qrc
 
