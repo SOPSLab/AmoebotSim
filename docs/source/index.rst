@@ -1,16 +1,16 @@
 .. toctree::
-    :hidden:
+  :hidden:
 
-    install/install
-    usage/usage
-    tutorials/tutorials
-    development/development
+  install/install
+  usage/usage
+  tutorials/tutorials
+  development/development
 
 
 AmoebotSim
 ==========
 
-Welcome to AmoebotSim, a visual simulator for the amoebot model developed by the `Self-Organizing Particle Systems (SOPS) Lab <https://sops.engineering.asu.edu/>`_ at Arizona State University and the University of Paderborn.
+Welcome to `AmoebotSim <https://github.com/SOPSLab/AmoebotSim>`_, a visual simulator for the amoebot model developed by the `Self-Organizing Particle Systems (SOPS) Lab <https://sops.engineering.asu.edu/>`_ at Arizona State University and the University of Paderborn.
 The amoebot model is an abstraction of *programmable matter*, a material that can dynamically change its physical properties (e.g., shape, size, color, etc.) based on user input or stimuli from its environment.
 This simulator is designed for students and researchers who want to:
 
@@ -19,7 +19,7 @@ This simulator is designed for students and researchers who want to:
 * Validate correctness and runtime claims for new or existing amoebot model algorithms
 
 .. todo::
-    Need to add a link under "amoebot model" that points to the website's dedicated page for the chapter once it exists.
+  Need to add a link under "amoebot model" that points to the website's dedicated page for the chapter once it exists.
 
 
 Getting Started
@@ -27,12 +27,9 @@ Getting Started
 
 In your self-guided tour through our documentation, choosing the right guide for your goals will get you to the right information quickly.
 
-.. todo::
-    I like the idea of "guides" being actual particle mascots for each of the three types of users (end users, researchers, contributors) that appear as visual cues for what documentation is useful to which sort of person.
 
-
-Explorer
-^^^^^^^^
+Explorer 🔎
+^^^^^^^^^^^
 
 You're an *explorer* if:
 
@@ -45,8 +42,8 @@ If this describes you, refer to the :ref:`Installation Guide <install-explorer>`
 Then, follow the :doc:`Usage Guide <usage/usage>` for instructions on navigating the AmoebotSim environment.
 
 
-Researcher
-^^^^^^^^^^
+Researcher 🧪
+^^^^^^^^^^^^^
 
 You're a *researcher* if:
 
@@ -58,11 +55,11 @@ If this describes you, refer to the :ref:`Installation Guide <install-researchde
 Then, refer to the :doc:`Code Tutorials <tutorials/tutorials>` for a walkthrough of AmoebotSim algorithms and examples.
 
 .. todo::
-    Will we include a full API-like documentation set? If so, it should be mentioned here.
+  Will we include a full API-like documentation set? If so, it should be mentioned here.
 
 
-Developer
-^^^^^^^^^
+Developer 💻
+^^^^^^^^^^^^
 
 You're a *developer* if:
 
@@ -74,18 +71,21 @@ If this describes you, refer to the :ref:`Installation Guide <install-researchde
 If you're new to AmoebotSim development, refer to the :doc:`Code Tutorials <tutorials/tutorials>` for a walkthrough of AmoebotSim algorithms and examples.
 All development best practices and guidelines for contributions are discussed under :doc:`Development <development/development>`.
 
+.. tip::
+  Look for the 🔎, 🧪, and 💻 guides throughout the documentation to find the information most relevant to you.
+
 
 Acknowledgements
 ----------------
 
-AmoebotSim was originally created by `Robert Gmyr <https://gmyr.net/>`_ during his PhD studies at the University of Paderborn, and is now actively maintained by `Joshua J. Daymude <https://github.com/jdaymude>`_ and `Kristian Hinnenthal <todo>`_, current PhD students in the SOPS Lab.
+AmoebotSim was originally created by `Robert Gmyr <https://gmyr.net/>`_ during his PhD studies at the University of Paderborn, and is now actively maintained by `Joshua J. Daymude <https://github.com/jdaymude>`_ and `Kristian Hinnenthal <?>`_, current PhD students in the SOPS Lab.
 Many other hands have helped (and are currently helping) build AmoebotSim.
 We'd like to thank:
 
 *
 
 .. todo::
-    Need to add a GitHub account for Kristian and need to fill out past contributors.
+  Need to add a GitHub account for Kristian and need to fill out past contributors.
 
 
 Licensing
@@ -110,26 +110,26 @@ Citing AmoebotSim
 
 If you utilize AmoebotSim in your research, we ask that you cite the project as:
 
-    TODO
+  TODO
 
 .. todo::
-    Need to figure out what the citation would actually be.
+  Need to figure out what the citation would actually be.
 
 You can also use the following BibTeX entry, if more convenient:
 
 .. code-block:: tex
 
-    TODO
+  TODO
 
 .. todo::
-    Need to build out the BibTeX reference.
+  Need to build out the BibTeX reference.
 
 
 FAQs
 ----
 
 .. todo::
-    If we ever end up needing an FAQ section, would this be a reasonable place to build it out?
+  If we ever end up needing an FAQ section, would this be a reasonable place to build it out?
 
 
 .. _contact-us:
@@ -137,7 +137,7 @@ FAQs
 Contact Us
 ----------
 
-If you can't find the answers you need in the documentation, feel free to open a `new issue <https://github.com/jdaymude/AmoebotSim/issues>`_ in GitHub or email us at sopslab@asu.edu (whichever is more appropriate for your question).
+If you can't find the answers you need in the documentation, feel free to open a `new issue <https://github.com/SOPSLab/AmoebotSim/issues>`_ in GitHub or email us at sopslab@asu.edu (whichever is more appropriate for your question).
 
 
 Changelog
@@ -146,4 +146,4 @@ Changelog
 In the future, this will contain the changelog for AmoebotSim.
 
 .. todo::
-    Need to actually build this out.
+  Need to actually build this out.

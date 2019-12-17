@@ -8,19 +8,19 @@ Feel free to :ref:`contact us <contact-us>` if you encounter any issues.
 
 .. _install-explorer:
 
-For Explorers
--------------
+For Explorers 🔎
+----------------
 
 If you want a standalone, front-end version of AmoebotSim without having to deal with its source code, you can download the latest stable release `here <todo>`_.
 
 .. todo::
-    Add link to releases page. Add any extra instructions needed once that's in place.
+  Add link to releases page. Add any extra instructions needed once that's in place.
 
 
 .. _install-researchdev:
 
-For Researchers and Developers
-------------------------------
+For Researchers 🧪 and Developers 💻
+-------------------------------------
 
 If you want to modify AmoebotSim's source code, either to experiment with your own algorithms or integrate your changes with our repository, follow these instructions.
 
@@ -28,7 +28,7 @@ If you want to modify AmoebotSim's source code, either to experiment with your o
 Accessing the AmoebotSim Repository
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`AmoebotSim <https://github.com/jdaymude/AmoebotSim>`_ is hosted as a public repository on GitHub.
+`AmoebotSim <https://github.com/SOPSLab/AmoebotSim>`_ is hosted as a public repository on GitHub.
 However, only our SOPS Lab development team has push access, meaning that you won't be able to push your code changes directly.
 For those familiar with this paradigm, feel free to fork the AmoebotSim repository, clone your forked repository onto your machine, and go on to the next section.
 
@@ -42,12 +42,14 @@ This walkthrough will assume you're using GitKraken.
 #. `Fork our repository <https://help.github.com/en/github/getting-started-with-github/fork-a-repo>`_ so you can work on your own copy.
 #. Download and install `GitKraken <https://www.gitkraken.com/>`_, and log in with your GitHub account.
 #. Clone *your forked copy* of the AmoebotSim repository. In more detail:
-    * Open GitKraken and navigate to "File > Clone Repo".
-    * In the sidebar of the overlay that opens, choose "GitHub.com" and connect your GitHub account if not already done.
-    * Choose ``AmoebotSim`` under your username as the "Repository to clone".
-    * For "Where to clone to", specify the directory on your machine where you'd like AmoebotSim's source code to live. You may also optionally change the "Full Path".
-    * Select "Clone the repo!" to finish the process. You may be prompted to enter your GitHub login credentials.
-#. AmoebotSim's source code should now be in the directory you specified.
+
+  * Open GitKraken and navigate to "File > Clone Repo".
+  * In the sidebar of the overlay that opens, choose "GitHub.com" and connect your GitHub account if not already done.
+  * Choose ``AmoebotSim`` under your username as the "Repository to clone".
+  * For "Where to clone to", specify the directory on your machine where you'd like AmoebotSim's source code to live. You may also optionally change the "Full Path".
+  * Select "Clone the repo!" to finish the process. You may be prompted to enter your GitHub login credentials.
+
+AmoebotSim's source code should now be in the directory you specified.
 
 
 Installing Qt
@@ -66,7 +68,7 @@ Please follow these instructions carefully, as many small deviations can cause i
 You should select the following Qt components:
 
 .. todo::
-    Need to verify all of the above instructions and then actually do the installer with some version that works.
+  Need to verify all of the above instructions and then actually do the installer with some version that works.
 
 
 Configuring, Building, and Running AmoebotSim
@@ -81,12 +83,12 @@ With the repository cloned and Qt installed, the only thing that's left to do is
 #. Select "Build Steps > qmake > Enable QML debugging and profiling".
 #. Set "Build Steps > make > Parallel jobs" to the number of cores on your machine.
     .. note::
-        This will considerably increase memory usage during compilation.
+      This will considerably increase memory usage during compilation.
 #. Repeat Steps 3, 4, and 6 for the "Profile" and "Release" configurations, but do not enable QML debugging and profiling.
 #. If you are using Windows, select "Run" under "Build & Run" in the second-left sidebar. Under "Run Environment", look for an environment variable called ``QT_OPENGL``. If this variable exists, make sure its value is ``desktop``.
     .. todo::
-        Check if this is still an issue with the updated Qt versions.
+      Check if this is still an issue with the updated Qt versions.
 #. In the bottom-left of Qt Creator, set the configuration back to "Debug" (best for development) and click the green arrow to build and run. AmoebotSim should appear.
 
 .. todo::
-    Add an updated screenshot of AmoebotSim once we settle on the public release version.
+  Add an updated screenshot of AmoebotSim once we settle on the public release version.
