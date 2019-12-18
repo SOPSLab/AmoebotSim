@@ -6,7 +6,7 @@ As a prerequisite, make sure you've followed the instructions in the :doc:`Insta
 Additionally, you should be comfortable with how the `amoebot model <?>`_ is defined.
 
 All tutorials can be found in the ``alg/demo/`` directory of AmoebotSim so you can build and run them yourself.
-Note that the coding style in these tutorials follows our :ref:`C++ Style Guide <?>` which we will not be re-explaining here.
+Note that the coding style in these tutorials follows our :ref:`C++ Style Guide <cpp-style>` which we will not re-explain here.
 
 .. todo::
   Add links.

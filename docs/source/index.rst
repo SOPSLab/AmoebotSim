@@ -125,11 +125,13 @@ You can also use the following BibTeX entry, if more convenient:
   Need to build out the BibTeX reference.
 
 
+.. _faqs:
+
 FAQs
 ----
 
 .. todo::
-  If we ever end up needing an FAQ section, would this be a reasonable place to build it out?
+  Coming soon!
 
 
 .. _contact-us:
@@ -137,8 +139,10 @@ FAQs
 Contact Us
 ----------
 
-If you can't find the answers you need in the documentation, feel free to open a `new issue <https://github.com/SOPSLab/AmoebotSim/issues>`_ in GitHub or email us at sopslab@asu.edu (whichever is more appropriate for your question).
+If you can't find the answers you need in the documentation, feel free to open a `new issue <https://github.com/SOPSLab/AmoebotSim/issues/new/choose>`_ in GitHub using the question template or email us at sopslab@asu.edu (whichever is more appropriate for your question).
 
+
+.. _changelog:
 
 Changelog
 ---------
@@ -146,4 +150,4 @@ Changelog
 In the future, this will contain the changelog for AmoebotSim.
 
 .. todo::
-  Need to actually build this out.
+  Coming soon!
