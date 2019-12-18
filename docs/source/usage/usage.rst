@@ -1,14 +1,22 @@
 Usage
 =====
 
-This usage guide details the controls and functionality of AmoebotSim's front-end user interface.
+This usage guide is for explorers 🔎, researchers 🧪, and developers 💻 learning how to use AmoebotSim's front-end user interface.
 
 
 At A Glance
 -----------
 
-.. todo::
-  Add an annotated figure of AmoebotSim's interface, similar to what matplotlib did in their `usage guide <https://matplotlib.org/tutorials/introductory/usage.html#sphx-glr-tutorials-introductory-usage-py>`_. Then follow up with various explanations.
+.. image:: graphics/usageglance.png
+
+As a first introduction to AmoebotSim, we'll discuss the main parts of its interface:
+
+- **Particle System**. The black dots represent individual particles, which can optionally display a color and a directional pointer. They live on the nodes of the triangular lattice (grey lines).
+- **Algorithm Selector and Parameters**. Choose the algorithm you want to simulate from the dropdown menu, and add its parameters in the list. Pressing *Instantiate* will generate a new instance of that algorithm with the specified parameters.
+- **Simulation Controls**. Pressing the *Start/Stop* button will start and stop the instanced simulation. When stopped, the *Step* button will execute a single particle activation. The *Step Duration* slider controls how fast the simulation proceeds.
+- **Metrics**. These labels track different simulation statistics as it runs.
+- **Inspection Text**. A particle's inspection text shows various information about its state.
+- **Command Line**. The command line provides a front-end interface to AmoebotSim's JavaScript API, described more :ref:`below <command-line>`.
 
 
 .. _controls:
@@ -16,15 +24,8 @@ At A Glance
 Controls
 --------
 
-Move the scene by left-clicking and dragging.
-Zoom in and out with the scroll wheel.
-Use the "Start" and "Stop" buttons to control the current simulation.
-Use the slider to control the speed of the current simulation.
-
-.. todo::
-  Need to now also explain getting data.
-
-Interact with individual particles by using the following button+click interactions.
+Left-click and drag to translate the scene, and use the scroll wheel to zoom in and out.
+Interact with individual particles by using the following.
 
 .. csv-table::
   :header: "Windows", "macOS", "The selected particle..."
@@ -32,9 +33,6 @@ Interact with individual particles by using the following button+click interacti
 
   ``Ctrl`` + ``left click``, ``Cmd`` + ``left click``, ...executes a single activation
   ``Alt`` + ``left click``, ``Option`` + ``left click``, ...shows its inspection text
-
-.. todo::
-  Need to talk about algorithm instantiation.
 
 The following keyboard shortcuts are also available.
 
@@ -47,9 +45,8 @@ The following keyboard shortcuts are also available.
   ``Ctrl+F``, ``Cmd+F``, Recenter the scene on the particle system
   ``Ctrl+B``, ``Cmd+B``, Hide/show UI elements (useful for presentations)
 
-.. todo::
-  Need to add a ``Ctrl+S`` shortcut to save data.
 
+.. _command-line:
 
 Command Line
 ------------
@@ -57,13 +54,13 @@ Command Line
 AmoebotSim's command line can be opened by pressing ``Return``.
 The following is a list of all recognized commands.
 
-.. todo::
-  The script interface will likely no longer exist as a command line interface, but will still be available for scripting. So this section will likely need to move elsewhere or at least be presented differently.
-  There would of course be more things exposed by ``ScriptInterface``, so we'll need to potentially add everything in there to an API area.
-
 .. js:function:: log(msg, error)
 
   :param string msg: A message to log to the command line.
   :param boolean error: ``true`` if and only if this is an error message.
 
   Emits the message ``msg`` to the console, and can be denoted as an error message by setting ``error`` to ``true``.
+
+.. todo::
+  The script interface will likely no longer exist as a command line interface, but will still be available for scripting. So this section will likely need to move elsewhere or at least be presented differently.
+  There would of course be more things exposed by ``ScriptInterface``, so we'll need to potentially add everything in there to an API area.

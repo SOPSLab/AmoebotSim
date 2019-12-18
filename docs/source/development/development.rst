@@ -166,14 +166,11 @@ The Google C++ Style Guide has many formatting rules meant to optimize code read
 #. There should be at most 80 characters per line to make it easy to view and ``diff`` files side-by-side on reasonable screen sizes.
 #. Indentations should be 2 spaces (instead of 1 tab or 4 spaces).
 
-These can be set as default in Qt by navigating to "Tools > Options..." and making the following changes:
+These can be set as default in Qt by navigating to "Tools > Options..." on Windows or "Qt Creator > Preferences" on macOS and making the following changes:
 
 - Under "Text Editor > Display > Text Wrapping", make sure "Display right margin at column" is checked and set to 80.
 - Under "Text Editor > Behavior > Tabs and Indentation", the tab policy should be "Spaces Only", the tab and indent size should both be 2, and "Align continuation lines:" should be "With Spaces".
 - Under "C++ > Code Style", make a copy of "Qt [built-in]" and then "Edit..." this new code style. Under "General > Tabs and Indentation", set the variables as in the above step.
-
-.. todo::
-  Check that the toolbar locations are the same on macOS.
 
 
 Defining Classes

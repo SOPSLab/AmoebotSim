@@ -11,7 +11,7 @@ AmoebotSim
 ==========
 
 Welcome to `AmoebotSim <https://github.com/SOPSLab/AmoebotSim>`_, a visual simulator for the amoebot model developed by the `Self-Organizing Particle Systems (SOPS) Lab <https://sops.engineering.asu.edu/>`_ at Arizona State University and the University of Paderborn.
-The amoebot model is an abstraction of *programmable matter*, a material that can dynamically change its physical properties (e.g., shape, size, color, etc.) based on user input or stimuli from its environment.
+The `amoebot model <link-todo>`_ is an abstraction of *programmable matter*, a material that can dynamically change its physical properties (e.g., shape, size, color, etc.) based on user input or stimuli from its environment.
 This simulator is designed for students and researchers who want to:
 
 * Visualize and learn about current distributed algorithms for the amoebot model
@@ -78,7 +78,7 @@ All development best practices and guidelines for contributions are discussed un
 Acknowledgements
 ----------------
 
-AmoebotSim was originally created by `Robert Gmyr <https://gmyr.net/>`_ during his PhD studies at the University of Paderborn, and is now actively maintained by `Joshua J. Daymude <https://github.com/jdaymude>`_ and `Kristian Hinnenthal <?>`_, current PhD students in the SOPS Lab.
+AmoebotSim was originally created by `Robert Gmyr <https://gmyr.net/>`_ during his PhD studies at the University of Paderborn, and is now actively maintained by `Joshua J. Daymude <https://github.com/jdaymude>`_ and `Kristian Hinnenthal <link-todo>`_, current PhD students in the SOPS Lab.
 Many other hands have helped (and are currently helping) build AmoebotSim.
 We'd like to thank:
 

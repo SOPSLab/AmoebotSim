@@ -11,7 +11,7 @@ Feel free to :ref:`contact us <contact-us>` if you encounter any issues.
 For Explorers 🔎
 ----------------
 
-If you want a standalone, front-end version of AmoebotSim without having to deal with its source code, you can download the latest stable release `here <todo>`_.
+If you want a standalone, front-end version of AmoebotSim without having to deal with its source code, you can download the latest stable release `here <link-todo>`_.
 
 .. todo::
   Add link to releases page. Add any extra instructions needed once that's in place.
@@ -89,6 +89,3 @@ With the repository cloned and Qt installed, the only thing that's left to do is
     .. todo::
       Check if this is still an issue with the updated Qt versions.
 #. In the bottom-left of Qt Creator, set the configuration back to "Debug" (best for development) and click the green arrow to build and run. AmoebotSim should appear.
-
-.. todo::
-  Add an updated screenshot of AmoebotSim once we settle on the public release version.

@@ -3,7 +3,7 @@ Tutorials
 
 These tutorials are for researchers 🧪 and developers 💻 wanting to implement distributed algorithms for programmable matter in AmoebotSim.
 As a prerequisite, make sure you've followed the instructions in the :doc:`Installation Guide </install/install>` so that everything builds and runs correctly.
-Additionally, you should be comfortable with how the `amoebot model <?>`_ is defined.
+Additionally, you should be comfortable with how the `amoebot model <link-todo>`_ is defined.
 
 All tutorials can be found in the ``alg/demo/`` directory of AmoebotSim so you can build and run them yourself.
 Note that the coding style in these tutorials follows our :ref:`C++ Style Guide <cpp-style>` which we will not re-explain here.
@@ -31,7 +31,7 @@ AmoebotSim is organized into seven main directories that loosely collect similar
 
 * ``res/`` contains AmoebotSim's resources, including textures for graphics rendering, icons, GUI layout, etc.
 
-* ``script/`` contains the classes used for interpreting and executing commands issued to AmoebotSim via its `JavaScript API <?>`_.
+* ``script/`` contains the classes used for interpreting and executing commands issued to AmoebotSim via its `JavaScript API <link-todo>`_.
 
 * ``ui/`` contains the classes used for front end GUI rendering and visualization.
 
@@ -134,7 +134,7 @@ Repeat these steps for the header file ``discodemo.h`` using the *"C++ Header Fi
 The Header File
 ^^^^^^^^^^^^^^^
 
-This section assumes you've read the `Defining Classes <?>`_ section of our development guide.
+This section assumes you've read the :ref:`C++ Style Guide <cpp-style>` in our development guide.
 We begin by setting up the header file's structure, which includes the following elements:
 
 - A `class comment <https://google.github.io/styleguide/cppguide.html#Class_Comments>`_ that includes the copyright notice, a brief description of the class(es) this file contains, any relevant publications/references, and this algorithm's command line signature (we'll leave the signature blank for now). **Disco** doesn't have a publication, but we'll add a reference to this code tutorial.
