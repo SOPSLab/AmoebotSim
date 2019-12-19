@@ -11,10 +11,7 @@ Feel free to :ref:`contact us <contact-us>` if you encounter any issues.
 For Explorers 🔎
 ----------------
 
-If you want a standalone, front-end version of AmoebotSim without having to deal with its source code, you can download the latest stable release `here <link-todo>`_.
-
-.. todo::
-  Add link to releases page. Add any extra instructions needed once that's in place.
+If you want a standalone, front-end version of AmoebotSim without having to deal with its source code, you can download the latest stable release `here <https://github.com/SOPSLab/AmoebotSim/releases>`_.
 
 
 .. _install-researchdev:
