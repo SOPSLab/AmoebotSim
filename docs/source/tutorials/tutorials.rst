@@ -52,9 +52,6 @@ The most important classes for implemeting new distributed algorithms in Amoebot
 
 * ``AmoebotSystem`` (in ``core/amoebotsystem.*``) is a glorified container of ``AmoebotParticles`` that keeps track of the particle system's size, position, and progress. All particle systems running new algorithms inherit from this class.
 
-.. todo::
-  Circle back later to check if there's a level of class-linking that would be beneficial to include in this documentation.
-
 
 DiscoDemo: Your First Algorithm
 -------------------------------
