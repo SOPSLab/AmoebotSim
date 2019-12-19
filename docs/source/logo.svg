@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="190"
+   height="190"
+   viewBox="0 0 50.270834 50.270832"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.1 r15371"
+   sodipodi:docname="logo.svg"
+   inkscape:export-filename="C:\Users\joshd\Documents\GitProjects\AmoebotSim\docs\source\logo.png"
+   inkscape:export-xdpi="599.93719"
+   inkscape:export-ydpi="599.93719">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.8"
+     inkscape:cx="212.29976"
+     inkscape:cy="58.367373"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:snap-object-midpoints="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:window-width="3000"
+     inkscape:window-height="1875"
+     inkscape:window-x="3187"
+     inkscape:window-y="695"
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     units="px" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-0.52499084,12.248865)">
+    <path
+       sodipodi:type="star"
+       style="opacity:1;fill:#e0e0e0;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       id="path4485"
+       sodipodi:sides="6"
+       sodipodi:cx="21.882692"
+       sodipodi:cy="13.360214"
+       sodipodi:r1="4.8168797"
+       sodipodi:r2="4.1715403"
+       sodipodi:arg1="1.0471976"
+       sodipodi:arg2="1.5707963"
+       inkscape:flatsided="true"
+       inkscape:rounded="0"
+       inkscape:randomized="0"
+       d="m 24.291132,17.531755 -4.81688,-1e-6 -2.408439,-4.17154 2.40844,-4.1715401 4.816879,2e-7 2.40844,4.1715399 z"
+       transform="matrix(4.330127,-2.5,2.5,4.330127,-102.53091,9.7478003)" />
+    <circle
+       style="opacity:1;fill:#e0e0e0;fill-opacity:1;stroke:none;stroke-width:7.42446136;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       id="path4489-1-0"
+       cx="25.624468"
+       cy="12.892495"
+       r="15.130534" />
+    <circle
+       style="opacity:1;fill:#990033;fill-opacity:1;stroke:none;stroke-width:7.99419403;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       id="path4489"
+       cx="25.624468"
+       cy="12.892495"
+       r="16.291609" />
+    <circle
+       style="opacity:1;fill:#e0e0e0;fill-opacity:1;stroke:none;stroke-width:5.03865242;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       id="path4489-1-0-4"
+       cx="25.624462"
+       cy="12.892494"
+       r="10.268422" />
+    <circle
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:3.49046135;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+       id="path4489-3"
+       cx="25.624468"
+       cy="12.892495"
+       r="7.1133142" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 4.7667674,12.892494 H 25.624462 v 0.47245"
+       id="path4584"
+       inkscape:connector-curvature="0" />
+  </g>
+</svg>
