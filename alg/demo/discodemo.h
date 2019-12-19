@@ -6,8 +6,8 @@
 // tutorial, a first algorithm for new developers to AmoebotSim. Disco
 // demonstrates the basics of algorithm architecture, instantiating a particle
 // system, moving particles, and changing particles' states. The pseudocode is
-// available in the wiki:
-// [https://bitbucket.org/gmyr/amoebotsim/wiki/Code%20Tutorials].
+// available in the docs:
+// [https://amoebotsim.rtfd.io/en/latest/tutorials/tutorials.html#discodemo-your-first-algorithm].
 //
 // Run on the simulator command line using discodemo(# particles, counter max).
 

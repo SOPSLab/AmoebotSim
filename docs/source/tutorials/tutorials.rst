@@ -158,7 +158,7 @@ With all these elements in place, we have the following:
   // demonstrates the basics of algorithm architecture, instantiating a particle
   // system, moving particles, and changing particles' states. The pseudocode is
   // available in the docs:
-  // [???].
+  // [https://amoebotsim.rtfd.io/en/latest/tutorials/tutorials.html#discodemo-your-first-algorithm].
   //
   // Run on the simulator command line using discodemo(???).
 
@@ -177,9 +177,6 @@ With all these elements in place, we have the following:
   };
 
   #endif  // AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
-
-.. todo::
-  Need to update the link in the header comment and in the actual ``discodemo.h`` to reflect the ReadTheDocs link when it's up.
 
 Next, we need to fill out our classes' member variables and functions.
 It's helpful to be familiar with the parent classes' variables and functions when defining our own so we don't waste time implementing functionality that already exists.

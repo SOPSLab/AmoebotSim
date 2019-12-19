@@ -82,10 +82,14 @@ With the repository cloned and Qt installed, the only thing that's left to do is
 #. For "General > Build Directory", choose a directory *outside* the repository directory housing the AmoebotSim source code (otherwise, you will need to add the build directory to your ``.gitignore``).
 #. Select "Build Steps > qmake > Enable QML debugging and profiling".
 #. Set "Build Steps > make > Parallel jobs" to the number of cores on your machine.
+
     .. note::
       This will considerably increase memory usage during compilation.
+
 #. Repeat Steps 3, 4, and 6 for the "Profile" and "Release" configurations, but do not enable QML debugging and profiling.
 #. If you are using Windows, select "Run" under "Build & Run" in the second-left sidebar. Under "Run Environment", look for an environment variable called ``QT_OPENGL``. If this variable exists, make sure its value is ``desktop``.
+
     .. todo::
       Check if this is still an issue with the updated Qt versions.
+
 #. In the bottom-left of Qt Creator, set the configuration back to "Debug" (best for development) and click the green arrow to build and run. AmoebotSim should appear.
