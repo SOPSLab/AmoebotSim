@@ -71,6 +71,8 @@ class ScriptInterface : public QObject {
   // Algorithm instance commands. Documentation for foo() can be found in
   // alg/foo.h.
   void compression(const int numParticles = 100, const double lambda = 4.0);
+  void improvedleaderelection(const int numParticles = 100,
+                              const double holeProb = 0.2);
   void infobjcoating(const int numParticles = 100, const double holeProb = 0.2);
   void leaderelection(const int numParticles = 100,
                       const double holeProb = 0.2);
