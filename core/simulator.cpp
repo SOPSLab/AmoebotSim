@@ -67,22 +67,6 @@ void Simulator::runUntilTermination() {
   }
 }
 
-void Simulator::exportMetrics() {
-  QMutexLocker locker(&system->mutex);
-  QFile outFile(QDir::currentPath() + "/metrics_" +
-                QString::number(QDateTime::currentSecsSinceEpoch()) + ".json");
-  if (!outFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-    return;
-  }
-  QTextStream outStream(&outFile);
-  outStream << system->metricsAsJSON();
-}
-
-void Simulator::saveScreenshotSetup(const QString filePath) {
-  emit systemChanged(system);
-  emit saveScreenshot(filePath);
-}
-
 int Simulator::numParticles() const {
   QMutexLocker locker(&system->mutex);
   return system->size();
@@ -105,4 +89,20 @@ QVariant Simulator::metrics() const {
                                     m->_history.back()}));
   }
   return QVariant::fromValue(metricsData);
+}
+
+void Simulator::exportMetrics() {
+  QMutexLocker locker(&system->mutex);
+  QFile outFile(QDir::currentPath() + "/metrics_" +
+                QString::number(QDateTime::currentSecsSinceEpoch()) + ".json");
+  if (!outFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    return;
+  }
+  QTextStream outStream(&outFile);
+  outStream << system->metricsAsJSON();
+}
+
+void Simulator::saveScreenshotSetup(const QString filePath) {
+  emit systemChanged(system);
+  emit saveScreenshot(filePath);
 }

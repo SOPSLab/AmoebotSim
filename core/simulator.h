@@ -32,7 +32,7 @@ class Simulator : public QObject {
   void stopped();
 
  public slots:
-  // Slots for responding to control flow signals from the GUI. Start, stop, and
+  // Responds to control flow signals from the GUI and scripts. Start, stop, and
   // step are self-explanatory. stepForParticleAt executes one activation for
   // the specific particle at the given node. setStepDuration updates the delay
   // in milliseconds between particle activations. runUntilTermination activates
@@ -44,20 +44,18 @@ class Simulator : public QObject {
   void setStepDuration(int ms);
   void runUntilTermination();
 
-  // Slot for responding to the exportMetrics signal from the GUI. This slot
-  // creates an output file with a unique timestamp (to avoid accidental
-  // overwrites) and writes the metrics JSON to it.
+  // Responds to GUI and script requests for statistics and metrics.
+  int numParticles() const;
+  int numObjects() const;
+  QVariant metrics() const;
+
+  // Responds to the exportMetrics signal from the GUI and scripts by creating
+  // an output file with a unique timestamp (to avoid accidental overwrites) and
+  // writing the metrics JSON to it.
   void exportMetrics();
 
   // TODO.
   void saveScreenshotSetup(const QString filePath);
-
-  // Slots for getting metrics and statistics to the GUI. TODO: why are
-  // numParticles and numObjects implemented here? No part of the GUI connects
-  // to these slots.
-  int numParticles() const;
-  int numObjects() const;
-  QVariant metrics() const;
 
  protected:
   QTimer stepTimer;

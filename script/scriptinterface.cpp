@@ -54,10 +54,6 @@ void ScriptInterface::step() {
   sim.step();
 }
 
-void ScriptInterface::runUntilTermination() {
-  sim.runUntilTermination();
-}
-
 void ScriptInterface::setStepDuration(const int ms) {
   if (ms < 0) {
     log("Step duration must be non-negative", true);
@@ -67,8 +63,21 @@ void ScriptInterface::setStepDuration(const int ms) {
   }
 }
 
+void ScriptInterface::runUntilTermination() {
+  sim.runUntilTermination();
+}
+
 int ScriptInterface::getNumParticles() {
   return sim.numParticles();
+}
+
+int ScriptInterface::getNumObjects() {
+  return sim.numObjects();
+}
+
+void ScriptInterface::exportMetrics() {
+  sim.exportMetrics();
+  log("Metrics exported to application directory.");
 }
 
 void ScriptInterface::setWindowSize(int width, int height) {
@@ -76,7 +85,6 @@ void ScriptInterface::setWindowSize(int width, int height) {
     vis->setWindowSize(width, height);
   }
 }
-
 
 void ScriptInterface::focusOn(int x, int y) {
   if (vis != nullptr) {
