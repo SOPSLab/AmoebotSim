@@ -15,7 +15,6 @@
 
 #include "core/object.h"
 #include "core/system.h"
-#include "core/metric.h"
 #include "helper/randomnumbergenerator.h"
 
 // AmoebotParticle must be forward declared to avoid a cyclic dependency.
@@ -25,7 +24,8 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   friend class AmoebotParticle;
 
  public:
-  // Constructs a new particle system with zero movements and zero rounds.
+  // Constructs a new particle system with fresh round, activation, and movement
+  // counts.
   AmoebotSystem();
 
   // Deletes the particles in this system before destructing the system.
@@ -34,10 +34,6 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   // Functions for activating a particle in the system. activate activates a
   // random particle in the system, while activateParticleAt activates the
   // particle occupying the specified node if such a particle exists.
-  // ISSUE: it appears that activate simply shuffles the particles and then
-  // executes them in order, meaning each particle goes exactly once per round.
-  // This seems inconsistent with our model, where no assumptions are made about
-  // particles' relative computational speeds. Also see registerActivation.
   void activate() final;
   void activateParticleAt(Node node) final;
 
@@ -53,34 +49,35 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   // Returns a reference to the object list.
   virtual const std::deque<Object*>& getObjects() const final;
 
-  // Function for measuring the progress of the system. Returns a vector with
-  // various metrics about the system, represented by a pair with the metrics'
-  // name and its current value.
-  std::vector<std::pair<std::string, double>> metrics();
-
-  // Inserts a particle or a object, respectively, into the system. A particle can be contracted or
-  // expanded. Fails if the respective node(s) are already occupied.
+  // Inserts a particle or an object, respectively, into the system. A particle
+  // can be contracted or expanded. Fails if the respective node(s) are already
+  // occupied.
   void insert(AmoebotParticle* particle);
   void insert(Object* object);
 
-  // Functions for logging the progress of the system. registerMovement
-  // increments the total number of movements the system has made by the given
-  // amount. registerActivation logs that the given particle has been activated;
-  // when all particles have been activated at least once, it resets its logging
-  // and increments the number of completed asynchronous rounds by one.
-  // ISSUE: registerActivation simply inserts particles into a collection and
-  // increments the rounds when the collection size equals the system size,
-  // which relies on the assumption that #activations per round = #particles.
-  // See activate.
-  void registerMovement(unsigned int num = 1);
+  // Functions for logging system progress. registerMovement logs the given
+  // number of movements the system has made. registerActivation logs that the
+  // given particle has been activated. When all particles have been activated
+  // at least once, this resets its logging and triggers registerRound(), which
+  // commits all counts and measures to their histories and increments the
+  // number of completed asynchronous rounds by one.
+  void registerMovement(unsigned int numMoves = 1);
   void registerActivation(AmoebotParticle* particle);
+  void registerRound();
 
-  // Function for signaling the end of a round, triggering the recording of
-  // counts and possible calculation of measures.
-  void endOfRound();
+  // Various access functions for metrics (counts and measures). getCounts
+  // (resp., getMeasures) returns a reference to the count (resp., measure)
+  // list. getCount (resp., getMeasure) return a reference to the named count
+  // (resp., measure). These functions crash if the requested count/measure is
+  // not found!
+  const std::vector<Count*>& getCounts() const final;
+  const std::vector<Measure*>& getMeasures() const final;
+  Count& getCount(std::string name) const final;
+  Measure& getMeasure(std::string name) const final;
 
-  // Triggers the export of all metrics' history, written into a .csv file.
-  void exportData();
+  // Formats the count and measure histories as a JSON string. The structure of
+  // this JSON string can be found in the Usage documentation.
+  const QString metricsAsJSON() const final;
 
  protected:
   std::vector<AmoebotParticle*> particles;
@@ -88,47 +85,8 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   std::set<AmoebotParticle*> activatedParticles;
   std::deque<Object*> objects;
   std::map<Node, Object*> objectMap;
-  std::map<std::string, Count*> counts;
-  std::map<std::string, Measure*> measures;
-};
-
-class ActivationCount : public Count {
- public:
-  ActivationCount() {
-    value = 0;
-    name = "activation";
-  }
-  ~ActivationCount() {}
-  void record() {
-    value++;
-  }
-};
-
-class RoundCount : public Count {
- public:
-  RoundCount() {
-    value = 0;
-    name = "round";
-  }
-  ~RoundCount() {}
-  void record() {
-    value++;
-  }
-};
-
-class MoveCount : public Count {
- public:
-  MoveCount() {
-    value = 0;
-    name = "moves";
-  }
-  ~MoveCount() {}
-  void record() {
-    value++;
-  }
+  std::vector<Count*> _counts;
+  std::vector<Measure*> _measures;
 };
 
 #endif  // AMOEBOTSIM_CORE_AMOEBOTSYSTEM_H_
-
-
-

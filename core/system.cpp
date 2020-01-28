@@ -29,11 +29,6 @@ SystemIterator System::end() const {
   return SystemIterator(this, size());
 }
 
-std::vector<std::pair<std::string, double>> System::metrics() {
-  return {};
-}
-
 bool System::hasTerminated() const {
   return false;
 }
-void System::exportData() {}

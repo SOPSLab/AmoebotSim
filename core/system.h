@@ -13,6 +13,7 @@
 
 #include <QMutex>
 
+#include "core/metric.h"
 #include "core/node.h"
 #include "core/object.h"
 #include "core/particle.h"
@@ -64,13 +65,15 @@ class System {
   SystemIterator begin() const;
   SystemIterator end() const;
 
-  // Signatures for functions measuring the progress of the system. These all
-  // return default values at this level; see amoebotsystem.h for more detailed
-  // documentation.
-  virtual std::vector<std::pair<std::string, double>> metrics();
+  // Various access function signatures for metrics (counts and measures). These
+  // are pure virtual at this level; see amoebotsystem.h for their overrides.
+  virtual const std::vector<Count*>& getCounts() const = 0;
+  virtual const std::vector<Measure*>& getMeasures() const = 0;
+  virtual Count& getCount(std::string name) const = 0;
+  virtual Measure& getMeasure(std::string name) const = 0;
+  virtual const QString metricsAsJSON() const = 0;
 
   virtual bool hasTerminated() const;
-  virtual void exportData();
 
  protected:
   // Checks whether the particle system forms one connected component.

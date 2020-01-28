@@ -2,6 +2,10 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
+#include <QDateTime>
+#include <QDir>
+#include <QFile>
+#include "core/metric.h"
 #include "core/simulator.h"
 
 #include <QMutexLocker>
@@ -30,11 +34,6 @@ std::shared_ptr<System> Simulator::getSystem() const {
 void Simulator::start() {
   stepTimer.start();
   emit started();
-}
-
-void Simulator::getData() {
-  QMutexLocker locker(&system->mutex);
-  system->exportData();
 }
 
 void Simulator::stop() {
@@ -68,6 +67,17 @@ void Simulator::runUntilTermination() {
   }
 }
 
+void Simulator::exportMetrics() {
+  QMutexLocker locker(&system->mutex);
+  QFile outFile(QDir::currentPath() + "/metrics_" +
+                QString::number(QDateTime::currentSecsSinceEpoch()) + ".json");
+  if (!outFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    return;
+  }
+  QTextStream outStream(&outFile);
+  outStream << system->metricsAsJSON();
+}
+
 void Simulator::saveScreenshotSetup(const QString filePath) {
   emit systemChanged(system);
   emit saveScreenshot(filePath);
@@ -78,17 +88,21 @@ int Simulator::numParticles() const {
   return system->size();
 }
 
-QList<QVariant> Simulator::metrics() const {
-  QMutexLocker locker(&system->mutex);
-  std::vector<std::pair<std::string, double>> metricInfo = system->metrics();
-  QList<QVariant> data;
-  for(auto const& m: metricInfo) {
-    data.push_back(QVariant({QString::fromStdString(m.first), m.second}));
-  }
-  return data;
-}
-
 int Simulator::numObjects() const {
   QMutexLocker locker(&system->mutex);
   return system->numObjects();
+}
+
+QVariant Simulator::metrics() const {
+  QMutexLocker locker(&system->mutex);
+  QList<QVariant> metricsData;
+  for (const auto& c : system->getCounts()) {
+    metricsData.push_back(QVariant({QString::fromStdString(c->_name),
+                                    c->_value}));
+  }
+  for (const auto& m : system->getMeasures()) {
+    metricsData.push_back(QVariant({QString::fromStdString(m->_name),
+                                    m->_history.back()}));
+  }
+  return QVariant::fromValue(metricsData);
 }

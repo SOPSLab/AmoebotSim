@@ -31,7 +31,7 @@ ApplicationWindow {
   signal start()
   signal stop()
   signal step()
-  signal getData()
+  signal exportMetrics()
   signal focusOnCenterOfMass()
 
   signal executeCommand(string cmd)
@@ -100,21 +100,20 @@ ApplicationWindow {
         commandField.forceActiveFocus()
         event.accepted = true
       } else if (event.modifiers & Qt.ControlModifier) {
-        if (event.key === Qt.Key_B) {
+        if (event.key === Qt.Key_H) {
           sidebar.visible = !sidebar.visible
           event.accepted = true
-        } else if (event.key === Qt.Key_E) {
+        } else if (event.key === Qt.Key_S) {
           (startStopButton.text === "Start") ? start() : stop()
           event.accepted = true
         } else if (event.key === Qt.Key_D) {
           step()
           event.accepted = true
+        } else if (event.key === Qt.Key_E) {
+          exportMetrics()
+          event.accepted = true
         } else if (event.key === Qt.Key_F) {
           vis.focusOnCenterOfMass()
-          event.accepted = true
-        }
-        else if (event.key === Qt.Key_M) {
-          getData()
           event.accepted = true
         }
       }
@@ -278,50 +277,39 @@ ApplicationWindow {
       }
     }
 
+    ScrollView {
+      id: metricView
+      Layout.preferredWidth: parent.width
+      Layout.preferredHeight: 200
+      verticalScrollBarPolicy: Qt.ScrollBarAsNeeded
+
+      ListView {
+        id: metricList
+        anchors.fill: parent
+        spacing: 5
+
+        delegate: Row {
+          Text {
+            id: metricName
+            width: 150
+            color: "black"
+            text: model.modelData[0] + ": "
+          }
+          Text {
+            id: metricValue
+            width: sidebar.width - 15 - metricName.width
+            color: "black"
+            text: model.modelData[1]
+          }
+        }
+      }
+    }
+
     Rectangle {
       id: fillRectangle
       Layout.preferredWidth: parent.width
       Layout.fillHeight: true
       color: "transparent"
-    }
-
-
-    Rectangle {
-      Layout.preferredWidth: parent.width
-      Layout.preferredHeight: 65
-      Layout.bottomMargin: 15
-      color: "transparent"
-
-      Component {
-        id: metricDelegate
-        RowLayout {
-          spacing: 15
-
-          Rectangle {
-            Layout.preferredWidth: 70
-            Text {
-              anchors.left: parent.left
-              text: model.modelData[0]
-            }
-          }
-
-          Rectangle {
-            Layout.preferredWidth: 25
-            Text {
-              anchors.left: parent.left
-              text: model.modelData[1]
-            }
-          }
-        }
-      }
-
-      ListView {
-        id: metricList
-        anchors.fill: parent
-        model: {}
-        delegate: metricDelegate
-        spacing: 20
-      }
     }
 
     RowLayout {
@@ -437,12 +425,11 @@ ApplicationWindow {
       }
 
       A_Button {
-        id: dataButton
+        id: metricsButton
         implicitWidth: 80
-        text: "Data"
-        onClicked: getData()
+        text: "Metrics"
+        onClicked: exportMetrics()
       }
-
     }
   }
 }

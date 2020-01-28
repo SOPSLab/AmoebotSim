@@ -1,50 +1,57 @@
-// Defines a class to capture a numerical metric of a particle
-// system during an algorithm execution.
+/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+ * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
+ * notice can be found at the top of main/main.cpp. */
 
-#ifndef AMOEBOTSIM_SIM_METRIC_H
-#define AMOEBOTSIM_SIM_METRIC_H
+// Defines numerical metrics capturing system progress and characteristics
+// during algorithm execution.
+
+#ifndef AMOEBOTSIM_CORE_METRIC_H_
+#define AMOEBOTSIM_CORE_METRIC_H_
 
 #include <string>
 #include <vector>
 
 class AmoebotSystem;
 
+class Count {
+ public:
+  // Constructs a new count initialized to zero.
+  Count(const std::string name);
+
+  // Increments the value of this count by the number of events being recorded,
+  // whose default is 1.
+  void record(const unsigned int numEvents = 1);
+
+  // Member variables. The count's name should be human-readable, as it is used
+  // to represent this count in the GUI. The value of the count is what is
+  // incremented. History records the count values over time, once per round.
+  const std::string _name;
+  unsigned int _value;
+  std::vector<int> _history;
+};
+
 class Measure {
  public:
+  // Constructs a new measure with a given name, calculation frequency, and
+  // reference to the system whose property is being measured.
+  Measure(const std::string name, const unsigned int freq,
+          AmoebotSystem& system);
 
-  // Default constructor and deconstructor for the measure class.
-  Measure() {}
-  virtual ~Measure() {}
+  // Implements the measurement from the "global" perspective of the
+  // AmoebotSystem being measured. Examples: calculate the percentage of
+  // particles in a particular state, calculate the perimeter of a system, etc.
+  // This is a pure virtual function and must be overridden by child classes.
+  virtual double calculate() = 0;
 
-  // Virtual function to be overwritten to calculate the desired metric.
-  virtual void calculate(AmoebotSystem* system) = 0;
-
-  // Frequency determines how often the measure is calculated during the
-  // algorithm execution. A value of i would be executed every i round.
-  int frequency;
-
-  // Vector to capture the value of the measure each time it is calculated.
-  std::vector<double> history;
+  // Member variables. The measure's name should be human-readable, as it is
+  // used to represent this measure in the GUI. Frequency determines how often
+  // the measure is calculated in terms of # of rounds. The system reference
+  // points to the AmoebotSystem whose property is being measured. History
+  // records the measure values over time, once per round.
+  const std::string _name;
+  const unsigned int _freq;
+  AmoebotSystem& _system;
+  std::vector<double> _history;
 };
 
-class Count {
-  public:
-
-    // Default constructor and deconstructor for the count class.
-    Count() {}
-    virtual ~Count() {}
-
-    // Virtual function to be overwritten to calculate the desired metric upon
-    // called.
-    virtual void record() = 0;
-
-    // The name will hold the name of the property being counted. Value will
-    // represent the total value of the current count.
-    std::string name;
-    int value;
-
-    // Vector to capture the value of the count over each round.
-    std::vector<double> history;
-};
-
-#endif // AMOEBOTSIM_SIM_METRIC_H
+#endif  // AMOEBOTSIM_CORE_METRIC_H_

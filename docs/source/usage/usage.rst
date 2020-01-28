@@ -40,10 +40,11 @@ The following keyboard shortcuts are also available.
   :header: "Windows", "macOS", "Description"
   :widths: auto
 
-  ``Ctrl+E``, ``Cmd+E``, Start/stop the current simulation
+  ``Ctrl+S``, ``Cmd+S``, Start/stop the current simulation
   ``Ctrl+D``, ``Cmd+D``, Execute a single particle activation
-  ``Ctrl+F``, ``Cmd+F``, Recenter the scene on the particle system
-  ``Ctrl+B``, ``Cmd+B``, Hide/show UI elements (useful for presentations)
+  ``Ctrl+F``, ``Cmd+F``, Focus the scene on the particle system
+  ``Ctrl+H``, ``Cmd+H``, Hide/show UI elements (useful for presentations)
+  ``Ctrl+E``, ``Cmd+E``, Export metrics data as JSON
 
 
 .. _command-line:
@@ -64,3 +65,32 @@ The following is a list of all recognized commands.
 .. todo::
   The script interface will likely no longer exist as a command line interface, but will still be available for scripting. So this section will likely need to move elsewhere or at least be presented differently.
   There would of course be more things exposed by ``ScriptInterface``, so we'll need to potentially add everything in there to an API area.
+
+
+Exporting Metrics Data
+----------------------
+
+AmoebotSim supports metrics tracking for its algorithms. These metrics can be simple, such as the cumulative number of moves made by particles, or more complicated, such as the distance between the furthest pair of particles or the perimeter of a connected particle system. AmoebotSim automatically tracks these metrics and stores their historical data, which can be exported as a JSON for further analysis or plotting. Exporting metrics data (using either the *Metrics* button or ``Ctrl+E``/``Cmd+E``) writes the metrics file as ``metrics_<secs_since_epoch>.json`` to the application executable's directory. The structure of these JSON files is:
+
+.. code-block::
+
+  {
+    "title" : "AmoebotSim Metrics JSON",
+    "datetime" : str,
+    "algorithm" : str,
+    "counts" : [count],
+    "measures" : [measure]
+  }
+
+  count : {
+    "name" : str,
+    "history" : [int]
+  }
+
+  measure : {
+    "name" : str,
+    "frequency" : int,
+    "history" : [float]
+  }
+
+Details on implementing custom metrics and attaching them to algorithms can be found in the :ref:`MetricsDemo tutorial <metrics-demo>`.

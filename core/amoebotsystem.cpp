@@ -2,20 +2,16 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
+#include <QDateTime>
 #include "core/amoebotsystem.h"
 
 #include <QtGlobal>
 
 #include "core/amoebotparticle.h"
-#include <fstream>
-#include <map>
-
-#include <QDir>
-
 AmoebotSystem::AmoebotSystem() {
-  counts["round"] = new RoundCount();
-  counts["activation"] = new ActivationCount();
-  counts["move"] = new MoveCount();
+  _counts.push_back(new Count("# Rounds"));
+  _counts.push_back(new Count("# Activations"));
+  _counts.push_back(new Count("# Moves"));
 }
 
 AmoebotSystem::~AmoebotSystem() {
@@ -23,6 +19,7 @@ AmoebotSystem::~AmoebotSystem() {
     delete p;
   }
   particles.clear();
+
   for (auto t : objects) {
     delete t;
   }
@@ -56,18 +53,7 @@ const Particle& AmoebotSystem::at(int i) const {
 }
 
 const std::deque<Object*>& AmoebotSystem::getObjects() const {
-    return objects;
-}
-
-std::vector<std::pair<std::string, double>> AmoebotSystem::metrics() {
-  std::vector<std::pair<std::string, double>> currentMetrics;
-  for (auto const& c : counts) {
-    currentMetrics.push_back(std::make_pair(c.first, c.second->value));
-  }
-  for (auto const& m : measures) {
-    currentMetrics.push_back(std::make_pair(m.first, m.second->history.back()));
-  }
-  return currentMetrics;
+  return objects;
 }
 
 void AmoebotSystem::insert(AmoebotParticle* particle) {
@@ -91,47 +77,94 @@ void AmoebotSystem::insert(Object* object) {
   objectMap[object->_node] = object;
 }
 
-void AmoebotSystem::endOfRound() {
-  int roundNum = counts["round"]->value;
-  for (auto const& c : counts) {
-    c.second->history.push_back(c.second->value);
-  }
-  for (auto const& m : measures) {
-    if (roundNum % m.second->frequency == 0) {
-      m.second->calculate(this);
-    }
-  }
-  counts["round"]->record();
-}
-
-void AmoebotSystem::exportData()  {
-  std::string homePath = QDir::homePath().toStdString();
-  std::ofstream outFile(homePath + "/metricData.csv");
-
-  for (auto &c : counts) {
-    outFile << c.first << ", ";
-    for (double roundVal : c.second->history) {
-      outFile << roundVal << ", ";
-    }
-    outFile << std::endl;
-  }
-
-  for (auto &m : measures) {
-    outFile << m.first << ", ";
-    for (double roundVal : m.second->history) {
-      outFile << roundVal << ", ";
-    }
-    outFile << std::endl;
-  }
-
-  outFile.close();
+void AmoebotSystem::registerMovement(unsigned int numMoves) {
+  getCount("# Moves").record(numMoves);
 }
 
 void AmoebotSystem::registerActivation(AmoebotParticle* particle) {
-  counts["activation"]->record();
+  getCount("# Activations").record();
   activatedParticles.insert(particle);
-  if(activatedParticles.size() == particles.size()) {
-    endOfRound();
+  if (activatedParticles.size() == particles.size()) {
+    registerRound();
     activatedParticles.clear();
   }
+}
+
+void AmoebotSystem::registerRound() {
+  for (const auto& c : _counts) {
+    c->_history.push_back(c->_value);
+  }
+  for (const auto& m : _measures) {
+    if (getCount("# Rounds")._value % m->_freq == 0) {
+      m->_history.push_back(m->calculate());
+    }
+  }
+  getCount("# Rounds").record();
+}
+
+const std::vector<Count*>& AmoebotSystem::getCounts() const {
+  return _counts;
+}
+
+const std::vector<Measure*>& AmoebotSystem::getMeasures() const {
+  return _measures;
+}
+
+Count& AmoebotSystem::getCount(std::string name) const {
+  for (const auto& c : _counts) {
+    if (c->_name.compare(name) == 0) {
+      return *c;
+    }
+  }
+  Q_ASSERT(false);  // Requested count does not exist.
+}
+
+Measure& AmoebotSystem::getMeasure(std::string name) const {
+  for (const auto& m : _measures) {
+    if (m->_name.compare(name) == 0) {
+      return *m;
+    }
+  }
+  Q_ASSERT(false);  // Requested measure does not exist.
+}
+
+
+const QString AmoebotSystem::metricsAsJSON() const {
+  QString json = "{\"title\" : \"AmoebotSim Metrics JSON\", ";
+  json += "\"datetime\" : \"" +
+          QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss") + "\", ";
+  json += "\"algorithm\" : \"???\", ";
+  json += "\"counts\" : [";
+  for (const auto& c : _counts) {
+    json += "{\"name\" : \"" + QString::fromStdString(c->_name) + "\", ";
+    json += "\"history\" : [";
+    for (auto val : c->_history) {
+      json += QString::number(val) += ", ";
+    }
+    if (!c->_history.empty()) {
+      json.chop(2);  // Remove the last ", ".
+    }
+    json += "]}, ";
+  }
+  if (!_counts.empty()) {
+    json.chop(2);  // Remove the last ", ".
+  }
+  json += "], \"measures\" : [";
+  for (const auto& m : _measures) {
+    json += "{\"name\" : \"" + QString::fromStdString(m->_name) + "\", ";
+    json += "\"frequency\" : " + QString::number(m->_freq) + ", ";
+    json += "\"history\" : [";
+    for (auto val : m->_history) {
+      json += QString::number(val) += ", ";
+    }
+    if (!m->_history.empty()) {
+      json.chop(2);  // Remove the last ", ".
+    }
+    json += "]}, ";
+  }
+  if (!_measures.empty()) {
+    json.chop(2);  // Remove the last ", ".
+  }
+  json += "]}";
+  return json;
 }
