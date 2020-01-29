@@ -12,7 +12,7 @@
 
 #include "core/simulator.h"
 #include "script/scriptengine.h"
-#include "ui/alg.h"
+#include "ui/algorithm.h"
 #include "ui/commandhistorymanager.h"
 #include "ui/parameterlistmodel.h"
 

@@ -7,7 +7,7 @@
 
 #include <QStringListModel>
 
-#include "ui/alg.h"
+#include "ui/algorithm.h"
 
 class ParameterListModel : public QStringListModel {
   Q_OBJECT

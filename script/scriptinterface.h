@@ -4,8 +4,8 @@
 
 // Defines the API for the command line interface in the simulator.
 
-#ifndef AMOEBOTSIM_SCRIPT_SCRIPTINTERFACE_H
-#define AMOEBOTSIM_SCRIPT_SCRIPTINTERFACE_H
+#ifndef AMOEBOTSIM_SCRIPT_SCRIPTINTERFACE_H_
+#define AMOEBOTSIM_SCRIPT_SCRIPTINTERFACE_H_
 
 #include <QObject>
 #include <QString>
@@ -86,4 +86,4 @@ class ScriptInterface : public QObject {
   QString pad(const int number, const int length);
 };
 
-#endif  // AMOEBOTSIM_SCRIPT_SCRIPTINTERFACE_H
+#endif  // AMOEBOTSIM_SCRIPT_SCRIPTINTERFACE_H_

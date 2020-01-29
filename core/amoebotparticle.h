@@ -10,8 +10,8 @@
 // neighboring particles are able to detect neighboring objects using the
 // functions defined below (e.g., hasObjectAtLabel and hasObjectNbr)
 
-#ifndef AMOEBOTSIM_ALG_AMOEBOTPARTICLE_H
-#define AMOEBOTSIM_ALG_AMOEBOTPARTICLE_H
+#ifndef AMOEBOTSIM_CORE_AMOEBOTPARTICLE_H_
+#define AMOEBOTSIM_CORE_AMOEBOTPARTICLE_H_
 
 #include <array>
 #include <deque>
@@ -277,4 +277,4 @@ bool AmoebotParticle::hasToken(
   return false;
 }
 
-#endif  // AMOEBOTSIM_ALG_AMOEBOTPARTICLE_H
+#endif  // AMOEBOTSIM_CORE_AMOEBOTPARTICLE_H_

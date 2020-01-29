@@ -27,7 +27,7 @@ HEADERS += \
     main/application.h \
     script/scriptengine.h \
     script/scriptinterface.h \
-    ui/alg.h \
+    ui/algorithm.h \
     ui/commandhistorymanager.h \
     ui/glitem.h \
     ui/parameterlistmodel.h \
@@ -54,7 +54,7 @@ SOURCES += \
     main/main.cpp\
     script/scriptengine.cpp \
     script/scriptinterface.cpp \
-    ui/alg.cpp \
+    ui/algorithm.cpp \
     ui/commandhistorymanager.cpp \
     ui/glitem.cpp \
     ui/parameterlistmodel.cpp \

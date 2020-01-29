@@ -24,8 +24,8 @@
 // is significantly simpler than this version's, and both Solitude Verification
 // phases accomplish the same goals.
 
-#ifndef AMOEBOTSIM_ALG_LEADERELECTION_H
-#define AMOEBOTSIM_ALG_LEADERELECTION_H
+#ifndef AMOEBOTSIM_ALG_LEADERELECTION_H_
+#define AMOEBOTSIM_ALG_LEADERELECTION_H_
 
 #include <QString>
 
@@ -387,4 +387,4 @@ class LeaderElectionSystem : public AmoebotSystem {
   bool hasTerminated() const override;
 };
 
-#endif  // AMOEBOTSIM_ALG_LEADERELECTION_H
+#endif  // AMOEBOTSIM_ALG_LEADERELECTION_H_

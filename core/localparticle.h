@@ -22,8 +22,8 @@
 //          only one of the two nodes occupied by the particle) gets label 0.
 //          From label 0, labels increase counter-clockwise around the particle.
 
-#ifndef AMOEBOTSIM_ALG_LOCALPARTICLE_H
-#define AMOEBOTSIM_ALG_LOCALPARTICLE_H
+#ifndef AMOEBOTSIM_CORE_LOCALPARTICLE_H_
+#define AMOEBOTSIM_CORE_LOCALPARTICLE_H_
 
 #include <array>
 #include <vector>
@@ -129,4 +129,4 @@ class LocalParticle : public Particle {
   static const std::array<std::array<int, 10>, 6> labelDir;
 };
 
-#endif  // AMOEBOTSIM_ALG_LOCALPARTICLE_H
+#endif  // AMOEBOTSIM_CORE_LOCALPARTICLE_H_

@@ -2,8 +2,8 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-#ifndef VISITEM_H
-#define VISITEM_H
+#ifndef AMOEBOTSIM_UI_VISITEM_H_
+#define AMOEBOTSIM_UI_VISITEM_H_
 
 #include <memory>
 
@@ -79,4 +79,4 @@ class VisItem : public GLItem {
   std::shared_ptr<System> system;
 };
 
-#endif // VISITEM_H
+#endif  // AMOEBOTSIM_UI_VISITEM_H_

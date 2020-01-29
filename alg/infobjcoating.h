@@ -12,8 +12,8 @@
 // Run with infobjcoating(#particles, hole probability) on the simulator command
 // line.
 
-#ifndef AMOEBOTSIM_ALG_INFOBJCOATING_H
-#define AMOEBOTSIM_ALG_INFOBJCOATING_H
+#ifndef AMOEBOTSIM_ALG_INFOBJCOATING_H_
+#define AMOEBOTSIM_ALG_INFOBJCOATING_H_
 
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
@@ -98,4 +98,4 @@ class InfObjCoatingSystem : public AmoebotSystem {
   bool hasTerminated() const override;
 };
 
-#endif  // AMOEBOTSIM_ALG_INFOBJCOATING_H
+#endif  // AMOEBOTSIM_ALG_INFOBJCOATING_H_

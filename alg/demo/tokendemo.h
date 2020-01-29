@@ -7,8 +7,8 @@
 // Run with tokendemo(#particles, hole probability) on the simulator command
 // line.
 
-#ifndef AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H
-#define AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H
+#ifndef AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H_
+#define AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H_
 
 #include "alg/shapeformation.h"
 
@@ -59,4 +59,4 @@ class TokenDemoSystem : public AmoebotSystem {
   virtual bool hasTerminated() const;
 };
 
-#endif  // AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H
+#endif  // AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H_

@@ -2,8 +2,8 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-#ifndef RANDOMNUMBERGENERATOR_H
-#define RANDOMNUMBERGENERATOR_H
+#ifndef AMOEBOTSIM_HELPER_RANDOMNUMBERGENERATOR_H_
+#define AMOEBOTSIM_HELPER_RANDOMNUMBERGENERATOR_H_
 
 #include <algorithm>
 #include <chrono>
@@ -81,4 +81,4 @@ void RandomNumberGenerator::shuffle(Iterator first, Iterator last)
     std::shuffle(first, last, rng);
 }
 
-#endif // RANDOMNUMBERGENERATOR_H
+#endif  // AMOEBOTSIM_HELPER_RANDOMNUMBERGENERATOR_H_
