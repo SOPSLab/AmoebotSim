@@ -9,9 +9,9 @@
 #ifndef AMOEBOTSIM_CORE_NODE_H_
 #define AMOEBOTSIM_CORE_NODE_H_
 
-#include <QtGlobal>
-
 #include <array>
+
+#include <QtGlobal>
 
 class Node {
  public:

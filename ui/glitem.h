@@ -10,6 +10,7 @@
 
 class GLItem : public QQuickItem {
   Q_OBJECT
+
  public:
   explicit GLItem(QQuickItem* parent = nullptr);
 

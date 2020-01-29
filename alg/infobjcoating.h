@@ -15,6 +15,8 @@
 #ifndef AMOEBOTSIM_ALG_INFOBJCOATING_H_
 #define AMOEBOTSIM_ALG_INFOBJCOATING_H_
 
+#include <QString>
+
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
 

@@ -5,10 +5,7 @@
 #ifndef AMOEBOTSIM_UI_VIEW_H_
 #define AMOEBOTSIM_UI_VIEW_H_
 
-#include <cmath>
-
 #include <QMutex>
-#include <QMutexLocker>
 #include <QPointF>
 
 class View {

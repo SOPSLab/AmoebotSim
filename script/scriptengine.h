@@ -9,13 +9,14 @@
 #include <QObject>
 
 #include "core/simulator.h"
-
 #include "ui/visitem.h"
 
+// ScriptInterface must be forward declared to avoid a dependency loop.
 class ScriptInterface;
 
 class ScriptEngine : public QObject {
   Q_OBJECT
+
  public:
   ScriptEngine(Simulator& sim, VisItem* vis = nullptr);
 

@@ -13,7 +13,6 @@
 #ifndef AMOEBOTSIM_CORE_AMOEBOTPARTICLE_H_
 #define AMOEBOTSIM_CORE_AMOEBOTPARTICLE_H_
 
-#include <array>
 #include <deque>
 #include <functional>
 #include <map>
@@ -21,8 +20,8 @@
 
 #include "core/amoebotsystem.h"
 #include "core/localparticle.h"
-#include "helper/randomnumbergenerator.h"
 #include "core/node.h"
+#include "helper/randomnumbergenerator.h"
 
 class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
  public:
@@ -153,6 +152,7 @@ class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
                 propertyCheck) const;
 
   AmoebotSystem& system;
+
  private:
   std::deque<std::shared_ptr<Token>> tokens;
 };

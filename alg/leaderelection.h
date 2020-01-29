@@ -27,13 +27,13 @@
 #ifndef AMOEBOTSIM_ALG_LEADERELECTION_H_
 #define AMOEBOTSIM_ALG_LEADERELECTION_H_
 
-#include <QString>
+#include <array>
+#include <vector>
 
-#include <set>
+#include <QString>
 
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
-
 
 class LeaderElectionParticle : public AmoebotParticle {
  public:

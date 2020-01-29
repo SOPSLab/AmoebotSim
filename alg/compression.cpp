@@ -2,12 +2,12 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
+#include "alg/compression.h"
+
 #include <algorithm>  // For distance() and find().
 #include <QtGlobal>
 #include <set>
 #include <vector>
-
-#include "alg/compression.h"
 
 CompressionParticle::CompressionParticle(const Node head,
                                          const int globalTailDir,

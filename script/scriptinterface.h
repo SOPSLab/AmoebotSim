@@ -10,8 +10,8 @@
 #include <QObject>
 #include <QString>
 
-#include "script/scriptengine.h"
 #include "core/simulator.h"
+#include "script/scriptengine.h"
 #include "ui/visitem.h"
 
 class ScriptInterface : public QObject {

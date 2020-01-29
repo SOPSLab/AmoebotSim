@@ -7,23 +7,23 @@
 
 #include <memory>
 
+#include <QMouseEvent>
 #include <QOpenGLTexture>
 #include <QPointF>
 #include <QString>
 #include <QTimer>
+#include <QWheelEvent>
 
 #include "core/node.h"
+#include "core/object.h"
 #include "core/particle.h"
 #include "core/system.h"
 #include "ui/glitem.h"
 #include "ui/view.h"
-#include "core/object.h"
-
-class QMouseEvent;
-class QWheelEvent;
 
 class VisItem : public GLItem {
   Q_OBJECT
+
  public:
   explicit VisItem(QQuickItem* parent = nullptr);
 

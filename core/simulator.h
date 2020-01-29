@@ -14,6 +14,7 @@
 
 class Simulator : public QObject {
   Q_OBJECT
+
  public:
   Simulator();
   virtual ~Simulator();

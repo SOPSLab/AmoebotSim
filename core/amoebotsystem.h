@@ -13,10 +13,11 @@
 #include <set>
 #include <vector>
 
-#include "helper/randomnumbergenerator.h"
-#include "core/system.h"
 #include "core/object.h"
+#include "core/system.h"
+#include "helper/randomnumbergenerator.h"
 
+// AmoebotParticle must be forward declared to avoid a cyclic dependency.
 class AmoebotParticle;
 
 class AmoebotSystem : public System, public RandomNumberGenerator {

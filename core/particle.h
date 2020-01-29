@@ -8,10 +8,9 @@
 #ifndef AMOEBOTSIM_CORE_PARTICLE_H_
 #define AMOEBOTSIM_CORE_PARTICLE_H_
 
-#include <QString>
-
 #include <array>
-#include <vector>
+
+#include <QString>
 
 #include "core/node.h"
 

@@ -8,15 +8,16 @@
 #ifndef AMOEBOTSIM_CORE_SYSTEM_H_
 #define AMOEBOTSIM_CORE_SYSTEM_H_
 
-#include <QMutex>
-
 #include <deque>
 #include <set>
 
-#include "core/node.h"
-#include "core/particle.h"
-#include "core/object.h"
+#include <QMutex>
 
+#include "core/node.h"
+#include "core/object.h"
+#include "core/particle.h"
+
+// System is forward declared to avoid a cyclic dependency with SystemIterator.
 class System;
 
 class SystemIterator {
@@ -40,10 +41,6 @@ class SystemIterator {
 
 class System {
  public:
-  // Default constructor and destructor. TODO: not sure if we need these.
-  System();
-  virtual ~System();
-
   // Signatures for functions which activate particles. Must be overridden by
   // any system subclasses; see amoebotsystem.h for more detailed documentation.
   virtual void activate() = 0;

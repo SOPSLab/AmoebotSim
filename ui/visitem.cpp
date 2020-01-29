@@ -2,16 +2,15 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
+#include "ui/visitem.h"
+
 #include <cmath>
 
-#include <QFile>
 #include <QImage>
 #include <QMutexLocker>
 #include <QOpenGLFunctions_2_0>
 #include <QQuickWindow>
 #include <QRgb>
-
-#include "ui/visitem.h"
 
 // visualisation preferences
 static constexpr float targetFramesPerSecond = 60.0f;
