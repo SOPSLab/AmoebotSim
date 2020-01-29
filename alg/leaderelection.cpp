@@ -2,13 +2,11 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-#include <QtGlobal>
-#include <QtDebug>
+#include "alg/leaderelection.h"
 
 #include <set>
-#include <vector>
 
-#include "alg/leaderelection.h"
+#include <QtGlobal>
 
 //----------------------------BEGIN PARTICLE CODE----------------------------
 

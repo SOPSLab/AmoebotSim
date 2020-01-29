@@ -15,14 +15,14 @@
 // mode == "t2" --> center triangle formation
 // mode == "l" --> line formation
 
-#ifndef AMOEBOTSIM_ALG_SHAPEFORMATION_H
-#define AMOEBOTSIM_ALG_SHAPEFORMATION_H
+#ifndef AMOEBOTSIM_ALG_SHAPEFORMATION_H_
+#define AMOEBOTSIM_ALG_SHAPEFORMATION_H_
+
+#include <QString>
+#include <set>
 
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
-
-#include <set>
-#include <QString>
 
 class ShapeFormationParticle : public AmoebotParticle {
  public:
@@ -127,4 +127,4 @@ class ShapeFormationSystem : public AmoebotSystem  {
   static std::set<QString> getAcceptedModes();
 };
 
-#endif  // AMOEBOTSIM_ALG_SHAPEFORMATION_H
+#endif  // AMOEBOTSIM_ALG_SHAPEFORMATION_H_

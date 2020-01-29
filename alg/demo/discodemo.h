@@ -14,6 +14,8 @@
 #ifndef AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
 #define AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
 
+#include <QString>
+
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
 

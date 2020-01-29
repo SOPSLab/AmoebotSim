@@ -5,13 +5,12 @@
 // Defines a base particle which contains the information necessary for drawing
 // a particle in the simulator.
 
-#ifndef AMOEBOTSIM_SIM_PARTICLE_H
-#define AMOEBOTSIM_SIM_PARTICLE_H
-
-#include <QString>
+#ifndef AMOEBOTSIM_CORE_PARTICLE_H_
+#define AMOEBOTSIM_CORE_PARTICLE_H_
 
 #include <array>
-#include <vector>
+
+#include <QString>
 
 #include "core/node.h"
 
@@ -57,4 +56,4 @@ class Particle {
   int globalTailDir;
 };
 
-#endif  // AMOEBOTSIM_SIM_PARTICLE_H
+#endif  // AMOEBOTSIM_CORE_PARTICLE_H_

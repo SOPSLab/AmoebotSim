@@ -2,8 +2,6 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-#include <QtGlobal>
-
 #include "core/object.h"
 
 Object::Object(const Node& node) :

@@ -21,10 +21,6 @@ const SystemIterator& SystemIterator::operator++() {
   return *this;
 }
 
-// TODO: remove?
-System::System() {}
-System::~System() {}
-
 SystemIterator System::begin() const {
   return SystemIterator(this, 0);
 }

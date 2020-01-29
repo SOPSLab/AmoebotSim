@@ -4,8 +4,8 @@
 
 // Defines an object, which is a single node of a solid object.
 
-#ifndef AMOEBOTSIM_SIM_OBJECT_H_
-#define AMOEBOTSIM_SIM_OBJECT_H_
+#ifndef AMOEBOTSIM_CORE_OBJECT_H_
+#define AMOEBOTSIM_CORE_OBJECT_H_
 
 #include "core/node.h"
 
@@ -17,4 +17,4 @@ class Object {
   Node _node;
 };
 
-#endif  // AMOEBOTSIM_SIM_OBJECT_H_
+#endif  // AMOEBOTSIM_CORE_OBJECT_H_

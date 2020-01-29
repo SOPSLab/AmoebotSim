@@ -2,11 +2,12 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
+#include "script/scriptengine.h"
+
 #include <QFile>
 #include <QString>
 #include <QTextStream>
 
-#include "script/scriptengine.h"
 #include "script/scriptinterface.h"
 
 ScriptEngine::ScriptEngine(Simulator& sim, VisItem* vis)

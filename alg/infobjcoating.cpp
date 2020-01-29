@@ -2,10 +2,9 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-#include <cmath>
-#include <set>
-
 #include "alg/infobjcoating.h"
+
+#include <set>
 
 InfObjCoatingParticle::InfObjCoatingParticle(const Node head,
                                              const int globalTailDir,

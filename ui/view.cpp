@@ -4,6 +4,10 @@
 
 #include "ui/view.h"
 
+#include <cmath>
+
+#include <QMutexLocker>
+
 // Zoom preferences.
 static constexpr double zoomInit = 16.0;
 static constexpr double zoomMin = 4.0;

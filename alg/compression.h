@@ -11,8 +11,10 @@
 // Run with compression(#particles, hole probability) on the simulator command
 // line.
 
-#ifndef AMOEBOTSIM_ALG_COMPRESSION_H
-#define AMOEBOTSIM_ALG_COMPRESSION_H
+#ifndef AMOEBOTSIM_ALG_COMPRESSION_H_
+#define AMOEBOTSIM_ALG_COMPRESSION_H_
+
+#include <QString>
 
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
@@ -75,4 +77,4 @@ class CompressionSystem : public AmoebotSystem {
   virtual bool hasTerminated() const;
 };
 
-#endif  // AMOEBOTSIM_ALG_COMPRESSION_H
+#endif  // AMOEBOTSIM_ALG_COMPRESSION_H_

@@ -2,10 +2,10 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
+#include "ui/glitem.h"
+
 #include <QQuickWindow>
 #include <QSurfaceFormat>
-
-#include "ui/glitem.h"
 
 GLItem::GLItem(QQuickItem* parent) :
   QQuickItem(parent),

@@ -2,10 +2,13 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
+#include "script/scriptinterface.h"
+
+#include <cmath>
+
+#include <QDateTime>
 #include <QFile>
 #include <QTextStream>
-#include <QTime>
-#include <math.h>
 
 #include "alg/demo/discodemo.h"
 #include "alg/demo/pulldemo.h"
@@ -15,7 +18,6 @@
 #include "alg/leaderelection.h"
 #include "alg/shapeformation.h"
 
-#include "script/scriptinterface.h"
 #include "core/node.h"
 
 ScriptInterface::ScriptInterface(ScriptEngine &engine, Simulator& sim,
@@ -99,8 +101,7 @@ void ScriptInterface::setZoom(float zoom) {
 void ScriptInterface::saveScreenshot(QString filePath) {
   if(filePath == "") {
     filePath = QString("amoebotsim_") +
-               QString::number(QTime::currentTime().msecsSinceStartOfDay()) +
-               QString(".png");
+               QString::number(QDateTime::currentSecsSinceEpoch()) + ".png";
   }
 
   sim.saveScreenshotSetup(filePath);

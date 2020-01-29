@@ -6,12 +6,12 @@
 // left-right and the y-axis runs northeast-southwest.
 // The neighbors of a node are numbered ascendingy in clockwise order: 0=E, 1=NE, 2=NW, 3=W, 4=SW, 5=SE
 
-#ifndef AMOEBOTSIM_SIM_NODE_H
-#define AMOEBOTSIM_SIM_NODE_H
-
-#include <QtGlobal>
+#ifndef AMOEBOTSIM_CORE_NODE_H_
+#define AMOEBOTSIM_CORE_NODE_H_
 
 #include <array>
+
+#include <QtGlobal>
 
 class Node {
  public:
@@ -68,4 +68,4 @@ inline bool operator<(const Node& v1, const Node& v2) {
   return (v1.x < v2.x) || (v1.x == v2.x && v1.y < v2.y);
 }
 
-#endif  // AMOEBOTSIM_SIM_NODE_H
+#endif  // AMOEBOTSIM_CORE_NODE_H_

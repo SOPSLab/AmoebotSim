@@ -2,28 +2,28 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-#ifndef VISITEM_H
-#define VISITEM_H
+#ifndef AMOEBOTSIM_UI_VISITEM_H_
+#define AMOEBOTSIM_UI_VISITEM_H_
 
 #include <memory>
 
+#include <QMouseEvent>
 #include <QOpenGLTexture>
 #include <QPointF>
 #include <QString>
 #include <QTimer>
+#include <QWheelEvent>
 
 #include "core/node.h"
+#include "core/object.h"
 #include "core/particle.h"
 #include "core/system.h"
 #include "ui/glitem.h"
 #include "ui/view.h"
-#include "core/object.h"
-
-class QMouseEvent;
-class QWheelEvent;
 
 class VisItem : public GLItem {
   Q_OBJECT
+
  public:
   explicit VisItem(QQuickItem* parent = nullptr);
 
@@ -79,4 +79,4 @@ class VisItem : public GLItem {
   std::shared_ptr<System> system;
 };
 
-#endif // VISITEM_H
+#endif  // AMOEBOTSIM_UI_VISITEM_H_

@@ -2,8 +2,8 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-#ifndef SIMULATOR_H
-#define SIMULATOR_H
+#ifndef AMOEBOTSIM_CORE_SIMULATOR_H_
+#define AMOEBOTSIM_CORE_SIMULATOR_H_
 
 #include <memory>
 
@@ -14,6 +14,7 @@
 
 class Simulator : public QObject {
   Q_OBJECT
+
  public:
   Simulator();
   virtual ~Simulator();
@@ -49,4 +50,4 @@ class Simulator : public QObject {
   std::shared_ptr<System> system;
 };
 
-#endif // SIMULATOR_H
+#endif  // AMOEBOTSIM_CORE_SIMULATOR_H_

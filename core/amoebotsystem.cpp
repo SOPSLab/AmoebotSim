@@ -2,8 +2,11 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-#include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
+
+#include <QtGlobal>
+
+#include "core/amoebotparticle.h"
 
 AmoebotSystem::AmoebotSystem()
   : _numMovements(0),

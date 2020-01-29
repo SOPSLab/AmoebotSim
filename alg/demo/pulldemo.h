@@ -6,8 +6,10 @@
 //
 // Run with pulldemo() on the simulator command line.
 
-#ifndef AMOEBOTSIM_ALG_DEMO_PULLDEMO_H
-#define AMOEBOTSIM_ALG_DEMO_PULLDEMO_H
+#ifndef AMOEBOTSIM_ALG_DEMO_PULLDEMO_H_
+#define AMOEBOTSIM_ALG_DEMO_PULLDEMO_H_
+
+#include <QString>
 
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
@@ -69,4 +71,4 @@ class PullDemoSystem : public AmoebotSystem {
   bool hasTerminated() const override;
 };
 
-#endif  // AMOEBOTSIM_ALG_DEMO_PULLDEMO_H
+#endif  // AMOEBOTSIM_ALG_DEMO_PULLDEMO_H_

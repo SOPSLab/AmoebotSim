@@ -2,11 +2,14 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
+#include "main/application.h"
+
 #include <QDebug>
 #include <QQmlContext>
+#include <QString>
+#include <QStringList>
 #include <QTimer>
 
-#include "main/application.h"
 #include "ui/visitem.h"
 
 // for evaluation, you can specify the path to a script here

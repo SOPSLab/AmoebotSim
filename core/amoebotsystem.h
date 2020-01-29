@@ -5,18 +5,19 @@
 // Defines a particle system that complies with the properties and constraints
 // of the amoebot model, but is independent of any particular algorithm.
 
-#ifndef AMOEBOTSIM_ALG_AMOEBOTSYSTEM_H
-#define AMOEBOTSIM_ALG_AMOEBOTSYSTEM_H
+#ifndef AMOEBOTSIM_CORE_AMOEBOTSYSTEM_H_
+#define AMOEBOTSIM_CORE_AMOEBOTSYSTEM_H_
 
 #include <deque>
 #include <map>
 #include <set>
 #include <vector>
 
-#include "helper/randomnumbergenerator.h"
-#include "core/system.h"
 #include "core/object.h"
+#include "core/system.h"
+#include "helper/randomnumbergenerator.h"
 
+// AmoebotParticle must be forward declared to avoid a cyclic dependency.
 class AmoebotParticle;
 
 class AmoebotSystem : public System, public RandomNumberGenerator {
@@ -87,4 +88,4 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   unsigned int _numRounds;
 };
 
-#endif  // AMOEBOTSIM_ALG_AMOEBOTSYSTEM_H
+#endif  // AMOEBOTSIM_CORE_AMOEBOTSYSTEM_H_
