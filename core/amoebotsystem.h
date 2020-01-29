@@ -13,6 +13,9 @@
 #include <set>
 #include <vector>
 
+#include <QString>
+
+#include "core/metric.h"
 #include "core/object.h"
 #include "core/system.h"
 #include "helper/randomnumbergenerator.h"
@@ -28,7 +31,8 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   // counts.
   AmoebotSystem();
 
-  // Deletes the particles in this system before destructing the system.
+  // Deletes the particles, objects, and metrics in this system before
+  // destructing the system.
   virtual ~AmoebotSystem();
 
   // Functions for activating a particle in the system. activate activates a
@@ -72,8 +76,8 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
   // not found!
   const std::vector<Count*>& getCounts() const final;
   const std::vector<Measure*>& getMeasures() const final;
-  Count& getCount(std::string name) const final;
-  Measure& getMeasure(std::string name) const final;
+  Count& getCount(QString name) const final;
+  Measure& getMeasure(QString name) const final;
 
   // Formats the count and measure histories as a JSON string. The structure of
   // this JSON string can be found in the Usage documentation.

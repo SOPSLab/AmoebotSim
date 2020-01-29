@@ -2,13 +2,15 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
+#include "core/simulator.h"
+
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
-#include "core/metric.h"
-#include "core/simulator.h"
-
 #include <QMutexLocker>
+#include <QTextStream>
+
+#include "core/metric.h"
 
 Simulator::Simulator() {
   stepTimer.setInterval(100);
@@ -81,12 +83,14 @@ QVariant Simulator::metrics() const {
   QMutexLocker locker(&system->mutex);
   QList<QVariant> metricsData;
   for (const auto& c : system->getCounts()) {
-    metricsData.push_back(QVariant({QString::fromStdString(c->_name),
-                                    c->_value}));
+    metricsData.push_back(QVariant({c->_name, c->_value}));
   }
   for (const auto& m : system->getMeasures()) {
-    metricsData.push_back(QVariant({QString::fromStdString(m->_name),
-                                    m->_history.back()}));
+    if (m->_history.empty()) {
+      metricsData.push_back(QVariant({m->_name, 0.0}));
+    } else {
+      metricsData.push_back(QVariant({m->_name, m->_history.back()}));
+    }
   }
   return QVariant::fromValue(metricsData);
 }

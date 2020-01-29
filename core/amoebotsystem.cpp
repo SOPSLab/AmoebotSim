@@ -2,12 +2,13 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-#include <QDateTime>
 #include "core/amoebotsystem.h"
 
+#include <QDateTime>
 #include <QtGlobal>
 
 #include "core/amoebotparticle.h"
+
 AmoebotSystem::AmoebotSystem() {
   _counts.push_back(new Count("# Rounds"));
   _counts.push_back(new Count("# Activations"));
@@ -24,6 +25,14 @@ AmoebotSystem::~AmoebotSystem() {
     delete t;
   }
   objects.clear();
+
+  for (auto c : _counts) {
+    delete c;
+  }
+
+  for (auto m : _measures) {
+    delete m;
+  }
 }
 
 void AmoebotSystem::activate() {
@@ -110,18 +119,18 @@ const std::vector<Measure*>& AmoebotSystem::getMeasures() const {
   return _measures;
 }
 
-Count& AmoebotSystem::getCount(std::string name) const {
+Count& AmoebotSystem::getCount(QString name) const {
   for (const auto& c : _counts) {
-    if (c->_name.compare(name) == 0) {
+    if (QString::compare(c->_name, name) == 0) {
       return *c;
     }
   }
   Q_ASSERT(false);  // Requested count does not exist.
 }
 
-Measure& AmoebotSystem::getMeasure(std::string name) const {
+Measure& AmoebotSystem::getMeasure(QString name) const {
   for (const auto& m : _measures) {
-    if (m->_name.compare(name) == 0) {
+    if (QString::compare(m->_name, name) == 0) {
       return *m;
     }
   }
@@ -136,7 +145,7 @@ const QString AmoebotSystem::metricsAsJSON() const {
   json += "\"algorithm\" : \"???\", ";
   json += "\"counts\" : [";
   for (const auto& c : _counts) {
-    json += "{\"name\" : \"" + QString::fromStdString(c->_name) + "\", ";
+    json += "{\"name\" : \"" + c->_name + "\", ";
     json += "\"history\" : [";
     for (auto val : c->_history) {
       json += QString::number(val) += ", ";
@@ -151,7 +160,7 @@ const QString AmoebotSystem::metricsAsJSON() const {
   }
   json += "], \"measures\" : [";
   for (const auto& m : _measures) {
-    json += "{\"name\" : \"" + QString::fromStdString(m->_name) + "\", ";
+    json += "{\"name\" : \"" + m->_name + "\", ";
     json += "\"frequency\" : " + QString::number(m->_freq) + ", ";
     json += "\"history\" : [";
     for (auto val : m->_history) {

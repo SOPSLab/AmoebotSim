@@ -12,6 +12,7 @@
 #include <set>
 
 #include <QMutex>
+#include <QString>
 
 #include "core/metric.h"
 #include "core/node.h"
@@ -69,8 +70,8 @@ class System {
   // are pure virtual at this level; see amoebotsystem.h for their overrides.
   virtual const std::vector<Count*>& getCounts() const = 0;
   virtual const std::vector<Measure*>& getMeasures() const = 0;
-  virtual Count& getCount(std::string name) const = 0;
-  virtual Measure& getMeasure(std::string name) const = 0;
+  virtual Count& getCount(QString name) const = 0;
+  virtual Measure& getMeasure(QString name) const = 0;
   virtual const QString metricsAsJSON() const = 0;
 
   virtual bool hasTerminated() const;

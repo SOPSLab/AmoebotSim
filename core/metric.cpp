@@ -4,7 +4,9 @@
 
 #include "core/metric.h"
 
-Count::Count(const std::string name)
+#include "core/amoebotsystem.h"
+
+Count::Count(const QString name)
   : _name(name),
     _value(0) {}
 
@@ -12,8 +14,8 @@ void Count::record(const unsigned int numEvents) {
   _value += numEvents;
 }
 
-Measure::Measure(const std::string name, const unsigned int freq,
-                 AmoebotSystem& system)
+Measure::Measure(const QString name, const unsigned int freq)
   : _name(name),
-    _freq(freq),
-    _system(system) {}
+    _freq(freq) {}
+
+Measure::~Measure() {}
