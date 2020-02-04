@@ -54,7 +54,8 @@ class Simulator : public QObject {
   // writing the metrics JSON to it.
   void exportMetrics();
 
-  // TODO.
+  // Emits a signal that updates the system visually, followed by a signal that
+  // takes a screenshot of the result.
   void saveScreenshotSetup(const QString filePath);
 
  protected:

@@ -71,7 +71,7 @@ class AmoebotSystem : public System, public RandomNumberGenerator {
 
   // Various access functions for metrics (counts and measures). getCounts
   // (resp., getMeasures) returns a reference to the count (resp., measure)
-  // list. getCount (resp., getMeasure) return a reference to the named count
+  // list. getCount (resp., getMeasure) returns a reference to the named count
   // (resp., measure). These functions crash if the requested count/measure is
   // not found!
   const std::vector<Count*>& getCounts() const final;
