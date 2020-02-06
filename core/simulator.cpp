@@ -4,7 +4,15 @@
 
 #include "core/simulator.h"
 
+#include <QCoreApplication>
+#include <QDateTime>
+#include <QDir>
+#include <QFile>
 #include <QMutexLocker>
+#include <QTextStream>
+#include <QtGlobal>
+
+#include "core/metric.h"
 
 Simulator::Simulator() {
   stepTimer.setInterval(100);
@@ -63,11 +71,6 @@ void Simulator::runUntilTermination() {
   }
 }
 
-void Simulator::saveScreenshotSetup(const QString filePath) {
-  emit systemChanged(system);
-  emit saveScreenshot(filePath);
-}
-
 int Simulator::numParticles() const {
   QMutexLocker locker(&system->mutex);
   return system->size();
@@ -78,12 +81,43 @@ int Simulator::numObjects() const {
   return system->numObjects();
 }
 
-int Simulator::numMovements() const {
+QVariant Simulator::metrics() const {
   QMutexLocker locker(&system->mutex);
-  return system->numMovements();
+  QList<QVariant> metricsData;
+  for (const auto& c : system->getCounts()) {
+    metricsData.push_back(QVariant({c->_name, c->_value}));
+  }
+  for (const auto& m : system->getMeasures()) {
+    if (m->_history.empty()) {
+      metricsData.push_back(QVariant({m->_name, 0.0}));
+    } else {
+      metricsData.push_back(QVariant({m->_name, m->_history.back()}));
+    }
+  }
+  return QVariant::fromValue(metricsData);
 }
 
-int Simulator::numRounds() const {
+void Simulator::exportMetrics() {
   QMutexLocker locker(&system->mutex);
-  return system->numRounds();
+  QDir metricsDir(QCoreApplication::applicationDirPath());
+  #ifdef Q_OS_MACOS
+    metricsDir.cd("../../..");  // Escape the macOS application bundle.
+  #endif
+  if (!metricsDir.cd("metrics")) {
+    metricsDir.mkdir("metrics");
+    metricsDir.cd("metrics");
+  }
+  QFile outFile(metricsDir.path() + "/metrics_" +
+                QString::number(QDateTime::currentSecsSinceEpoch()) + ".json");
+  if (!outFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    return;
+  }
+  QTextStream outStream(&outFile);
+  outStream << system->metricsAsJSON();
+  outFile.close();
+}
+
+void Simulator::saveScreenshotSetup(const QString filePath) {
+  emit systemChanged(system);
+  emit saveScreenshot(filePath);
 }

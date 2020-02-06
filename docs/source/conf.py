@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'AmoebotSim'
-copyright = '2019, Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal'
+copyright = '2020, Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal'
 author = 'Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal'
 
 # The full version, including alpha/beta/rc tags

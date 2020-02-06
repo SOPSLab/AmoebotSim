@@ -18,8 +18,9 @@
 #ifndef AMOEBOTSIM_ALG_SHAPEFORMATION_H_
 #define AMOEBOTSIM_ALG_SHAPEFORMATION_H_
 
-#include <QString>
 #include <set>
+
+#include <QString>
 
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"

@@ -18,6 +18,7 @@ HEADERS += \
     core/amoebotparticle.h \
     core/amoebotsystem.h \
     core/localparticle.h \
+    core/metric.h \
     core/node.h \
     core/object.h \
     core/particle.h \
@@ -45,6 +46,7 @@ SOURCES += \
     core/amoebotparticle.cpp \
     core/amoebotsystem.cpp \
     core/localparticle.cpp \
+    core/metric.cpp \
     core/object.cpp \
     core/particle.cpp \
     core/simulator.cpp \

@@ -593,6 +593,8 @@ TokenDemo: Communicating over Distance
   Coming soon!
 
 
+.. _metrics-demo:
+
 MetricsDemo: Capturing Data
 ---------------------------
 

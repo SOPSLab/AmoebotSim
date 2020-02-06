@@ -29,14 +29,6 @@ SystemIterator System::end() const {
   return SystemIterator(this, size());
 }
 
-unsigned int System::numMovements() const {
-  return 0;
-}
-
-unsigned int System::numRounds() const {
-  return 0;
-}
-
 bool System::hasTerminated() const {
   return false;
 }

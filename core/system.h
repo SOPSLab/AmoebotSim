@@ -12,7 +12,9 @@
 #include <set>
 
 #include <QMutex>
+#include <QString>
 
+#include "core/metric.h"
 #include "core/node.h"
 #include "core/object.h"
 #include "core/particle.h"
@@ -64,11 +66,13 @@ class System {
   SystemIterator begin() const;
   SystemIterator end() const;
 
-  // Signatures for functions measuring the progress of the system. These all
-  // return default values at this level; see amoebotsystem.h for more detailed
-  // documentation.
-  virtual unsigned int numMovements() const;
-  virtual unsigned int numRounds() const;
+  // Various access function signatures for metrics (counts and measures). These
+  // are pure virtual at this level; see amoebotsystem.h for their overrides.
+  virtual const std::vector<Count*>& getCounts() const = 0;
+  virtual const std::vector<Measure*>& getMeasures() const = 0;
+  virtual Count& getCount(QString name) const = 0;
+  virtual Measure& getMeasure(QString name) const = 0;
+  virtual const QString metricsAsJSON() const = 0;
 
   virtual bool hasTerminated() const;
 

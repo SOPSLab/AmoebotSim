@@ -20,6 +20,9 @@
 #include "core/amoebotsystem.h"
 
 class CompressionParticle : public AmoebotParticle {
+  friend class CompressionSystem;
+  friend class PerimeterMeasure;
+
  public:
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
@@ -61,11 +64,11 @@ private:
   // Functions for checking Properties 1 and 2 of the compression algorithm.
   bool checkProp1(std::vector<int> S) const;
   bool checkProp2(std::vector<int> S) const;
-
-  friend class CompressionSystem;
 };
 
 class CompressionSystem : public AmoebotSystem {
+  friend class PerimeterMeasure;
+
  public:
   // Constructs a system of CompressionParticles connected to a randomly
   // generated surface (with no tunnels). Takes an optionally specified size
@@ -75,6 +78,22 @@ class CompressionSystem : public AmoebotSystem {
 
   // Because this algorithm never terminates, this simply returns false.
   virtual bool hasTerminated() const;
+};
+
+class PerimeterMeasure : public Measure {
+ public:
+  // Constructs a PerimeterMeasure by using the parent constructor and adding a
+  // reference to the CompressionSystem being measured.
+  PerimeterMeasure(const QString name, const unsigned int freq,
+                   CompressionSystem& system);
+
+  // Calculates the perimeter of the system, i.e., the number of edges on the
+  // walk around the unique external boundary of the system. Uses the fact
+  // that perimeter = (3 * #particles) - (#nearest neighbor pairs) - 3.
+  double calculate() const final;
+
+ protected:
+  CompressionSystem& _system;
 };
 
 #endif  // AMOEBOTSIM_ALG_COMPRESSION_H_

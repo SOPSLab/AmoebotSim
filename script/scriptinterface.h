@@ -41,14 +41,13 @@ class ScriptInterface : public QObject {
   void setStepDuration(const int ms);
   void runUntilTermination();
 
-  // Simulator metrics commands. getNumParticles returns the number of particles
-  // in the given instance. getNumMovements returns the total number of
-  // expansions and contractions executed by the particle system. getNumRounds
-  // returns the number of asynchronous rounds completed by the particle system.
-  // See amoebotsystem.h for further discussion.
+  // Simulator metrics commands. getNumParticles and getNumObjects return the
+  // number of particles and objects in the given instance, respectively.
+  // exportMetrics writes the metrics to JSON. See simulator.h for further
+  // discussion.
   int getNumParticles();
-  int getNumMovements();
-  int getNumRounds();
+  int getNumObjects();
+  void exportMetrics();
 
   // Visualization commands. focusOn centers the window at the given (x,y) node.
   // setZoom sets the zoom level of the window. saveScreenshot saves the current
