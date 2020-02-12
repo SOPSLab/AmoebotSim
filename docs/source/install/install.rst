@@ -49,6 +49,19 @@ This walkthrough will assume you're using GitKraken.
 AmoebotSim's source code should now be in the directory you specified.
 
 
+Installing Sphinx
+^^^^^^^^^^^^^^^^^
+
+These docs are written in reStructuredText and built using `Sphinx <https://www.sphinx-doc.org>`_.
+If you want to edit these docs and preview them on your own machine, follow these instructions:
+
+#. Follow the `Sphinx installation instructions <https://www.sphinx-doc.org/en/master/usage/installation.html>`_ for your platform.
+#. Use ``pip`` to install the ReadTheDocs theme: ``pip install sphinx_rtd_theme``.
+#. On the command line, navigate to the ``docs/`` directory of AmoebotSim.
+#. Run the ``make html`` command to build the docs.
+#. Preview the docs by opening ``docs/build/html/index.html`` in your browser of choice.
+
+
 Installing Qt
 ^^^^^^^^^^^^^
 
@@ -58,11 +71,21 @@ Please follow these instructions carefully, as many small deviations can cause i
 #. Navigate to Qt's `download page <https://www.qt.io/download>`_ and choose the "Go open source" option under "Downloads for open source users".
 #. Scroll to the bottom of the page and select "Download the Qt Online Installer".
 #. Download the correct version of the installer for your operating system.
-#. Run the installer. You can skip the step asking for your Qt login if you don't have one.
-#. On the "Select Components" screen, locate the ``Qt`` tab (you can ignore ``Preview``) and choose the components listed below. Note that you do not need any other components; these can be unselected to dramatically decrease the application size and installation time.
+#. Run the installer. Due to recent `Qt offering changes <https://www.qt.io/blog/qt-offering-changes-2020>`_, you will have to create a Qt account.
+#. On the "Select Components" screen, locate the ``Qt`` tab and choose the components listed below. Note that you do not need any other components; these can be unselected to dramatically decrease the application size and installation time.
 #. Agree to the licenses and install.
 
-You should select the following Qt components:
+You should select the following Qt components.
+
+* Under the subtab for the latest Qt version, e.g., ``Qt > Qt 5.14.1``, choose:
+
+  * The latest components for your platform. On macOS, this is ``macOS``; on Windows, this is the latest MinGW toolchain, e.g., [TODO]. Note that there may be 32-bit and 64-bit version to choose from; you should choose the latest version for your architecture.
+  * The latest Qt source components, ``Sources``.
+  * The latest scripting engine, ``Qt Script (Deprecated)``.
+
+* Under the ``Developer and Designer Tools`` subtab, choose:
+
+  * The latest 3D graphics library, e.g., ``Qt 3D Studio 2.6.0``.
 
 .. todo::
   Need to verify all of the above instructions and then actually do the installer with some version that works.
@@ -77,13 +100,7 @@ With the repository cloned and Qt installed, the only thing that's left to do is
 #. Select "Projects" in the left sidebar, and in the next-left sidebar that appears, choose "Build" under "Build & Run" (this may already be selected).
 #. At the top of the page next to "Edit build configuration", choose "Debug" from the first drop-down menu.
 #. For "General > Build Directory", choose a directory *outside* the repository directory housing the AmoebotSim source code (otherwise, you will need to add the build directory to your ``.gitignore``).
-#. Select "Build Steps > qmake > Enable QML debugging and profiling".
-#. Set "Build Steps > make > Parallel jobs" to the number of cores on your machine.
-
-    .. note::
-      This will considerably increase memory usage during compilation.
-
-#. Repeat Steps 3, 4, and 6 for the "Profile" and "Release" configurations, but do not enable QML debugging and profiling.
+Repeat this step for the "Profile" and "Release" configurations, targeting different build directories for each.
 #. If you are using Windows, select "Run" under "Build & Run" in the second-left sidebar. Under "Run Environment", look for an environment variable called ``QT_OPENGL``. If this variable exists, make sure its value is ``desktop``.
 
     .. todo::
