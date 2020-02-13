@@ -40,7 +40,7 @@ You're welcome to do pretty much anything you'd like with our code, but you cann
 >
 > You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
 >
-> AmoebotSim is developed using Qt under Open Source Usage.
+> AmoebotSim is developed using Open Source Qt.
 
 
 ## Contact Us
