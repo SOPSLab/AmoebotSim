@@ -75,20 +75,11 @@ Please follow these instructions carefully, as many small deviations can cause i
 #. On the "Select Components" screen, locate the ``Qt`` tab and choose the components listed below. Note that you do not need any other components; these can be unselected to dramatically decrease the application size and installation time.
 #. Agree to the licenses and install.
 
-You should select the following Qt components.
+Under the subtab for the latest Qt version, e.g., ``Qt > Qt 5.14.1``, select the following Qt components:
 
-* Under the subtab for the latest Qt version, e.g., ``Qt > Qt 5.14.1``, choose:
-
-  * The latest components for your platform. On macOS, this is ``macOS``; on Windows, this is the latest MinGW toolchain, e.g., [TODO]. Note that there may be 32-bit and 64-bit version to choose from; you should choose the latest version for your architecture.
-  * The latest Qt source components, ``Sources``.
-  * The latest scripting engine, ``Qt Script (Deprecated)``.
-
-* Under the ``Developer and Designer Tools`` subtab, choose:
-
-  * The latest 3D graphics library, e.g., ``Qt 3D Studio 2.6.0``.
-
-.. todo::
-  Need to verify all of the above instructions and then actually do the installer with some version that works.
+* The latest prebuilt components for your platform. On macOS, this is ``macOS``; on Windows, this is the latest MinGW toolchain, e.g., ``MinGW 7.3.0 64-bit``. Note that on Windows there may be 32-bit and 64-bit versions to choose from; you should choose the latest version for your architecture.
+* The latest Qt source components, ``Sources``.
+* The latest scripting engine, ``Qt Script (Deprecated)``.
 
 
 Configuring, Building, and Running AmoebotSim
@@ -99,11 +90,5 @@ With the repository cloned and Qt installed, the only thing that's left to do is
 #. Open AmoebotSim in Qt Creator by opening ``AmoebotSim.pro`` in the repository directory.
 #. Select "Projects" in the left sidebar, and in the next-left sidebar that appears, choose "Build" under "Build & Run" (this may already be selected).
 #. At the top of the page next to "Edit build configuration", choose "Debug" from the first drop-down menu.
-#. For "General > Build Directory", choose a directory *outside* the repository directory housing the AmoebotSim source code (otherwise, you will need to add the build directory to your ``.gitignore``).
-Repeat this step for the "Profile" and "Release" configurations, targeting different build directories for each.
-#. If you are using Windows, select "Run" under "Build & Run" in the second-left sidebar. Under "Run Environment", look for an environment variable called ``QT_OPENGL``. If this variable exists, make sure its value is ``desktop``.
-
-    .. todo::
-      Check if this is still an issue with the updated Qt versions.
-
+#. For "General > Build Directory", choose a directory *outside* the repository directory housing the AmoebotSim source code (otherwise, you will need to add the build directory to your ``.gitignore``). Repeat this step for the "Profile" and "Release" configurations, targeting different build directories for each.
 #. In the bottom-left of Qt Creator, set the configuration back to "Debug" (best for development) and click the green arrow to build and run. AmoebotSim should appear.
