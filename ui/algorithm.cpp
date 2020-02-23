@@ -55,7 +55,8 @@ AlgorithmList::AlgorithmList() {
   _algorithms.back()->addParameter("Counter Max", "5");
 
   // Demo: Pull Handovers.
-  _algorithms.push_back(new Algorithm("Demo: Pull Handovers", "pulldemo"));
+  _algorithms.push_back(new Algorithm("Demo: Ballroom", "ballroomdemo"));
+  _algorithms.back()->addParameter("# Particles", "100");
 
   // Demo: Token Passing.
   _algorithms.push_back(new Algorithm("Demo: Token Passing", "tokendemo"));

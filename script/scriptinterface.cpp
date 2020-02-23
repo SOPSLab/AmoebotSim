@@ -11,7 +11,7 @@
 #include <QTextStream>
 
 #include "alg/demo/discodemo.h"
-#include "alg/demo/pulldemo.h"
+#include "alg/demo/ballroomdemo.h"
 #include "alg/demo/tokendemo.h"
 #include "alg/compression.h"
 #include "alg/infobjcoating.h"
@@ -134,8 +134,12 @@ void ScriptInterface::discodemo(const int numParticles, const int counterMax) {
   }
 }
 
-void ScriptInterface::pulldemo() {
-  sim.setSystem(std::make_shared<PullDemoSystem>());
+void ScriptInterface::ballroomdemo(const int numParticles) {
+  if (numParticles <= 0) {
+    log("# particles must be > 0", true);
+  } else {
+    sim.setSystem(std::make_shared<BallroomDemoSystem>(numParticles));
+  }
 }
 
 void ScriptInterface::tokendemo(const int numParticles, const double holeProb) {
