@@ -14,7 +14,7 @@
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
 
-class PullDemoParticle : public AmoebotParticle {
+class BallroomDemoParticle : public AmoebotParticle {
  public:
   enum class State {
     Leader,
@@ -24,7 +24,7 @@ class PullDemoParticle : public AmoebotParticle {
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
   // for its local compass, a system which it belongs to, and an initial state.
-  PullDemoParticle(const Node head, const int globalTailDir,
+  BallroomDemoParticle(const Node head, const int globalTailDir,
                    const int orientation, AmoebotSystem& system, State state);
 
   // Executes one particle activation.
@@ -36,7 +36,6 @@ class PullDemoParticle : public AmoebotParticle {
   // when the particle is contracted. headMarkDir returns the label of the port
   // on which the black head marker is drawn.
   int headMarkColor() const override;
-  int headMarkDir() const override;
   int tailMarkColor() const override;
 
   // Returns the string to be displayed when this particle is inspected; used
@@ -46,7 +45,7 @@ class PullDemoParticle : public AmoebotParticle {
   // Gets a reference to the neighboring particle incident to the specified port
   // label. Crashes if no such particle exists at this label; consider using
   // hasNbrAtLabel() first if unsure.
-  PullDemoParticle& nbrAtLabel(int label) const;
+  BallroomDemoParticle& nbrAtLabel(int label) const;
 
   // Returns the label of the first port incident to a neighboring particle in
   // any of the specified states, starting at the (optionally) specified label
@@ -56,19 +55,15 @@ class PullDemoParticle : public AmoebotParticle {
 
  protected:
   State state;
-  int moveDir;
 
  private:
-  friend class PullDemoSystem;
+  friend class BallroomDemoSystem;
 };
 
-class PullDemoSystem : public AmoebotSystem {
+class BallroomDemoSystem : public AmoebotSystem {
  public:
   // Constructs a system of two PullDemoParticles (one leader and one follower).
-  PullDemoSystem();
-
-  // Because this algorithm never terminates, this simply returns false.
-  bool hasTerminated() const override;
+  BallroomDemoSystem(unsigned int numParticles = 50);
 };
 
 #endif  // AMOEBOTSIM_ALG_DEMO_PULLDEMO_H_

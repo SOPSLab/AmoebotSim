@@ -69,10 +69,12 @@ void DiscoDemoAlg::instantiate(const int numParticles, const int counterMax) {
   }
 }
 
-PullDemoAlg::PullDemoAlg() : Algorithm("Demo: Pull Handovers", "pulldemo") {}
+PullDemoAlg::PullDemoAlg() : Algorithm("Demo: Pull Passing", "pulldemo") {
+  addParameter("# Particles", "100");
+}
 
 void PullDemoAlg::instantiate() {
-  emit setSystem(std::make_shared<PullDemoSystem>());
+  emit setSystem(std::make_shared<BallroomDemoSystem>());
 }
 
 TokenDemoAlg::TokenDemoAlg() : Algorithm("Demo: Token Passing", "tokendemo") {

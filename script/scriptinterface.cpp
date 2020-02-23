@@ -11,7 +11,7 @@
 #include <QTextStream>
 
 #include "alg/demo/discodemo.h"
-#include "alg/demo/pulldemo.h"
+#include "alg/demo/ballroomdemo.h"
 #include "alg/demo/tokendemo.h"
 #include "alg/compression.h"
 #include "alg/infobjcoating.h"
