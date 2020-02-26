@@ -39,18 +39,23 @@ void VisItem::focusOnCenterOfMass() {
   }
 
   QPointF sum;
-  int numNodes = 0;
+  int numMassPoints = 0;
 
   for (const Particle& p : *system) {
     sum = sum + nodeToWorldCoord(p.head);
-    numNodes++;
+    numMassPoints++;
     if (p.globalTailDir != -1) {
       sum = sum + nodeToWorldCoord(p.tail());
-      numNodes++;
+      numMassPoints++;
     }
   }
 
-  view.setFocusPos(sum / numNodes);
+  for(const Object* obj: system->getObjects()) {
+      sum = sum + nodeToWorldCoord(obj->_node);
+      numMassPoints++;
+  }
+
+  view.setFocusPos(sum / numMassPoints);
 }
 
 void VisItem::setWindowSize(int width, int height) {
