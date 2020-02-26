@@ -50,8 +50,8 @@ void VisItem::focusOnCenterOfMass() {
     }
   }
 
-  for(const Object* t: system->getObjects()) {
-      sum = sum + nodeToWorldCoord(t->_node);
+  for(const Object* obj: system->getObjects()) {
+      sum = sum + nodeToWorldCoord(obj->_node);
       numMassPoints++;
   }
 

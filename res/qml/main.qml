@@ -274,7 +274,6 @@ ApplicationWindow {
       onClicked: {
         vis.forceActiveFocus()
         instantiate(algorithmSelectBox.currentText)
-        vis.focusOnCenterOfMass();
       }
     }
 
