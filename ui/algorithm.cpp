@@ -59,8 +59,7 @@ AlgorithmList::AlgorithmList() {
 
   // Demo: Token Passing.
   _algorithms.push_back(new Algorithm("Demo: Token Passing", "tokendemo"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
+  _algorithms.back()->addParameter("# Particles", "50");
 
   /* ALGORITHMS */
 

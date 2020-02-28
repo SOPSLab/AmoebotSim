@@ -138,13 +138,11 @@ void ScriptInterface::pulldemo() {
   sim.setSystem(std::make_shared<PullDemoSystem>());
 }
 
-void ScriptInterface::tokendemo(const int numParticles, const double holeProb) {
+void ScriptInterface::tokendemo(const int numParticles) {
   if (numParticles <= 0) {
     log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
   } else {
-    sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
+    sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles));
   }
 }
 

@@ -46,8 +46,8 @@ class TokenDemoParticle : public ShapeFormationParticle {
  protected:
   // Tokens for demonstration. In practice, these tokens can contain a constant
   // amount of structured data; however, for demonstration these are empty.
-  struct RedToken : public Token {};
-  struct BlueToken : public Token {};
+  struct RedToken : public Token { int data; };
+  struct BlueToken : public Token { int data; };
 };
 
 class TokenDemoSystem : public AmoebotSystem {
@@ -56,7 +56,7 @@ class TokenDemoSystem : public AmoebotSystem {
   // (#particles) and hole probability. holeProb in [0,1] controls how "spread
   // out" the system is; closer to 0 is more compressed, closer to 1 is more
   // expanded.
-  TokenDemoSystem(int numParticles = 20, double holeProb = 0.2);
+  TokenDemoSystem(int numParticles = 20);
 
   // Returns true when the simulation has completed; however, as this demo runs
   // indefinitely, it always returns false.

@@ -589,8 +589,213 @@ CoordinationDemo: Working Together
 TokenDemo: Communicating over Distance
 --------------------------------------
 
-.. todo::
-  Coming soon!
+We'll be developing a rather simple algorithm which creates a hexagon of particles and demonstrates the passing of tokens between particles changing colors accordingly.
+In this tutorial you will also learn how to utilize tokens with structured data.
+
+We will first begin by creating two files in the ``alg/demo`` directory, ``alg/demo/tokendemo.h`` and ``alg/demo/tokendemo.cpp``.
+We start by declaring the ``TokenDemoParticle`` class which we have publicly inheriting from ``ShapeFormationParticle`` only because it allows for much easier visualization of the tokens being passed between particles. 
+
+.. code-block:: c++
+
+  class TokenDemoParticle : public ShapeFormationParticle { ... }
+
+Just like with other particle type creations, we must declare the necessary virtual functions: 
+
+.. code-block:: c++
+
+  class TokenDemoParticle : public ShapeFormationParticle {
+    public:
+    // Constructs a new particle with a node position for its head, a global
+    // compass direction from its head to its tail (-1 if contracted), an offset
+    // for its local compass, a system which it belongs to, an initial state, and
+    // a string to determine its shape formation mode ("l" for line formation in
+    // this demo).
+    TokenDemoParticle(const Node head, const int globalTailDir,
+                    const int orientation, AmoebotSystem& system, State state,
+                    const QString mode);
+
+    // Executes one particle activation.
+    virtual void activate();
+
+    // Returns the color to be used for the ring drawn around the head node. In
+    // this case, it returns the color of the token(s) this particle is holding.
+    virtual int headMarkColor() const;
+
+    // Returns the string to be displayed when this particle is inspected; used
+    // to snapshot the current values of this particle's memory at runtime.
+    virtual QString inspectionText() const;
+
+    // Gets a reference to the neighboring particle incident to the specified port
+    // label. Crashes if no such particle exists at this label; consider using
+    // hasNbrAtLabel() first if unsure.
+    TokenDemoParticle& nbrAtLabel(int label) const;
+
+    // ...
+
+Within the class we will declare the token types will be working with as protected and inheriting from the Token struct declared within ``AmoebotParticle.h``: 
+
+.. code-block:: c++
+
+  // ...
+
+  protected:
+  // Tokens for demonstration. The data within them will be used later in the tutorial. 
+  struct RedToken : public Token { int data; };
+  struct BlueToken : public Token { int data; };
+
+  // ...
+
+A declaration of the ``TokenDemoSystem`` should also belong in the file inheriting from ``AmoebotSystem`` publicly with a constructor and ``hasTerminated()`` function declarations. 
+
+.. code-block:: c++
+
+  class TokenDemoSystem : public AmoebotSystem {
+    public:
+    TokenDemoSystem(int numParticles = 20);
+
+    // Returns true when the simulation has completed; however, as this demo runs
+    // indefinitely, it always returns false.
+    virtual bool hasTerminated() const;
+  };
+
+Now comes the actual implementation of the declared classes and members within the ``alg/demo/tokendemo.cpp`` file. 
+We define the constructor for a ``TokenDemoParticle`` and specify that a particle in the ``Seed`` state should contatin 5 ``BlueToken(s)`` and ``RedToken(s)`` each. 
+There will only be 1 seed particle and 10 tokens being passed around the system. 
+
+.. code-block:: c++
+
+  // ...
+
+  TokenDemoParticle::TokenDemoParticle(const Node head, const int globalTailDir,
+                                     const int orientation,
+                                     AmoebotSystem& system, State state,
+                                     const QString mode)
+  : ShapeFormationParticle(head, globalTailDir, orientation, system, state,
+                           mode) {
+    // Initialize the seed particle to hold three red tokens and two blue.
+    if (state == State::Seed) {
+      putToken(std::make_shared<RedToken>());
+      putToken(std::make_shared<RedToken>());
+      putToken(std::make_shared<RedToken>());
+      putToken(std::make_shared<RedToken>());
+      putToken(std::make_shared<RedToken>());
+      putToken(std::make_shared<BlueToken>());
+      putToken(std::make_shared<BlueToken>());
+      putToken(std::make_shared<BlueToken>());
+      putToken(std::make_shared<BlueToken>());
+      putToken(std::make_shared<BlueToken>());
+    }
+  }
+
+  // ...
+
+We will now take a look at the implementation of the ``activate()`` function: 
+
+.. code-block:: c++
+
+  // ...
+
+  void TokenDemoParticle::activate() {
+    // If this particle is holding a token and is the seed or is finished, choose
+    // a random seed or finished neighbor. If such a neighbor exists, take the
+    // first token this particle is holding and give it to the chosen neighbor.
+    if (hasToken<Token>()) {
+      if (isContracted() && (state == State::Seed || state == State::Finish)) {
+        int lbl = labelOfFirstNbrInState({State::Seed, State::Finish}, randDir());
+        if (lbl != -1) {
+          nbrAtLabel(lbl).putToken(takeToken<Token>());
+        }
+      }
+    }
+  }
+
+  // ...
+
+The ``headMarkColor()`` function will return the color of the particle depending on whether or not it has any tokens. 
+
+.. code-block:: c++
+
+  // ...
+
+  int TokenDemoParticle::headMarkColor() const {
+    //Returns the color purple
+    if (hasToken<RedToken>() && hasToken<BlueToken>()) {
+      return 0xff00ff;
+    } else if (hasToken<RedToken>()) {
+      return 0xff0000;
+    } else if (hasToken<BlueToken>()) {
+      return 0x0000ff;
+    } else {
+      return -1;
+    }
+  }
+
+  // ...
+
+The ``inspectionText()`` function will be changed accordingly to indicate the tokens a particle contains. 
+We also need the ``nbrAtLabel(int)`` function for use in the activate function to select a neighbor to pass the tokens to.
+
+.. code-block:: c++
+
+  // ...
+
+  QString TokenDemoParticle::inspectionText() const {
+    QString text = ShapeFormationParticle::inspectionText();
+    text += "numRedTokens: " + QString::number(countTokens<RedToken>());
+    text += "\n";
+    text += "numBlueTokens: " + QString::number(countTokens<BlueToken>());
+
+    return text;
+  }
+
+  TokenDemoParticle& TokenDemoParticle::nbrAtLabel(int label) const {
+    return AmoebotParticle::nbrAtLabel<TokenDemoParticle>(label);
+  }
+  // ...
+
+We will now implement the actual initializaation of the particles within the system using the ``TokenDemoSystem`` constructor. 
+This will create a ``Seed`` node at position ``(0,0)`` as part of the bottom side of the hexagon, and spawn other nodes completing the hexagon much like the Disco Demo. 
+Since this algorithm does not terminate it will not use the ``hasTerminated()`` function but we will implement it anyway. 
+
+.. code-block:: c++
+
+  TokenDemoSystem::TokenDemoSystem(int numParticles) {
+    Q_ASSERT(numParticles > 0);
+
+    // Insert the seed at (0, 0).
+    insert(new TokenDemoParticle(Node(0, 0), -1, randDir(), *this,
+                                ShapeFormationParticle::State::Seed, "l"));
+
+    // Creating the rest of the hexagon by placing the particles accordingly
+    int sideLen = static_cast<int>(std::round(1.4 * std::sqrt(numParticles)));
+    Node boundNode = Node(0, 0);
+    for (int dir = 0; dir < 6; ++dir) {
+      for (int i = 0; i < sideLen; ++i) {
+
+        // Since we placed the seed node at (0,0) we have to stop placing nodes once we reach that point
+        if(dir == 5 && i == sideLen - 1) {
+          return;
+        }
+
+        boundNode = boundNode.nodeInDir(dir);
+        insert(new TokenDemoParticle(boundNode, -1, randDir(), *this,
+                                    ShapeFormationParticle::State::Finish, "l"));
+      }
+    }
+  }
+
+  bool TokenDemoSystem::hasTerminated() const {
+    #ifdef QT_DEBUG
+      if (!isConnected(particles)) {
+        return true;
+      }
+    #endif
+
+    return false;
+  }
+
+Now you just need to register the algorithm much like you did with the Disco demo and you are on your way.
+Congratulations, you just implemented an algorithm with token passing!
 
 
 .. _metrics-demo:
