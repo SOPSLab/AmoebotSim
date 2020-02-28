@@ -17,14 +17,17 @@ TokenDemoParticle::TokenDemoParticle(const Node head, const int globalTailDir,
     putToken(std::make_shared<RedToken>());
     putToken(std::make_shared<RedToken>());
     putToken(std::make_shared<RedToken>());
+    putToken(std::make_shared<RedToken>());
+    putToken(std::make_shared<RedToken>());
+    putToken(std::make_shared<BlueToken>());
+    putToken(std::make_shared<BlueToken>());
+    putToken(std::make_shared<BlueToken>());
     putToken(std::make_shared<BlueToken>());
     putToken(std::make_shared<BlueToken>());
   }
 }
 
 void TokenDemoParticle::activate() {
-  ShapeFormationParticle::activate();
-
   // If this particle is holding a token and is the seed or is finished, choose
   // a random seed or finished neighbor. If such a neighbor exists, take the
   // first token this particle is holding and give it to the chosen neighbor.
@@ -45,8 +48,6 @@ int TokenDemoParticle::headMarkColor() const {
     return 0xff0000;
   } else if (hasToken<BlueToken>()) {
     return 0x0000ff;
-  } else if (state == State::Seed || state == State::Finish) {
-    return 0x000000;
   } else {
     return -1;
   }
@@ -65,53 +66,25 @@ TokenDemoParticle& TokenDemoParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<TokenDemoParticle>(label);
 }
 
-TokenDemoSystem::TokenDemoSystem(int numParticles, double holeProb) {
+TokenDemoSystem::TokenDemoSystem(int numParticles) {
   Q_ASSERT(numParticles > 0);
-  Q_ASSERT(0 <= holeProb && holeProb <= 1);
 
   // Insert the seed at (0, 0).
   insert(new TokenDemoParticle(Node(0, 0), -1, randDir(), *this,
                                ShapeFormationParticle::State::Seed, "l"));
 
-  std::set<Node> occupied;
-  occupied.insert(Node(0, 0));
+  int sideLen = static_cast<int>(std::round(1.4 * std::sqrt(numParticles)));
+  Node boundNode = Node(0, 0);
+  for (int dir = 0; dir < 6; ++dir) {
+    for (int i = 0; i < sideLen; ++i) {
 
-  std::set<Node> candidates;
-  for(int i = 0; i < 6; i++) {
-    candidates.insert(Node(0, 0).nodeInDir(i));
-  }
-
-  // Add inactive particles.
-  int numNonStaticParticles = 0;
-  while(numNonStaticParticles < numParticles && !candidates.empty()) {
-    // Pick random candidate.
-    int randIndex = randInt(0, candidates.size());
-    Node randomCandidate;
-    for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-      if (randIndex == 0) {
-        randomCandidate = *it;
-        candidates.erase(it);
-        break;
-      } else {
-        randIndex--;
+      if(dir == 5 && i == sideLen - 1) {
+        return;
       }
-    }
 
-    occupied.insert(randomCandidate);
-
-    // Add this candidate as a particle if not a hole.
-    if (randBool(1.0 - holeProb)) {
-      insert(new TokenDemoParticle(randomCandidate, -1, randDir(), *this,
-                                   ShapeFormationParticle::State::Idle, "l"));
-      numNonStaticParticles++;
-
-      // Add new candidates.
-      for (int i = 0; i < 6; i++) {
-        auto neighbor = randomCandidate.nodeInDir(i);
-        if (occupied.find(neighbor) == occupied.end()) {
-          candidates.insert(neighbor);
-        }
-      }
+      boundNode = boundNode.nodeInDir(dir);
+      insert(new TokenDemoParticle(boundNode, -1, randDir(), *this,
+                                   ShapeFormationParticle::State::Finish, "l"));
     }
   }
 }
