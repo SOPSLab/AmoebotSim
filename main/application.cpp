@@ -54,6 +54,12 @@ Application::Application(int argc, char *argv[])
             parameterModel, SLOT(updateAlgParameters(QString)));
     connect(qmlRoot, SIGNAL(instantiate(QString)),
             parameterModel, SLOT(createCommand(QString)));
+    for (Algorithm* alg : parameterModel->getAlgorithmList()->getAlgs()) {
+      connect(alg, SIGNAL(log), [qmlRoot](const QString msg, const bool isError){
+        QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
+      });
+      connect(alg, SIGNAL(setSystem), &sim, SLOT(setSystem));
+    }
 
     // setup connections between GUI and Simulator
     connect(&sim, &Simulator::systemChanged, vis, &VisItem::systemChanged);

@@ -62,20 +62,40 @@ void ParameterListModel::updateAlgParameters(QString algName) {
 void ParameterListModel::createCommand(QString algName) {
   QStringList defaults = _algs->getParameterDefaults(algName);
 
-  QString cmd;
-  cmd += _algs->getAlgSignature(algName) + "(";
+  QString signature;
+  std::vector<QString> params;
+  Algorithm* alg = _algs->getAlg(algName);
+  signature = _algs->getAlgSignature(algName);
   for (int i = 0; i < _values.size(); ++i) {
     if (_values[i].compare("") != 0) {
-      cmd += _values[i];
+      params.push_back(_values[i]);
     } else {
-      cmd += defaults[i];
-    }
-
-    if (i + 1 < _values.size()) {
-      cmd += ", ";
+      params.push_back(defaults[i]);
     }
   }
-  cmd += ")";
 
-  emit executeCommand(cmd);
+  if (signature == "discodemo") {
+    dynamic_cast<DiscoDemoAlg*>(alg)->instantiate(params[0].toInt(),
+        params[1].toInt());
+  } else if (signature == "pulldemo") {
+    dynamic_cast<PullDemoAlg*>(alg)->instantiate();
+  } else if (signature == "tokendemo") {
+    dynamic_cast<TokenDemoAlg*>(alg)->instantiate(params[0].toInt(),
+        params[1].toDouble());
+  } else if (signature == "compression") {
+    dynamic_cast<CompressionAlg*>(alg)->instantiate(params[0].toInt(),
+        params[1].toDouble());
+  } else if (signature == "infobjcoating") {
+    dynamic_cast<InfObjCoatingAlg*>(alg)->instantiate(params[0].toInt(),
+        params[1].toDouble());
+  } else if (signature == "shapeformation") {
+    dynamic_cast<ShapeFormationAlg*>(alg)->instantiate(params[0].toInt(),
+        params[1].toDouble(), params[2]);
+  } else if (signature == "leaderelection") {
+    dynamic_cast<LeaderElectionAlg*>(alg)->instantiate(params[0].toInt(),
+        params[1].toDouble());
+  } else {
+    // A signature that is unrecognized has been entered.
+    Q_ASSERT(false);
+  }
 }

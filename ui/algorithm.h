@@ -5,13 +5,17 @@
 #ifndef AMOEBOTSIM_UI_ALGORITHM_H_
 #define AMOEBOTSIM_UI_ALGORITHM_H_
 
+#include <memory>
 #include <utility>
 #include <vector>
 
 #include <QString>
 #include <QStringList>
+#include <QObject>
 
-class Algorithm {
+#include <core/system.h>
+
+class Algorithm : public QObject {
  public:
   // Constructs an algorithm with a given name (e.g., "Infinite Object Coating")
   // and a given signature (e.g., "infobjcoating").
@@ -30,10 +34,66 @@ class Algorithm {
   // Adds a parameter to the algorithm of the given name and default value.
   void addParameter(QString parameter, QString defaultValue);
 
+ signals:
+  void log(const QString msg, bool error = false);
+  void setSystem(std::shared_ptr<System> _system);
+
  private:
   QString _name;
   QString _signature;
   std::vector<std::pair<QString, QString>> _parameters;
+};
+
+// Below, declare Algorithm classes which handle the instantiation of specific
+// algorithms
+class DiscoDemoAlg : public Algorithm {
+ public:
+  DiscoDemoAlg();
+
+  void instantiate(const int numParticles = 30, const int counterMax = 5);
+};
+
+class PullDemoAlg : public Algorithm {
+ public:
+  PullDemoAlg();
+
+  void instantiate();
+};
+
+class TokenDemoAlg : public Algorithm {
+ public:
+  TokenDemoAlg();
+
+  void instantiate(const int numParticles = 200, const double holeProb = 0.2);
+};
+
+class CompressionAlg : public Algorithm {
+ public:
+  CompressionAlg();
+
+  void instantiate(const int numParticles = 100, const double lambda = 4.0);
+};
+
+class InfObjCoatingAlg : public Algorithm {
+ public:
+  InfObjCoatingAlg();
+
+  void instantiate(const int numParticles = 100, const double holeProb = 0.2);
+};
+
+class LeaderElectionAlg : public Algorithm {
+ public:
+  LeaderElectionAlg();
+
+  void instantiate(const int numParticles = 100, const double holeProb = 0.2);
+};
+
+class ShapeFormationAlg : public Algorithm {
+ public:
+  ShapeFormationAlg();
+
+  void instantiate(const int numParticles = 200, const double holeProb = 0.2,
+                   const QString mode = "h");
 };
 
 class AlgorithmList {
@@ -44,6 +104,12 @@ class AlgorithmList {
 
   // Destructs the Algorithms that are contained in this list.
   virtual ~AlgorithmList();
+
+  // Returns a list of all the algorithms in this list.
+  std::vector<Algorithm*> getAlgs();
+
+  // Returns the algorithm object of the given algorithm.
+  Algorithm* getAlg(QString algName) const;
 
   // Returns a list of all the algorithm's names in this list.
   QStringList getAlgNames() const;
