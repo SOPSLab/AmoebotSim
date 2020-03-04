@@ -12,16 +12,19 @@
 
 #include "alg/shapeformation.h"
 
-class TokenDemoParticle : public ShapeFormationParticle {
- public:
+class TokenDemoParticle : public AmoebotParticle {
+ public:  
+  enum class State {
+    Seed,
+    Finish
+  };
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
   // for its local compass, a system which it belongs to, an initial state, and
   // a string to determine its shape formation mode ("l" for line formation in
   // this demo).
   TokenDemoParticle(const Node head, const int globalTailDir,
-                    const int orientation, AmoebotSystem& system, State state,
-                    const QString mode);
+                    const int orientation, AmoebotSystem& system, State state);
 
   // Executes one particle activation.
   virtual void activate();
@@ -39,11 +42,20 @@ class TokenDemoParticle : public ShapeFormationParticle {
   // hasNbrAtLabel() first if unsure.
   TokenDemoParticle& nbrAtLabel(int label) const;
 
+  // Returns the label of the first port incident to a neighboring particle in
+  // any of the specified states, starting at the (optionally) specified label
+  // and continuing clockwise.
+  int labelOfFirstNbrInState(std::initializer_list<State> states,
+                             int startLabel = 0) const;
+
  protected:
+  State state;
   // Tokens for demonstration. In practice, these tokens can contain a constant
   // amount of structured data; however, for demonstration these are empty.
-  struct RedToken : public Token { int data; };
-  struct BlueToken : public Token { int data; };
+  struct RedToken : public Token { int lifeCycle = 500; };
+  struct BlueToken : public Token { int lifeCycle = 500; };
+
+
 };
 
 class TokenDemoSystem : public AmoebotSystem {
