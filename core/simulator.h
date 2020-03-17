@@ -22,6 +22,7 @@ class Simulator : public QObject {
 
   std::shared_ptr<System> getSystem() const;
 
+  void setSystem(std::shared_ptr<System> _system);
  signals:
   void systemChanged(std::shared_ptr<System> _system);
   void stepDurationChanged(int ms);
@@ -56,8 +57,6 @@ class Simulator : public QObject {
   // Emits a signal that updates the system visually, followed by a signal that
   // takes a screenshot of the result.
   void saveScreenshotSetup(const QString filePath);
-
-  void setSystem(std::shared_ptr<System> _system);
  protected:
   QTimer stepTimer;
   std::shared_ptr<System> system;

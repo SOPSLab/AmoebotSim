@@ -98,7 +98,7 @@ Application::Application(int argc, char *argv[])
     );
 
     // setup scripting
-    scriptEngine = std::make_shared<ScriptEngine>(sim, vis);
+    scriptEngine = std::make_shared<ScriptEngine>(sim, vis, parameterModel->getAlgorithmList());
     connect(scriptEngine.get(), &ScriptEngine::log,
             [qmlRoot](const QString msg, const bool isError){
               QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
@@ -106,6 +106,11 @@ Application::Application(int argc, char *argv[])
     );
     connect(qmlRoot, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
     connect(parameterModel, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
+
+    qDebug("TEST 2");
+
+    // Set ShapeFormation to be the 1st algorithm to be instantiated
+    dynamic_cast<ShapeFormationAlg*>(parameterModel->getAlgorithmList()->getAlg("shapeformation"))->instantiate();
 
     // Set default step duration.
     sim.setStepDuration(0);

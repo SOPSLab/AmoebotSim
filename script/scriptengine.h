@@ -19,7 +19,8 @@ class ScriptEngine : public QObject {
   Q_OBJECT
 
  public:
-  ScriptEngine(Simulator& sim, VisItem* vis = nullptr);
+  ScriptEngine(Simulator& sim, VisItem* vis = nullptr,
+               AlgorithmList* list = nullptr);
 
  signals:
   void log(const QString msg, bool error = false);
@@ -31,7 +32,7 @@ class ScriptEngine : public QObject {
  private:
   QJSEngine engine;
   ScriptInterface* scriptInterface;
-
+  AlgorithmList* algList;
 };
 
 #endif  // AMOEBOTSIM_SCRIPT_SCRIPTENGINE_H_

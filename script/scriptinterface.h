@@ -61,21 +61,6 @@ class ScriptInterface : public QObject {
   void saveScreenshot(QString filePath = "");
   void filmSimulation(QString filePath, const int stepLimit);
 
-  // Demonstration algorithm instance commands. Documentation for foo() can be
-  // found in alg/demo/foo.h.
-  void discodemo(const int numParticles = 30, const int counterMax = 5);
-  void pulldemo();
-  void tokendemo(const int numParticles = 200, const double holeProb = 0.2);
-
-  // Algorithm instance commands. Documentation for foo() can be found in
-  // alg/foo.h.
-  void compression(const int numParticles = 100, const double lambda = 4.0);
-  void infobjcoating(const int numParticles = 100, const double holeProb = 0.2);
-  void leaderelection(const int numParticles = 100,
-                      const double holeProb = 0.2);
-  void shapeformation(const int numParticles = 200, const double holeProb = 0.2,
-                      const QString mode = "h");
-
  private:
   ScriptEngine& engine;
   Simulator& sim;
