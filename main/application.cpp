@@ -58,7 +58,7 @@ Application::Application(int argc, char *argv[])
       connect(alg, &Algorithm::log, [qmlRoot](const QString msg, const bool isError){
         QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
       });
-      connect(alg, SIGNAL(setSystem), &sim, SLOT(setSystem));
+      connect(alg, &Algorithm::setSystem, &sim, &Simulator::setSystem);
     }
 
     // setup connections between GUI and Simulator

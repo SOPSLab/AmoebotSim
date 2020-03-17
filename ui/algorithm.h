@@ -16,6 +16,7 @@
 #include <core/system.h>
 
 class Algorithm : public QObject {
+  Q_OBJECT
  public:
   // Constructs an algorithm with a given name (e.g., "Infinite Object Coating")
   // and a given signature (e.g., "infobjcoating").
