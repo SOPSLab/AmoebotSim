@@ -640,8 +640,8 @@ Within the class we will declare the token types will be working with as protect
 
   protected:
   // Tokens for demonstration. The data within them will be used later in the tutorial. 
-  struct RedToken : public Token { int data; };
-  struct BlueToken : public Token { int data; };
+  struct RedToken : public Token { int lifeCycle; };
+  struct BlueToken : public Token { int lifeCycle; };
 
   // ...
 
@@ -751,6 +751,7 @@ We also need the ``nbrAtLabel(int)`` function for use in the activate function t
   TokenDemoParticle& TokenDemoParticle::nbrAtLabel(int label) const {
     return AmoebotParticle::nbrAtLabel<TokenDemoParticle>(label);
   }
+
   // ...
 
 We will now implement the actual initializaation of the particles within the system using the ``TokenDemoSystem`` constructor. 
@@ -758,6 +759,8 @@ This will create a ``Seed`` node at position ``(0,0)`` as part of the bottom sid
 Since this algorithm does not terminate it will not use the ``hasTerminated()`` function but we will implement it anyway. 
 
 .. code-block:: c++
+
+  // ...
 
   TokenDemoSystem::TokenDemoSystem(int numParticles) {
     Q_ASSERT(numParticles > 0);
@@ -797,6 +800,56 @@ Since this algorithm does not terminate it will not use the ``hasTerminated()`` 
 Now you just need to register the algorithm much like you did with the Disco demo and you are on your way.
 Congratulations, you just implemented an algorithm with token passing!
 
+We can take this algorithm a step further by having the tokens contain information and the particles use that information accordingly. 
+We can start by giving the ``lifeCycle`` variable within the declaration of the ``BlueToken`` and ``RedToken``. 
+This variable is how many times the token can get passed before it dies, which we will set to 500 in ``tokendemo.h``. 
+
+.. code-block:: c++
+
+  // ...
+
+  struct RedToken : public Token { int lifeCycle = 500; };
+  struct BlueToken : public Token { int lifeCycle = 500; };
+
+  // ...
+
+This can be followed by updating the ``activate`` function within ``tokendemo.cpp`` to pass a token only if its ``lifeCycle`` is greater than 0. 
+You will notice that you can only access a tokens member after you have "taken" it from a particle. 
+
+.. code-block:: c++
+
+  // ...
+
+  void TokenDemoParticle::activate() {
+    // If this particle is holding a token and is the seed or is finished, choose
+    // a random seed or finished neighbor. If such a neighbor exists, take the
+    // first token this particle is holding and give it to the chosen neighbor.
+    if (hasToken<Token>()) {
+      if (isContracted() && (state == State::Seed || state == State::Finish)) {
+        int lbl = labelOfFirstNbrInState({State::Seed, State::Finish}, randDir());
+        if (lbl != -1) {
+          // Must access particle members individually 
+          if(hasToken<BlueToken>()) {
+            std::shared_ptr<BlueToken> t = takeToken<BlueToken>();
+            t->lifeCycle--;
+
+            if(t->lifeCycle != 0)
+              nbrAtLabel(lbl).putToken(t);
+          } else {
+            std::shared_ptr<RedToken> t = takeToken<RedToken>();
+            t->lifeCycle--;
+
+            if(t->lifeCycle != 0)
+              nbrAtLabel(lbl).putToken(t);
+          }
+        }
+      }
+    }
+  }
+
+  // ...
+
+This will create a working algorithm to pass tokens and utulize the data within them using the Amoebot Model, great job! 
 
 MetricsDemo: Capturing Data
 ---------------------------

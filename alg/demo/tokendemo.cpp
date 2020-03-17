@@ -31,11 +31,13 @@ void TokenDemoParticle::activate() {
         if(hasToken<BlueToken>()) {
           std::shared_ptr<BlueToken> t = takeToken<BlueToken>();
           t->lifeCycle--;
+
           if(t->lifeCycle != 0)
             nbrAtLabel(lbl).putToken(t);
         } else {
           std::shared_ptr<RedToken> t = takeToken<RedToken>();
           t->lifeCycle--;
+
           if(t->lifeCycle != 0)
             nbrAtLabel(lbl).putToken(t);
         }
