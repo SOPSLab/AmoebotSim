@@ -65,7 +65,7 @@ class ScriptInterface : public QObject {
   // found in alg/demo/foo.h.
   void discodemo(const int numParticles = 30, const int counterMax = 5);
   void pulldemo();
-  void tokendemo(const int numParticles = 50);
+  void tokendemo(const int numParticles = 48);
 
   // Algorithm instance commands. Documentation for foo() can be found in
   // alg/foo.h.

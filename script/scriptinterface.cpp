@@ -139,8 +139,8 @@ void ScriptInterface::pulldemo() {
 }
 
 void ScriptInterface::tokendemo(const int numParticles) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
+  if (numParticles < 6) {
+    log("# particles must be >= 6", true);
   } else {
     sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles));
   }

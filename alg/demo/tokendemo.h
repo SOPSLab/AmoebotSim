@@ -2,33 +2,26 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-// Defines a particle for demonstrating token passing functionality.
+// Defines a particle system and composing particles for the TokenDemo code
+// tutorial. TokenDemo demonstrates token passing functionality, including
+// defining new token types, modifying token memory contents, and passing tokens
+// between particles.
 //
-// Run with tokendemo(#particles, hole probability) on the simulator command
-// line.
+// Run with tokendemo(#particles) on the simulator command line.
 
 #ifndef AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H_
 #define AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H_
 
-#include <QString>
-
-#include "alg/shapeformation.h"
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
 
 class TokenDemoParticle : public AmoebotParticle {
- public:  
-  enum class State {
-    Seed,
-    Finish
-  };
+ public:
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
-  // for its local compass, a system which it belongs to, an initial state, and
-  // a string to determine its shape formation mode ("l" for line formation in
-  // this demo).
+  // for its local compass, a system which it belongs to, and an initial state.
   TokenDemoParticle(const Node head, const int globalTailDir,
-                    const int orientation, AmoebotSystem& system, State state);
+                    const int orientation, AmoebotSystem& system);
 
   // Executes one particle activation.
   virtual void activate();
@@ -46,32 +39,28 @@ class TokenDemoParticle : public AmoebotParticle {
   // hasNbrAtLabel() first if unsure.
   TokenDemoParticle& nbrAtLabel(int label) const;
 
-  // Returns the label of the first port incident to a neighboring particle in
-  // any of the specified states, starting at the (optionally) specified label
-  // and continuing clockwise.
-  int labelOfFirstNbrInState(std::initializer_list<State> states,
-                             int startLabel = 0) const;
-
  protected:
-  State state;
-  // Tokens for demonstration. In practice, these tokens can contain a constant
-  // amount of structured data; however, for demonstration these are empty.
-  struct RedToken : public Token { int lifeCycle = 500; };
-  struct BlueToken : public Token { int lifeCycle = 500; };
+  // Token types. DemoToken is a general type that has two data members:
+  // (i) passedFrom, which denotes the direction from which the token was last
+  // passed (initially -1, meaning it has not yet been passed), and (ii)
+  // lifetime, which is decremented each time the token is passed. The red and
+  // blue tokens are two types of DemoTokens.
+  struct DemoToken : public Token { int passedFrom = -1; int lifetime = 100; };
+  struct RedToken : public DemoToken {};
+  struct BlueToken : public DemoToken {};
 
-
+ private:
+  friend class TokenDemoSystem;
 };
 
 class TokenDemoSystem : public AmoebotSystem {
  public:
   // Constructs a system of TokenDemoParticles with an optionally specified size
-  // (#particles) and hole probability. holeProb in [0,1] controls how "spread
-  // out" the system is; closer to 0 is more compressed, closer to 1 is more
-  // expanded.
-  TokenDemoSystem(int numParticles = 20);
+  // (#particles).
+  TokenDemoSystem(int numParticles = 48);
 
-  // Returns true when the simulation has completed; however, as this demo runs
-  // indefinitely, it always returns false.
+  // Returns true when the simulation has completed; i.e, when all tokens have
+  // died out.
   virtual bool hasTerminated() const;
 };
 
