@@ -1,22 +1,25 @@
-/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
 // Defines a base particle system and its iterators, primarily serving the
 // purpose of defining functions to be overridden by subclasses.
 
-#ifndef AMOEBOTSIM_SIM_SYSTEM_H
-#define AMOEBOTSIM_SIM_SYSTEM_H
-
-#include <QMutex>
+#ifndef AMOEBOTSIM_CORE_SYSTEM_H_
+#define AMOEBOTSIM_CORE_SYSTEM_H_
 
 #include <deque>
 #include <set>
 
-#include "core/node.h"
-#include "core/particle.h"
-#include "core/object.h"
+#include <QMutex>
+#include <QString>
 
+#include "core/metric.h"
+#include "core/node.h"
+#include "core/object.h"
+#include "core/particle.h"
+
+// System is forward declared to avoid a cyclic dependency with SystemIterator.
 class System;
 
 class SystemIterator {
@@ -40,10 +43,6 @@ class SystemIterator {
 
 class System {
  public:
-  // Default constructor and destructor. TODO: not sure if we need these.
-  System();
-  virtual ~System();
-
   // Signatures for functions which activate particles. Must be overridden by
   // any system subclasses; see amoebotsystem.h for more detailed documentation.
   virtual void activate() = 0;
@@ -67,11 +66,13 @@ class System {
   SystemIterator begin() const;
   SystemIterator end() const;
 
-  // Signatures for functions measuring the progress of the system. These all
-  // return default values at this level; see amoebotsystem.h for more detailed
-  // documentation.
-  virtual unsigned int numMovements() const;
-  virtual unsigned int numRounds() const;
+  // Various access function signatures for metrics (counts and measures). These
+  // are pure virtual at this level; see amoebotsystem.h for their overrides.
+  virtual const std::vector<Count*>& getCounts() const = 0;
+  virtual const std::vector<Measure*>& getMeasures() const = 0;
+  virtual Count& getCount(QString name) const = 0;
+  virtual Measure& getMeasure(QString name) const = 0;
+  virtual const QString metricsAsJSON() const = 0;
 
   virtual bool hasTerminated() const;
 
@@ -114,4 +115,4 @@ bool System::isConnected(const ParticleContainer& particles) {
   return occupiedNodes.empty();
 }
 
-#endif  // AMOEBOTSIM_SIM_SYSTEM_H
+#endif  // AMOEBOTSIM_CORE_SYSTEM_H_

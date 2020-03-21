@@ -1,5 +1,5 @@
 /* AmoebotSim: a visual simulator for the amoebot model of programmable matter.
- * Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+ * Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * Please direct all questions and communications to sopslab@asu.edu.
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -13,7 +13,9 @@
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program. If not, see <https://www.gnu.org/licenses/>. */
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * AmoebotSim is developed using Open Source Qt. */
 
 #include "application.h"
 

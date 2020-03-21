@@ -1,12 +1,13 @@
-/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
+
+#include "script/scriptengine.h"
 
 #include <QFile>
 #include <QString>
 #include <QTextStream>
 
-#include "script/scriptengine.h"
 #include "script/scriptinterface.h"
 
 ScriptEngine::ScriptEngine(Simulator& sim, VisItem* vis)

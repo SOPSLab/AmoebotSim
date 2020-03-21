@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
@@ -12,8 +12,10 @@
 // Run with infobjcoating(#particles, hole probability) on the simulator command
 // line.
 
-#ifndef AMOEBOTSIM_ALG_INFOBJCOATING_H
-#define AMOEBOTSIM_ALG_INFOBJCOATING_H
+#ifndef AMOEBOTSIM_ALG_INFOBJCOATING_H_
+#define AMOEBOTSIM_ALG_INFOBJCOATING_H_
+
+#include <QString>
 
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
@@ -98,4 +100,4 @@ class InfObjCoatingSystem : public AmoebotSystem {
   bool hasTerminated() const override;
 };
 
-#endif  // AMOEBOTSIM_ALG_INFOBJCOATING_H
+#endif  // AMOEBOTSIM_ALG_INFOBJCOATING_H_

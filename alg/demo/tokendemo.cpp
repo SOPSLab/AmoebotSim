@@ -1,47 +1,55 @@
-/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
-
-#include <memory>
 
 #include "alg/demo/tokendemo.h"
 
 TokenDemoParticle::TokenDemoParticle(const Node head, const int globalTailDir,
                                      const int orientation,
-                                     AmoebotSystem& system, State state)
-  :  AmoebotParticle(head, globalTailDir, orientation, system),
-    state(state) {
-  // Initialize the seed particle to hold three red tokens and two blue.
-  if (state == State::Seed) {
-    for (int i = 0; i < 5; i++) {
-      putToken(std::make_shared<RedToken>());
-      putToken(std::make_shared<BlueToken>());
-    }
-  }
-}
+                                     AmoebotSystem& system)
+  : AmoebotParticle(head, globalTailDir, orientation, system) {}
 
 void TokenDemoParticle::activate() {
-  // If this particle is holding a token and is the seed or is finished, choose
-  // a random seed or finished neighbor. If such a neighbor exists, take the
-  // first token this particle is holding and give it to the chosen neighbor.
-  if (hasToken<Token>()) {
-    if (isContracted() && (state == State::Seed || state == State::Finish)) {
-      int lbl = labelOfFirstNbrInState({State::Seed, State::Finish}, randDir());
-      if (lbl != -1) {
-        if(hasToken<BlueToken>()) {
-          std::shared_ptr<BlueToken> t = takeToken<BlueToken>();
-          t->lifeCycle--;
+  if (hasToken<DemoToken>()) {
+    std::shared_ptr<DemoToken> token = takeToken<DemoToken>();
 
-          if(t->lifeCycle != 0)
-            nbrAtLabel(lbl).putToken(t);
-        } else {
-          std::shared_ptr<RedToken> t = takeToken<RedToken>();
-          t->lifeCycle--;
-
-          if(t->lifeCycle != 0)
-            nbrAtLabel(lbl).putToken(t);
+    // Calculate the direction to pass this token.
+    int passTo;
+    if (token->passedFrom == -1) {
+      // This hasn't been passed yet; pass red and blue in opposite directions.
+      int sweepLen = (std::dynamic_pointer_cast<RedToken>(token)) ? 1 : 2;
+      for (int dir = 0; dir < 6; dir++) {
+        if (hasNbrAtLabel(dir)) {
+          sweepLen--;
+          if (sweepLen == 0) {
+            passTo = dir;
+            break;
+          }
         }
       }
+    } else {
+      // This has been passed before; pass continuing in the same direction.
+      for (int offset = 1; offset < 6; offset++) {
+        if (hasNbrAtLabel((token->passedFrom + offset) % 6)) {
+          passTo = (token->passedFrom + offset) % 6;
+          break;
+        }
+      }
+    }
+
+    // Update the token's passedFrom direction. Needs to point at this particle
+    // from the perspective of the next neighbor.
+    for (int nbrLabel = 0; nbrLabel < 6; nbrLabel++) {
+      if (pointsAtMe(nbrAtLabel(passTo), nbrLabel)) {
+        token->passedFrom = nbrLabel;
+        break;
+      }
+    }
+
+    // If the token still has lifetime remaining, pass it on.
+    if (token->lifetime > 0) {
+      token->lifetime--;
+      nbrAtLabel(passTo).putToken(token);
     }
   }
 }
@@ -59,10 +67,15 @@ int TokenDemoParticle::headMarkColor() const {
 }
 
 QString TokenDemoParticle::inspectionText() const {
-  QString text = AmoebotParticle::inspectionText();
-  text += "numRedTokens: " + QString::number(countTokens<RedToken>());
-  text += "\n";
-  text += "numBlueTokens: " + QString::number(countTokens<BlueToken>());
+  QString text;
+  text += "Global Info:\n";
+  text += "  head: (" + QString::number(head.x) + ", "
+                      + QString::number(head.y) + ")\n";
+  text += "  orientation: " + QString::number(orientation) + "\n";
+  text += "  globalTailDir: " + QString::number(globalTailDir) + "\n\n";
+  text += "Local Info:\n";
+  text += "  numRedTokens: " + QString::number(countTokens<RedToken>()) + "\n";
+  text += "  numBlueTokens: " + QString::number(countTokens<BlueToken>());
 
   return text;
 }
@@ -71,49 +84,38 @@ TokenDemoParticle& TokenDemoParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<TokenDemoParticle>(label);
 }
 
-int TokenDemoParticle::labelOfFirstNbrInState(
-    std::initializer_list<State> states, int startLabel) const {
-  auto prop = [&](const TokenDemoParticle& p) {
-    for (auto state : states) {
-      if (p.state == state) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  return labelOfFirstNbrWithProperty<TokenDemoParticle>(prop, startLabel);
-}
 TokenDemoSystem::TokenDemoSystem(int numParticles) {
-  Q_ASSERT(numParticles > 0);
+  Q_ASSERT(numParticles >= 6);
 
-  // Insert the seed at (0, 0).
-  insert(new TokenDemoParticle(Node(0, 0), -1, randDir(), *this,
-                               TokenDemoParticle::State::Seed));
-
-  int sideLen = static_cast<int>(std::round(1.4 * std::sqrt(numParticles)));
-  Node boundNode = Node(0, 0);
+  // Instantiate a hexagon of particles.
+  int sideLen = static_cast<int>(std::round(numParticles / 6.0));
+  Node hexNode = Node(0, 0);
   for (int dir = 0; dir < 6; ++dir) {
     for (int i = 0; i < sideLen; ++i) {
-
-      // Reaching the last node position of the hexagon
-      if(dir == 5 && i == sideLen - 1) {
-        return;
+      // Give the first particle five tokens of each color.
+      if (hexNode.x == 0 && hexNode.y == 0) {
+        auto firstP = new TokenDemoParticle(Node(0, 0), -1, randDir(), *this);
+        for (int j = 0; j < 5; ++j) {
+          firstP->putToken(std::make_shared<TokenDemoParticle::RedToken>());
+          firstP->putToken(std::make_shared<TokenDemoParticle::BlueToken>());
+        }
+        insert(firstP);
+      } else {
+        insert(new TokenDemoParticle(hexNode, -1, randDir(), *this));
       }
 
-      boundNode = boundNode.nodeInDir(dir);
-      insert(new TokenDemoParticle(boundNode, -1, randDir(), *this,
-                                   TokenDemoParticle::State::Finish));
+      hexNode = hexNode.nodeInDir(dir);
     }
   }
 }
 
 bool TokenDemoSystem::hasTerminated() const {
-  #ifdef QT_DEBUG
-    if (!isConnected(particles)) {
-      return true;
+  for (auto p : particles) {
+    auto tdp = dynamic_cast<TokenDemoParticle*>(p);
+    if (tdp->hasToken<TokenDemoParticle::DemoToken>()) {
+      return false;
     }
-  #endif
+  }
 
-  return false;
+  return true;
 }

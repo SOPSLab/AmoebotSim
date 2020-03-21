@@ -1,11 +1,14 @@
-/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
+#include "script/scriptinterface.h"
+
+#include <cmath>
+
+#include <QDateTime>
 #include <QFile>
 #include <QTextStream>
-#include <QTime>
-#include <math.h>
 
 #include "alg/demo/discodemo.h"
 #include "alg/demo/pulldemo.h"
@@ -15,7 +18,6 @@
 #include "alg/leaderelection.h"
 #include "alg/shapeformation.h"
 
-#include "script/scriptinterface.h"
 #include "core/node.h"
 
 ScriptInterface::ScriptInterface(ScriptEngine &engine, Simulator& sim,
@@ -52,10 +54,6 @@ void ScriptInterface::step() {
   sim.step();
 }
 
-void ScriptInterface::runUntilTermination() {
-  sim.runUntilTermination();
-}
-
 void ScriptInterface::setStepDuration(const int ms) {
   if (ms < 0) {
     log("Step duration must be non-negative", true);
@@ -65,16 +63,21 @@ void ScriptInterface::setStepDuration(const int ms) {
   }
 }
 
+void ScriptInterface::runUntilTermination() {
+  sim.runUntilTermination();
+}
+
 int ScriptInterface::getNumParticles() {
   return sim.numParticles();
 }
 
-int ScriptInterface::getNumMovements() {
-  return sim.numMovements();
+int ScriptInterface::getNumObjects() {
+  return sim.numObjects();
 }
 
-int ScriptInterface::getNumRounds() {
-  return sim.numRounds();
+void ScriptInterface::exportMetrics() {
+  sim.exportMetrics();
+  log("Metrics exported to application directory.");
 }
 
 void ScriptInterface::setWindowSize(int width, int height) {
@@ -82,7 +85,6 @@ void ScriptInterface::setWindowSize(int width, int height) {
     vis->setWindowSize(width, height);
   }
 }
-
 
 void ScriptInterface::focusOn(int x, int y) {
   if (vis != nullptr) {
@@ -99,8 +101,7 @@ void ScriptInterface::setZoom(float zoom) {
 void ScriptInterface::saveScreenshot(QString filePath) {
   if(filePath == "") {
     filePath = QString("amoebotsim_") +
-               QString::number(QTime::currentTime().msecsSinceStartOfDay()) +
-               QString(".png");
+               QString::number(QDateTime::currentSecsSinceEpoch()) + ".png";
   }
 
   sim.saveScreenshotSetup(filePath);
@@ -138,8 +139,8 @@ void ScriptInterface::pulldemo() {
 }
 
 void ScriptInterface::tokendemo(const int numParticles) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
+  if (numParticles < 6) {
+    log("# particles must be >= 6", true);
   } else {
     sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles));
   }

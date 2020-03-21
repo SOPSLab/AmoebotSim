@@ -1,13 +1,14 @@
-/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
+#include "alg/compression.h"
+
 #include <algorithm>  // For distance() and find().
-#include <QtGlobal>
 #include <set>
 #include <vector>
 
-#include "alg/compression.h"
+#include <QtGlobal>
 
 CompressionParticle::CompressionParticle(const Node head,
                                          const int globalTailDir,
@@ -202,6 +203,7 @@ bool CompressionParticle::checkProp2(std::vector<int> S) const {
 CompressionSystem::CompressionSystem(int numParticles, double lambda) {
   Q_ASSERT(lambda > 1);
 
+  // Initialize particle system.
   if (lambda <= 2.17) {  // In the proven range of expansion, make a hexagon.
     int x, y;
     for (int i = 1; i <= numParticles; ++i) {
@@ -253,6 +255,9 @@ CompressionSystem::CompressionSystem(int numParticles, double lambda) {
       insert(new CompressionParticle(Node(i, 0), -1, randDir(), *this, lambda));
     }
   }
+
+  // Set up metrics.
+  _measures.push_back(new PerimeterMeasure("Perimeter", 1, *this));
 }
 
 bool CompressionSystem::hasTerminated() const {
@@ -263,4 +268,25 @@ bool CompressionSystem::hasTerminated() const {
   #endif
 
   return false;
+}
+
+PerimeterMeasure::PerimeterMeasure(const QString name, const unsigned int freq,
+                                   CompressionSystem& system)
+    : Measure(name, freq),
+      _system(system) {}
+
+double PerimeterMeasure::calculate() const {
+  int numEdges = 0;
+  for (const auto& p : _system.particles) {
+    auto comp_p = dynamic_cast<CompressionParticle*>(p);
+    auto tailLabels = comp_p->isContracted() ? comp_p->uniqueLabels()
+                                             : comp_p->tailLabels();
+    for (const int label : tailLabels) {
+      if (comp_p->hasNbrAtLabel(label) && !comp_p->hasExpHeadAtLabel(label)) {
+        ++numEdges;
+      }
+    }
+  }
+
+  return (3 * _system.size()) - (numEdges / 2) - 3;
 }

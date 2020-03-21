@@ -1,11 +1,11 @@
-/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
 // Defines an object, which is a single node of a solid object.
 
-#ifndef AMOEBOTSIM_SIM_OBJECT_H_
-#define AMOEBOTSIM_SIM_OBJECT_H_
+#ifndef AMOEBOTSIM_CORE_OBJECT_H_
+#define AMOEBOTSIM_CORE_OBJECT_H_
 
 #include "core/node.h"
 
@@ -17,4 +17,4 @@ class Object {
   Node _node;
 };
 
-#endif  // AMOEBOTSIM_SIM_OBJECT_H_
+#endif  // AMOEBOTSIM_CORE_OBJECT_H_

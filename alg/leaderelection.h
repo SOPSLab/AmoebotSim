@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
@@ -24,16 +24,16 @@
 // is significantly simpler than this version's, and both Solitude Verification
 // phases accomplish the same goals.
 
-#ifndef AMOEBOTSIM_ALG_LEADERELECTION_H
-#define AMOEBOTSIM_ALG_LEADERELECTION_H
+#ifndef AMOEBOTSIM_ALG_LEADERELECTION_H_
+#define AMOEBOTSIM_ALG_LEADERELECTION_H_
+
+#include <array>
+#include <vector>
 
 #include <QString>
 
-#include <set>
-
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
-
 
 class LeaderElectionParticle : public AmoebotParticle {
  public:
@@ -387,4 +387,4 @@ class LeaderElectionSystem : public AmoebotSystem {
   bool hasTerminated() const override;
 };
 
-#endif  // AMOEBOTSIM_ALG_LEADERELECTION_H
+#endif  // AMOEBOTSIM_ALG_LEADERELECTION_H_

@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
@@ -15,14 +15,15 @@
 // mode == "t2" --> center triangle formation
 // mode == "l" --> line formation
 
-#ifndef AMOEBOTSIM_ALG_SHAPEFORMATION_H
-#define AMOEBOTSIM_ALG_SHAPEFORMATION_H
+#ifndef AMOEBOTSIM_ALG_SHAPEFORMATION_H_
+#define AMOEBOTSIM_ALG_SHAPEFORMATION_H_
+
+#include <set>
+
+#include <QString>
 
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
-
-#include <set>
-#include <QString>
 
 class ShapeFormationParticle : public AmoebotParticle {
  public:
@@ -127,4 +128,4 @@ class ShapeFormationSystem : public AmoebotSystem  {
   static std::set<QString> getAcceptedModes();
 };
 
-#endif  // AMOEBOTSIM_ALG_SHAPEFORMATION_H
+#endif  // AMOEBOTSIM_ALG_SHAPEFORMATION_H_

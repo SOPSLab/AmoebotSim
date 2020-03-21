@@ -1,12 +1,15 @@
-/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
+#include "main/application.h"
+
 #include <QDebug>
 #include <QQmlContext>
+#include <QString>
+#include <QStringList>
 #include <QTimer>
 
-#include "main/application.h"
 #include "ui/visitem.h"
 
 // for evaluation, you can specify the path to a script here
@@ -29,17 +32,12 @@ Application::Application(int argc, char *argv[])
     auto slider = qmlRoot->findChild<QObject*>("stepDurationSlider");
     connect(vis, &VisItem::beforeRendering,
             [this, qmlRoot](){
-                QMetaObject::invokeMethod(qmlRoot, "setNumMovements", Q_ARG(QVariant, sim.numMovements()));
-            }
-    );
-    connect(vis, &VisItem::beforeRendering,
-            [this, qmlRoot](){
-                QMetaObject::invokeMethod(qmlRoot, "setNumRounds", Q_ARG(QVariant, sim.numRounds()));
+              QMetaObject::invokeMethod(qmlRoot, "setMetrics", Q_ARG(QVariant, sim.metrics()));
             }
     );
     connect(vis, &VisItem::inspectParticle,
             [qmlRoot](QString text){
-                QMetaObject::invokeMethod(qmlRoot, "inspectParticle", Q_ARG(QVariant, text));
+              QMetaObject::invokeMethod(qmlRoot, "inspectParticle", Q_ARG(QVariant, text));
             }
     );
 
@@ -49,6 +47,7 @@ Application::Application(int argc, char *argv[])
     QStringList names = parameterModel->getAlgorithmList()->getAlgNames();
     algBox->setProperty("model", QVariant::fromValue(names));
     algBox->setProperty("currentIndex", names.indexOf("Basic Shape Formation"));
+    parameterModel->updateAlgParameters("Basic Shape Formation");
 
     // Connect the parameter list model to the UI elements that use it.
     connect(qmlRoot, SIGNAL(algSelected(QString)),
@@ -62,14 +61,15 @@ Application::Application(int argc, char *argv[])
     connect(qmlRoot, SIGNAL(start()), &sim, SLOT(start()));
     connect(qmlRoot, SIGNAL(stop()), &sim, SLOT(stop()));
     connect(qmlRoot, SIGNAL(step()), &sim, SLOT(step()));
+    connect(qmlRoot, SIGNAL(exportMetrics()), &sim, SLOT(exportMetrics()));
     connect(&sim, &Simulator::started,
             [qmlRoot](){
-                QMetaObject::invokeMethod(qmlRoot, "setLabelStop");
+              QMetaObject::invokeMethod(qmlRoot, "setLabelStop");
             }
     );
     connect(&sim, &Simulator::stopped,
             [qmlRoot](){
-                QMetaObject::invokeMethod(qmlRoot, "setLabelStart");
+              QMetaObject::invokeMethod(qmlRoot, "setLabelStart");
             }
     );
     connect(vis, &VisItem::stepForParticleAt, &sim, &Simulator::stepForParticleAt);
@@ -87,7 +87,7 @@ Application::Application(int argc, char *argv[])
     connect(qmlRoot, SIGNAL(commandFieldReset()), &commandHistoryManager, SLOT(reset()));
     connect(&commandHistoryManager, &CommandHistoryManager::setCommand,
             [qmlRoot](const QString& command){
-                QMetaObject::invokeMethod(qmlRoot, "setCommand", Q_ARG(QVariant, command));
+              QMetaObject::invokeMethod(qmlRoot, "setCommand", Q_ARG(QVariant, command));
             }
     );
 
@@ -95,7 +95,7 @@ Application::Application(int argc, char *argv[])
     scriptEngine = std::make_shared<ScriptEngine>(sim, vis);
     connect(scriptEngine.get(), &ScriptEngine::log,
             [qmlRoot](const QString msg, const bool isError){
-                QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
+              QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
             }
     );
     connect(qmlRoot, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));

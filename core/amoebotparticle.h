@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
@@ -10,10 +10,9 @@
 // neighboring particles are able to detect neighboring objects using the
 // functions defined below (e.g., hasObjectAtLabel and hasObjectNbr)
 
-#ifndef AMOEBOTSIM_ALG_AMOEBOTPARTICLE_H
-#define AMOEBOTSIM_ALG_AMOEBOTPARTICLE_H
+#ifndef AMOEBOTSIM_CORE_AMOEBOTPARTICLE_H_
+#define AMOEBOTSIM_CORE_AMOEBOTPARTICLE_H_
 
-#include <array>
 #include <deque>
 #include <functional>
 #include <map>
@@ -21,8 +20,8 @@
 
 #include "core/amoebotsystem.h"
 #include "core/localparticle.h"
-#include "helper/randomnumbergenerator.h"
 #include "core/node.h"
+#include "helper/randomnumbergenerator.h"
 
 class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
  public:
@@ -153,6 +152,7 @@ class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
                 propertyCheck) const;
 
   AmoebotSystem& system;
+
  private:
   std::deque<std::shared_ptr<Token>> tokens;
 };
@@ -277,4 +277,4 @@ bool AmoebotParticle::hasToken(
   return false;
 }
 
-#endif  // AMOEBOTSIM_ALG_AMOEBOTPARTICLE_H
+#endif  // AMOEBOTSIM_CORE_AMOEBOTPARTICLE_H_
