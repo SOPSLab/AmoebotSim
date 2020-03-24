@@ -2,6 +2,8 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
+#include "ui/algorithm.h"
+
 #include "alg/demo/discodemo.h"
 #include "alg/demo/pulldemo.h"
 #include "alg/demo/tokendemo.h"
@@ -9,8 +11,6 @@
 #include "alg/infobjcoating.h"
 #include "alg/leaderelection.h"
 #include "alg/shapeformation.h"
-
-#include "ui/algorithm.h"
 
 Algorithm::Algorithm(QString name, QString signature)
     : _name(name),
@@ -109,7 +109,8 @@ InfObjCoatingAlg::InfObjCoatingAlg() :
   addParameter("Hole Prob.", "0.2");
 }
 
-void InfObjCoatingAlg::instantiate(const int numParticles, const double holeProb) {
+void InfObjCoatingAlg::instantiate(const int numParticles,
+                                   const double holeProb) {
   if (numParticles <= 0) {
     emit log("# particles must be > 0", true);
   } else if (holeProb < 0 || holeProb > 1) {
@@ -124,7 +125,7 @@ ShapeFormationAlg::ShapeFormationAlg() :
   Algorithm("Basic Shape Formation", "shapeformation") {
   addParameter("# Particles", "200");
   addParameter("Hole Prob.", "0.2");
-  addParameter("Shape", "\"h\"");
+  addParameter("Shape", "h");
 }
 
 void ShapeFormationAlg::instantiate(const int numParticles,

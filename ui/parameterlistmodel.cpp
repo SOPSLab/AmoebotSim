@@ -59,7 +59,7 @@ void ParameterListModel::updateAlgParameters(QString algName) {
   }
 }
 
-void ParameterListModel::createCommand(QString algName) {
+void ParameterListModel::createSystem(QString algName) {
   QStringList defaults = _algs->getParameterDefaults(algName);
 
   QString signature;

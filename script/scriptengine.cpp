@@ -10,24 +10,22 @@
 
 #include "script/scriptinterface.h"
 
-ScriptEngine::ScriptEngine(Simulator& sim, VisItem* vis, AlgorithmList* list)
-  : scriptInterface(new ScriptInterface(*this, sim, vis)) {
+ScriptEngine::ScriptEngine(Simulator& sim, VisItem* vis, AlgorithmList* algList)
+  : scriptInterface(new ScriptInterface(*this, sim, vis)),
+    _algList(algList) {
   // Create a global object for the JavaScript engine and make its methods
   // globally accessible. The engine owns the script interface.
-  algList = list;
   auto globalObject = engine.newQObject(scriptInterface);
   engine.globalObject().setProperty("globalObject", globalObject);
   engine.evaluate("Object.keys(globalObject).forEach(function(key){ this[key] = globalObject[key] })");
 
-  for (auto alg : algList->getAlgs()) {
+  // For each algorithm, register it with the script engine and associate its
+  // signature (e.g., 'shapeformation' for the Basic Shape Formation algorithm)
+  // with its ::instantiate() function defined in ui/algorithm.*
+  for (auto alg : _algList->getAlgs()) {
     auto algObject = engine.newQObject(alg);
     engine.globalObject().setProperty(alg->getSignature(), algObject);
-    // Create a string that will register each algorithm's instantiate function
-    // as a global function under its signature name, e.g., for Shape Formation
-    // the JS function to instantiate it is
-    // 'shapeformation(numParticles, holeProb, mode)'
-    QString JScmd = "this[" + alg->getSignature() + "] = " + alg->getSignature() + "[instantiate]";
-    engine.evaluate(JScmd);
+    engine.evaluate("this[" + alg->getSignature() + "] = " + alg->getSignature() + "[instantiate]");
   }
 }
 

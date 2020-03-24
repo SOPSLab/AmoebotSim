@@ -20,9 +20,9 @@ class Simulator : public QObject {
   Simulator();
   virtual ~Simulator();
 
+  void setSystem(std::shared_ptr<System> _system);
   std::shared_ptr<System> getSystem() const;
 
-  void setSystem(std::shared_ptr<System> _system);
  signals:
   void systemChanged(std::shared_ptr<System> _system);
   void stepDurationChanged(int ms);

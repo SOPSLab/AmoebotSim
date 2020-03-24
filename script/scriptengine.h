@@ -20,7 +20,7 @@ class ScriptEngine : public QObject {
 
  public:
   ScriptEngine(Simulator& sim, VisItem* vis = nullptr,
-               AlgorithmList* list = nullptr);
+               AlgorithmList* algList = nullptr);
 
  signals:
   void log(const QString msg, bool error = false);
@@ -32,7 +32,7 @@ class ScriptEngine : public QObject {
  private:
   QJSEngine engine;
   ScriptInterface* scriptInterface;
-  AlgorithmList* algList;
+  AlgorithmList* _algList;
 };
 
 #endif  // AMOEBOTSIM_SCRIPT_SCRIPTENGINE_H_

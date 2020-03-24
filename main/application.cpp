@@ -53,7 +53,7 @@ Application::Application(int argc, char *argv[])
     connect(qmlRoot, SIGNAL(algSelected(QString)),
             parameterModel, SLOT(updateAlgParameters(QString)));
     connect(qmlRoot, SIGNAL(instantiate(QString)),
-            parameterModel, SLOT(createCommand(QString)));
+            parameterModel, SLOT(createSystem(QString)));
     for (Algorithm* alg : parameterModel->getAlgorithmList()->getAlgs()) {
       connect(alg, &Algorithm::log, [qmlRoot](const QString msg, const bool isError){
         QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));

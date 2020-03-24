@@ -9,11 +9,11 @@
 #include <utility>
 #include <vector>
 
+#include <QObject>
 #include <QString>
 #include <QStringList>
-#include <QObject>
 
-#include <core/system.h>
+#include "core/system.h"
 
 class Algorithm : public QObject {
   Q_OBJECT
@@ -37,7 +37,7 @@ class Algorithm : public QObject {
 
  signals:
   void log(const QString msg, bool error = false);
-  void setSystem(std::shared_ptr<System> _system);
+  void setSystem(std::shared_ptr<System> system);
 
  private:
   QString _name;
@@ -50,49 +50,42 @@ class Algorithm : public QObject {
 class DiscoDemoAlg : public Algorithm {
  public:
   DiscoDemoAlg();
-
   void instantiate(const int numParticles = 30, const int counterMax = 5);
 };
 
 class PullDemoAlg : public Algorithm {
  public:
   PullDemoAlg();
-
   void instantiate();
 };
 
 class TokenDemoAlg : public Algorithm {
  public:
   TokenDemoAlg();
-
   void instantiate(const int numParticles = 200, const double holeProb = 0.2);
 };
 
 class CompressionAlg : public Algorithm {
  public:
   CompressionAlg();
-
   void instantiate(const int numParticles = 100, const double lambda = 4.0);
 };
 
 class InfObjCoatingAlg : public Algorithm {
  public:
   InfObjCoatingAlg();
-
   void instantiate(const int numParticles = 100, const double holeProb = 0.2);
 };
 
 class LeaderElectionAlg : public Algorithm {
  public:
   LeaderElectionAlg();
-
   void instantiate(const int numParticles = 100, const double holeProb = 0.2);
 };
 
 class ShapeFormationAlg : public Algorithm {
  public:
   ShapeFormationAlg();
-
   void instantiate(const int numParticles = 200, const double holeProb = 0.2,
                    const QString mode = "h");
 };
