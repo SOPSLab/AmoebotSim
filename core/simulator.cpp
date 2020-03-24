@@ -24,7 +24,6 @@ Simulator::~Simulator() {
 }
 
 void Simulator::setSystem(std::shared_ptr<System> _system) {
-  qDebug("TEST 3");
   stepTimer.stop();
   emit stopped();
 

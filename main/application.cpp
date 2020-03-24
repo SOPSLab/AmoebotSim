@@ -107,15 +107,17 @@ Application::Application(int argc, char *argv[])
     connect(qmlRoot, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
     connect(parameterModel, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
 
-    qDebug("TEST 2");
-
-    // Set ShapeFormation to be the 1st algorithm to be instantiated
-    dynamic_cast<ShapeFormationAlg*>(parameterModel->getAlgorithmList()->getAlg("shapeformation"))->instantiate();
-
     // Set default step duration.
     sim.setStepDuration(0);
   } else {
-    scriptEngine = std::make_shared<ScriptEngine>(sim, nullptr);
+    parameterModel = new ParameterListModel();
+
+    for (Algorithm* alg : parameterModel->getAlgorithmList()->getAlgs()) {
+      connect(alg, &Algorithm::log, [](const QString msg, const bool isError){ Q_UNUSED(isError); qDebug() << msg; });
+      connect(alg, &Algorithm::setSystem, &sim, &Simulator::setSystem);
+    }
+
+    scriptEngine = std::make_shared<ScriptEngine>(sim, nullptr, parameterModel->getAlgorithmList());
     connect(scriptEngine.get(), &ScriptEngine::log, [](const QString msg, const bool isError){ Q_UNUSED(isError); qDebug() << msg; });
     scriptEngine->executeCommand("runScript(\"" + scriptPath + "\")");
     // create one shot timer that quits the application once the script is executed

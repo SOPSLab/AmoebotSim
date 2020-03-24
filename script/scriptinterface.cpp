@@ -25,7 +25,7 @@ ScriptInterface::ScriptInterface(ScriptEngine &engine, Simulator& sim,
   : engine(engine),
     sim(sim),
     vis(vis) {
-  qDebug("TEST");
+  sim.setSystem(std::make_shared<ShapeFormationSystem>(200, 0.2, "h"));
 }
 
 void ScriptInterface::log(const QString msg, bool error) {

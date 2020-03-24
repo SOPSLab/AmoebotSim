@@ -76,4 +76,5 @@ OTHER_FILES += \
     res/qml/main.qml
 
 DISTFILES += \
+  main/test \
   main/ucexperiment.js

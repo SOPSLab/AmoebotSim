@@ -1,6 +1,9 @@
+wrong
 // FILENAME: 	ucexperiment.js
 // AUTHOR: 		Josh Daymude
 // DESCRIPTION: Used to perform test runs of the universalcoating algorithm.
+
+log("TEST", true);
 
 // various parameters, most are customizable
 var id = 1;
@@ -18,7 +21,7 @@ for (i = 0; i < 6; i++) {
     numParticles += i;
     shapeformation(numParticles, holeProb, mode);
     writeToFile(outfilepath, numParticles.toString() + "," + mode + "," + holeProb.toString() + "\n");
-    writeToFile(outfilepath, "STUFF: " + getNumParticles() + ", " + getNumObjects())
+    writeToFile(outfilepath, "STUFF: " + getNumParticles() + ", " + getNumObjects());
 }
 
 
