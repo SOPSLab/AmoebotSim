@@ -75,6 +75,4 @@ OTHER_FILES += \
     res/qml/A_TextField.qml \
     res/qml/main.qml
 
-DISTFILES += \
-  main/test \
-  main/ucexperiment.js
+DISTFILES +=
