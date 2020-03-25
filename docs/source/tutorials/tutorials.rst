@@ -977,7 +977,9 @@ In your new metricsdemo files which are essentially copies of the discodemo file
 
 Just to be sure, your metricsdemo files should now look like this:
 
-metricsdemo.h: ::
+metricsdemo.h:
+
+.. code-block:: c++
 
   #ifndef AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
   #define AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
@@ -1046,7 +1048,9 @@ metricsdemo.h: ::
 
   #endif // AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
 
-metricsdemo.cpp: ::
+metricsdemo.cpp:
+
+.. code-block:: c++
 
   /* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
    * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
@@ -1182,7 +1186,9 @@ Counts - Number of Bumps Into Boundary Wall
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Counts show the number of times a certain event has happened up to that point in the system.
-Before we create our custom count metric, let's take a look at the basic format of a count which is outlined in core/metric.h : ::
+Before we create our custom count metric, let's take a look at the basic format of a count which is outlined in core/metric.h :
+
+.. code-block:: c++
 
   class Count {
    public:
@@ -1213,14 +1219,14 @@ But if numEvents is set to 3, for example, your count will count up as follows: 
 Now that we understand the basic format of the Count class, let's create a custom count to monitor how many times particles have bumped into the boundary wall.
 
 First, as is the case with any custom metric (count or measure), we need to add the new count to the function of the system.
-In the metricsdemo.cpp file, we will add our new count to the top of MetricsDemoSystem::MetricsDemoSystem() {}, filling the name parameter of Count() with "# Bumps Into Wall" : ::
+In the metricsdemo.cpp file, we will add our new count to the top of MetricsDemoSystem::MetricsDemoSystem() {}, filling the name parameter of Count() with "# Bumps Into Wall" :
+
+.. code-block:: c++
 
   MetricsDemoSystem::MetricsDemoSystem(unsigned int numParticles, int counterMax) {
     _counts.push_back(new Count("# Bumps Into Wall"));
-    ...
-    ...
-    ...
-  }
+
+    // ...
 
 Next, we must place the record() function of our count to the activate() function of MetricsDemoParticle.
 Our count needs to count up every time a particle bumps into the hexagonal boundary wall of the system, so record() must be placed where this event would happen.
@@ -1242,11 +1248,12 @@ Before placing our record() function where the inability to expand because of a 
     contract tail
   end if
 
-Now let's put this into our metricsdemo.cpp file in the activate() function of MetricsDemoParticle: ::
+Now let's put this into our metricsdemo.cpp file in the activate() function of MetricsDemoParticle:
+
+.. code-block:: c++
 
   void MetricsDemoParticle::activate() {
-    ...
-    ...
+    // ...
 
     if (isContracted()) {
       int expandDir = randDir();
@@ -1261,8 +1268,7 @@ Now let's put this into our metricsdemo.cpp file in the activate() function of M
       contractTail();
     }
 
-    ...
-  }
+    // ...
 
 As you can see, we are just adding the else...if section (which is when the particle can't expand because of an object/wall node) that comes after the if(canExand) {} statement.
 
@@ -1279,7 +1285,9 @@ As opposed to a count that simply increments up when a certain event occurs, mea
 They are basically any metrics that do not simply count up by 1 each time an event occurs.
 Examples of measures include the percentage of a system in a particular state (what we are going to fo here), the perimeter of the system, etc.
 
-Before we created our custom measure metric, let's take a look at the basic format and creation of a measure which is outlined in core/metric.h : ::
+Before we created our custom measure metric, let's take a look at the basic format and creation of a measure which is outlined in core/metric.h :
+
+.. code-block:: c++
 
   class Measure {
    public:
@@ -1309,7 +1317,9 @@ This is where most of your code for a measure will reside.
 
 Now that we understand the basic format of the Measure class, let's create a measure to monitor the percentage of the particles in the system that are red.
 
-With measures, unlike with counts, we need to add some code to our header file to set up our custom measure, "PercentageRedMeasure", which inherits from the Measur class we looked at in metric.h . ::
+With measures, unlike with counts, we need to add some code to our header file to set up our custom measure, "PercentageRedMeasure", which inherits from the Measur class we looked at in metric.h .
+
+.. code-block:: c++
 
   class PercentageRedMeasure : public Measure {
 
@@ -1325,6 +1335,8 @@ With measures, unlike with counts, we need to add some code to our header file t
 
 Next, in order for our custom measure to have access to the information of the particle system as well as of the individual particles (which are separate classes), we must add the following line of code:
 
+.. code-block:: c++
+
   friend class PercentageRedMeasure;
 
 This needs to be placed in the definition of the MetricsDemoSystem class; all measures must be a friend class of the particle system class.
@@ -1333,7 +1345,9 @@ Additionally, this line needs to be placed in the definition of the MetricsDemoP
 Measures only need to be friend classes of the particle class in some cases, depending on what information the metric needs access to.
 For our PercentageRedMeasure, as you will see shortly, we need to access the states of individual particles; therefore, the measure must be a friend class of the particle class.
 
-Your header file, in total, should now look like this: ::
+Your header file, in total, should now look like this:
+
+.. code-block:: c++
 
   #ifndef AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
   #define AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
@@ -1418,7 +1432,9 @@ Your header file, in total, should now look like this: ::
 
 Next, moving on to the source file, we need to add our new PercentageRedMeasure to the measures of the simulation.
 This should look similar to what we did when adding our count, with a few extra parameters and a few small differences.
-Add the following line of code to the top of MetricsDemoSystem::MetricsDemoSystem() {} : (just above or below where you initialized the # Bumps count) ::
+Add the following line of code to the top of MetricsDemoSystem::MetricsDemoSystem() {} : (just above or below where you initialized the # Bumps count)
+
+.. code-block:: c++
 
   _measures.push_back(new PercentageRedMeasure("Percentage Red", 1, *this));
 
@@ -1428,7 +1444,9 @@ Using our PercentageRedMeasure() which we just defined in the header file, the p
 - 1 - freq, the integer of how many rounds between the measure is re-calculated and updated
 - *this - system, *this is use because we are already in MetricsDemoSystem::MetricsDemoSystem() {} which is the system we are looking at
 
-Next, still in metricsdemo.cpp, we need to declare our custom measure class, PercentageRedMeasure : ::
+Next, still in metricsdemo.cpp, we need to declare our custom measure class, PercentageRedMeasure :
+
+.. code-block:: c++
 
   PercentageRedMeasure::PercentageRedMeasure(const QString name, const unsigned int freq,
                                              MetricsDemoSystem& system)
@@ -1447,7 +1465,9 @@ First, here is the pseudocode of the calculate() function: ::
   end for
   return (numRed / system.size) * 100   // system.size equals the total number of particles in the system
 
-Now let's put this into actual code: ::
+Now let's put this into actual code:
+
+.. code-block:: c++
 
   double PercentageRedMeasure::calculate() const {
     int numRed = 0;
@@ -1462,7 +1482,9 @@ Now let's put this into actual code: ::
     return ( (double(numRed) / double(_system.size())) * 100);
   }
 
-Everything put together, your metricsdemo.cpp should now look like this: ::
+Everything put together, your metricsdemo.cpp should now look like this:
+
+.. code-block:: c++
 
   /* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
    * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
@@ -1624,7 +1646,9 @@ Although we will be following the same format and setup as was outlined in the p
 Additionally, we are calculating distances here, which is an extremely valuable and important aspect of a particle system.
 You will likely need to calculate distance in your future custom metrics.
 
-Following the same steps as before, let's begin by setting up our new measure class in the header file: ::
+Following the same steps as before, let's begin by setting up our new measure class in the header file:
+
+.. code-block:: c++
 
   class MaxDistanceMeasure : public Measure {
 
@@ -1638,11 +1662,15 @@ Following the same steps as before, let's begin by setting up our new measure cl
     MetricsDemoSystem& _system;
   };
 
-Next, we need to make our measure class a friend class of the particle system, adding the following line to the top of class MetricsDemoSystem : public AmoebotSystem {}, just as before (Note: for this measure we do not need explicit access to individual particles, so we do not need to make our measure a friend class of the MetricsDemoParticle class): ::
+Next, we need to make our measure class a friend class of the particle system, adding the following line to the top of class MetricsDemoSystem : public AmoebotSystem {}, just as before (Note: for this measure we do not need explicit access to individual particles, so we do not need to make our measure a friend class of the MetricsDemoParticle class):
+
+.. code-block:: c++
 
   friend class MaxDistanceMeasure;
 
-The completed header file should now look like this: ::
+The completed header file should now look like this:
+
+.. code-block:: c++
 
   #ifndef AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
   #define AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
@@ -1738,11 +1766,15 @@ The completed header file should now look like this: ::
 
   #endif // AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
 
-Next, moving on to the source file, we need to add our new measure to the top of MetricsDemoSystem::MetricsDemoSystem() {}, using the same frequency and system parameters as before: ::
+Next, moving on to the source file, we need to add our new measure to the top of MetricsDemoSystem::MetricsDemoSystem() {}, using the same frequency and system parameters as before:
+
+.. code-block:: c++
 
   _measures.push_back(new MaxDistanceMeasure("Max 2 Particle Dist", 1, *this));
 
-Next, declare our new measure class: ::
+Next, declare our new measure class:
+
+.. code-block:: c++
 
   MaxDistanceMeasure::MaxDistanceMeasure(const QString name, const unsigned int freq,
                                              MetricsDemoSystem& system)
@@ -1754,7 +1786,7 @@ Finally, we need to write the measure's calculate() function.
 Before we look at the pseudocode, we must consider one very important thing about calculating distance in AmoebotSim.
 The simulator using a triangular lattice, with the x and y coordinates being determined as follows:
 
-Image Here
+Image here
 
 As a result, we need to convert the triangular lattice coordinates to rectangular/Cartesian coordinates before calculating the distance between two points: ::
 
@@ -1783,7 +1815,9 @@ Here is the psuedocode for the calculate() function of our MaxDistanceMeasure: :
 
   return maxDist
 
-Now, the actual code to add to the source file: ::
+Now, the actual code to add to the source file:
+
+.. code-block:: c++
 
   double MaxDistanceMeasure::calculate() const {
     double dist;
@@ -1805,7 +1839,9 @@ Now, the actual code to add to the source file: ::
     return maxDist;
   }
 
-With everything, metricsdemo.cpp should now look like this: ::
+With everything, metricsdemo.cpp should now look like this:
+
+.. code-block:: c++
 
   /* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
    * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
@@ -1982,3 +2018,8 @@ Run the simulation and you should now see your new measure, "Max 2 Particle Dist
 
 Exporting Data
 ^^^^^^^^^^^^^^
+
+AmoebotSim automatically tracks metrics and stores their historical data, which can be exported as a JSON for further analysis or plotting.
+To export metrics data, you can either use the GUI Metrics button (shown below) or use the shortcut Ctrl+E/Cmd+E.
+
+This writes the metrics file with all of the historical data as your_AmoebotSim_build_directory/debug/metrics/metrics_<secs_since_epoch>.json (debug is assuming that the simulator has been build and run in debug).
