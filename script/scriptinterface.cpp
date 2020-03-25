@@ -13,6 +13,7 @@
 #include "alg/demo/discodemo.h"
 #include "alg/demo/pulldemo.h"
 #include "alg/demo/tokendemo.h"
+#include "alg/demo/metricsdemo.h"
 #include "alg/compression.h"
 #include "alg/infobjcoating.h"
 #include "alg/leaderelection.h"
