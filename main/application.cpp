@@ -105,7 +105,6 @@ Application::Application(int argc, char *argv[])
             }
     );
     connect(qmlRoot, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
-    connect(parameterModel, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
 
     // Set default step duration.
     sim.setStepDuration(0);
