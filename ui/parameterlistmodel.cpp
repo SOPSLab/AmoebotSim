@@ -75,27 +75,27 @@ void ParameterListModel::createSystem(QString algName) {
   }
 
   if (signature == "discodemo") {
-    dynamic_cast<DiscoDemoAlg*>(alg)->instantiate(params[0].toInt(),
-        params[1].toInt());
+    dynamic_cast<DiscoDemoAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toInt());
   } else if (signature == "pulldemo") {
     dynamic_cast<PullDemoAlg*>(alg)->instantiate();
   } else if (signature == "tokendemo") {
-    dynamic_cast<TokenDemoAlg*>(alg)->instantiate(params[0].toInt(),
-        params[1].toDouble());
+    dynamic_cast<TokenDemoAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toDouble());
   } else if (signature == "compression") {
-    dynamic_cast<CompressionAlg*>(alg)->instantiate(params[0].toInt(),
-        params[1].toDouble());
+    dynamic_cast<CompressionAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toDouble());
   } else if (signature == "infobjcoating") {
-    dynamic_cast<InfObjCoatingAlg*>(alg)->instantiate(params[0].toInt(),
-        params[1].toDouble());
+    dynamic_cast<InfObjCoatingAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toDouble());
   } else if (signature == "shapeformation") {
-    dynamic_cast<ShapeFormationAlg*>(alg)->instantiate(params[0].toInt(),
-        params[1].toDouble(), params[2]);
+    dynamic_cast<ShapeFormationAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toDouble(), params[2]);
   } else if (signature == "leaderelection") {
-    dynamic_cast<LeaderElectionAlg*>(alg)->instantiate(params[0].toInt(),
-        params[1].toDouble());
+    dynamic_cast<LeaderElectionAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toDouble());
   } else {
-    // A signature that is unrecognized has been entered.
+    // An unrecognized signature has been entered.
     Q_ASSERT(false);
   }
 }

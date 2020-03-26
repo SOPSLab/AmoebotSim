@@ -121,6 +121,24 @@ void InfObjCoatingAlg::instantiate(const int numParticles,
   }
 }
 
+LeaderElectionAlg::LeaderElectionAlg() :
+  Algorithm("Leader Election", "leaderelection") {
+  addParameter("# Particles", "100");
+  addParameter("Hole Prob.", "0.2");
+}
+
+void LeaderElectionAlg::instantiate(const int numParticles,
+                                    const double holeProb) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    emit log("holeProb in [0,1] required", true);
+  } else {
+    emit setSystem(std::make_shared<LeaderElectionSystem>(numParticles,
+                                                          holeProb));
+  }
+}
+
 ShapeFormationAlg::ShapeFormationAlg() :
   Algorithm("Basic Shape Formation", "shapeformation") {
   addParameter("# Particles", "200");
@@ -148,49 +166,17 @@ void ShapeFormationAlg::instantiate(const int numParticles,
   }
 }
 
-LeaderElectionAlg::LeaderElectionAlg() :
-  Algorithm("Leader Election", "leaderelection") {
-  addParameter("# Particles", "100");
-  addParameter("Hole Prob.", "0.2");
-}
-
-void LeaderElectionAlg::instantiate(const int numParticles,
-                                    const double holeProb) {
-  if (numParticles <= 0) {
-    emit log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    emit log("holeProb in [0,1] required", true);
-  } else {
-    emit setSystem(std::make_shared<LeaderElectionSystem>(numParticles,
-                                                          holeProb));
-  }
-}
-
 AlgorithmList::AlgorithmList() {
-  /* DEMO ALGORITHMS */
-
-  // Demo: Disco, a first tutorial.
-  _algorithms.push_back(new DiscoDemoAlg());
-
-  // Demo: Pull Handovers.
-  _algorithms.push_back(new PullDemoAlg());
-
-  // Demo: Token Passing.
+  // Demo algorithms.
+  _algorithms.push_back(new DiscoDemoAlg());  
+  _algorithms.push_back(new PullDemoAlg());  
   _algorithms.push_back(new TokenDemoAlg());
 
-  /* ALGORITHMS */
-
-  // Compression.
-  _algorithms.push_back(new CompressionAlg());
-
-  // Infinite Object Coating.
-  _algorithms.push_back(new InfObjCoatingAlg());
-
-  // Basic Shape Formation.
-  _algorithms.push_back(new ShapeFormationAlg());
-
-  // Leader Election.
+  // General algorithms.
+  _algorithms.push_back(new CompressionAlg());  
+  _algorithms.push_back(new InfObjCoatingAlg());    
   _algorithms.push_back(new LeaderElectionAlg());
+  _algorithms.push_back(new ShapeFormationAlg());
 }
 
 AlgorithmList::~AlgorithmList() {

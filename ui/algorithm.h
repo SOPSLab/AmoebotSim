@@ -45,44 +45,51 @@ class Algorithm : public QObject {
   std::vector<std::pair<QString, QString>> _parameters;
 };
 
-// Below, declare Algorithm classes which handle the instantiation of specific
-// algorithms
+/* Algorithm classes for handling the instantiation of specific algorithms */
+
+// Demo: Disco, a first tutorial.
 class DiscoDemoAlg : public Algorithm {
  public:
   DiscoDemoAlg();
   void instantiate(const int numParticles = 30, const int counterMax = 5);
 };
 
+// Demo: Pull Handovers.
 class PullDemoAlg : public Algorithm {
  public:
   PullDemoAlg();
   void instantiate();
 };
 
+// Demo: Token Passing.
 class TokenDemoAlg : public Algorithm {
  public:
   TokenDemoAlg();
   void instantiate(const int numParticles = 200, const double holeProb = 0.2);
 };
 
+// Compression.
 class CompressionAlg : public Algorithm {
  public:
   CompressionAlg();
   void instantiate(const int numParticles = 100, const double lambda = 4.0);
 };
 
+// Infinite Object Coating.
 class InfObjCoatingAlg : public Algorithm {
  public:
   InfObjCoatingAlg();
   void instantiate(const int numParticles = 100, const double holeProb = 0.2);
 };
 
+// Leader Election.
 class LeaderElectionAlg : public Algorithm {
  public:
   LeaderElectionAlg();
   void instantiate(const int numParticles = 100, const double holeProb = 0.2);
 };
 
+// Basic Shape Formation.
 class ShapeFormationAlg : public Algorithm {
  public:
   ShapeFormationAlg();

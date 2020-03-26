@@ -57,6 +57,7 @@ class Simulator : public QObject {
   // Emits a signal that updates the system visually, followed by a signal that
   // takes a screenshot of the result.
   void saveScreenshotSetup(const QString filePath);
+
  protected:
   QTimer stepTimer;
   std::shared_ptr<System> system;
