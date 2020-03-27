@@ -13,7 +13,7 @@ AggregateParticle::AggregateParticle(const Node head, const int globalTailDir,
 
 void AggregateParticle::activate() {
   bool particleInSight = checkIfParticleInSight();
-  int probNum = 0;
+  // int probNum = 0;
 
 
 // // Original algorithm but with added randomness/probabilities
