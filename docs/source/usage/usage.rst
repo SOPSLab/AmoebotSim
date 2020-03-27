@@ -66,6 +66,7 @@ The following is a list of all recognized commands.
   The script interface will likely no longer exist as a command line interface, but will still be available for scripting. So this section will likely need to move elsewhere or at least be presented differently.
   There would of course be more things exposed by ``ScriptInterface``, so we'll need to potentially add everything in there to an API area.
 
+.. _usage-export-metrics-data:
 
 Exporting Metrics Data
 ----------------------
