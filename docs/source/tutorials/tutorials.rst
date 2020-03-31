@@ -602,16 +602,15 @@ After completing this tutorial, you will be able to:
 At a high level overview, the psuedocode for the algorithm is as
 
 For **Ballroom**, every particle will keep a state either ``State::Leader`` or ``State::Follower``.
-Initially, ``numPair`` leader/follower pairs are spawned with leaders expanded into a random direction.
+Initially, ``numPairs`` leader/follower pairs are spawned with leaders expanded into a random direction.
 The leader is responsible for coordninating movement and after the pair is finished, swap roles with its partner.::
 
         if (contracted()), then do:
           if (state == Leader)
-          int flwrLabel = locationOfFollower(.);
-          BallroomDemoParticle& flwr = nbrAtLabel(flwrLabel);
-          if (canPush(flwrLabel)), then do:
-            push(flwrLabel);
-            flwr.state = Leader;
+          int nbrLabel = labelOfNeighbor();
+          if (canPush(nbrLabel)), then do:
+            push(nbrLabel);
+            neighbor.state = Leader;
             state = Follower;
           else, do:
             // Choose a random move direction not occupied by the follower.
@@ -623,12 +622,11 @@ The leader is responsible for coordninating movement and after the pair is finis
           end if
         else, do:
           if (state == Leader), then do:
-            int flwrLabel = locationOfFollower(.);
-            BallroomDemoParticle& flwr = nbrAtLabel(flwrLabel);
-            if (canPull(flwrLabel)), then do:
-              pull(flwrLabel);
-              flwr.contractTail();
-              flwr.state = Leader;
+            int nbrLabel = labelOfNeighbor();
+            if (canPull(nbrLabel)), then do:
+              pull(nbrLabel);
+              neighbor.contractTail();
+              neighbor.state = Leader;
               state = Follower;
             end if
             else, do:
@@ -641,37 +639,30 @@ Similar to the **Disco** algorithm, the ``activate()`` functions follows the alg
 
     // ...
 
-    void PullDemoParticle::activate() {
+    void BallroomDemoParticle::activate() {
       if (isContracted()) {
         if (state == State::Leader) {
-          int flwrLabel = labelOfFirstNbrInState({State::Follower});
-          bool flwrExists = (flwrLabel != -1);
-          if (flwrExists) {
-            PullDemoParticle& flwr = nbrAtLabel(flwrLabel);
-            if (canPush(flwrLabel)) {
-              push(flwrLabel);
-              flwr.state = State::Leader;
-              state = State::Follower;
-            } else { // Choose a random move direction not occupied by the follower.
-              int moveDir = randDir();
-              if (canExpand(moveDir))
-                expand(moveDir);
-            }
+          int nbrLabel = labelOfNeighbor(&*neighbor);
+          if (canPush(nbrLabel)) {
+            push(nbrLabel);
+            (*neighbor).state = State::Leader;
+            state = State::Follower;
+          } else { // Choose a random move direction not occupied by the follower.
+            int moveDir = randDir();
+            if (canExpand(moveDir))
+              expand(moveDir);
           }
+
         }
       }
       else {  // isExpanded().
         if (state == State::Leader) {
-          int flwrLabel = labelOfFirstNbrInState({State::Follower});
-          bool flwrExists = (flwrLabel != -1);
-          if (flwrExists) {
-            PullDemoParticle& flwr = nbrAtLabel(flwrLabel);
-            if (canPull(flwrLabel)) {
-              pull(flwrLabel);
-              flwr.contractTail();
-              flwr.state = State::Leader;
-              state = State::Follower;
-            }
+          int nbrLabel = labelOfNeighbor(&*neighbor);
+          if (canPull(nbrLabel)) {
+            pull(nbrLabel);
+            (*neighbor).contractTail();
+            (*neighbor).state = State::Leader;
+            state = State::Follower;
           }
         }
       }
@@ -681,40 +672,21 @@ Similar to the **Disco** algorithm, the ``activate()`` functions follows the alg
 
 Lets break down the ``activate()`` and discuss the individual methods used:
 
-1. ``labelOfFirstNbrInState(.)`` and ``labelOfFirstObjectNbr(.)`` are functions used to find the location of a dance partner. By iterating through a particle's ports, checking to see if there exists a particle with the desired property, until a particle is found, else -1 is returned.
+1. ``labelOfNeighbor(.)`` is a function used to find the location of a dance partner. It does this by iterating through a particle's ports, checking to see if their is a neighbor at that port until it is found.
 
 .. code-block:: c++
 
     // ...
-    int BallroomDemoParticle::labelOfFirstNbrInState(
-    std::initializer_list<State> states, int startLabel) const {
-      auto prop = [&](const BallroomDemoParticle& p) {
-      for (auto state : states) {
-        if (p.state == state) {
-          return true;
-        }
-      }
-      return false;
-      };
-
-      return labelOfFirstNbrWithProperty<BallroomDemoParticle>(prop, startLabel);
-    }
-
-    template<class ParticleType>
-    int AmoebotParticle::labelOfFirstNbrWithProperty(
-        std::function<bool(const ParticleType&)> propertyCheck,
-        int startLabel) const {
-      const int labelLimit = isContracted() ? 6 : 10;
-      for (int labelOffset = 0; labelOffset < labelLimit; labelOffset++) {
-        const int label = (startLabel + labelOffset) % labelLimit;
-        if (hasNbrAtLabel(label)) {
-          const ParticleType& particle = nbrAtLabel<ParticleType>(label);
-          if (propertyCheck(particle)) {
-            return label;
+    int BallroomDemoParticle::labelOfNeighbor(BallroomDemoParticle *neighbor) const {
+      const int maxNeighbors = isExpanded() ? 12 : 6;
+      for(int i = 0; i < maxNeighbors; ++i) {
+        bool hasnbr = hasNbrAtLabel(i);
+        if (hasnbr) {
+          if(&nbrAtLabel(i) == &*neighbor) {
+            return i;
           }
         }
       }
-
       return -1;
     }
 
@@ -808,35 +780,71 @@ The system is set up as follows:
 
     // ...
 
-    BallroomDemoSystem::BallroomDemoSystem(unsigned int numParticles) {
+    BallroomDemoSystem::BallroomDemoSystem(unsigned int numPairs) {
+
+      // The Ballroom system is enclosed in a rhombus with side length
+      // of 2 * numParticles.
+      Node boundNode(numPairs, numPairs);
+      int direcitons[4] = {3, 4, 0, 1};
+      for (int j = 0; j < 4; ++j) {
+        int dir = direcitons[j];
+        for (int i = 0; i < 2*numPairs; ++i) {
+          insert(new Object(boundNode));
+          boundNode = boundNode.nodeInDir(dir);
+        }
+      }
+
       std::set<Node> occupied;
-      while (occupied.size() < numParticles) {
-        int x = randInt(-numParticles, numParticles);
-        int y = randInt(-numParticles, numParticles);
-        Node node(x, y);
+      while ((occupied.size()/3) < numPairs) {
+        // First, choose an x and y position at random within the rhombus.
+        int x = randInt(-(2*numPairs/3), (2*numPairs/3));
+        int y = randInt(-(2*numPairs/3), (2*numPairs/3));
+
+        // Then, we identify the positions we want to place the expanded particle
+        // and its follower.
+        Node nodeTail(x, y);
         int partnerDir = randDir();
-        Node flwr = node.nodeInDir(partnerDir);
+        Node flwr = nodeTail.nodeInDir(partnerDir);
         int leaderExpandDir = randDir();
-
-        while (leaderExpandDir == partnerDir)
+        while (leaderExpandDir == partnerDir) {
           leaderExpandDir = randDir();
+        }
+        Node nodeHead = nodeTail.nodeInDir(leaderExpandDir);
 
-        if (occupied.find(node) == occupied.end() && occupied.find(flwr) == occupied.end()) {
-          BallroomDemoParticle *lead = new BallroomDemoParticle(node, leaderExpandDir, randDir(), *this, BallroomDemoParticle::State::Leader);
-          insert(lead);
-          BallroomDemoParticle *follow = new BallroomDemoParticle(flwr, -1, randDir(), *this, BallroomDemoParticle::State::Follower);
-          insert(follow);
-          occupied.insert(node);
+        // If unoccupied, place the particles there.
+        if ((occupied.find(nodeTail) == occupied.end() &&
+            occupied.find(flwr) == occupied.end()) &&
+            occupied.find(nodeHead) == occupied.end()) {
+          BallroomDemoParticle *one =
+              new BallroomDemoParticle(nodeTail, leaderExpandDir, randDir(), *this,
+                                                      BallroomDemoParticle::State::Leader);
+          insert(one);
+
+          BallroomDemoParticle *two =
+              new BallroomDemoParticle(flwr, -1, randDir(), *this,
+                                                      BallroomDemoParticle::State::Follower);
+          insert(two);
+
+          // Then, we link the two particles by their 'neighbor' variable to keep
+          // track of their dance partner. This ensures the particles only dance
+          // with their original pairing.
+          one->neighbor = &(*two);
+          two->neighbor = &(*one);
+
+          // Here, we insert both the nodeHead and nodeTail positions so we
+          // do not insert particles into occupied positions.
+          occupied.insert(nodeTail);
           occupied.insert(flwr);
+          occupied.insert(nodeHead);
         }
       }
     }
 
     // ...
 
-After registering the algorithm, as per the **Disco** demo, you are ready to run the algorithm. Congratulations! 
+After registering the algorithm, as per the **Disco** demo, you are ready to run the algorithm. Congratulations!
 
-.. image:: graphics/ballroom.gif
+.. image:: graphics/ballroomDemo.gif
 
 TokenDemo: Communicating over Distance
 --------------------------------------

@@ -16,31 +16,26 @@ void BallroomDemoParticle::activate() {
   if (isContracted()) {
     if (state == State::Leader) {
       int nbrLabel = labelOfNeighbor(&*neighbor);
-      bool flwrExists = (nbrLabel != -1) && (neighbor->state == State::Follower);
-      if (flwrExists) {
-        if (canPush(nbrLabel)) {
-          push(nbrLabel);
-          (*neighbor).state = State::Leader;
-          state = State::Follower;
-        } else { // Choose a random move direction not occupied by the follower.
-          int moveDir = randDir();
-          if (canExpand(moveDir))
-            expand(moveDir);
-        }
+      if (canPush(nbrLabel)) {
+        push(nbrLabel);
+        (*neighbor).state = State::Leader;
+        state = State::Follower;
+      } else { // Choose a random move direction not occupied by the follower.
+        int moveDir = randDir();
+        if (canExpand(moveDir))
+          expand(moveDir);
       }
+
     }
   }
   else {  // isExpanded().
     if (state == State::Leader) {
       int nbrLabel = labelOfNeighbor(&*neighbor);
-      bool flwrExists = (nbrLabel != -1) && (neighbor->state == State::Follower);
-      if (flwrExists) {
-        if (canPull(nbrLabel)) {
-          pull(nbrLabel);
-          (*neighbor).contractTail();
-          (*neighbor).state = State::Leader;
-          state = State::Follower;
-        }
+      if (canPull(nbrLabel)) {
+        pull(nbrLabel);
+        (*neighbor).contractTail();
+        (*neighbor).state = State::Leader;
+        state = State::Follower;
       }
     }
   }
@@ -96,25 +91,25 @@ BallroomDemoParticle& BallroomDemoParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<BallroomDemoParticle>(label);
 }
 
-BallroomDemoSystem::BallroomDemoSystem(unsigned int numParticles) {
+BallroomDemoSystem::BallroomDemoSystem(unsigned int numPairs) {
 
   // The Ballroom system is enclosed in a rhombus with side length
   // of 2 * numParticles.
-  Node boundNode(numParticles, numParticles);
+  Node boundNode(numPairs, numPairs);
   int direcitons[4] = {3, 4, 0, 1};
   for (int j = 0; j < 4; ++j) {
     int dir = direcitons[j];
-    for (int i = 0; i < 2*numParticles; ++i) {
+    for (int i = 0; i < 2*numPairs; ++i) {
       insert(new Object(boundNode));
       boundNode = boundNode.nodeInDir(dir);
     }
   }
 
   std::set<Node> occupied;
-  while ((occupied.size()/3) < numParticles) {
+  while ((occupied.size()/3) < numPairs) {
     // First, choose an x and y position at random within the rhombus.
-    int x = randInt(-(2*numParticles/3), (2*numParticles/3));
-    int y = randInt(-(2*numParticles/3), (2*numParticles/3));
+    int x = randInt(-(2*numPairs/3), (2*numPairs/3));
+    int y = randInt(-(2*numPairs/3), (2*numPairs/3));
 
     // Then, we identify the positions we want to place the expanded particle
     // and its follower.
