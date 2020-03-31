@@ -53,7 +53,13 @@ Application::Application(int argc, char *argv[])
     connect(qmlRoot, SIGNAL(algSelected(QString)),
             parameterModel, SLOT(updateAlgParameters(QString)));
     connect(qmlRoot, SIGNAL(instantiate(QString)),
-            parameterModel, SLOT(createCommand(QString)));
+            parameterModel, SLOT(createSystem(QString)));
+    for (Algorithm* alg : parameterModel->getAlgorithmList()->getAlgs()) {
+      connect(alg, &Algorithm::log, [qmlRoot](const QString msg, const bool isError){
+        QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
+      });
+      connect(alg, &Algorithm::setSystem, &sim, &Simulator::setSystem);
+    }
 
     // setup connections between GUI and Simulator
     connect(&sim, &Simulator::systemChanged, vis, &VisItem::systemChanged);
@@ -92,19 +98,25 @@ Application::Application(int argc, char *argv[])
     );
 
     // setup scripting
-    scriptEngine = std::make_shared<ScriptEngine>(sim, vis);
+    scriptEngine = std::make_shared<ScriptEngine>(sim, vis, parameterModel->getAlgorithmList());
     connect(scriptEngine.get(), &ScriptEngine::log,
             [qmlRoot](const QString msg, const bool isError){
               QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
             }
     );
     connect(qmlRoot, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
-    connect(parameterModel, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
 
     // Set default step duration.
     sim.setStepDuration(0);
   } else {
-    scriptEngine = std::make_shared<ScriptEngine>(sim, nullptr);
+    parameterModel = new ParameterListModel();
+
+    for (Algorithm* alg : parameterModel->getAlgorithmList()->getAlgs()) {
+      connect(alg, &Algorithm::log, [](const QString msg, const bool isError){ Q_UNUSED(isError); qDebug() << msg; });
+      connect(alg, &Algorithm::setSystem, &sim, &Simulator::setSystem);
+    }
+
+    scriptEngine = std::make_shared<ScriptEngine>(sim, nullptr, parameterModel->getAlgorithmList());
     connect(scriptEngine.get(), &ScriptEngine::log, [](const QString msg, const bool isError){ Q_UNUSED(isError); qDebug() << msg; });
     scriptEngine->executeCommand("runScript(\"" + scriptPath + "\")");
     // create one shot timer that quits the application once the script is executed

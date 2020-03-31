@@ -25,7 +25,7 @@ ScriptInterface::ScriptInterface(ScriptEngine &engine, Simulator& sim,
   : engine(engine),
     sim(sim),
     vis(vis) {
-  shapeformation();
+  sim.setSystem(std::make_shared<ShapeFormationSystem>(200, 0.2, "h"));
 }
 
 void ScriptInterface::log(const QString msg, bool error) {
@@ -121,83 +121,6 @@ void ScriptInterface::filmSimulation(QString filePath, const int stepLimit) {
     saveScreenshot(filePath + pad(i,fnameLen) + QString(".png"));
     step();
     ++i;
-  }
-}
-
-void ScriptInterface::discodemo(const int numParticles, const int counterMax) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (counterMax <= 0) {
-    log("counterMax must be > 0", true);
-  } else {
-    sim.setSystem(std::make_shared<DiscoDemoSystem>(numParticles));
-  }
-}
-
-void ScriptInterface::pulldemo() {
-  sim.setSystem(std::make_shared<PullDemoSystem>());
-}
-
-void ScriptInterface::tokendemo(const int numParticles, const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
-  }
-}
-
-void ScriptInterface::compression(const int numParticles, const double lambda) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else {
-    sim.setSystem(std::make_shared<CompressionSystem>(numParticles, lambda));
-  }
-}
-
-void ScriptInterface::infobjcoating(const int numParticles,
-                                    const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<InfObjCoatingSystem>(numParticles,
-                                                        holeProb));
-  }
-}
-
-void ScriptInterface::leaderelection(const int numParticles,
-                                         const double holeProb) {
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else {
-    sim.setSystem(std::make_shared<LeaderElectionSystem>(numParticles,
-                                                         holeProb));
-  }
-}
-
-void ScriptInterface::shapeformation(const int numParticles,
-                                     const double holeProb,
-                                     const QString mode) {
-  std::set<QString> set = ShapeFormationSystem::getAcceptedModes();
-  if (numParticles <= 0) {
-    log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    log("holeProb in [0,1] required", true);
-  } else if (set.find(mode) == set.end()) {
-    QString accepted = "";
-    for(std::set<QString>::iterator it = set.begin(); it != set.end(); ++it) {
-      if (accepted != "") accepted = accepted + ", " + *it;
-      else accepted = *it;
-    }
-    log("only accepted modes are: " + accepted, true);
-  } else {
-    sim.setSystem(std::make_shared<ShapeFormationSystem>(numParticles, holeProb,
-                                                         mode));
   }
 }
 

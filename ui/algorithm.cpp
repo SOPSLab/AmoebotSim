@@ -4,6 +4,14 @@
 
 #include "ui/algorithm.h"
 
+#include "alg/demo/discodemo.h"
+#include "alg/demo/pulldemo.h"
+#include "alg/demo/tokendemo.h"
+#include "alg/compression.h"
+#include "alg/infobjcoating.h"
+#include "alg/leaderelection.h"
+#include "alg/shapeformation.h"
+
 Algorithm::Algorithm(QString name, QString signature)
     : _name(name),
       _signature(signature) {}
@@ -46,48 +54,150 @@ void Algorithm::addParameter(QString parameter, QString defaultValue) {
   _parameters.push_back(std::make_pair(parameter, defaultValue));
 }
 
+DiscoDemoAlg::DiscoDemoAlg() : Algorithm("Demo: Disco", "discodemo") {
+  addParameter("# Particles", "30");
+  addParameter("Counter Max", "5");
+};
+
+void DiscoDemoAlg::instantiate(const int numParticles, const int counterMax) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (counterMax <= 0) {
+    emit log("counterMax must be > 0", true);
+  } else {
+    emit setSystem(std::make_shared<DiscoDemoSystem>(numParticles));
+  }
+}
+
+PullDemoAlg::PullDemoAlg() : Algorithm("Demo: Pull Handovers", "pulldemo") {}
+
+void PullDemoAlg::instantiate() {
+  emit setSystem(std::make_shared<PullDemoSystem>());
+}
+
+TokenDemoAlg::TokenDemoAlg() : Algorithm("Demo: Token Passing", "tokendemo") {
+  addParameter("# Particles", "200");
+  addParameter("Hole Prob.", "0.2");
+}
+
+void TokenDemoAlg::instantiate(const int numParticles, const double holeProb) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    emit log("holeProb in [0,1] required", true);
+  } else {
+    emit setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
+  }
+}
+
+CompressionAlg::CompressionAlg() : Algorithm("Compression", "compression") {
+  addParameter("# Particles", "100");
+  addParameter("Lambda", "4.0");
+}
+
+void CompressionAlg::instantiate(const int numParticles, const double lambda) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else {
+    emit setSystem(std::make_shared<CompressionSystem>(numParticles, lambda));
+  }
+}
+
+InfObjCoatingAlg::InfObjCoatingAlg() :
+  Algorithm("Infinite Object Coating", "infobjcoating") {
+  addParameter("# Particles", "100");
+  addParameter("Hole Prob.", "0.2");
+}
+
+void InfObjCoatingAlg::instantiate(const int numParticles,
+                                   const double holeProb) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    emit log("holeProb in [0,1] required", true);
+  } else {
+    emit setSystem(std::make_shared<InfObjCoatingSystem>(numParticles,
+                                                         holeProb));
+  }
+}
+
+LeaderElectionAlg::LeaderElectionAlg() :
+  Algorithm("Leader Election", "leaderelection") {
+  addParameter("# Particles", "100");
+  addParameter("Hole Prob.", "0.2");
+}
+
+void LeaderElectionAlg::instantiate(const int numParticles,
+                                    const double holeProb) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    emit log("holeProb in [0,1] required", true);
+  } else {
+    emit setSystem(std::make_shared<LeaderElectionSystem>(numParticles,
+                                                          holeProb));
+  }
+}
+
+ShapeFormationAlg::ShapeFormationAlg() :
+  Algorithm("Basic Shape Formation", "shapeformation") {
+  addParameter("# Particles", "200");
+  addParameter("Hole Prob.", "0.2");
+  addParameter("Shape", "h");
+}
+
+void ShapeFormationAlg::instantiate(const int numParticles,
+                                    const double holeProb, const QString mode) {
+  std::set<QString> set = ShapeFormationSystem::getAcceptedModes();
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    emit log("holeProb in [0,1] required", true);
+  } else if (set.find(mode) == set.end()) {
+    QString accepted = "";
+    for(std::set<QString>::iterator it = set.begin(); it != set.end(); ++it) {
+      if (accepted != "") accepted = accepted + ", " + *it;
+      else accepted = *it;
+    }
+    emit log("only accepted modes are: " + accepted, true);
+  } else {
+    emit setSystem(std::make_shared<ShapeFormationSystem>(numParticles,
+                                                          holeProb, mode));
+  }
+}
+
 AlgorithmList::AlgorithmList() {
-  /* DEMO ALGORITHMS */
+  // Demo algorithms.
+  _algorithms.push_back(new DiscoDemoAlg());  
+  _algorithms.push_back(new PullDemoAlg());  
+  _algorithms.push_back(new TokenDemoAlg());
 
-  // Demo: Disco, a first tutorial.
-  _algorithms.push_back(new Algorithm("Demo: Disco", "discodemo"));
-  _algorithms.back()->addParameter("# Particles", "30");
-  _algorithms.back()->addParameter("Counter Max", "5");
-
-  // Demo: Pull Handovers.
-  _algorithms.push_back(new Algorithm("Demo: Pull Handovers", "pulldemo"));
-
-  // Demo: Token Passing.
-  _algorithms.push_back(new Algorithm("Demo: Token Passing", "tokendemo"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
-
-  /* ALGORITHMS */
-
-  // Compression.
-  _algorithms.push_back(new Algorithm("Compression", "compression"));
-  _algorithms.back()->addParameter("# Particles", "100");
-  _algorithms.back()->addParameter("Lambda", "4.0");
-
-  // Infinite Object Coating.
-  _algorithms.push_back(new Algorithm("Infinite Object Coating", "infobjcoating"));
-  _algorithms.back()->addParameter("# Particles", "100");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
-
-  // Basic Shape Formation.
-  _algorithms.push_back(new Algorithm("Basic Shape Formation", "shapeformation"));
-  _algorithms.back()->addParameter("# Particles", "200");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
-  _algorithms.back()->addParameter("Shape", "\"h\"");
-
-  // Leader Election.
-  _algorithms.push_back(new Algorithm("Leader Election", "leaderelection"));
-  _algorithms.back()->addParameter("# Particles", "100");
-  _algorithms.back()->addParameter("Hole Prob.", "0.2");
+  // General algorithms.
+  _algorithms.push_back(new CompressionAlg());  
+  _algorithms.push_back(new InfObjCoatingAlg());    
+  _algorithms.push_back(new LeaderElectionAlg());
+  _algorithms.push_back(new ShapeFormationAlg());
 }
 
 AlgorithmList::~AlgorithmList() {
   _algorithms.erase(_algorithms.begin(), _algorithms.end());
+}
+
+std::vector<Algorithm*> AlgorithmList::getAlgs() {
+  return _algorithms;
+}
+
+Algorithm* AlgorithmList::getAlg(QString algName) const {
+  Algorithm* algo = nullptr;
+
+  for (auto alg : _algorithms) {
+    if (alg->getName().compare(algName) == 0) {
+      algo = alg;
+      break;
+    }
+  }
+
+  return algo;
 }
 
 QStringList AlgorithmList::getAlgNames() const {
