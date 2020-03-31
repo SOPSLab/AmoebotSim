@@ -182,6 +182,9 @@ bool AggregateParticle::checkIfParticleInSight() const {
 }
 
 AggregateSystem::AggregateSystem(int numParticles) {
+  _measures.push_back(new MaxDistanceMeasure("MAX 2 Particle Dist", 1, *this));
+  _measures.push_back(new SumDistancesMeasure("SUM 2 Particle Dists", 1, *this));
+
   Q_ASSERT(numParticles > 0);
   std::set<Node> occupied;
   std::vector<AggregateParticle*> particles;
@@ -208,6 +211,176 @@ AggregateSystem::AggregateSystem(int numParticles) {
   for (auto p : particles) {
     p->particles = particles;
   }
+}
+
+MaxDistanceMeasure::MaxDistanceMeasure(const QString name, const unsigned int freq,
+                                           AggregateSystem& system)
+  : Measure(name, freq),
+    _system(system) {}
+
+double MaxDistanceMeasure::calculate() const {
+  double dist;
+  double maxDist = 0.0;
+  int x1_center, y1_center, x2_center, y2_center;
+
+  for (const auto& p1 : _system.particles) {
+    auto aggr_p1 = dynamic_cast<AggregateParticle*>(p1);
+
+    switch (aggr_p1->center) {
+      case 0 :
+        x1_center = aggr_p1->head.x + 1;
+        y1_center = aggr_p1->head.y;
+        break;
+      case 1 :
+        x1_center = aggr_p1->head.x;
+        y1_center = aggr_p1->head.y + 1;
+        break;
+      case 2 :
+        x1_center = aggr_p1->head.x - 1;
+        y1_center = aggr_p1->head.y + 1;
+        break;
+      case 3 :
+        x1_center = aggr_p1->head.x - 1;
+        y1_center = aggr_p1->head.y;
+        break;
+      case 4 :
+        x1_center = aggr_p1->head.x;
+        y1_center = aggr_p1->head.y - 1;
+        break;
+      case 5 :
+        x1_center = aggr_p1->head.x + 1;
+        y1_center = aggr_p1->head.y - 1;
+        break;
+    }
+
+    double x1_car = x1_center + y1_center/2.0;
+    double y1_car = sqrt(3.0)/2 * y1_center;
+
+    for (const auto& p2 : _system.particles) {
+      auto aggr_p2 = dynamic_cast<AggregateParticle*>(p2);
+
+      switch (aggr_p2->center) {
+        case 0 :
+          x2_center = aggr_p2->head.x + 1;
+          y2_center = aggr_p2->head.y;
+          break;
+        case 1 :
+          x2_center = aggr_p2->head.x;
+          y2_center = aggr_p2->head.y + 1;
+          break;
+        case 2 :
+          x2_center = aggr_p2->head.x - 1;
+          y2_center = aggr_p2->head.y + 1;
+          break;
+        case 3 :
+          x2_center = aggr_p2->head.x - 1;
+          y2_center = aggr_p2->head.y;
+          break;
+        case 4 :
+          x2_center = aggr_p2->head.x;
+          y2_center = aggr_p2->head.y - 1;
+          break;
+        case 5 :
+          x2_center = aggr_p2->head.x + 1;
+          y2_center = aggr_p2->head.y - 1;
+          break;
+      }
+
+      double x2_car = x2_center + y2_center/2.0;
+      double y2_car = sqrt(3.0)/2 * y2_center;
+
+      dist = sqrt( pow((x2_car - x1_car), 2) + pow((y2_car - y1_car), 2) );
+      if (dist > maxDist) {
+        maxDist = dist;
+      }
+    }
+  }
+
+  return maxDist;
+}
+
+SumDistancesMeasure::SumDistancesMeasure(const QString name, const unsigned int freq,
+                                           AggregateSystem& system)
+  : Measure(name, freq),
+    _system(system) {}
+
+double SumDistancesMeasure::calculate() const {
+  double dist;
+  double totalDist = 0.0;
+  int x1_center, y1_center, x2_center, y2_center;
+
+  for (const auto& p1 : _system.particles) {
+    auto aggr_p1 = dynamic_cast<AggregateParticle*>(p1);
+
+    switch (aggr_p1->center) {
+      case 0 :
+        x1_center = aggr_p1->head.x + 1;
+        y1_center = aggr_p1->head.y;
+        break;
+      case 1 :
+        x1_center = aggr_p1->head.x;
+        y1_center = aggr_p1->head.y + 1;
+        break;
+      case 2 :
+        x1_center = aggr_p1->head.x - 1;
+        y1_center = aggr_p1->head.y + 1;
+        break;
+      case 3 :
+        x1_center = aggr_p1->head.x - 1;
+        y1_center = aggr_p1->head.y;
+        break;
+      case 4 :
+        x1_center = aggr_p1->head.x;
+        y1_center = aggr_p1->head.y - 1;
+        break;
+      case 5 :
+        x1_center = aggr_p1->head.x + 1;
+        y1_center = aggr_p1->head.y - 1;
+        break;
+    }
+
+    double x1_car = x1_center + y1_center/2.0;
+    double y1_car = sqrt(3.0)/2 * y1_center;
+
+    for (const auto& p2 : _system.particles) {
+      auto aggr_p2 = dynamic_cast<AggregateParticle*>(p2);
+
+      switch (aggr_p2->center) {
+        case 0 :
+          x2_center = aggr_p2->head.x + 1;
+          y2_center = aggr_p2->head.y;
+          break;
+        case 1 :
+          x2_center = aggr_p2->head.x;
+          y2_center = aggr_p2->head.y + 1;
+          break;
+        case 2 :
+          x2_center = aggr_p2->head.x - 1;
+          y2_center = aggr_p2->head.y + 1;
+          break;
+        case 3 :
+          x2_center = aggr_p2->head.x - 1;
+          y2_center = aggr_p2->head.y;
+          break;
+        case 4 :
+          x2_center = aggr_p2->head.x;
+          y2_center = aggr_p2->head.y - 1;
+          break;
+        case 5 :
+          x2_center = aggr_p2->head.x + 1;
+          y2_center = aggr_p2->head.y - 1;
+          break;
+      }
+
+      double x2_car = x2_center + y2_center/2.0;
+      double y2_car = sqrt(3.0)/2 * y2_center;
+
+      dist = sqrt( pow((x2_car - x1_car), 2) + pow((y2_car - y1_car), 2) );
+      totalDist = totalDist + dist;
+    }
+  }
+
+  return totalDist;
 }
 
 bool AggregateSystem::hasTerminated() const {

@@ -21,6 +21,9 @@
 #include "core/amoebotsystem.h"
 
 class AggregateParticle : public AmoebotParticle {
+  friend class MaxDistanceMeasure;
+  friend class SumDistancesMeasure;
+
  public:
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
@@ -68,6 +71,9 @@ class AggregateParticle : public AmoebotParticle {
 };
 
 class AggregateSystem : public AmoebotSystem  {
+  friend class MaxDistanceMeasure;
+  friend class SumDistancesMeasure;
+
  public:
   // Constructs a system of AggregateParticles with an optionally specified size
   // (#particles). The spread of the particles in the system is limited by a box
@@ -78,6 +84,30 @@ class AggregateSystem : public AmoebotSystem  {
   // Checks whether or not the system's run of the aggregation algorithm has
   // terminated (all particles have clustered together).
   bool hasTerminated() const override;
+};
+
+class MaxDistanceMeasure : public Measure {
+
+public:
+  MaxDistanceMeasure(const QString name, const unsigned int freq,
+                       AggregateSystem& system);
+
+  double calculate() const final;
+
+protected:
+  AggregateSystem& _system;
+};
+
+class SumDistancesMeasure : public Measure {
+
+public:
+  SumDistancesMeasure(const QString name, const unsigned int freq,
+                       AggregateSystem& system);
+
+  double calculate() const final;
+
+protected:
+  AggregateSystem& _system;
 };
 
 #endif  // AMOEBOTSIM_ALG_AGGREGATION_H
