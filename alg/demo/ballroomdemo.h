@@ -47,14 +47,13 @@ class BallroomDemoParticle : public AmoebotParticle {
   // hasNbrAtLabel() first if unsure.
   BallroomDemoParticle& nbrAtLabel(int label) const;
 
-  // Returns the label of the first port incident to a neighboring particle in
-  // any of the specified states, starting at the (optionally) specified label
-  // and continuing clockwise.
-  int labelOfFirstNbrInState(std::initializer_list<State> states,
-                             int startLabel = 0) const;
+  // Returns the label each particle's neighbor; A particle always has only one
+  // neighbor.
+  int labelOfNeighbor(BallroomDemoParticle* neighbor) const;
 
  protected:
   State state;
+  BallroomDemoParticle *neighbor;
 
  private:
   friend class BallroomDemoSystem;

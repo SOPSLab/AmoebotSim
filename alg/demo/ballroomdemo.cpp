@@ -15,13 +15,12 @@ BallroomDemoParticle::BallroomDemoParticle(const Node head, const int globalTail
 void BallroomDemoParticle::activate() {
   if (isContracted()) {
     if (state == State::Leader) {
-      int flwrLabel = labelOfFirstNbrInState({State::Follower});
-      bool flwrExists = (flwrLabel != -1);
+      int nbrLabel = labelOfNeighbor(&*neighbor);
+      bool flwrExists = (nbrLabel != -1) && (neighbor->state == State::Follower);
       if (flwrExists) {
-        BallroomDemoParticle& flwr = nbrAtLabel(flwrLabel);
-        if (canPush(flwrLabel)) {
-          push(flwrLabel);
-          flwr.state = State::Leader;
+        if (canPush(nbrLabel)) {
+          push(nbrLabel);
+          (*neighbor).state = State::Leader;
           state = State::Follower;
         } else { // Choose a random move direction not occupied by the follower.
           int moveDir = randDir();
@@ -33,14 +32,13 @@ void BallroomDemoParticle::activate() {
   }
   else {  // isExpanded().
     if (state == State::Leader) {
-      int flwrLabel = labelOfFirstNbrInState({State::Follower});
-      bool flwrExists = (flwrLabel != -1);
+      int nbrLabel = labelOfNeighbor(&*neighbor);
+      bool flwrExists = (nbrLabel != -1) && (neighbor->state == State::Follower);
       if (flwrExists) {
-        BallroomDemoParticle& flwr = nbrAtLabel(flwrLabel);
-        if (canPull(flwrLabel)) {
-          pull(flwrLabel);
-          flwr.contractTail();
-          flwr.state = State::Leader;
+        if (canPull(nbrLabel)) {
+          pull(nbrLabel);
+          (*neighbor).contractTail();
+          (*neighbor).state = State::Leader;
           state = State::Follower;
         }
       }
@@ -59,6 +57,19 @@ int BallroomDemoParticle::headMarkColor() const {
 
 int BallroomDemoParticle::tailMarkColor() const {
   return headMarkColor();
+}
+
+int BallroomDemoParticle::labelOfNeighbor(BallroomDemoParticle *neighbor) const {
+  const int maxNeighbors = isExpanded() ? 12 : 6;
+  for(int i = 0; i < maxNeighbors; ++i) {
+    bool hasnbr = hasNbrAtLabel(i);
+    if (hasnbr) {
+      if(&nbrAtLabel(i) == &*neighbor) {
+        return i;
+      }
+    }
+  }
+  return -1;
 }
 
 QString BallroomDemoParticle::inspectionText() const {
@@ -85,21 +96,6 @@ BallroomDemoParticle& BallroomDemoParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<BallroomDemoParticle>(label);
 }
 
-int BallroomDemoParticle::labelOfFirstNbrInState(
-    std::initializer_list<State> states, int startLabel) const {
-  auto prop = [&](const BallroomDemoParticle& p) {
-    for (auto state : states) {
-      if (p.state == state) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  return labelOfFirstNbrWithProperty<BallroomDemoParticle>(prop, startLabel);
-}
-
-
 BallroomDemoSystem::BallroomDemoSystem(unsigned int numParticles) {
   // Insert the leader at (0,0) and the follower at (-1,0).
   std::set<Node> occupied;
@@ -124,6 +120,8 @@ BallroomDemoSystem::BallroomDemoSystem(unsigned int numParticles) {
       BallroomDemoParticle *two = new BallroomDemoParticle(flwr, -1, randDir(), *this,
                                                   BallroomDemoParticle::State::Follower);
       insert(two);
+      one->neighbor = &(*two);
+      two->neighbor = &(*one);
       occupied.insert(node);
       occupied.insert(flwr);
     }
