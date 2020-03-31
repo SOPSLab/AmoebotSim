@@ -593,11 +593,11 @@ We'll be developing a rather simple algorithm which creates a hexagon of particl
 In this tutorial you will also learn how to utilize tokens with structured data.
 
 We will first begin by creating two files in the ``alg/demo`` directory, ``alg/demo/tokendemo.h`` and ``alg/demo/tokendemo.cpp``.
-We start by declaring the ``TokenDemoParticle`` class which we have publicly inheriting from ``ShapeFormationParticle`` only because it allows for much easier visualization of the tokens being passed between particles. 
+We start by declaring the ``TokenDemoParticle`` class which we have publicly inheriting from ``AmoebotParticle`` only because it allows for much easier visualization of the tokens being passed between particles. 
 
 .. code-block:: c++
 
-  class TokenDemoParticle : public ShapeFormationParticle { ... }
+  class TokenDemoParticle : public AmoebotParticle { ... }
 
 Just like with other particle type creations, we must declare the necessary virtual functions: 
 
@@ -605,62 +605,76 @@ Just like with other particle type creations, we must declare the necessary virt
 
   class TokenDemoParticle : public ShapeFormationParticle {
     public:
-    // Constructs a new particle with a node position for its head, a global
-    // compass direction from its head to its tail (-1 if contracted), an offset
-    // for its local compass, a system which it belongs to, an initial state, and
-    // a string to determine its shape formation mode ("l" for line formation in
-    // this demo).
-    TokenDemoParticle(const Node head, const int globalTailDir,
-                    const int orientation, AmoebotSystem& system, State state,
-                    const QString mode);
+      // Constructs a new particle with a node position for its head, a global
+      // compass direction from its head to its tail (-1 if contracted), an offset
+      // for its local compass, a system which it belongs to, an initial state, and
+      // a string to determine its shape formation mode ("l" for line formation in
+      // this demo).
+      TokenDemoParticle(const Node head, const int globalTailDir,
+                      const int orientation, AmoebotSystem& system, State state,
+                      const QString mode);
 
-    // Executes one particle activation.
-    virtual void activate();
+      // Executes one particle activation.
+      virtual void activate();
 
-    // Returns the color to be used for the ring drawn around the head node. In
-    // this case, it returns the color of the token(s) this particle is holding.
-    virtual int headMarkColor() const;
+      // Returns the color to be used for the ring drawn around the head node. In
+      // this case, it returns the color of the token(s) this particle is holding.
+      virtual int headMarkColor() const;
 
-    // Returns the string to be displayed when this particle is inspected; used
-    // to snapshot the current values of this particle's memory at runtime.
-    virtual QString inspectionText() const;
+      // Returns the string to be displayed when this particle is inspected; used
+      // to snapshot the current values of this particle's memory at runtime.
+      virtual QString inspectionText() const;
 
-    // Gets a reference to the neighboring particle incident to the specified port
-    // label. Crashes if no such particle exists at this label; consider using
-    // hasNbrAtLabel() first if unsure.
-    TokenDemoParticle& nbrAtLabel(int label) const;
+      // Gets a reference to the neighboring particle incident to the specified port
+      // label. Crashes if no such particle exists at this label; consider using
+      // hasNbrAtLabel() first if unsure.
+      TokenDemoParticle& nbrAtLabel(int label) const;
 
     // ...
 
 Within the class we will declare the token types will be working with as protected and inheriting from the Token struct declared within ``AmoebotParticle.h``: 
+We have a parent ``DemoToken`` for simplifying the use of tokens within this class.
+The data types stored within ``DemoToken`` will be used later in the implementation such as ``lifetime`` which we use as the number of times the token can be passed.
+``TokenDemoParticle`` should also contain ``TokenDemoSystem`` as a private friend class so that it can access its members and functions. 
+ 
 
 .. code-block:: c++
 
   // ...
 
   protected:
-  // Tokens for demonstration. The data within them will be used later in the tutorial. 
-  struct RedToken : public Token { int lifeCycle; };
-  struct BlueToken : public Token { int lifeCycle; };
+    // Token types. DemoToken is a general type that has two data members:
+    // (i) passedFrom, which denotes the direction from which the token was last
+    // passed (initially -1, meaning it has not yet been passed), and (ii)
+    // lifetime, which is decremented each time the token is passed. The red and
+    // blue tokens are two types of DemoTokens.
+    struct DemoToken : public Token { int passedFrom = -1; int lifetime = 100; };
+    struct RedToken : public DemoToken {};
+    struct BlueToken : public DemoToken {};
+
+  private:
+    friend class TokenDemoSystem;
+};
 
   // ...
 
-A declaration of the ``TokenDemoSystem`` should also belong in the file inheriting from ``AmoebotSystem`` publicly with a constructor and ``hasTerminated()`` function declarations. 
+A declaration of the ``TokenDemoSystem`` should also belong in the file, inheriting from ``AmoebotSystem`` publicly with a constructor and ``hasTerminated()`` function declarations. 
 
 .. code-block:: c++
 
   class TokenDemoSystem : public AmoebotSystem {
-    public:
-    TokenDemoSystem(int numParticles = 20);
+  public:
+    // Constructs a system of TokenDemoParticles with an optionally specified size
+    // (#particles).
+    TokenDemoSystem(int numParticles = 48);
 
-    // Returns true when the simulation has completed; however, as this demo runs
-    // indefinitely, it always returns false.
+    // Returns true when the simulation has completed; i.e, when all tokens have
+    // died out.
     virtual bool hasTerminated() const;
   };
 
 Now comes the actual implementation of the declared classes and members within the ``alg/demo/tokendemo.cpp`` file. 
-We define the constructor for a ``TokenDemoParticle`` and specify that a particle in the ``Seed`` state should contatin 5 ``BlueToken(s)`` and ``RedToken(s)`` each. 
-There will only be 1 seed particle and 10 tokens being passed around the system. 
+We define the constructor for a ``TokenDemoParticle`` as using its parent's constructor and does not need anything special to be done.  
 
 .. code-block:: c++
 
@@ -668,43 +682,59 @@ There will only be 1 seed particle and 10 tokens being passed around the system.
 
   TokenDemoParticle::TokenDemoParticle(const Node head, const int globalTailDir,
                                      const int orientation,
-                                     AmoebotSystem& system, State state,
-                                     const QString mode)
-  : ShapeFormationParticle(head, globalTailDir, orientation, system, state,
-                           mode) {
-    // Initialize the seed particle to hold three red tokens and two blue.
-    if (state == State::Seed) {
-      putToken(std::make_shared<RedToken>());
-      putToken(std::make_shared<RedToken>());
-      putToken(std::make_shared<RedToken>());
-      putToken(std::make_shared<RedToken>());
-      putToken(std::make_shared<RedToken>());
-      putToken(std::make_shared<BlueToken>());
-      putToken(std::make_shared<BlueToken>());
-      putToken(std::make_shared<BlueToken>());
-      putToken(std::make_shared<BlueToken>());
-      putToken(std::make_shared<BlueToken>());
-    }
-  }
+                                     AmoebotSystem& system)
+    : AmoebotParticle(head, globalTailDir, orientation, system) {}
 
   // ...
 
 We will now take a look at the implementation of the ``activate()`` function: 
+This function ensures that ``RedToken(s)`` and ``BlueToken(s)`` are passed in opposite directions so that the passing of tokens can be much more visible in the algorithm. 
 
 .. code-block:: c++
 
   // ...
 
   void TokenDemoParticle::activate() {
-    // If this particle is holding a token and is the seed or is finished, choose
-    // a random seed or finished neighbor. If such a neighbor exists, take the
-    // first token this particle is holding and give it to the chosen neighbor.
-    if (hasToken<Token>()) {
-      if (isContracted() && (state == State::Seed || state == State::Finish)) {
-        int lbl = labelOfFirstNbrInState({State::Seed, State::Finish}, randDir());
-        if (lbl != -1) {
-          nbrAtLabel(lbl).putToken(takeToken<Token>());
+    if (hasToken<DemoToken>()) {
+      std::shared_ptr<DemoToken> token = takeToken<DemoToken>();
+
+      // Calculate the direction to pass this token.
+      int passTo;
+      if (token->passedFrom == -1) {
+        // This hasn't been passed yet; pass red and blue in opposite directions.
+        int sweepLen = (std::dynamic_pointer_cast<RedToken>(token)) ? 1 : 2;
+        for (int dir = 0; dir < 6; dir++) {
+          if (hasNbrAtLabel(dir)) {
+            sweepLen--;
+            if (sweepLen == 0) {
+              passTo = dir;
+              break;
+            }
+          }
         }
+      } else {
+        // This has been passed before; pass continuing in the same direction.
+        for (int offset = 1; offset < 6; offset++) {
+          if (hasNbrAtLabel((token->passedFrom + offset) % 6)) {
+            passTo = (token->passedFrom + offset) % 6;
+            break;
+          }
+        }
+      }
+
+      // Update the token's passedFrom direction. Needs to point at this particle
+      // from the perspective of the next neighbor.
+      for (int nbrLabel = 0; nbrLabel < 6; nbrLabel++) {
+        if (pointsAtMe(nbrAtLabel(passTo), nbrLabel)) {
+          token->passedFrom = nbrLabel;
+          break;
+        }
+      }
+
+      // If the token still has lifetime remaining, pass it on.
+      if (token->lifetime > 0) {
+        token->lifetime--;
+        nbrAtLabel(passTo).putToken(token);
       }
     }
   }
@@ -732,7 +762,7 @@ The ``headMarkColor()`` function will return the color of the particle depending
 
   // ...
 
-The ``inspectionText()`` function will be changed accordingly to indicate the tokens a particle contains. 
+The ``inspectionText()`` function will be modified accordingly to indicate the tokens a particle contains. 
 We also need the ``nbrAtLabel(int)`` function for use in the activate function to select a neighbor to pass the tokens to.
 
 .. code-block:: c++
@@ -740,13 +770,19 @@ We also need the ``nbrAtLabel(int)`` function for use in the activate function t
   // ...
 
   QString TokenDemoParticle::inspectionText() const {
-    QString text = ShapeFormationParticle::inspectionText();
-    text += "numRedTokens: " + QString::number(countTokens<RedToken>());
-    text += "\n";
-    text += "numBlueTokens: " + QString::number(countTokens<BlueToken>());
+    QString text;
+    text += "Global Info:\n";
+    text += "  head: (" + QString::number(head.x) + ", "
+                        + QString::number(head.y) + ")\n";
+    text += "  orientation: " + QString::number(orientation) + "\n";
+    text += "  globalTailDir: " + QString::number(globalTailDir) + "\n\n";
+    text += "Local Info:\n";
+    text += "  numRedTokens: " + QString::number(countTokens<RedToken>()) + "\n";
+    text += "  numBlueTokens: " + QString::number(countTokens<BlueToken>());
 
     return text;
   }
+
 
   TokenDemoParticle& TokenDemoParticle::nbrAtLabel(int label) const {
     return AmoebotParticle::nbrAtLabel<TokenDemoParticle>(label);
@@ -755,100 +791,50 @@ We also need the ``nbrAtLabel(int)`` function for use in the activate function t
   // ...
 
 We will now implement the actual initializaation of the particles within the system using the ``TokenDemoSystem`` constructor. 
-This will create a ``Seed`` node at position ``(0,0)`` as part of the bottom side of the hexagon, and spawn other nodes completing the hexagon much like the Disco Demo. 
-Since this algorithm does not terminate it will not use the ``hasTerminated()`` function but we will implement it anyway. 
+This places the particles in the shape of a hexagon much like the ``DiscoDemo`` and gives the first particle 5 of each Token to pass.
+The ``hasTerminated()`` function will return true only once all of the tokens in the system have been passed as many times as their lifetime.
 
 .. code-block:: c++
 
   // ...
 
   TokenDemoSystem::TokenDemoSystem(int numParticles) {
-    Q_ASSERT(numParticles > 0);
+    Q_ASSERT(numParticles >= 6);
 
-    // Insert the seed at (0, 0).
-    insert(new TokenDemoParticle(Node(0, 0), -1, randDir(), *this,
-                                ShapeFormationParticle::State::Seed, "l"));
-
-    // Creating the rest of the hexagon by placing the particles accordingly
-    int sideLen = static_cast<int>(std::round(1.4 * std::sqrt(numParticles)));
-    Node boundNode = Node(0, 0);
+    // Instantiate a hexagon of particles.
+    int sideLen = static_cast<int>(std::round(numParticles / 6.0));
+    Node hexNode = Node(0, 0);
     for (int dir = 0; dir < 6; ++dir) {
       for (int i = 0; i < sideLen; ++i) {
-
-        // Since we placed the seed node at (0,0) we have to stop placing nodes once we reach that point
-        if(dir == 5 && i == sideLen - 1) {
-          return;
+        // Give the first particle five tokens of each color.
+        if (hexNode.x == 0 && hexNode.y == 0) {
+          auto firstP = new TokenDemoParticle(Node(0, 0), -1, randDir(), *this);
+          for (int j = 0; j < 5; ++j) {
+            firstP->putToken(std::make_shared<TokenDemoParticle::RedToken>());
+            firstP->putToken(std::make_shared<TokenDemoParticle::BlueToken>());
+          }
+          insert(firstP);
+        } else {
+          insert(new TokenDemoParticle(hexNode, -1, randDir(), *this));
         }
 
-        boundNode = boundNode.nodeInDir(dir);
-        insert(new TokenDemoParticle(boundNode, -1, randDir(), *this,
-                                    ShapeFormationParticle::State::Finish, "l"));
+        hexNode = hexNode.nodeInDir(dir);
       }
     }
   }
 
   bool TokenDemoSystem::hasTerminated() const {
-    #ifdef QT_DEBUG
-      if (!isConnected(particles)) {
-        return true;
+    for (auto p : particles) {
+      auto tdp = dynamic_cast<TokenDemoParticle*>(p);
+      if (tdp->hasToken<TokenDemoParticle::DemoToken>()) {
+        return false;
       }
-    #endif
+    }
 
-    return false;
+    return true;
   }
 
 Now you just need to register the algorithm much like you did with the Disco demo and you are on your way.
-Congratulations, you just implemented an algorithm with token passing!
-
-We can take this algorithm a step further by having the tokens contain information and the particles use that information accordingly. 
-We can start by giving the ``lifeCycle`` variable within the declaration of the ``BlueToken`` and ``RedToken``. 
-This variable is how many times the token can get passed before it dies, which we will set to 500 in ``tokendemo.h``. 
-
-.. code-block:: c++
-
-  // ...
-
-  struct RedToken : public Token { int lifeCycle = 500; };
-  struct BlueToken : public Token { int lifeCycle = 500; };
-
-  // ...
-
-This can be followed by updating the ``activate`` function within ``tokendemo.cpp`` to pass a token only if its ``lifeCycle`` is greater than 0. 
-You will notice that you can only access a tokens member after you have "taken" it from a particle. 
-
-.. code-block:: c++
-
-  // ...
-
-  void TokenDemoParticle::activate() {
-    // If this particle is holding a token and is the seed or is finished, choose
-    // a random seed or finished neighbor. If such a neighbor exists, take the
-    // first token this particle is holding and give it to the chosen neighbor.
-    if (hasToken<Token>()) {
-      if (isContracted() && (state == State::Seed || state == State::Finish)) {
-        int lbl = labelOfFirstNbrInState({State::Seed, State::Finish}, randDir());
-        if (lbl != -1) {
-          // Must access particle members individually 
-          if(hasToken<BlueToken>()) {
-            std::shared_ptr<BlueToken> t = takeToken<BlueToken>();
-            t->lifeCycle--;
-
-            if(t->lifeCycle != 0)
-              nbrAtLabel(lbl).putToken(t);
-          } else {
-            std::shared_ptr<RedToken> t = takeToken<RedToken>();
-            t->lifeCycle--;
-
-            if(t->lifeCycle != 0)
-              nbrAtLabel(lbl).putToken(t);
-          }
-        }
-      }
-    }
-  }
-
-  // ...
-
 This will create a working algorithm to pass tokens and utulize the data within them using the Amoebot Model, great job! 
 
 .. _metrics-demo:

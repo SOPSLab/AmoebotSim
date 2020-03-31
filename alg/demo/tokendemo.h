@@ -39,12 +39,6 @@ class TokenDemoParticle : public AmoebotParticle {
   // hasNbrAtLabel() first if unsure.
   TokenDemoParticle& nbrAtLabel(int label) const;
 
-  // Returns the label of the first port incident to a neighboring particle in
-  // any of the specified states, starting at the (optionally) specified label
-  // and continuing clockwise.
-  int labelOfFirstNbrInState(std::initializer_list<State> states,
-                             int startLabel = 0) const;
-
  protected:
   // Token types. DemoToken is a general type that has two data members:
   // (i) passedFrom, which denotes the direction from which the token was last
