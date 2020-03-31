@@ -1185,7 +1185,7 @@ Just to be sure, your metricsdemo files should now look like this:
 
 Finally, register your new metricsdemo algorithm by adding the necessary code in the following places: ``script/scriptinterface.h``, ``script/scriptinterface.cpp``, and ``ui/algorithm.cpp``.
 Revisit the :ref:`"Registering the Algorithm" section of the DiscoDemo tutorial <register-algorithm>` for specific instructions on how to register a new algorithm.
-Because our MetricsDemo simulation is so similar to Disco, we will be using the same default parameters, parameter checking, system instantiation, etc. for registering the algorithm.
+Because our MetricsDemo simulation is so similar to DiscoDemo, we will be using the same default parameters, parameter checking, system instantiation, etc. for registering the algorithm.
 
 Run the simulation and you will essentially have the disco demo you created in the previous tutorial.
 
