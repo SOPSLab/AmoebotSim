@@ -2051,7 +2051,7 @@ Exporting Data
 AmoebotSim automatically tracks metrics and stores their historical data, which can be exported as a JSON for further analysis or plotting.
 To export metrics data, you can either use the GUI Metrics button (shown below) or use the shortcut Ctrl+E/Cmd+E.
 
-.. image:: graphics/metricsdemo5_exportButton.png
+.. image:: graphics/metrics_exportButton.png
 
 This writes the metrics file with all of the historical data as ``your_AmoebotSim_build_directory/debug/metrics/metrics_<secs_since_epoch>.json`` (debug is assuming that the simulator has been built and run in the debug mode in Qt, as opposed to profile or release).
 
