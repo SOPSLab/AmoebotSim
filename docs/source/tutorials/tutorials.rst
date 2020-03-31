@@ -516,8 +516,12 @@ The ``instantiate()`` function should have the same parameters as ``DiscoDemoSys
 
   // Demo: Disco, a first tutorial.
   class DiscoDemoAlg : public Algorithm {
+    Q_OBJECT
+
    public:
     DiscoDemoAlg();
+
+   public slots:
     void instantiate(const int numParticles = 30, const int counterMax = 5);
   };
 
@@ -562,6 +566,19 @@ This will add **DiscoDemo** to the algorithm selection dropdown.
     _algorithms.push_back(new DiscoDemoAlg());
 
     // ...
+
+At this point, we can go back to ``alg/demo/discodemo.h`` and update the part of the class comment that describes the algorithm's signature on the command line:
+
+.. code-block:: c++
+
+  // ...
+  //
+  // Run on the simulator command line using discodemo(# particles, counter max).
+
+  #ifndef AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
+  #define AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
+
+  // ...
 
 Finally, in ``ui/parameterlistmodel.cpp``, we need to parse the values given by the user in the sidebar's parameter input boxes.
 All parameter values are input as strings, but need to be cast to their correct data types as defined by ``instantiate()``.

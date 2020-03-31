@@ -17,6 +17,7 @@
 
 class Algorithm : public QObject {
   Q_OBJECT
+
  public:
   // Constructs an algorithm with a given name (e.g., "Infinite Object Coating")
   // and a given signature (e.g., "infobjcoating").
@@ -50,6 +51,7 @@ class Algorithm : public QObject {
 // Demo: Disco, a first tutorial.
 class DiscoDemoAlg : public Algorithm {
   Q_OBJECT
+
  public:
   DiscoDemoAlg();
 
@@ -60,6 +62,7 @@ class DiscoDemoAlg : public Algorithm {
 // Demo: Pull Handovers.
 class PullDemoAlg : public Algorithm {
   Q_OBJECT
+
  public:
   PullDemoAlg();
 
@@ -70,6 +73,7 @@ class PullDemoAlg : public Algorithm {
 // Demo: Token Passing.
 class TokenDemoAlg : public Algorithm {
   Q_OBJECT
+
  public:
   TokenDemoAlg();
 
@@ -80,6 +84,7 @@ class TokenDemoAlg : public Algorithm {
 // Compression.
 class CompressionAlg : public Algorithm {
   Q_OBJECT
+
  public:
   CompressionAlg();
 
@@ -90,6 +95,7 @@ class CompressionAlg : public Algorithm {
 // Infinite Object Coating.
 class InfObjCoatingAlg : public Algorithm {
   Q_OBJECT
+
  public:
   InfObjCoatingAlg();
 
@@ -100,6 +106,7 @@ class InfObjCoatingAlg : public Algorithm {
 // Leader Election.
 class LeaderElectionAlg : public Algorithm {
   Q_OBJECT
+
  public:
   LeaderElectionAlg();
 
@@ -110,6 +117,7 @@ class LeaderElectionAlg : public Algorithm {
 // Basic Shape Formation.
 class ShapeFormationAlg : public Algorithm {
   Q_OBJECT
+
  public:
   ShapeFormationAlg();
 
