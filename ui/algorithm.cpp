@@ -7,6 +7,7 @@
 #include "alg/demo/discodemo.h"
 #include "alg/demo/pulldemo.h"
 #include "alg/demo/tokendemo.h"
+#include "alg/demo/metricsdemo.h"
 #include "alg/compression.h"
 #include "alg/infobjcoating.h"
 #include "alg/leaderelection.h"
@@ -87,6 +88,21 @@ void TokenDemoAlg::instantiate(const int numParticles, const int lifetime) {
     emit log("token lifetime must be > 0", true);
   } else {
     emit setSystem(std::make_shared<TokenDemoSystem>(numParticles, lifetime));
+  }
+}
+
+MetricsDemoAlg::MetricsDemoAlg() : Algorithm("Demo: Metrics", "metricsdemo") {
+  addParameter("# Particles", "30");
+  addParameter("Counter Max", "5");
+};
+
+void MetricsDemoAlg::instantiate(const int numParticles, const int counterMax) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (counterMax <= 0) {
+    emit log("counterMax must be > 0", true);
+  } else {
+    emit setSystem(std::make_shared<MetricsDemoSystem>(numParticles));
   }
 }
 
@@ -171,6 +187,7 @@ AlgorithmList::AlgorithmList() {
   _algorithms.push_back(new DiscoDemoAlg());  
   _algorithms.push_back(new PullDemoAlg());  
   _algorithms.push_back(new TokenDemoAlg());
+  _algorithms.push_back(new MetricsDemoAlg());
 
   // General algorithms.
   _algorithms.push_back(new CompressionAlg());  

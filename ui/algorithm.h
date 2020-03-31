@@ -81,6 +81,17 @@ class TokenDemoAlg : public Algorithm {
   void instantiate(const int numParticles = 48, const int lifetime = 100);
 };
 
+// Demo: Metrics.
+class MetricsDemoAlg : public Algorithm {
+  Q_OBJECT
+
+ public:
+  MetricsDemoAlg();
+
+ public slots:
+  void instantiate(const int numParticles = 30, const int counterMax = 5);
+};
+
 // Compression.
 class CompressionAlg : public Algorithm {
   Q_OBJECT
