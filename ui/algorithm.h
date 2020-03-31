@@ -49,50 +49,71 @@ class Algorithm : public QObject {
 
 // Demo: Disco, a first tutorial.
 class DiscoDemoAlg : public Algorithm {
+  Q_OBJECT
  public:
   DiscoDemoAlg();
+
+ public slots:
   void instantiate(const int numParticles = 30, const int counterMax = 5);
 };
 
 // Demo: Pull Handovers.
 class PullDemoAlg : public Algorithm {
+  Q_OBJECT
  public:
   PullDemoAlg();
+
+ public slots:
   void instantiate();
 };
 
 // Demo: Token Passing.
 class TokenDemoAlg : public Algorithm {
+  Q_OBJECT
  public:
   TokenDemoAlg();
+
+ public slots:
   void instantiate(const int numParticles = 200, const double holeProb = 0.2);
 };
 
 // Compression.
 class CompressionAlg : public Algorithm {
+  Q_OBJECT
  public:
   CompressionAlg();
+
+ public slots:
   void instantiate(const int numParticles = 100, const double lambda = 4.0);
 };
 
 // Infinite Object Coating.
 class InfObjCoatingAlg : public Algorithm {
+  Q_OBJECT
  public:
   InfObjCoatingAlg();
+
+ public slots:
   void instantiate(const int numParticles = 100, const double holeProb = 0.2);
 };
 
 // Leader Election.
 class LeaderElectionAlg : public Algorithm {
+  Q_OBJECT
  public:
   LeaderElectionAlg();
+
+ public slots:
   void instantiate(const int numParticles = 100, const double holeProb = 0.2);
 };
 
 // Basic Shape Formation.
 class ShapeFormationAlg : public Algorithm {
+  Q_OBJECT
  public:
   ShapeFormationAlg();
+
+ public slots:
   void instantiate(const int numParticles = 200, const double holeProb = 0.2,
                    const QString mode = "h");
 };

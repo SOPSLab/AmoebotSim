@@ -25,7 +25,7 @@ ScriptEngine::ScriptEngine(Simulator& sim, VisItem* vis, AlgorithmList* algList)
   for (auto alg : _algList->getAlgs()) {
     auto algObject = engine.newQObject(alg);
     engine.globalObject().setProperty(alg->getSignature(), algObject);
-    engine.evaluate("this[" + alg->getSignature() + "] = " + alg->getSignature() + "[instantiate]");
+    engine.evaluate("this[\"" + alg->getSignature() + "\"] = " + alg->getSignature() + "[\"instantiate\"]");
   }
 }
 
