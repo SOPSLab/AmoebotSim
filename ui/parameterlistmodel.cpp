@@ -90,6 +90,9 @@ void ParameterListModel::createSystem(QString algName) {
     dynamic_cast<DynamicDemoAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toDouble(),
                     params[2].toDouble());
+  } else if (signature == "aggregation") {
+    dynamic_cast<AggregationAlg*>(alg)->
+        instantiate(params[0].toInt());
   } else if (signature == "compression") {
     dynamic_cast<CompressionAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toDouble());

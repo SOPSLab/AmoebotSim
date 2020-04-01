@@ -9,6 +9,7 @@
 #include "alg/demo/dynamicdemo.h"
 #include "alg/demo/metricsdemo.h"
 #include "alg/demo/tokendemo.h"
+#include "alg/aggregation.h"
 #include "alg/compression.h"
 #include "alg/energyshape.h"
 #include "alg/energysharing.h"
@@ -128,6 +129,18 @@ void DynamicDemoAlg::instantiate(const unsigned int numParticles,
   } else {
     emit setSystem(std::make_shared<DynamicDemoSystem>(numParticles, growProb,
                                                        dieProb));
+  }
+}
+
+AggregationAlg::AggregationAlg() : Algorithm("Swarm Aggregation", "aggregation") {
+  addParameter("# Particles", "2");
+}
+
+void AggregationAlg::instantiate(const int numParticles) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else {
+    emit setSystem(std::make_shared<AggregateSystem>(numParticles));
   }
 }
 
@@ -286,6 +299,7 @@ AlgorithmList::AlgorithmList() {
   _algorithms.push_back(new DynamicDemoAlg());
 
   // General algorithms.
+  _algorithms.push_back(new AggregationAlg());
   _algorithms.push_back(new CompressionAlg());
   _algorithms.push_back(new EnergyShapeAlg());
   _algorithms.push_back(new EnergySharingAlg());
