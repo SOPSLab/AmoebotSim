@@ -34,17 +34,14 @@ class ParameterListModel : public QStringListModel {
   bool setData(const QModelIndex &index, const QVariant &value,
                int role = Qt::EditRole);
 
- signals:
-  void executeCommand(QString cmd);
-
  public slots:
   // Updates this model's internal string list to be the list of parameter names
   // for the given algorithm.
   void updateAlgParameters(QString algName);
 
-  // Creates a command string using the current parameter values and emits it as
-  // a signal to be processed by the script engine.
-  void createCommand(QString algName);
+  // Extracts the parameter values and creates an instance of the corresponding
+  // algorithm (according to algName).
+  void createSystem(QString algName);
 
  private:
   AlgorithmList * _algs;

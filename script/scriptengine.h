@@ -9,6 +9,7 @@
 #include <QObject>
 
 #include "core/simulator.h"
+#include "ui/algorithm.h"
 #include "ui/visitem.h"
 
 // ScriptInterface must be forward declared to avoid a dependency loop.
@@ -18,7 +19,8 @@ class ScriptEngine : public QObject {
   Q_OBJECT
 
  public:
-  ScriptEngine(Simulator& sim, VisItem* vis = nullptr);
+  ScriptEngine(Simulator& sim, VisItem* vis = nullptr,
+               AlgorithmList* algList = nullptr);
 
  signals:
   void log(const QString msg, bool error = false);
@@ -30,6 +32,7 @@ class ScriptEngine : public QObject {
  private:
   QJSEngine engine;
   ScriptInterface* scriptInterface;
+  AlgorithmList* _algList;
 };
 
 #endif  // AMOEBOTSIM_SCRIPT_SCRIPTENGINE_H_

@@ -56,7 +56,7 @@ The most important classes for implemeting new distributed algorithms in Amoebot
 DiscoDemo: Your First Algorithm
 -------------------------------
 
-We'll be developing a fun (but not particularly useful) algorithm called **Disco** where particles will move within a boundary, changing colors as they go.
+We'll be developing a fun (but not particularly useful) algorithm called **DiscoDemo** where particles will move within a boundary, changing colors as they go.
 You can follow along with this tutorial by referencing the completed ``alg/demo/discodemo.*`` files in AmoebotSim; this tutorial shows how to develop this simulation from scratch.
 
 
@@ -68,7 +68,7 @@ Algorithm Pseudocode
 All algorithms for the amoebot model are defined at the particle level, and all particles run an instance of the same algorithm (this is where the "distributed computing" perspective comes in).
 So when we write algorithm pseudocode, we always write it from the perspective of a single particle, *not* from the system's perspective!
 
-For **Disco**, every particle will keep a state ``color`` and a counter ``ctr`` that decrements each time it is activated.
+For **DiscoDemo**, every particle will keep a state ``color`` and a counter ``ctr`` that decrements each time it is activated.
 When ``ctr = 0``, the particle will change its ``color``.
 Here's the color-changing part of the pseudocode for a particle ``P``::
 
@@ -91,10 +91,10 @@ However, the amoebot model doesn't allow multiple particles to be on the same no
     contract tail
   end if
 
-Some caveats related to **Disco**'s compliance with the amoebot model:
+Some caveats related to **DiscoDemo**'s compliance with the amoebot model:
 
 - The amoebot model assumes that each particle only has constant-size memory, which has two implications for our algorithm: (1) ``CTR_MAX`` should be a constant value, e.g., "5", and (2) the number of colors that can be returned by ``getRandColor()`` must also be constant. We'll use {R, O, Y, G, B, I, V} (`what? <https://en.wikipedia.org/wiki/ROYGBIV>`_).
-- Many algorithms for the amoebot model are designed to keep the particle system connected, but the particles running **Disco** will definitely disconnect from one another because they're moving in random directions. This is why we have the static boundary: to corral all those particles and keep them from diffusing into infinity!
+- Many algorithms for the amoebot model are designed to keep the particle system connected, but the particles running **DiscoDemo** will definitely disconnect from one another because they're moving in random directions. This is why we have the static boundary: to corral all those particles and keep them from diffusing into infinity!
 
 
 Creating the Files
@@ -134,13 +134,13 @@ The Header File
 This section assumes you've read the :ref:`C++ Style Guide <cpp-style>` in our development guide.
 We begin by setting up the header file's structure, which includes the following elements:
 
-- A `class comment <https://google.github.io/styleguide/cppguide.html#Class_Comments>`_ that includes the copyright notice, a brief description of the class(es) this file contains, any relevant publications/references, and this algorithm's command line signature (we'll leave the signature blank for now). **Disco** doesn't have a publication, but we'll add a reference to this code tutorial.
+- A `class comment <https://google.github.io/styleguide/cppguide.html#Class_Comments>`_ that includes the copyright notice, a brief description of the class(es) this file contains, any relevant publications/references, and this algorithm's command line signature (we'll leave the signature blank for now). **DiscoDemo** doesn't have a publication, but we'll add a reference to this code tutorial.
 
 - `#define guards <https://google.github.io/styleguide/cppguide.html#The__define_Guard>`_ of the form ``<PROJECT>_<PATH>_<FILE>_<H>_``. In our case, this is ``AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_``.
 
-- Any ``#includes`` grouped in order of standard C/C++ libraries, then any Qt libraries, and finally any AmoebotSim-specific headers. Each group is ordered alphabetically. For **Disco**, we only need the core ``AmoebotParticle`` and ``AmoebotSystem`` classes, which are used in essentially every algorithm.
+- Any ``#includes`` grouped in order of standard C/C++ libraries, then any Qt libraries, and finally any AmoebotSim-specific headers. Each group is ordered alphabetically. For **DiscoDemo**, we only need the core ``AmoebotParticle`` and ``AmoebotSystem`` classes, which are used in essentially every algorithm.
 
-- The two classes for **Disco**: a particle class ``DiscoDemoParticle`` that inherits from ``AmoebotParticle``, and a particle system class ``DiscoDemoSystem`` that inherits from ``AmoebotSystem``.
+- The two classes for **DiscoDemo**: a particle class ``DiscoDemoParticle`` that inherits from ``AmoebotParticle``, and a particle system class ``DiscoDemoSystem`` that inherits from ``AmoebotSystem``.
 
 With all these elements in place, we have the following:
 
@@ -216,7 +216,7 @@ For the ``public`` members, we need:
 
 - A definition for the custom type ``State``. We'll use an `enumeration class <https://www.learncpp.com/cpp-tutorial/4-5a-enum-classes/>`_ to define a type-safe set of possible states; in our case, this is a set of colors.
 
-- A constructor. Every class that inherits from ``AmoebotParticle`` should at least take a ``const Node head``, ``const int globalTailDir``, ``const int orientation``, and ``AmoebotSystem& system`` as inputs to its constructor, but can additionally take algorithm-specific information. For **Disco**, we'll additionally take a maximum counter value ``const int counterMax``.
+- A constructor. Every class that inherits from ``AmoebotParticle`` should at least take a ``const Node head``, ``const int globalTailDir``, ``const int orientation``, and ``AmoebotSystem& system`` as inputs to its constructor, but can additionally take algorithm-specific information. For **DiscoDemo**, we'll additionally take a maximum counter value ``const int counterMax``.
 
 - A function handling what a ``DiscoDemoParticle`` does when it's activated. This is achieved by overriding the ``activate()`` function from ``AmoebotParticle``.
 
@@ -506,20 +506,68 @@ This sort of logic is fairly common in many other algorithms' particle system co
 Registering the Algorithm
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-With the header and source files completed, we're nearly done with the **Disco** simulation.
-The last (small) bit of work to do is to register the **Disco** simulation with AmoebotSim so that **Disco** can be run from the GUI.
-The first files we need to update are ``script/scriptinterface.h`` and ``script/scriptinterface.cpp``.
-In ``script/scriptinterface.h``, we add the algorithm's *script signature*.
-Except for in rare cases, an algorithm's script signature registered in ``ScriptInterface`` should have the same parameters as the algorithm's system constructor.
-In our case, we have:
+With the header and source files completed, we're nearly done with the **DiscoDemo** simulation.
+The last (small) bit of work to do is to register **DiscoDemo** with AmoebotSim so it can be run from the GUI.
+The first files we need to update are ``ui/algorithm.h`` and ``ui/algorithm.cpp``.
+In ``ui/algorithm.h``, we add an ``Algorithm`` child class to represent **DiscoDemo** with a constructor and an ``instantiate()`` function.
+The ``instantiate()`` function should have the same parameters as ``DiscoDemoSystem``'s constructor.
 
 .. code-block:: c++
 
-  // Demonstration algorithm instance commands. Documentation for foo() can be
-  // found in alg/demo/foo.h.
-  void discodemo(const int numParticles = 30, const int counterMax = 5);
+  // Demo: Disco, a first tutorial.
+  class DiscoDemoAlg : public Algorithm {
+    Q_OBJECT
 
-At this point, we can also go back to ``alg/demo/discodemo.h`` and update the part of the class comment that describes the algorithm's signature on the command line:
+   public:
+    DiscoDemoAlg();
+
+   public slots:
+    void instantiate(const int numParticles = 30, const int counterMax = 5);
+  };
+
+In ``ui/algorithm.cpp``, we first implement the ``DiscoDemoAlg()`` constructor.
+This first calls the parent constructor ``Algorithm(<name>, <signature>)``, which takes two parameters: a *human-readable name* for the algorithm to put in the algorithm selection dropdown, and an algorithm *signature* to be used internally by the simulator.
+Here, we use *"Demo: Disco"* as the name and *"discodemo"* as the signature.
+Next, we add a human-readable name and a default value for each of the algorithm's parameters using ``addParameter(<name>, <default value>)``; these parameters should match what was used in the ``instantiate()`` function.
+Note that the default values should always be given as a string (e.g., *"30"*).
+
+.. code-block:: c++
+
+  DiscoDemoAlg::DiscoDemoAlg() : Algorithm("Demo: Disco", "discodemo") {
+    addParameter("# Particles", "30");
+    addParameter("Counter Max", "5");
+  };
+
+Next, we implement the ``instantiate()`` function.
+This essentially has two parts: parameter checking (to ensure we don't pass our algorithm bad parameters that might crash AmoebotSim) and instantiating the system (achieved using ``Simulator``'s ``setSystem()`` function).
+Here, we use ``log()`` to show error messages to the user if one of their parameters is bad.
+
+.. code-block:: c++
+
+  void DiscoDemoAlg::instantiate(const int numParticles, const int counterMax) {
+    if (numParticles <= 0) {
+      log("# particles must be > 0", true);
+    } else if (counterMax <= 0) {
+      log("counterMax must be > 0", true);
+    } else {
+      sim.setSystem(std::make_shared<DiscoDemoSystem>(numParticles));
+    }
+  }
+
+One last addition to ``ui/algorithm.cpp``: we need to construct an instance of our newly defined ``DiscoDemoAlg`` class and add it to AmoebotSim's algorithm list.
+This will add **DiscoDemo** to the algorithm selection dropdown.
+
+.. code-block:: c++
+
+  // ...
+
+  AlgorithmList::AlgorithmList() {
+    // Demo algorithms.
+    _algorithms.push_back(new DiscoDemoAlg());
+
+    // ...
+
+At this point, we can go back to ``alg/demo/discodemo.h`` and update the part of the class comment that describes the algorithm's signature on the command line:
 
 .. code-block:: c++
 
@@ -532,47 +580,20 @@ At this point, we can also go back to ``alg/demo/discodemo.h`` and update the pa
 
   // ...
 
-Next, in ``script/scriptinterface.cpp``, we implement ``discodemo()``.
-This essentially has two parts: parameter checking (to ensure we don't pass our algorithm bad parameters that might crash AmoebotSim) and instantiating the system (achieved using ``Simulator``'s ``setSystem()`` function).
+Finally, in ``ui/parameterlistmodel.cpp``, we need to parse the values given by the user in the sidebar's parameter input boxes.
+All parameter values are input as strings, but need to be cast to their correct data types as defined by ``instantiate()``.
 
 .. code-block:: c++
 
-  void ScriptInterface::discodemo(const int numParticles, const int counterMax) {
-    if (numParticles <= 0) {
-      log("# particles must be > 0", true);
-    } else if (counterMax <= 0) {
-      log("counterMax must be > 0", true);
-    } else {
-      sim.setSystem(std::make_shared<DiscoDemoSystem>(numParticles));
-    }
-  }
-
-If we were to compile and run AmoebotSim after doing these steps, we would be able to instantiate a ``DiscoDemoSystem`` using AmoebotSim's command line by typing ``discodemo()`` (if we wanted the default parameter values), or something like ``discodemo(70, 3)`` (if we wanted to supply our own parameter values).
-
-In order to get the **Disco** simulation to appear in the algorithm selection dropdown, however, we need to register the **Disco** simulation with ``AlgorithmList``, which is implemented in ``ui/alg.cpp``.
-Navigate to the implementation of ``AlgorithmList``'s constructor, and observe how the existing algorithms are registered.
-
-#. First, we use ``_algorithms.push_back(Algorithm(<algorithm name>, <algorithm signature>));`` to register the algorithm's name and signature. The name should be something human readable (in our case, *"Demo: Disco"*), but the signature must exactly match what we registered in ``ScriptInterface`` (in our case, *"discodemo"*).
-
-#. We then register each parameter using ``_algorithms.back().addParameter(<parameter name>, <default value>);``. Once again, the parameter name should be something human readable (e.g., *"# Particles"*), and the default value should always be given as a string (e.g., *"30"*).
-
-All together, we have:
-
-.. code-block:: c++
-
-  // ...
-
-  AlgorithmList::AlgorithmList() {
-    /* DEMO ALGORITHMS */
-
-    // Demo: Disco, a first tutorial.
-    _algorithms.push_back(new Algorithm("Demo: Disco", "discodemo"));
-    _algorithms.back()->addParameter("# Particles", "30");
-    _algorithms.back()->addParameter("Counter Max", "5");
-
+  void ParameterListModel::createSystem(QString algName) {
     // ...
 
-Compiling and running AmoebotSim after these steps will allow you to instantiate the **Disco** simulation using either the command line or the sidebar interface.
+    if (signature == "discodemo") {
+      dynamic_cast<DiscoDemoAlg*>(alg)->
+          instantiate(params[0].toInt(), params[1].toInt());
+    } else if (signature ==  // ...
+
+Compiling and running AmoebotSim after these steps will allow you to instantiate the **DiscoDemo** simulation using either the command line or the sidebar interface.
 
 Congratulations, you've implemented your first simulation on AmoebotSim!
 
