@@ -78,7 +78,7 @@ class TokenDemoAlg : public Algorithm {
   TokenDemoAlg();
 
  public slots:
-  void instantiate(const int numParticles = 200, const double holeProb = 0.2);
+  void instantiate(const int numParticles = 48);
 };
 
 // Compression.
