@@ -94,7 +94,7 @@ BallroomDemoParticle& BallroomDemoParticle::nbrAtLabel(int label) const {
 BallroomDemoSystem::BallroomDemoSystem(unsigned int numPairs) {
 
   // The Ballroom system is enclosed in a rhombus with side length
-  // of 2 * numParticles.
+  // of 2 * numPairs.
   Node boundNode(numPairs, numPairs);
   int direcitons[4] = {3, 4, 0, 1};
   for (int j = 0; j < 4; ++j) {

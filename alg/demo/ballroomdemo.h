@@ -2,12 +2,13 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-// Defines a particle system for demonstrating pull handover functionality.
+// Defines a particle system for demonstrating pull/push handover and
+// read & write functionality.
 //
-// Run with pulldemo() on the simulator command line.
+// Run with ballroomdemo() on the simulator command line.
 
-#ifndef AMOEBOTSIM_ALG_DEMO_PULLDEMO_H_
-#define AMOEBOTSIM_ALG_DEMO_PULLDEMO_H_
+#ifndef AMOEBOTSIM_ALG_DEMO_BALLROOMDEMO_H_
+#define AMOEBOTSIM_ALG_DEMO_BALLROOMDEMO_H_
 
 #include <QString>
 
@@ -61,8 +62,8 @@ class BallroomDemoParticle : public AmoebotParticle {
 
 class BallroomDemoSystem : public AmoebotSystem {
  public:
-  // Constructs a system of two PullDemoParticles (one leader and one follower).
-  BallroomDemoSystem(unsigned int numParticles = 50);
+  // Constructs a system of 50 dancing pairs.
+  BallroomDemoSystem(unsigned int numPairs = 30);
 };
 
-#endif  // AMOEBOTSIM_ALG_DEMO_PULLDEMO_H_
+#endif  // AMOEBOTSIM_ALG_DEMO_BALLROOMDEMO_H_

@@ -5,7 +5,7 @@
 #include "ui/algorithm.h"
 
 #include "alg/demo/discodemo.h"
-#include "alg/demo/pulldemo.h"
+#include "alg/demo/ballroomdemo.h"
 #include "alg/demo/tokendemo.h"
 #include "alg/compression.h"
 #include "alg/infobjcoating.h"
@@ -69,12 +69,12 @@ void DiscoDemoAlg::instantiate(const int numParticles, const int counterMax) {
   }
 }
 
-PullDemoAlg::PullDemoAlg() : Algorithm("Demo: Pull Passing", "pulldemo") {
-  addParameter("# Particles", "100");
+BallroomDemoAlg::BallroomDemoAlg() : Algorithm("Demo: Ballroom", "ballroomdemo") {
+  addParameter("# Particles", "30");
 }
 
-void PullDemoAlg::instantiate() {
-  emit setSystem(std::make_shared<BallroomDemoSystem>());
+void BallroomDemoAlg::instantiate(const int numPairs) {
+  emit setSystem(std::make_shared<BallroomDemoSystem>(numPairs));
 }
 
 TokenDemoAlg::TokenDemoAlg() : Algorithm("Demo: Token Passing", "tokendemo") {
@@ -171,7 +171,7 @@ void ShapeFormationAlg::instantiate(const int numParticles,
 AlgorithmList::AlgorithmList() {
   // Demo algorithms.
   _algorithms.push_back(new DiscoDemoAlg());  
-  _algorithms.push_back(new PullDemoAlg());  
+  _algorithms.push_back(new BallroomDemoAlg());
   _algorithms.push_back(new TokenDemoAlg());
 
   // General algorithms.
