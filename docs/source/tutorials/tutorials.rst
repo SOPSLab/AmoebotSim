@@ -600,18 +600,28 @@ Congratulations, you've implemented your first simulation on AmoebotSim!
 .. image:: graphics/discoanimation.gif
 
 
-CoordinationDemo: Working Together
+BallroomDemo: Working Together
 ----------------------------------
 
 In AmoebotSim, two particles can achieve coordinated movement through a process called handover. There are two types of handovers:
 
-#. ``push(int label)`` handover: A contracted particle P can initiate a “push” handover with an expanded neighbor Q, located at ``int label``, by expanding into a node occupied by Q, forcing it to contract.
+#. ``push(int label)`` handover: A contracted particle P can initiate a “push” handover with an expanded neighbor Q, located at ``int label``, by expanding into a node occupied by Q, forcing it to contract. In the graphic below, the contracted red particle 'pushes' the expanded blue particle to contract as red expands into its position.
 
-#. ``pull(int label)`` handover: An expanded particle Q can initiate a “pull” handover with a contracted neighbor P, located at ``int label``, by contracting, forcing P to expand into the node it is vacating.
+
+.. image:: graphics/pushhandover.gif
+  :scale: 50
+  :align: center
+
+
+#. ``pull(int label)`` handover: An expanded particle Q can initiate a “pull” handover with a contracted neighbor P, located at ``int label``, by contracting, forcing P to expand into the node it is vacating. In the graphic below, the expanded red particle vacates a position 'pulling' the blue particle to expand into the recently vacated spot.
+
+.. image:: graphics/pullhandover.gif
+  :scale: 50
+  :align: center
 
 In this demo, we will be developing an algorithm, ``Ballroom``, that coordinates random dance/movements between adjacent particles. Initially, pairs
 of particles, or dance partners, will be placed next to each other; one will be selected as a ``State::Leader``, and one as a ``State::Follower``. The leader is
-responsible for initiating the coordinated movement and, after the pair achieves the desired coordinated movement, the leader will change its internal state & will write to the
+responsible for initiating the coordinated movement and, after the pair achieves the desired coordinated movement, the leader will randomly change its internal state & will write to the
 follower to change its state as well. The dance continues infinitely.
 
 After completing this tutorial, you will be able to:
@@ -626,33 +636,35 @@ For **Ballroom**, every particle will keep a state either ``State::Leader`` or `
 Initially, ``numPairs`` leader/follower pairs are spawned with leaders expanded into a random direction.
 The leader is responsible for coordninating movement and after the pair is finished, swap roles with its partner.::
 
-        if (contracted()), then do:
+        if (contracted())
           if (state == Leader)
-          int nbrLabel = labelOfNeighbor();
-          if (canPush(nbrLabel)), then do:
-            push(nbrLabel);
-            neighbor.state = Leader;
-            state = Follower;
+            int nbrLabel = labelOfNeighbor();
+            if (canPush(nbrLabel))
+              push(nbrLabel);
+              neighbor.state = Leader;
+              state = Follower;
+              if (randBool())
+                neighbor.state = Leader;
+                state = Follower;
+
           else, do:
             // Choose a random move direction not occupied by the follower.
             int moveDir = randDir();
-            if (canExpand(moveDir)), then do:
+            if (canExpand(moveDir))
               expand(moveDir);
-            end if
-          end if
-          end if
-        else, do:
-          if (state == Leader), then do:
+              if (randBool())
+                neighbor.state = Leader;
+                state = Follower;
+
+        else: // particle is expanded
+          if (state == Leader)
             int nbrLabel = labelOfNeighbor();
-            if (canPull(nbrLabel)), then do:
+            if (canPull(nbrLabel))
               pull(nbrLabel);
               neighbor.contractTail();
-              neighbor.state = Leader;
-              state = Follower;
-            end if
-            else, do:
-          end if
-        end if
+              if (randBool())
+                neighbor.state = Leader;
+                state = Follower;
 
 Similar to the **Disco** algorithm, the ``activate()`` functions follows the algorithm psuedocode.
 
@@ -666,14 +678,21 @@ Similar to the **Disco** algorithm, the ``activate()`` functions follows the alg
           int nbrLabel = labelOfNeighbor(&*neighbor);
           if (canPush(nbrLabel)) {
             push(nbrLabel);
-            (*neighbor).state = State::Leader;
-            state = State::Follower;
-          } else { // Choose a random move direction not occupied by the follower.
-            int moveDir = randDir();
-            if (canExpand(moveDir))
-              expand(moveDir);
+            if (randBool()) {
+              (*neighbor).state = State::Leader;
+              state = State::Follower;
+            }
           }
-
+          else { // Choose a random move direction not occupied by the follower
+            int moveDir = randDir();
+            if (canExpand(moveDir)) {
+              expand(moveDir);
+              if (randBool()) {
+                (*neighbor).state = State::Leader;
+                state = State::Follower;
+              }
+            }
+          }
         }
       }
       else {  // isExpanded().
@@ -682,8 +701,10 @@ Similar to the **Disco** algorithm, the ``activate()`` functions follows the alg
           if (canPull(nbrLabel)) {
             pull(nbrLabel);
             (*neighbor).contractTail();
-            (*neighbor).state = State::Leader;
-            state = State::Follower;
+            if (randBool()) {
+              (*neighbor).state = State::Leader;
+              state = State::Follower;
+            }
           }
         }
       }
@@ -693,7 +714,7 @@ Similar to the **Disco** algorithm, the ``activate()`` functions follows the alg
 
 Lets break down the ``activate()`` and discuss the individual methods used:
 
-1. ``labelOfNeighbor(.)`` is a function used to find the location of a dance partner. It does this by iterating through a particle's ports, checking to see if their is a neighbor at that port until it is found.
+1. ``labelOfNeighbor(.)`` is a function used to find the location of a dance partner. It does this by iterating through a particle's ports, checking to see if there is a neighbor at each port until it is found.
 
 .. code-block:: c++
 
@@ -701,8 +722,8 @@ Lets break down the ``activate()`` and discuss the individual methods used:
     int BallroomDemoParticle::labelOfNeighbor(BallroomDemoParticle *neighbor) const {
       const int maxNeighbors = isExpanded() ? 12 : 6;
       for(int i = 0; i < maxNeighbors; ++i) {
-        bool hasnbr = hasNbrAtLabel(i);
-        if (hasnbr) {
+        bool hasNbr = hasNbrAtLabel(i);
+        if (hasNbr) {
           if(&nbrAtLabel(i) == &*neighbor) {
             return i;
           }
@@ -865,7 +886,7 @@ The system is set up as follows:
 
 After registering the algorithm, as per the **Disco** demo, you are ready to run the algorithm. Congratulations!
 
-.. image:: graphics/ballroomDemo.gif
+.. image:: graphics/ballroomdemo.gif
 
 TokenDemo: Communicating over Distance
 --------------------------------------

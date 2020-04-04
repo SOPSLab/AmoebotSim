@@ -18,14 +18,21 @@ void BallroomDemoParticle::activate() {
       int nbrLabel = labelOfNeighbor(&*neighbor);
       if (canPush(nbrLabel)) {
         push(nbrLabel);
-        (*neighbor).state = State::Leader;
-        state = State::Follower;
-      } else { // Choose a random move direction not occupied by the follower.
-        int moveDir = randDir();
-        if (canExpand(moveDir))
-          expand(moveDir);
+        if (randBool()) {
+          (*neighbor).state = State::Leader;
+          state = State::Follower;
+        }
       }
-
+      else { // Choose a random move direction not occupied by the follower
+        int moveDir = randDir();
+        if (canExpand(moveDir)) {
+          expand(moveDir);
+          if (randBool()) {
+            (*neighbor).state = State::Leader;
+            state = State::Follower;
+          }
+        }
+      }
     }
   }
   else {  // isExpanded().
@@ -34,8 +41,10 @@ void BallroomDemoParticle::activate() {
       if (canPull(nbrLabel)) {
         pull(nbrLabel);
         (*neighbor).contractTail();
-        (*neighbor).state = State::Leader;
-        state = State::Follower;
+        if (randBool()) {
+          (*neighbor).state = State::Leader;
+          state = State::Follower;
+        }
       }
     }
   }
