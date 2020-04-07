@@ -103,6 +103,20 @@ class CompressionAlg : public Algorithm {
   void instantiate(const int numParticles = 100, const double lambda = 4.0);
 };
 
+// Energy Distribution.
+class EnergyDistributionAlg : public Algorithm {
+  Q_OBJECT
+
+ public:
+  EnergyDistributionAlg();
+
+ public slots:
+  void instantiate(double consumptionRate, double restrictedRate,
+                   double hungerThreshold, double energyStorageCap, double environmentalGlutamate,
+                   double glutamateCost, double ammoniumBenefit, double inhibitedReuptakeRate, int signalSpeed);
+};
+
+
 // Infinite Object Coating.
 class InfObjCoatingAlg : public Algorithm {
   Q_OBJECT

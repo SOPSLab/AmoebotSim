@@ -9,6 +9,7 @@
 #include "alg/demo/metricsdemo.h"
 #include "alg/demo/tokendemo.h"
 #include "alg/compression.h"
+#include "alg/energydistribution.h"
 #include "alg/infobjcoating.h"
 #include "alg/leaderelection.h"
 #include "alg/shapeformation.h"
@@ -121,6 +122,26 @@ void CompressionAlg::instantiate(const int numParticles, const double lambda) {
   }
 }
 
+EnergyDistributionAlg::EnergyDistributionAlg() : Algorithm("Energy Distribution","energydistribution"){
+    addParameter("Harvest Rate","0.9");
+    addParameter("Inhibited Harvest Rate","0.0");
+    addParameter("Threshold","70");
+    addParameter("Capacity","100.0");
+    addParameter("Environmental Energy","5.0");
+    addParameter("REMOVE Energy Leak","1.0");
+    addParameter("GDH","10");
+    addParameter("REMOVE inihibit rate","0");
+    addParameter("Signal Velocity","8");
+}
+
+void EnergyDistributionAlg::instantiate(double consumptionRate, double restrictedRate,
+                                        double hungerThreshold, double energyStorageCap,
+                                        double environmentalGlutamate,double glutamateCost,double ammoniumBenefit,double inhibitedReuptakeRate, int signalSpeed){
+    emit setSystem(std::make_shared<EnergyDistributionSystem>(consumptionRate,restrictedRate,
+                                                      hungerThreshold,energyStorageCap,
+                                                      environmentalGlutamate,glutamateCost,ammoniumBenefit,inhibitedReuptakeRate,signalSpeed));
+}
+
 InfObjCoatingAlg::InfObjCoatingAlg() :
   Algorithm("Infinite Object Coating", "infobjcoating") {
   addParameter("# Particles", "100");
@@ -193,6 +214,7 @@ AlgorithmList::AlgorithmList() {
 
   // General algorithms.
   _algorithms.push_back(new CompressionAlg());  
+  _algorithms.push_back(new EnergyDistributionAlg());
   _algorithms.push_back(new InfObjCoatingAlg());    
   _algorithms.push_back(new LeaderElectionAlg());
   _algorithms.push_back(new ShapeFormationAlg());
