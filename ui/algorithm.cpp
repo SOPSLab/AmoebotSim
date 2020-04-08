@@ -122,24 +122,40 @@ void CompressionAlg::instantiate(const int numParticles, const double lambda) {
   }
 }
 
-EnergyDistributionAlg::EnergyDistributionAlg() : Algorithm("Energy Distribution","energydistribution"){
-    addParameter("Harvest Rate","0.9");
-    addParameter("Inhibited Harvest Rate","0.0");
-    addParameter("Threshold","70");
-    addParameter("Capacity","100.0");
-    addParameter("Environmental Energy","5.0");
-    addParameter("REMOVE Energy Leak","1.0");
-    addParameter("GDH","10");
-    addParameter("REMOVE inihibit rate","0");
-    addParameter("Signal Velocity","8");
+EnergyDistributionAlg::EnergyDistributionAlg()
+    : Algorithm("Energy Distribution", "energydist") {
+  addParameter("Harvest Rate", "0.9");
+  addParameter("Inhibited Rate", "0.0");
+  addParameter("Capacity", "100.0");
+  addParameter("Threshold", "70.0");
+  addParameter("Environment Energy", "5.0");
+  addParameter("GDH", "10.0");
+  addParameter("Signal Speed", "8");
 }
 
-void EnergyDistributionAlg::instantiate(double consumptionRate, double restrictedRate,
-                                        double hungerThreshold, double energyStorageCap,
-                                        double environmentalGlutamate,double glutamateCost,double ammoniumBenefit,double inhibitedReuptakeRate, int signalSpeed){
-    emit setSystem(std::make_shared<EnergyDistributionSystem>(consumptionRate,restrictedRate,
-                                                      hungerThreshold,energyStorageCap,
-                                                      environmentalGlutamate,glutamateCost,ammoniumBenefit,inhibitedReuptakeRate,signalSpeed));
+void EnergyDistributionAlg::instantiate(
+    const double harvestRate, const double inhibitedRate, const double capacity,
+    const double threshold, const double environmentEnergy, const double GDH,
+    const int signalSpeed) {
+  if (harvestRate <= 0 || harvestRate > 1) {
+    emit log("harvestRate must be in (0,1]", true);
+  } else if (inhibitedRate < 0 || inhibitedRate > harvestRate) {
+    emit log("inhibitedRate must be in [0,harvestRate]", true);
+  } else if (capacity <= 0) {
+    emit log("capacity must be > 0", true);
+  } else if (threshold <= 0 || threshold >= capacity) {
+    emit log("threshold must be in (0,capacity)", true);
+  } else if (environmentEnergy <= 1 || environmentEnergy > capacity) {
+    emit log("environmentEnergy must be in (1,capacity]", true);
+  } else if (GDH <= 0 || GDH > capacity) {
+    emit log("GDH must be in (0,capacity]", true);
+  } else if (signalSpeed < 1) {
+    emit log("signalSpeed must be >= 1", true);
+  } else {
+    emit setSystem(std::make_shared<EnergyDistributionSystem>(
+                     harvestRate, inhibitedRate, capacity, threshold,
+                     environmentEnergy, GDH, signalSpeed));
+  }
 }
 
 InfObjCoatingAlg::InfObjCoatingAlg() :

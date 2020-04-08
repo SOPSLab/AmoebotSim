@@ -1,116 +1,117 @@
-// Copyright (C) 2018 Robert Gmyr, Joshua J. Daymude, and Kristian Hinnenthal
-// The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
-// notice can be found at the top of main/main.cpp.
-//
-// Defines the particle system and composing particles for the Disco code
-// tutorial, a first algorithm for new developers to AmoebotSim. Disco
-// demonstrates the basics of algorithm architecture, instantiating a particle
-// system, moving particles, and changing particles' states. The pseudocode is
-// available in the wiki:
-// [https://bitbucket.org/gmyr/amoebotsim/wiki/Code%20Tutorials].
+/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+ * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
+ * notice can be found at the top of main/main.cpp. */
 
-#ifndef HAMILTONIANSYSTEM_H
-#define HAMILTONIANSYSTEM_H
+// TODO: header comment.
+
+#ifndef ALG_ENERGYDISTRIBUTION_H_
+#define ALG_ENERGYDISTRIBUTION_H_
+
+#include <vector>
 
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
 
-class EnergyParticle : public AmoebotParticle {
-    public:
-    EnergyParticle(const Node head, const int globalTailDir,const int orientation, AmoebotSystem& system,
-                   double consumptionRate, double restrictedRate,
-                   double hungerThreshold, double energyStorageCap,
-                   double environmentalGlutamate, double glutamateCost, double ammoniumBenefit, double inhibitedReuptakeRate, int signalSpeed);
-    //Methods
-    bool hasNbrAtLabel(int) const;
-    EnergyParticle& mitosis(int,int);
-    EnergyParticle& nbrAtLabel(int) const;
-    EnergyParticle* argMax(int);
-    bool hasEmptyNeighbor();
-    int headMarkColor() const override;
-    int tailMarkColor() const override;
-    int getState();
-    int interpolate(int,int,double) const;
-    void activate() override;
-    void updateState();
-    void setState(int);
-    void expandInit(int);
-    void contractInit();
-    void globalMetrics();
-    void globalInteriorEnergy();
-    void communicate();
-    void harvestEnergy();
-    void harvestRegulant();
-    void produceRegulant();
-    void reproduce();
-    int hasEmptyNeighborInDir();
+class EnergyDistributionParticle : public AmoebotParticle {
+ public:
+  enum class State {
+    Root,
+    Idle,
+    Active
+  };
 
-    //local variables
-    AmoebotSystem* _sys;
-    double _energyBattery;
-    double _energyBuffer;
-    double _regulantBattery;
-    double _regulantBuffer;
-    bool _stress;
-    bool _inhibit;
+  // TODO: comment.
+  EnergyDistributionParticle(const Node& head, int globalTailDir,
+                             const int orientation, AmoebotSystem& system,
+                             const double harvestRate,
+                             const double inhibitedRate,
+                             const double capacity, const double threshold,
+                             const double environmentEnergy,
+                             const double GDH, const int signalSpeed,
+                             const State state);
 
+  // Executes one particle activation.
+  void activate() override;
 
-    bool _inTelophase;
-    bool _stressed;
-    bool _stressRoot;
-    bool _canEat;
-    double _consumedGlutamate;
-    double _consumedAmmonium;
-    double _remainingGlutamate;
-    double _remainingAmmonium;
-    double _effectiveRate;
-    EnergyParticle* _parent;
-    EnergyParticle** _children;
-    int _expandDir;
-    int _prevX;
-    int _prevY;
-    int _signalTimer;
-    int _phase;
+  // Functions for altering a particle's cosmetic appearance; headMarkColor
+  // (respectively, tailMarkColor) returns the color to be used for the ring
+  // drawn around the head (respectively, tail) node. Tail color is not shown
+  // when the particle is contracted. headMarkDir returns the label of the port
+  // on which the black head marker is drawn.
+  int headMarkColor() const override;
+  int headMarkDir() const override;
+  int tailMarkColor() const override;
 
+  // Returns the string to be displayed when this particle is inspected; used
+  // to snapshot the current values of this particle's memory at runtime.
+  QString inspectionText() const override;
 
-    //inherited local variables
-    double _consumptionRate;
-    double _restrictedRate;
-    double _hungerThreshold;
-    double _energyStorageCap;
-    double _environmentalGlutamate;
-    double _glutamateCost;
-    double _ammoniumBenefit;
-    double _inhibitedReuptakeRate;
-    double _GDH;
-    double _regulantConversion;
-    int _signalSpeed;
+  // Gets a reference to the neighboring particle incident to the specified port
+  // label. Crashes if no such particle exists at this label; consider using
+  // hasNbrAtLabel() first if unsure.
+  EnergyDistributionParticle& nbrAtLabel(int label) const;
 
-    protected:
-        int _state;
-        enum TreeState {idle, follower, root}_treeState;
+  // Returns the label of the first port incident to a neighboring particle in
+  // any of the specified states, starting at the (optionally) specified label
+  // and continuing clockwise.
+  int labelOfFirstNbrInState(std::initializer_list<State> states,
+                             int startLabel = 0) const;
 
-     private:
-        friend class EnergyDistributionSystem;
+  // Checks whether this particle has a neighbor in any of the given states.
+  bool hasNbrInState(std::initializer_list<State> states) const;
 
+  // Phase functions. TODO: comment.
+  void communicate();
+  void harvestEnergy();
+  void harvestRegulant();
+  void produceRegulant();
+  void reproduce();
+
+  // TODO: comment. Helper functions.
+  bool isOnPeriphery() const;
+
+  // TODO: right now, these have to do with coloring. Ultimately would wrap
+  // into headMarkColor(), probably.
+  void updateState();
+  int interpolate(int,int,double) const;
+
+ protected:
+  // Algorithm parameters.
+  const double _harvestRate;
+  const double _inhibitedRate;
+  const double _capacity;
+  const double _threshold;
+  const double _environmentEnergy;
+  const double _GDH;
+  const int _signalSpeed;
+
+  // Local variables.
+  double _energyBattery;
+  double _energyBuffer;
+  double _regulantBattery;
+  double _regulantBuffer;
+  bool _stress;
+  bool _inhibit;
+  int _signalTimer;
+
+  // Spanning tree variables.
+  State _state;
+  int _parentDir;
+  std::set<int> _childrenDirs;
+
+  int _colorState;  // TODO: remove this.
+
+ private:
+  friend class EnergyDistributionSystem;
 };
 
 class EnergyDistributionSystem : public AmoebotSystem {
-    public:
-        EnergyDistributionSystem(double consumptionRate, double restrictedRate,
-                          double hungerThreshold, double energyStorageCap, double environmentalGlutamate,
-                          double glutamateCost, double ammoniumBenefit, double inhibitedReuptakeRate, int signalSpeed);
-    private:
-        double _consumptionRate;
-        double _restrictedRate;
-        double _hungerThreshold;
-        double _energyStorageCap;
-        double _environmentalGlutamate;
-        double _glutamateCost;
-        double _ammoniumBenefit;
-        double _inhibitedReuptakeRate;
-        int _signalSpeed;
+ public:
+  EnergyDistributionSystem(const double harvestRate, const double inhibitedRate,
+                           const double capacity, const double threshold,
+                           const double environmentEnergy, const double GDH,
+                           const int signalSpeed);
 };
 
-#endif // HAMILTONIANSYSTEM_H
+#endif  // ALG_ENERGYDISTRIBUTION_H_
 
