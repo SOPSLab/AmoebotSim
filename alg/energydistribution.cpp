@@ -127,6 +127,14 @@ QString EnergyDistributionParticle::inspectionText() const {
                       + QString::number(head.y) + ")\n";
   text += "  orientation: " + QString::number(orientation) + "\n";
   text += "  globalTailDir: " + QString::number(globalTailDir) + "\n\n";
+  text += "Parameters:\n";
+  text += "  harvestRate: " + QString::number(_harvestRate) + "\n";
+  text += "  inhibitedRate: " + QString::number(_inhibitedRate) + "\n";
+  text += "  capacity: " + QString::number(_capacity) + "\n";
+  text += "  threshold: " + QString::number(_threshold) + "\n";
+  text += "  environmentEnergy: " + QString::number(_environmentEnergy) + "\n";
+  text += "  GDH: " + QString::number(_GDH) + "\n";
+  text += "  signalSpeed: " + QString::number(_signalSpeed) + "\n\n";
   text += "Local Info:\n";
   text += "  energyBattery: " + QString::number(_energyBattery) + " / "
                               + QString::number(_capacity) + "\n";
@@ -193,7 +201,7 @@ void EnergyDistributionParticle::communicate() {
   }
 
   if (_state != State::Root) {
-    _stress = (_energyBattery < _threshold) || hasStressChild;
+    _stress = !isOnPeriphery() && ((_energyBattery < _threshold) || hasStressChild);
     _inhibit = nbrAtLabel(_parentDir)._inhibit;
   } else {
     _inhibit = (_energyBattery < _threshold) || hasStressChild;
@@ -313,22 +321,13 @@ void EnergyDistributionParticle::reproduce() {
         break;
       }
     }
-    Q_ASSERT(reproduceDir != -1);
 
     // Add a new particle to the system in the specified direction.
     system.insert(new EnergyDistributionParticle(
-                          head.nodeInDir(reproduceDir), -1, randDir(), system,
-                          _harvestRate, _inhibitedRate, _capacity, _threshold,
-                          _environmentEnergy, _GDH, _signalSpeed, State::Idle));
-
-    // Set this particle as the new particle's parent in the spanning tree.
-    for (int nbrDir = 0; nbrDir < 0; nbrDir++) {
-      if (pointsAtMe(nbrAtLabel(reproduceDir), nbrDir)) {
-        nbrAtLabel(reproduceDir)._parentDir = nbrDir;
-        break;
-      }
-    }
-    _childrenDirs.insert(reproduceDir);
+                    head.nodeInDir(localToGlobalDir(reproduceDir)), -1,
+                    randDir(), system, _harvestRate, _inhibitedRate, _capacity,
+                    _threshold, _environmentEnergy, _GDH, _signalSpeed,
+                    State::Idle));
   }
 }
 
