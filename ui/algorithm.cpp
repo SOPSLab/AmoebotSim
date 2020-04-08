@@ -76,17 +76,17 @@ void PullDemoAlg::instantiate() {
 }
 
 TokenDemoAlg::TokenDemoAlg() : Algorithm("Demo: Token Passing", "tokendemo") {
-  addParameter("# Particles", "200");
-  addParameter("Hole Prob.", "0.2");
+  addParameter("# Particles", "48");
+  addParameter("Token Lifetime", "100");
 }
 
-void TokenDemoAlg::instantiate(const int numParticles, const double holeProb) {
-  if (numParticles <= 0) {
-    emit log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    emit log("holeProb in [0,1] required", true);
+void TokenDemoAlg::instantiate(const int numParticles, const int lifetime) {
+  if (numParticles <= 6) {
+    emit log("# particles must be > 6", true);
+  } else if (lifetime <= 0) {
+    emit log("token lifetime must be > 0", true);
   } else {
-    emit setSystem(std::make_shared<TokenDemoSystem>(numParticles, holeProb));
+    emit setSystem(std::make_shared<TokenDemoSystem>(numParticles, lifetime));
   }
 }
 

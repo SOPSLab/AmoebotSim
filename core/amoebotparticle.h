@@ -46,10 +46,6 @@ class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
   int tailMarkGlobalDir() const final;
 
  protected:
-  // A struct expressing the most basic version of a token. Particle subclasses
-  // using tokens should write their token structs to inherit from this one.
-  struct Token { virtual ~Token(){ } };
-
   // Returns the local directions from the head (respectively, tail) on which to
   // draw the direction markers. Intended to be overridden by particle
   // subclasses, as the default implementations return -1 (no markers).
@@ -111,22 +107,37 @@ class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
       std::function<bool(const ParticleType&)> propertyCheck,
       int startLabel = 0) const;
 
-  // Functions for handling tokens. putToken simply adds the given token pointer
-  // to this particle's collection of tokens. peekAtToken returns a pointer to
-  // the first token in this particle's collection which is of the specified
-  // type. takeToken does the same thing as peekAtToken but additionally removes
-  // the returned token pointer from this particle's collection. Note that
-  // peekAtToken and takeToken both fail when no token of the given type exists
-  // in the collection; consider using hasToken() first if unsure.
+  /* TOKEN IMPLEMENTATION & FUNCTIONS */
+
+  // A struct expressing the most basic version of a token. Particle subclasses
+  // using tokens should write their token structs to inherit from this one.
+  struct Token { virtual ~Token(){ } };
+
+  // Functions for handling tokens. putToken adds the given token reference to
+  // this particle's collection. peekAtToken returns a reference to the first
+  // token in this particle's collection which is of the specified type.
+  // takeToken does the same thing as peekAtToken, but additionally removes the
+  // returned reference from this particle's collection. Note that peekAtToken
+  // and takeToken both fail when no token of the given type exists in the
+  // collection; consider using hasToken() first if unsure.
   void putToken(std::shared_ptr<Token> token);
   template<class TokenType>
   std::shared_ptr<TokenType> peekAtToken() const;
   template<class TokenType>
   std::shared_ptr<TokenType> takeToken();
 
-  // Overloaded functions for peekAtToken and takeToken have been provided
-  // in case there is a specific token of type TokenType that is being searched
-  // for that must satisfy a particular property requirement
+  // Functions for basic token-related information. countTokens returns the
+  // number of tokens of the specified type in this particle's collection.
+  // hasToken checks whether this particle has at least one token of the given
+  // type (equivalent to countTokens > 0).
+  template<class TokenType>
+  int countTokens() const;
+  template<class TokenType>
+  bool hasToken() const;
+
+  // Overloaded versions of the above functions (except putToken) that also take
+  // a custom property as input. This restricts the domain of each function to
+  // the tokens of the specified type that also satisfy the input property.
   template<class TokenType>
   std::shared_ptr<TokenType> peekAtToken(
       std::function<bool(const std::shared_ptr<TokenType>)>
@@ -134,19 +145,9 @@ class AmoebotParticle : public LocalParticle, public RandomNumberGenerator {
   template<class TokenType>
   std::shared_ptr<TokenType> takeToken(
       std::function<bool(const std::shared_ptr<TokenType>)> propertyCheck);
-
-  // Functions for basic token-related information. countTokens returns the
-  // number of tokens of the specified type this particle has in its collection.
-  // hasToken checks whether this particle has at least one token of the given
-  // type; i.e., equivalent to countTokens > 0.
   template<class TokenType>
-  int countTokens() const;
-  template<class TokenType>
-  bool hasToken() const;
-
-  // An overloaded function of hasToken has been provided in case there is a
-  // specific token of type TokenType that is being searched for that must
-  // satisfy a particular property requirement
+  int countTokens(std::function<bool(const std::shared_ptr<TokenType>)>
+                  propertyCheck) const;
   template<class TokenType>
   bool hasToken(std::function<bool(const std::shared_ptr<TokenType>)>
                 propertyCheck) const;
@@ -198,13 +199,12 @@ std::shared_ptr<TokenType> AmoebotParticle::peekAtToken() const {
 }
 
 template<class TokenType>
-std::shared_ptr<TokenType> AmoebotParticle::takeToken() {
+std::shared_ptr<TokenType> AmoebotParticle::peekAtToken(
+    std::function<bool(const std::shared_ptr<TokenType>)> propertyCheck) const {
   for (unsigned int i = 0; i < tokens.size(); i++) {
     std::shared_ptr<TokenType> token =
         std::dynamic_pointer_cast<TokenType>(tokens[i]);
-    if (token != nullptr) {
-      std::swap(tokens[0], tokens[i]);
-      tokens.pop_front();
+    if (token != nullptr && propertyCheck(token)) {
       return token;
     }
   }
@@ -212,12 +212,13 @@ std::shared_ptr<TokenType> AmoebotParticle::takeToken() {
 }
 
 template<class TokenType>
-std::shared_ptr<TokenType> AmoebotParticle::peekAtToken(
-    std::function<bool(const std::shared_ptr<TokenType>)> propertyCheck) const {
+std::shared_ptr<TokenType> AmoebotParticle::takeToken() {
   for (unsigned int i = 0; i < tokens.size(); i++) {
     std::shared_ptr<TokenType> token =
         std::dynamic_pointer_cast<TokenType>(tokens[i]);
-    if (token != nullptr && propertyCheck(token)) {
+    if (token != nullptr) {
+      std::swap(tokens[0], tokens[i]);
+      tokens.pop_front();
       return token;
     }
   }
@@ -246,6 +247,20 @@ int AmoebotParticle::countTokens() const {
     std::shared_ptr<TokenType> token =
         std::dynamic_pointer_cast<TokenType>(tokens[i]);
     if (token != nullptr) {
+      count++;
+    }
+  }
+  return count;
+}
+
+template<class TokenType>
+int AmoebotParticle::countTokens(
+    std::function<bool(const std::shared_ptr<TokenType>)> propertyCheck) const {
+  int count = 0;
+  for (unsigned int i = 0; i < tokens.size(); i++) {
+    std::shared_ptr<TokenType> token =
+        std::dynamic_pointer_cast<TokenType>(tokens[i]);
+    if (token != nullptr && propertyCheck(token)) {
       count++;
     }
   }

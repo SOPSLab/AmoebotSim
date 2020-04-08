@@ -2,38 +2,54 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-#include <memory>
-
 #include "alg/demo/tokendemo.h"
 
 TokenDemoParticle::TokenDemoParticle(const Node head, const int globalTailDir,
                                      const int orientation,
-                                     AmoebotSystem& system, State state,
-                                     const QString mode)
-  : ShapeFormationParticle(head, globalTailDir, orientation, system, state,
-                           mode) {
-  // Initialize the seed particle to hold three red tokens and two blue.
-  if (state == State::Seed) {
-    putToken(std::make_shared<RedToken>());
-    putToken(std::make_shared<RedToken>());
-    putToken(std::make_shared<RedToken>());
-    putToken(std::make_shared<BlueToken>());
-    putToken(std::make_shared<BlueToken>());
-  }
-}
+                                     AmoebotSystem& system)
+  : AmoebotParticle(head, globalTailDir, orientation, system) {}
 
 void TokenDemoParticle::activate() {
-  ShapeFormationParticle::activate();
+  if (hasToken<DemoToken>()) {
+    std::shared_ptr<DemoToken> token = takeToken<DemoToken>();
 
-  // If this particle is holding a token and is the seed or is finished, choose
-  // a random seed or finished neighbor. If such a neighbor exists, take the
-  // first token this particle is holding and give it to the chosen neighbor.
-  if (hasToken<Token>()) {
-    if (isContracted() && (state == State::Seed || state == State::Finish)) {
-      int lbl = labelOfFirstNbrInState({State::Seed, State::Finish}, randDir());
-      if (lbl != -1) {
-        nbrAtLabel(lbl).putToken(takeToken<Token>());
+    // Calculate the direction to pass this token.
+    int passTo;
+    if (token->_passedFrom == -1) {
+      // This hasn't been passed yet; pass red and blue in opposite directions.
+      int sweepLen = (std::dynamic_pointer_cast<RedToken>(token)) ? 1 : 2;
+      for (int dir = 0; dir < 6; dir++) {
+        if (hasNbrAtLabel(dir)) {
+          sweepLen--;
+          if (sweepLen == 0) {
+            passTo = dir;
+            break;
+          }
+        }
       }
+    } else {
+      // This has been passed before; pass continuing in the same direction.
+      for (int offset = 1; offset < 6; offset++) {
+        if (hasNbrAtLabel((token->_passedFrom + offset) % 6)) {
+          passTo = (token->_passedFrom + offset) % 6;
+          break;
+        }
+      }
+    }
+
+    // Update the token's _passedFrom direction. Needs to point at this particle
+    // from the perspective of the next neighbor.
+    for (int nbrLabel = 0; nbrLabel < 6; nbrLabel++) {
+      if (pointsAtMe(nbrAtLabel(passTo), nbrLabel)) {
+        token->_passedFrom = nbrLabel;
+        break;
+      }
+    }
+
+    // If the token still has lifetime remaining, pass it on.
+    if (token->_lifetime > 0) {
+      token->_lifetime--;
+      nbrAtLabel(passTo).putToken(token);
     }
   }
 }
@@ -45,18 +61,21 @@ int TokenDemoParticle::headMarkColor() const {
     return 0xff0000;
   } else if (hasToken<BlueToken>()) {
     return 0x0000ff;
-  } else if (state == State::Seed || state == State::Finish) {
-    return 0x000000;
   } else {
     return -1;
   }
 }
 
 QString TokenDemoParticle::inspectionText() const {
-  QString text = ShapeFormationParticle::inspectionText();
-  text += "numRedTokens: " + QString::number(countTokens<RedToken>());
-  text += "\n";
-  text += "numBlueTokens: " + QString::number(countTokens<BlueToken>());
+  QString text;
+  text += "Global Info:\n";
+  text += "  head: (" + QString::number(head.x) + ", "
+                      + QString::number(head.y) + ")\n";
+  text += "  orientation: " + QString::number(orientation) + "\n";
+  text += "  globalTailDir: " + QString::number(globalTailDir) + "\n\n";
+  text += "Local Info:\n";
+  text += "  # RedTokens: " + QString::number(countTokens<RedToken>()) + "\n";
+  text += "  # BlueTokens: " + QString::number(countTokens<BlueToken>());
 
   return text;
 }
@@ -65,63 +84,42 @@ TokenDemoParticle& TokenDemoParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<TokenDemoParticle>(label);
 }
 
-TokenDemoSystem::TokenDemoSystem(int numParticles, double holeProb) {
-  Q_ASSERT(numParticles > 0);
-  Q_ASSERT(0 <= holeProb && holeProb <= 1);
+TokenDemoSystem::TokenDemoSystem(int numParticles, int lifetime) {
+  Q_ASSERT(numParticles >= 6);
 
-  // Insert the seed at (0, 0).
-  insert(new TokenDemoParticle(Node(0, 0), -1, randDir(), *this,
-                               ShapeFormationParticle::State::Seed, "l"));
-
-  std::set<Node> occupied;
-  occupied.insert(Node(0, 0));
-
-  std::set<Node> candidates;
-  for(int i = 0; i < 6; i++) {
-    candidates.insert(Node(0, 0).nodeInDir(i));
-  }
-
-  // Add inactive particles.
-  int numNonStaticParticles = 0;
-  while(numNonStaticParticles < numParticles && !candidates.empty()) {
-    // Pick random candidate.
-    int randIndex = randInt(0, candidates.size());
-    Node randomCandidate;
-    for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-      if (randIndex == 0) {
-        randomCandidate = *it;
-        candidates.erase(it);
-        break;
-      } else {
-        randIndex--;
-      }
-    }
-
-    occupied.insert(randomCandidate);
-
-    // Add this candidate as a particle if not a hole.
-    if (randBool(1.0 - holeProb)) {
-      insert(new TokenDemoParticle(randomCandidate, -1, randDir(), *this,
-                                   ShapeFormationParticle::State::Idle, "l"));
-      numNonStaticParticles++;
-
-      // Add new candidates.
-      for (int i = 0; i < 6; i++) {
-        auto neighbor = randomCandidate.nodeInDir(i);
-        if (occupied.find(neighbor) == occupied.end()) {
-          candidates.insert(neighbor);
+  // Instantiate a hexagon of particles.
+  int sideLen = static_cast<int>(std::round(numParticles / 6.0));
+  Node hexNode = Node(0, 0);
+  for (int dir = 0; dir < 6; ++dir) {
+    for (int i = 0; i < sideLen; ++i) {
+      // Give the first particle five tokens of each color.
+      if (hexNode.x == 0 && hexNode.y == 0) {
+        auto firstP = new TokenDemoParticle(Node(0, 0), -1, randDir(), *this);
+        for (int j = 0; j < 5; ++j) {
+          auto redToken = std::make_shared<TokenDemoParticle::RedToken>();
+          redToken->_lifetime = lifetime;
+          firstP->putToken(redToken);
+          auto blueToken = std::make_shared<TokenDemoParticle::BlueToken>();
+          blueToken->_lifetime = lifetime;
+          firstP->putToken(blueToken);
         }
+        insert(firstP);
+      } else {
+        insert(new TokenDemoParticle(hexNode, -1, randDir(), *this));
       }
+
+      hexNode = hexNode.nodeInDir(dir);
     }
   }
 }
 
 bool TokenDemoSystem::hasTerminated() const {
-  #ifdef QT_DEBUG
-    if (!isConnected(particles)) {
-      return true;
+  for (auto p : particles) {
+    auto tdp = dynamic_cast<TokenDemoParticle*>(p);
+    if (tdp->hasToken<TokenDemoParticle::DemoToken>()) {
+      return false;
     }
-  #endif
+  }
 
-  return false;
+  return true;
 }
