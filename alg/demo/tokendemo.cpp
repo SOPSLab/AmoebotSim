@@ -15,7 +15,7 @@ void TokenDemoParticle::activate() {
 
     // Calculate the direction to pass this token.
     int passTo;
-    if (token->passedFrom == -1) {
+    if (token->_passedFrom == -1) {
       // This hasn't been passed yet; pass red and blue in opposite directions.
       int sweepLen = (std::dynamic_pointer_cast<RedToken>(token)) ? 1 : 2;
       for (int dir = 0; dir < 6; dir++) {
@@ -30,25 +30,25 @@ void TokenDemoParticle::activate() {
     } else {
       // This has been passed before; pass continuing in the same direction.
       for (int offset = 1; offset < 6; offset++) {
-        if (hasNbrAtLabel((token->passedFrom + offset) % 6)) {
-          passTo = (token->passedFrom + offset) % 6;
+        if (hasNbrAtLabel((token->_passedFrom + offset) % 6)) {
+          passTo = (token->_passedFrom + offset) % 6;
           break;
         }
       }
     }
 
-    // Update the token's passedFrom direction. Needs to point at this particle
+    // Update the token's _passedFrom direction. Needs to point at this particle
     // from the perspective of the next neighbor.
     for (int nbrLabel = 0; nbrLabel < 6; nbrLabel++) {
       if (pointsAtMe(nbrAtLabel(passTo), nbrLabel)) {
-        token->passedFrom = nbrLabel;
+        token->_passedFrom = nbrLabel;
         break;
       }
     }
 
     // If the token still has lifetime remaining, pass it on.
-    if (token->lifetime > 0) {
-      token->lifetime--;
+    if (token->_lifetime > 0) {
+      token->_lifetime--;
       nbrAtLabel(passTo).putToken(token);
     }
   }
@@ -74,8 +74,8 @@ QString TokenDemoParticle::inspectionText() const {
   text += "  orientation: " + QString::number(orientation) + "\n";
   text += "  globalTailDir: " + QString::number(globalTailDir) + "\n\n";
   text += "Local Info:\n";
-  text += "  numRedTokens: " + QString::number(countTokens<RedToken>()) + "\n";
-  text += "  numBlueTokens: " + QString::number(countTokens<BlueToken>());
+  text += "  # RedTokens: " + QString::number(countTokens<RedToken>()) + "\n";
+  text += "  # BlueTokens: " + QString::number(countTokens<BlueToken>());
 
   return text;
 }
@@ -84,7 +84,7 @@ TokenDemoParticle& TokenDemoParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<TokenDemoParticle>(label);
 }
 
-TokenDemoSystem::TokenDemoSystem(int numParticles) {
+TokenDemoSystem::TokenDemoSystem(int numParticles, int lifetime) {
   Q_ASSERT(numParticles >= 6);
 
   // Instantiate a hexagon of particles.
@@ -96,8 +96,12 @@ TokenDemoSystem::TokenDemoSystem(int numParticles) {
       if (hexNode.x == 0 && hexNode.y == 0) {
         auto firstP = new TokenDemoParticle(Node(0, 0), -1, randDir(), *this);
         for (int j = 0; j < 5; ++j) {
-          firstP->putToken(std::make_shared<TokenDemoParticle::RedToken>());
-          firstP->putToken(std::make_shared<TokenDemoParticle::BlueToken>());
+          auto redToken = std::make_shared<TokenDemoParticle::RedToken>();
+          redToken->_lifetime = lifetime;
+          firstP->putToken(redToken);
+          auto blueToken = std::make_shared<TokenDemoParticle::BlueToken>();
+          blueToken->_lifetime = lifetime;
+          firstP->putToken(blueToken);
         }
         insert(firstP);
       } else {
