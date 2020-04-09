@@ -1,5 +1,17 @@
-#ifndef AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
-#define AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
+/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+ * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
+ * notice can be found at the top of main/main.cpp. */
+
+// Defines the particle system and composing particles for the MetricsDemo code
+// tutorial. MetricsDemo demonstrates how to add custom "counts" and "measures"
+// to an algorithm, enabling the capture of quantitative data. The pseudocode is
+// available in the docs:
+// [https://amoebotsim.rtfd.io/en/latest/tutorials/tutorials.html#metricsdemo-capturing-data].
+//
+// Run on the simulator command line using metricsdemo(#particles, counter max).
+
+#ifndef AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H_
+#define AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H_
 
 #include <QString>
 
@@ -7,7 +19,7 @@
 #include "core/amoebotsystem.h"
 
 class MetricsDemoParticle : public AmoebotParticle {
-  friend class PercentageRedMeasure;
+  friend class PercentRedMeasure;
 
  public:
   enum class State {
@@ -56,38 +68,42 @@ class MetricsDemoParticle : public AmoebotParticle {
 };
 
 class MetricsDemoSystem : public AmoebotSystem {
-  friend class PercentageRedMeasure;
+  friend class PercentRedMeasure;
   friend class MaxDistanceMeasure;
 
  public:
   // Constructs a system of the specified number of MetricsDemoParticles enclosed
   // by a hexagonal ring of objects.
   MetricsDemoSystem(unsigned int numParticles = 30, int counterMax = 5);
-
 };
 
-class PercentageRedMeasure : public Measure {
+class PercentRedMeasure : public Measure {
+ public:
+  // Constructs a PercentRedMeasure by using the parent constructor and adding a
+  // reference to the MetricsDemoSystem being measured.
+  PercentRedMeasure(const QString name, const unsigned int freq,
+                    MetricsDemoSystem& system);
 
-public:
-  PercentageRedMeasure(const QString name, const unsigned int freq,
-                       MetricsDemoSystem& system);
-
+  // Calculated the percentage of particles in the system in the Red state.
   double calculate() const final;
 
-protected:
+ protected:
   MetricsDemoSystem& _system;
 };
 
 class MaxDistanceMeasure : public Measure {
-
-public:
+ public:
+  // Constructs a MaxDistanceMeasure by using the parent constructor and adding
+  // a reference to the MetricsDemoSystem being measured.
   MaxDistanceMeasure(const QString name, const unsigned int freq,
                        MetricsDemoSystem& system);
 
+  // Calculates the largest Cartesian distance between any pair of particles in
+  // the system.
   double calculate() const final;
 
-protected:
+ protected:
   MetricsDemoSystem& _system;
 };
 
-#endif // AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
+#endif  // AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H_

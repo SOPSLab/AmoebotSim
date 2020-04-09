@@ -4,21 +4,11 @@
 
 #include "script/scriptinterface.h"
 
-#include <cmath>
-
 #include <QDateTime>
 #include <QFile>
 #include <QTextStream>
 
-#include "alg/demo/discodemo.h"
-#include "alg/demo/pulldemo.h"
-#include "alg/demo/tokendemo.h"
-#include "alg/demo/metricsdemo.h"
-#include "alg/compression.h"
-#include "alg/infobjcoating.h"
-#include "alg/leaderelection.h"
 #include "alg/shapeformation.h"
-
 #include "core/node.h"
 
 ScriptInterface::ScriptInterface(ScriptEngine &engine, Simulator& sim,
