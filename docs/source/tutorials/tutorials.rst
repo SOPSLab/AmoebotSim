@@ -1249,17 +1249,17 @@ Moving on to ``alg/demo/metricsdemo.cpp``, add an instance of ``MaxDistanceMeasu
 
 Finally, we need to write the measure's ``calculate()`` function so that it loops over all pairs of particles and calculates the Cartesian pairwise distance between them, returning the largest such distance.
 (This is as opposed to the L1-distance along edges of the lattice).
-However, as we saw in **DiscoDemo**, particle coordinates are given on the triangular lattice:
+However, as we saw in **DiscoDemo**, particle coordinates are given on the triangular lattice.
 
-.. image:: graphics/coordinates_lattice.jpg
+.. image:: graphics/metricslattice.png
 
 As a result, we need to convert the triangular lattice coordinates to Cartesian coordinates before calculating the distance between two points.
-This conversion is given by:::
+This conversion is given by: ::
 
   x_cart = x_tri + (y_tri / 2)
   y_cart = (sqrt(3) / 2) * y_tri
 
-Once converted to Cartesian coordinates, distance can be calculated using the typical formula.:::
+Once converted to Cartesian coordinates, distance can be calculated using the typical formula. ::
 
   dist = sqrt((x2_cart - x1_cart)^2 + (y2_cart - y1_cart)^2);
 
