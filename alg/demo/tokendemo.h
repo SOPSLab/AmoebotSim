@@ -21,7 +21,7 @@ class TokenDemoParticle : public AmoebotParticle {
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
   // for its local compass, and a system which it belongs to.
-  TokenDemoParticle(const Node head, const int globalTailDir,
+  TokenDemoParticle(const Node& head, const int globalTailDir,
                     const int orientation, AmoebotSystem& system);
 
   // Executes one particle activation.

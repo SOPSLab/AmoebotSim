@@ -36,9 +36,9 @@ class MetricsDemoParticle : public AmoebotParticle {
   // compass direction from its head to its tail (-1 if contracted), an offset
   // for its local compass, a system that it belongs to, and a maximum value for
   // its counter.
-  MetricsDemoParticle(const Node head, const int globalTailDir,
-                    const int orientation, AmoebotSystem& system,
-                    const int counterMax);
+  MetricsDemoParticle(const Node& head, const int globalTailDir,
+                      const int orientation, AmoebotSystem& system,
+                      const int counterMax);
 
   // Executes one particle activation.
   void activate() override;
@@ -72,8 +72,8 @@ class MetricsDemoSystem : public AmoebotSystem {
   friend class MaxDistanceMeasure;
 
  public:
-  // Constructs a system of the specified number of MetricsDemoParticles enclosed
-  // by a hexagonal ring of objects.
+  // Constructs a system of the specified number of MetricsDemoParticles
+  // enclosed by a hexagonal ring of objects.
   MetricsDemoSystem(unsigned int numParticles = 30, int counterMax = 5);
 };
 
@@ -96,7 +96,7 @@ class MaxDistanceMeasure : public Measure {
   // Constructs a MaxDistanceMeasure by using the parent constructor and adding
   // a reference to the MetricsDemoSystem being measured.
   MaxDistanceMeasure(const QString name, const unsigned int freq,
-                       MetricsDemoSystem& system);
+                     MetricsDemoSystem& system);
 
   // Calculates the largest Cartesian distance between any pair of particles in
   // the system.

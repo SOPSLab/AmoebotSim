@@ -7,7 +7,7 @@
 #include <algorithm>  // for std::max
 #include <cmath>      // for std::sqrt, std::pow
 
-MetricsDemoParticle::MetricsDemoParticle(const Node head,
+MetricsDemoParticle::MetricsDemoParticle(const Node& head,
                                          const int globalTailDir,
                                          const int orientation,
                                          AmoebotSystem& system,
@@ -35,10 +35,8 @@ void MetricsDemoParticle::activate() {
     int expandDir = randDir();
     if (canExpand(expandDir)) {
       expand(expandDir);
-    } else {
-      if (hasObjectAtLabel(expandDir)) {
-        system.getCount("# Wall Bumps").record();
-      }
+    } else if (hasObjectAtLabel(expandDir)) {
+      system.getCount("# Wall Bumps").record();
     }
   } else {  // isExpanded().
     contractTail();
@@ -139,7 +137,10 @@ PercentRedMeasure::PercentRedMeasure(const QString name,
 
 double PercentRedMeasure::calculate() const {
   int numRed = 0;
+
+  // Loop through all particles of the system.
   for (const auto& p : _system.particles) {
+    // Convert the pointer to a MetricsDemoParticle so its color can be checked.
     auto metr_p = dynamic_cast<MetricsDemoParticle*>(p);
     if (metr_p->_state == MetricsDemoParticle::State::Red) {
       numRed++;

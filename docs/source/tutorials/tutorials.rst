@@ -247,7 +247,7 @@ All together, we have:
     // compass direction from its head to its tail (-1 if contracted), an offset
     // for its local compass, a system that it belongs to, and a maximum value for
     // its counter.
-    DiscoDemoParticle(const Node head, const int globalTailDir,
+    DiscoDemoParticle(const Node& head, const int globalTailDir,
                       const int orientation, AmoebotSystem& system,
                       const int counterMax);
 
@@ -300,7 +300,7 @@ It begins with the copyright notice and an ``#include`` of the header file, and 
 
   #include "alg/demo/discodemo.h"
 
-  DiscoDemoParticle::DiscoDemoParticle(const Node head, const int globalTailDir,
+  DiscoDemoParticle::DiscoDemoParticle(const Node& head, const int globalTailDir,
                                        const int orientation,
                                        AmoebotSystem& system,
                                        const int counterMax) {}
@@ -325,7 +325,7 @@ We then set this particle's ``_state`` to a random initial color.
 
 .. code-block:: c++
 
-  DiscoDemoParticle::DiscoDemoParticle(const Node head, const int globalTailDir,
+  DiscoDemoParticle::DiscoDemoParticle(const Node& head, const int globalTailDir,
                                        const int orientation,
                                        AmoebotSystem& system,
                                        const int counterMax)
@@ -506,7 +506,6 @@ This process is repeated until the desired number of particles has been placed.
 Here, we use a ``std::set<Node> occupied`` to keep track of the nodes that are occupied by placed particles, and use the condition ``occupied.find(node) == occupied.end()`` to check that the node in question is not already occupied by a particle.
 This sort of logic is fairly common in many other algorithms' particle system constructors.
 
-.. _register-algorithm:
 
 .. _disco-register:
 
@@ -705,7 +704,7 @@ Just as with other new particle types, we inherit from ``AmoebotParticle`` and s
     // Constructs a new particle with a node position for its head, a global
     // compass direction from its head to its tail (-1 if contracted), an offset
     // for its local compass, and a system which it belongs to.
-    TokenDemoParticle(const Node head, const int globalTailDir,
+    TokenDemoParticle(const Node& head, const int globalTailDir,
                       const int orientation, AmoebotSystem& system);
 
     // Executes one particle activation.
@@ -781,7 +780,7 @@ We complete our setup with a skeleton of ``alg/demo/tokendemo.cpp``.
 
   #include "alg/demo/tokendemo.h"
 
-  TokenDemoParticle::TokenDemoParticle(const Node head, const int globalTailDir,
+  TokenDemoParticle::TokenDemoParticle(const Node& head, const int globalTailDir,
                                        const int orientation,
                                        AmoebotSystem& system) {}
 
@@ -960,245 +959,36 @@ Well done!
 MetricsDemo: Capturing Data
 ---------------------------
 
-AmoebotSim supports metrics tracking for its algorithms.
-Metrics allow you, as the developer, to monitor a multitude of aspects of the particle system at hand.
-They can be simple, such as the cumulative number of moves made by particles, or more complicated, such as the perimeter of a connected particle system.
+This tutorial covers custom metrics that can be added to AmoebotSim algorithms.
+Metrics allow you, as the developer, to monitor and record any quantitative aspect of the particle system at hand.
+AmoebotSim metrics are broken up into two different classes:
 
-In this tutorial, we'll be adding custom metrics to the particle system that you have already built in the :ref:`disco demo tutorial <disco-demo>`.
+- *Counts* track the number of times a certain event happens, and thus are always increasing (e.g., usually incrementing once per event). For example, AmoebotSim's default metrics tracking the number of rounds elapsed, the number of particles activated, and the number of particle movements made are all implemented as counts.
 
-AmoebotSim metrics are broken up into two different classes: **counts** and **measures**.
-*Counts* are things that increment up by a certain value (usually 1).
-They count the number of times a certain event has happened.
-*Measures* are essentially any other type of metric, things that behave differently than just incrementing up by 1.
-They measure a broader, more "global" aspect of the system.
+- *Measures* track system properties based on a global, complete view of all particle positions and memory contents. For example, the **Compression** algorithm in ``alg/compression.*`` uses a measure to track the perimeter of the system as it fluctuates over time.
 
-In this tutorial, we will be creating three custom metrics for the disco demo system: **(1)** the number of times particles bump into the boundary wall (a *count*), **(2)** the percentage of the system that is red (a *measure*), and finally, **(3)** the greatest distance between any pair of particles (a *measure*).
+Here, we'll develop **MetricsDemo**, an extension of **DiscoDemo** that adds three separate metrics: (1) a count for the number of times particles bump into the boundary wall, (2) a measure for the percentage of particles that are red, and (3) and a more complex measure for the maximum distance between any pair of particles.
+This tutorial assumes that you have read and are comfortable with the **DiscoDemo** :ref:`tutorial <disco-demo>`; feel free to follow along with these instructions while referencing the completed ``alg/demo/metricsdemo.*`` files.
 
-Setting up the Environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To begin, create the ``alg/demo/metricsdemo.h`` and ``alg/demo/metricsdemo.cpp`` files.
-Then, copy and paste the discodemo header/source files into the according metricsdemo header/source files.
-This is because we will be using the exact, full code of the disco demo you have already completed, just adding metrics to it.
-Next, in your new metricsdemo files (which are currently copies of the discodemo files), change any instance where ``DiscoDemo`` is used to ``MetricsDemo`` (``DiscoDemoSystem`` -> ``MetricsDemoSystem``, ``DiscoDemoParticle`` -> ``MetricsDemoParticle``, etc.).
+Setting Up the Files
+^^^^^^^^^^^^^^^^^^^^
 
-Just to be sure, your metricsdemo files should now look like this:
+Our goal is to add metrics to the **DiscoDemo** simulation, so we begin by creating the ``alg/demo/metricsdemo.h`` and ``alg/demo/metricsdemo.cpp`` files as copies of the ``alg/demo/discodemo.h`` and ``alg/demo/discodemo.cpp`` files, respectively.
+Next, change any instance of "DiscoDemo" in your new files to "MetricsDemo" (i.e., update ``DiscoDemoParticle`` to ``MetricsDemoParticle``, ``DiscoDemoSystem`` to ``MetricsDemoSystem``, etc.).
+Don't forget to update your header comment and ``#define`` guards!
 
-``metricsdemo.h``:
+Next, :ref:`register <disco-register>` this new **MetricsDemo** algorithm in the same way we did with **DiscoDemo** using the same parameters, parameter checking, system instantiation, etc.
+Compiling and running AmoebotSim at this point will give you a **MetricsDemo** that is essentially identical to the **DiscoDemo** simulation you created in the previous tutorial.
 
-.. code-block:: c++
+You are now ready to create your first custom metrics!
 
-  #ifndef AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
-  #define AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
 
-  #include <QString>
+Counting Particle Wall Bumps
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  #include "core/amoebotparticle.h"
-  #include "core/amoebotsystem.h"
-
-  class MetricsDemoParticle : public AmoebotParticle {
-
-   public:
-    enum class State {
-      Red,
-      Orange,
-      Yellow,
-      Green,
-      Blue,
-      Indigo,
-      Violet
-    };
-
-    // Constructs a new particle with a node position for its head, a global
-    // compass direction from its head to its tail (-1 if contracted), an offset
-    // for its local compass, a system that it belongs to, and a maximum value for
-    // its counter.
-    MetricsDemoParticle(const Node head, const int globalTailDir,
-                      const int orientation, AmoebotSystem& system,
-                      const int counterMax);
-
-    // Executes one particle activation.
-    void activate() override;
-
-    // Functions for altering the particle's color. headMarkColor() (resp.,
-    // tailMarkColor()) returns the color to be used for the ring drawn around the
-    // particle's head (resp., tail) node. In this demo, the tail color simply
-    // matches the head color.
-    int headMarkColor() const override;
-    int tailMarkColor() const override;
-
-    // Returns the string to be displayed when this particle is inspected; used to
-    // snapshot the current values of this particle's memory at runtime.
-    QString inspectionText() const override;
-
-   protected:
-    // Returns a random State.
-    State getRandColor() const;
-
-    // Member variables.
-    State _state;
-    int _counter;
-    const int _counterMax;
-
-   private:
-    friend class MetricsDemoSystem;
-  };
-
-  class MetricsDemoSystem : public AmoebotSystem {
-
-   public:
-    // Constructs a system of the specified number of MetricsDemoParticles enclosed
-    // by a hexagonal ring of objects.
-    MetricsDemoSystem(unsigned int numParticles = 30, int counterMax = 5);
-
-  };
-
-  #endif // AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
-
-``metricsdemo.cpp``:
-
-.. code-block:: c++
-
-  /* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
-   * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
-   * notice can be found at the top of main/main.cpp. */
-
-  #include "alg/demo/metricsdemo.h"
-
-  MetricsDemoParticle::MetricsDemoParticle(const Node head, const int globalTailDir,
-                                       const int orientation,
-                                       AmoebotSystem& system,
-                                       const int counterMax)
-      : AmoebotParticle(head, globalTailDir, orientation, system),
-        _counter(counterMax),
-        _counterMax(counterMax) {
-    _state = getRandColor();
-  }
-
-  void MetricsDemoParticle::activate() {
-    // First decrement the particle's counter. If it's zero, reset the counter and
-    // get a new color.
-    _counter--;
-    if (_counter == 0) {
-      _counter = _counterMax;
-      _state = getRandColor();
-    }
-
-    // Next, handle movement. If the particle is contracted, choose a random
-    // direction to try to expand towards, but only do so if the node in that
-    // direction is unoccupied. Otherwise, if the particle is expanded, simply
-    // contract its tail.
-    if (isContracted()) {
-      int expandDir = randDir();
-      if (canExpand(expandDir)) {
-        expand(expandDir);
-      }
-    } else {  // isExpanded().
-      contractTail();
-    }
-  }
-
-  int MetricsDemoParticle::headMarkColor() const {
-    switch(_state) {
-      case State::Red:    return 0xff0000;
-      case State::Orange: return 0xff9000;
-      case State::Yellow: return 0xffff00;
-      case State::Green:  return 0x00ff00;
-      case State::Blue:   return 0x0000ff;
-      case State::Indigo: return 0x4b0082;
-      case State::Violet: return 0xbb00ff;
-    }
-
-    return -1;
-  }
-
-  int MetricsDemoParticle::tailMarkColor() const {
-    return headMarkColor();
-  }
-
-  QString MetricsDemoParticle::inspectionText() const {
-    QString text;
-    text += "Global Info:\n";
-    text += "  head: (" + QString::number(head.x) + ", "
-                        + QString::number(head.y) + ")\n";
-    text += "  orientation: " + QString::number(orientation) + "\n";
-    text += "  globalTailDir: " + QString::number(globalTailDir) + "\n\n";
-    text += "Local Info:\n";
-    text += "  state: ";
-    text += [this](){
-      switch(_state) {
-        case State::Red:    return "red\n";
-        case State::Orange: return "orange\n";
-        case State::Yellow: return "yellow\n";
-        case State::Green:  return "green\n";
-        case State::Blue:   return "blue\n";
-        case State::Indigo: return "indigo\n";
-        case State::Violet: return "violet\n";
-      }
-      return "no state\n";
-    }();
-    text += "  counter: " + QString::number(_counter);
-
-    return text;
-  }
-
-  MetricsDemoParticle::State MetricsDemoParticle::getRandColor() const {
-    // Randomly select an integer and return the corresponding state via casting.
-    return static_cast<State>(randInt(0, 7));
-  }
-
-  MetricsDemoSystem::MetricsDemoSystem(unsigned int numParticles, int counterMax) {
-    _counts.push_back(new Count("# Bumps Into Wall"));
-    _measures.push_back(new PercentageRedMeasure("Percentage Red", 1, *this));
-    _measures.push_back(new MaxDistanceMeasure("Max 2 Particle Dist", 1, *this));
-
-    // In order to enclose an area that's roughly 3.7x the # of particles using a
-    // regular hexagon, the hexagon should have side length 1.4*sqrt(# particles).
-    int sideLen = static_cast<int>(std::round(1.4 * std::sqrt(numParticles)));
-    Node boundNode(0, 0);
-    for (int dir = 0; dir < 6; ++dir) {
-      for (int i = 0; i < sideLen; ++i) {
-        insert(new Object(boundNode));
-        boundNode = boundNode.nodeInDir(dir);
-      }
-    }
-
-    // Let s be the bounding hexagon side length. When the hexagon is created as
-    // above, the nodes (x,y) strictly within the hexagon have (i) -s < x < s,
-    // (ii) 0 < y < 2s, and (iii) 0 < x+y < 2s. Choose interior nodes at random to
-    // place particles, ensuring at most one particle is placed at each node.
-    std::set<Node> occupied;
-    while (occupied.size() < numParticles) {
-      // First, choose an x and y position at random from the (i) and (ii) bounds.
-      int x = randInt(-sideLen + 1, sideLen);
-      int y = randInt(1, 2 * sideLen);
-      Node node(x, y);
-
-      // If the node satisfies (iii) and is unoccupied, place a particle there.
-      if (0 < x + y && x + y < 2 * sideLen
-          && occupied.find(node) == occupied.end()) {
-        insert(new MetricsDemoParticle(node, -1, randDir(), *this, counterMax));
-        occupied.insert(node);
-      }
-    }
-  }
-
-Finally, register your new metricsdemo algorithm by adding the necessary code in the following places: ``ui/algorithm.h``, ``ui/algorithm.cpp``, and ``ui/parameterlistmodel.cpp``.
-Revisit the :ref:`"Registering the Algorithm" section of the DiscoDemo tutorial <register-algorithm>` for specific instructions on how to register a new algorithm.
-Because our MetricsDemo simulation is so similar to DiscoDemo, we will be using the same default parameters, parameter checking, system instantiation, etc. for registering the algorithm.
-
-Run the simulation and you will essentially have the DiscoDemo you created in the previous tutorial.
-
-.. image:: graphics/metrics_base.gif
-
-You are now ready to begin creating your first custom metrics!
-
-Counts - Number of Bumps Into Boundary Wall
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Counts** show the number of times a certain event has happened (up to that point in time in the system), incrementing up each time the event being looked at occurs.
-
-Before we create our custom count metric, let's take a look at the basic format of a count which is outlined in ``core/metric.h``:
+Recall that *Counts* track the number of times a certain event has happened so far.
+Before we create our custom count, let's take a look at its class definition in ``core/metric.h``.
 
 .. code-block:: c++
 
@@ -1219,52 +1009,40 @@ Before we create our custom count metric, let's take a look at the basic format 
     std::vector<int> _history;
   };
 
-As you can see above, when creating a new count with ``Count()``, you must fill the ``name`` parameter with a string (this will show up in the GUI).
-Also, the count's value starts at zero.
-
-The ``record()`` function is used to register each time the event you are looking at happens as well as to increase the value of the count accordingly.
-It is placed in the ``activate()`` function of the particle wherever the occurrence of the event being looked at would be identified.
-The one parameter that ``record()`` has is ``numEvents`` (an integer), which is set to 1 by default.
-This parameter determines how much the count increments up by each time ``record()`` is called.
-So, by default, your count will count up as follows: 0, 1, 2, 3, 4... .
-But if ``numEvents`` is set to 3, for example, your count will count up as follows: 0, 3, 6, 9, 12... .
-
-Now that we understand the basic format of the ``Count`` class, let's create a custom count to monitor how many *times particles have bumped into the boundary wall*.
-
-First, as is necessary with any custom metric (count or measure), we need to add the new count to the system function in the source file.
-In the ``metricsdemo.cpp`` file, we will add our new count to the top of ``MetricsDemoSystem::MetricsDemoSystem() {}``, filling the name parameter of ``Count()`` with "# Bumps Into Wall" :
+Each ``Count`` object has a human readable ``_name``, a current ``_value`` (initialized to zero), and a ``_history`` that tracks the count value over time.
+As the constructor shows, creating a custom ``Count`` is as simple as instantiating it with a name.
+It can then be added it to a particle system's ``_counts`` vector, which every system class derived from ``AmoebotSystem`` has.
+For a first custom metric in **MetricsDemo**, we want to count the number of times *a particle bumps into the boundary wall*, which we instantiate in the ``MetricsDemoSystem`` constructor in ``alg/demo/metricsdemo.cpp``.
 
 .. code-block:: c++
 
   MetricsDemoSystem::MetricsDemoSystem(unsigned int numParticles, int counterMax) {
-    _counts.push_back(new Count("# Bumps Into Wall"));
-
     // ...
 
-The above format of an underscore before ``counts`` (or before "measures" when creating a measure) and ``.push_back()`` is always the same.
+    // Set up metrics.
+    _counts.push_back(new Count("# Wall Bumps"));
+  }
 
-Next, we must place the ``record()`` function of our count in the ``activate()`` function of ``MetricsDemoParticle``.
-Our count needs to increment up every time a particle bumps into the hexagonal boundary wall of the system, so ``record()`` must be placed where this event would happen.
-
-The way AmoebotSim functions and the way the basic discodemo particles behave, particles never actually bump into the wall.
-Instead, our number of "bumps" metric will be counting when a particle is unable to move because of the wall being in its way.
-
-Before placing our ``record()`` function in the location where the inability to expand because of a wall occurs, let's take a look at the pseudocode for this situation: ::
+The ``Count`` class's ``record()`` function is used to register each time the event of interest occurs, incrementing the ``_value`` of the count according to the ``numEvents`` parameter.
+By default ``numEvents = 1`` (and can thus be omitted), but this can be set to a larger value if desired.
+The ``record()`` function is placed in a particle's ``activate()`` function wherever the event of interest would be identified.
+In our case, we want to call ``record()`` whenever a ``MetricsDemoParticle`` "bumps" into the boundary wall, where we consider a "bump" any time that a particle is unable to move because of the wall being in its way.
+The **DiscoDemo** :ref:`pseudocode <disco-pseudocode>` for particles "dancing" within the boundary is easily modified to detect this event:::
 
   if (P is contracted), then do:
     expandDir <- random direction in [0, 6)
-    if (node in direction expandDir is empty), then do:   // P can expand
+    if (node in direction expandDir is empty), then do:
       expand towards expandDir
-    else, do: // P cannot expand
-      if (node in direction expandDir is occupied by an object), then do:   // P cannot expand because of an object (wall), as opposed to cannot expand because of another particle
-        num bumps into wall <- num bumps into wall + 1    // record()
-      end if
+    // MetricsDemo, new else-if:
+    else if (node in direction expandDir is occupied by an object), then do:
+      // This particle has "bumped" into the boundary wall!
     end if
-  else, do:   // P is expanded
+  else, do:  // P is expanded
     contract tail
   end if
 
-Now let's put this into our ``metricsdemo.cpp`` file in the ``activate()`` function of ``MetricsDemoParticle``:
+Now, we'll add this to the ``activate()`` function of ``MetricsDemoParticle`` in ``alg/demo/metricsdemo.cpp``.
+We access our wall bumps count using the ``getCount`` function, which searches for counts by name.
 
 .. code-block:: c++
 
@@ -1275,36 +1053,23 @@ Now let's put this into our ``metricsdemo.cpp`` file in the ``activate()`` funct
       int expandDir = randDir();
       if (canExpand(expandDir)) {
         expand(expandDir);
-      } else {
-        if (hasObjectAtLabel(expandDir)) {
-          system.getCount("# Bumps Into Wall").record();
-        }
+      } else if (hasObjectAtLabel(expandDir)) {
+        system.getCount("# Wall Bumps").record();
       }
-    } else {
+    } else {  // isExpanded().
       contractTail();
     }
+  }
 
-    // ...
+And that's it! You've just created your first custom metric.
+Running AmoebotSim with these changes, we can see our wall bumps count added just below the other default metrics.
 
-As you can see, we are just adding the else...if section (which is when the particle can't expand because of an object/wall node) that comes after the ``if (canExand)`` statement.
 
-Congratulations! You have just created your first custom metric!
+Measuring the Percentage of Red Particles
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Run the simulator and select "Demo: Metrics" to see the simulation in action.
-You should see your count ("# Bumps Into Wall") in the GUI next to the other default metrics.
-
-.. image:: graphics/metrics_count.gif
-
-Measures - Percentage of Red Particles
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Measures** show more broad, "global" aspects of the particle system.
-
-As opposed to a count that simply increments up when a certain event occurs, measures vary much more fluidly.
-They are basically any metrics that do not simply count up by 1 each time an event occurs.
-Examples of measures include the percentage of a system in a particular state (what we are doing here), the perimeter of the system, etc.
-
-Before we create our custom measure metric, let's take a look at the basic format and creation of a measure which is outlined in ``core/metric.h``:
+Recall that *Measures* track system properties based on a global view of all particles, and thus can fluctuate over time.
+Before we create our custom measure, let's take a look at its class definition in ``core/metric.h``:
 
 .. code-block:: c++
 
@@ -1329,730 +1094,209 @@ Before we create our custom measure metric, let's take a look at the basic forma
     std::vector<double> _history;
   };
 
-As you can see above, when creating a new measure with ``Measure()``, there are now two parameters: ``name`` (the GUI name of the metric, a string), and ``freq`` (the frequency in which the measure is calculated/updated, an integer representing the number of rounds between calculating the new value of the measure).
+Similar to counts, the ``Measure`` class has a human-readable ``_name`` and a ``_history`` that tracks the measure value over time.
+Unlike counts, however, measures have no need to keep a current value.
+Instead, the ``calculate()`` function is called once every ``_freq`` rounds to compute a new measure value, which is then appended to ``_history``.
+Whereas for counts the ``record()`` function is already defined and the main work is incorporating it in a particle's ``activate()`` function, measures require a custom definition of the ``calculate()`` function but are called automatically.
 
-The ``calculate()`` function is used to calculate and return the value of the measure, with these calculations being done from a global perspective, a system view.
-This is where most of your code for a measure will reside.
-
-Now that we understand the basic format of the ``Measure`` class, let's create our own measure to monitor the *percentage of particles in the system that is red*.
-
-With measures, unlike with counts, we need to add some code to our header file.
-To set up our measure class ``PercentageRedMeasure``, which inherits from the ``Measure`` class that we looked at in ``metric.h``, we need to add the following code:
+We'll create a custom measure that tracks the *percentage of particles in the system that are red*.
+To do this, we add a class ``PercentRedMeasure`` that inherits from ``Measure`` in ``alg/demo/metricsdemo.h``.
 
 .. code-block:: c++
 
-  class PercentageRedMeasure : public Measure {
+  class PercentRedMeasure : public Measure {
+   public:
+    // Constructs a PercentRedMeasure by using the parent constructor and adding a
+    // reference to the MetricsDemoSystem being measured.
+    PercentRedMeasure(const QString name, const unsigned int freq,
+                      MetricsDemoSystem& system);
 
-  public:
-    PercentageRedMeasure(const QString name, const unsigned int freq,
-                         MetricsDemoSystem& system);
-
+    // Calculated the percentage of particles in the system in the Red state.
     double calculate() const final;
 
-  protected:
+   protected:
     MetricsDemoSystem& _system;
   };
 
-The above format of setting up a measure in the header file, besides the name of the measure, is always the same.
-
-Next, in order for our custom measure to have access to the information of the particle system as well as of the individual particles, we must add the following line of code:
-
-.. code-block:: c++
-
-  friend class PercentageRedMeasure;
-
-This needs to be placed in the definition of the ``MetricsDemoSystem`` class; all measures must be a friend class of the particle system class.
-
-Additionally, this line needs to be placed in the definition of the ``MetricsDemoParticle`` class.
-Measures only need to be friend classes of the particle class in some cases, depending on what information the metric needs access to.
-For our ``PercentageRedMeasure``, as you will see shortly, we need to access the states of individual particles; therefore, the measure must be a friend class of the particle class.
-
-Your header file, in total, should now look like this:
+Because our measure will need access to the system's particles and those particles' memories (to check if they are red), we need to make ``PercentRedMeasure`` a `friend class <http://www.cplusplus.com/doc/tutorial/inheritance/>`_ of both ``MetricsDemoSystem`` and ``MetricsDemoParticle``.
+Otherwise, our measure will not have access to the system and particles' ``protected`` members, such as the list of particles or their memory contents.
 
 .. code-block:: c++
-
-  #ifndef AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
-  #define AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
-
-  #include <QString>
-
-  #include "core/amoebotparticle.h"
-  #include "core/amoebotsystem.h"
 
   class MetricsDemoParticle : public AmoebotParticle {
-    friend class PercentageRedMeasure;
+    friend class PercentRedMeasure;
 
-   public:
-    enum class State {
-      Red,
-      Orange,
-      Yellow,
-      Green,
-      Blue,
-      Indigo,
-      Violet
-    };
-
-    // Constructs a new particle with a node position for its head, a global
-    // compass direction from its head to its tail (-1 if contracted), an offset
-    // for its local compass, a system that it belongs to, and a maximum value for
-    // its counter.
-    MetricsDemoParticle(const Node head, const int globalTailDir,
-                      const int orientation, AmoebotSystem& system,
-                      const int counterMax);
-
-    // Executes one particle activation.
-    void activate() override;
-
-    // Functions for altering the particle's color. headMarkColor() (resp.,
-    // tailMarkColor()) returns the color to be used for the ring drawn around the
-    // particle's head (resp., tail) node. In this demo, the tail color simply
-    // matches the head color.
-    int headMarkColor() const override;
-    int tailMarkColor() const override;
-
-    // Returns the string to be displayed when this particle is inspected; used to
-    // snapshot the current values of this particle's memory at runtime.
-    QString inspectionText() const override;
-
-   protected:
-    // Returns a random State.
-    State getRandColor() const;
-
-    // Member variables.
-    State _state;
-    int _counter;
-    const int _counterMax;
-
-   private:
-    friend class MetricsDemoSystem;
+    // ...
   };
 
   class MetricsDemoSystem : public AmoebotSystem {
-    friend class PercentageRedMeasure;
+    friend class PercentRedMeasure;
 
-   public:
-    // Constructs a system of the specified number of MetricsDemoParticles enclosed
-    // by a hexagonal ring of objects.
-    MetricsDemoSystem(unsigned int numParticles = 30, int counterMax = 5);
-
+    // ...
   };
 
-  class PercentageRedMeasure : public Measure {
+.. note::
 
-  public:
-    PercentageRedMeasure(const QString name, const unsigned int freq,
-                         MetricsDemoSystem& system);
+  While a custom measure class must always be a friend class of the system class it's measuring, it may not need to be a friend class of the corresponding particle class if it does not need information from particles' memories.
 
-    double calculate() const final;
-
-  protected:
-    MetricsDemoSystem& _system;
-  };
-
-  #endif // AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
-
-Next, moving on to the source file, we need to add our new ``PercentageRedMeasure`` to the simulation.
-This should look very similar to what we did when adding our count, with a few extra parameters and a few small differences.
-Add the following line of code to the top of ``MetricsDemoSystem::MetricsDemoSystem() {}`` (right next to where you initialized the # Bumps count):
+Turning now to the source file ``alg/demo/metricsdemo.cpp``, we first add an instance of our new ``PercentRedMeasure`` to the ``MetricsDemoSystem``.
+Similar to what we did for counts, this takes place in the system's constructor by adding an instance of our measure to the system's ``_measures`` vector.
+Here, we specify a frequency of ``1``, meaning that we would like this measure to be calculated at the end of every round.
 
 .. code-block:: c++
-
-  _measures.push_back(new PercentageRedMeasure("Percentage Red", 1, *this));
-
-Using ``PercentageRedMeasure()``, which we just defined in the header file, the parameters are as follows:
-
-- ``"Percentage Red"`` - ``name``, the string for the measure's GUI name
-- ``1`` - ``freq``, the integer of how many rounds between the measure is re-calculated and updated
-- ``*this`` - ``system``, a pointer to the ``MetricsDemoSystem``
-
-Next, still in ``metricsdemo.cpp``, we need to declare our custom measure class, ``PercentageRedMeasure``:
-
-.. code-block:: c++
-
-  PercentageRedMeasure::PercentageRedMeasure(const QString name, const unsigned int freq,
-                                             MetricsDemoSystem& system)
-    : Measure(name, freq),
-      _system(system) {}
-
-The above format of declaring your measure in the source file is always the same.
-
-The final step is to write the ``calculate()`` function of our ``PercentageRedMeasure``, which will calculate and return the value of the measure.
-
-First, here is the pseudocode of the ``calculate()`` function: ::
-
-  numRed <- 0
-  for (P in system.particles) :   // loop through all particles in the system
-    if (P is red), then do :
-      numRed <- numRed + 1
-    end if
-  end for
-  return (numRed / system.size) * 100   // system.size refers to the total number of particles in the system
-
-Now let's put this into actual code and add it to the source file:
-
-.. code-block:: c++
-
-  double PercentageRedMeasure::calculate() const {
-    int numRed = 0;
-
-    for (const auto& p : _system.particles) {   // loop through all particles of the system
-      auto metr_p = dynamic_cast<MetricsDemoParticle*>(p);    // converts the pointer to the MetricsDemoParticle class
-      if (metr_p->_state == MetricsDemoParticle::State::Red) {    // if the particle is red
-        numRed++;
-      }
-    }
-
-    return ( (double(numRed) / double(_system.size())) * 100);
-  }
-
-Everything put together, ``metricsdemo.cpp`` should now look like this:
-
-.. code-block:: c++
-
-  /* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
-   * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
-   * notice can be found at the top of main/main.cpp. */
-
-  #include "alg/demo/metricsdemo.h"
-
-  MetricsDemoParticle::MetricsDemoParticle(const Node head, const int globalTailDir,
-                                       const int orientation,
-                                       AmoebotSystem& system,
-                                       const int counterMax)
-      : AmoebotParticle(head, globalTailDir, orientation, system),
-        _counter(counterMax),
-        _counterMax(counterMax) {
-    _state = getRandColor();
-  }
-
-  void MetricsDemoParticle::activate() {
-    // First decrement the particle's counter. If it's zero, reset the counter and
-    // get a new color.
-    _counter--;
-    if (_counter == 0) {
-      _counter = _counterMax;
-      _state = getRandColor();
-    }
-
-    // Next, handle movement. If the particle is contracted, choose a random
-    // direction to try to expand towards, but only do so if the node in that
-    // direction is unoccupied. Otherwise, if the particle is expanded, simply
-    // contract its tail.
-    if (isContracted()) {
-      int expandDir = randDir();
-      if (canExpand(expandDir)) {
-        expand(expandDir);
-      } else {
-        if (hasObjectAtLabel(expandDir)) {
-          system.getCount("# Bumps Into Wall").record();
-        }
-      }
-    } else {  // isExpanded().
-      contractTail();
-    }
-  }
-
-  int MetricsDemoParticle::headMarkColor() const {
-    switch(_state) {
-      case State::Red:    return 0xff0000;
-      case State::Orange: return 0xff9000;
-      case State::Yellow: return 0xffff00;
-      case State::Green:  return 0x00ff00;
-      case State::Blue:   return 0x0000ff;
-      case State::Indigo: return 0x4b0082;
-      case State::Violet: return 0xbb00ff;
-    }
-
-    return -1;
-  }
-
-  int MetricsDemoParticle::tailMarkColor() const {
-    return headMarkColor();
-  }
-
-  QString MetricsDemoParticle::inspectionText() const {
-    QString text;
-    text += "Global Info:\n";
-    text += "  head: (" + QString::number(head.x) + ", "
-                        + QString::number(head.y) + ")\n";
-    text += "  orientation: " + QString::number(orientation) + "\n";
-    text += "  globalTailDir: " + QString::number(globalTailDir) + "\n\n";
-    text += "Local Info:\n";
-    text += "  state: ";
-    text += [this](){
-      switch(_state) {
-        case State::Red:    return "red\n";
-        case State::Orange: return "orange\n";
-        case State::Yellow: return "yellow\n";
-        case State::Green:  return "green\n";
-        case State::Blue:   return "blue\n";
-        case State::Indigo: return "indigo\n";
-        case State::Violet: return "violet\n";
-      }
-      return "no state\n";
-    }();
-    text += "  counter: " + QString::number(_counter);
-
-    return text;
-  }
-
-  MetricsDemoParticle::State MetricsDemoParticle::getRandColor() const {
-    // Randomly select an integer and return the corresponding state via casting.
-    return static_cast<State>(randInt(0, 7));
-  }
 
   MetricsDemoSystem::MetricsDemoSystem(unsigned int numParticles, int counterMax) {
-    _counts.push_back(new Count("# Bumps Into Wall"));
-    _measures.push_back(new PercentageRedMeasure("Percentage Red", 1, *this));
+    // ...
 
-    // In order to enclose an area that's roughly 3.7x the # of particles using a
-    // regular hexagon, the hexagon should have side length 1.4*sqrt(# particles).
-    int sideLen = static_cast<int>(std::round(1.4 * std::sqrt(numParticles)));
-    Node boundNode(0, 0);
-    for (int dir = 0; dir < 6; ++dir) {
-      for (int i = 0; i < sideLen; ++i) {
-        insert(new Object(boundNode));
-        boundNode = boundNode.nodeInDir(dir);
-      }
-    }
-
-    // Let s be the bounding hexagon side length. When the hexagon is created as
-    // above, the nodes (x,y) strictly within the hexagon have (i) -s < x < s,
-    // (ii) 0 < y < 2s, and (iii) 0 < x+y < 2s. Choose interior nodes at random to
-    // place particles, ensuring at most one particle is placed at each node.
-    std::set<Node> occupied;
-    while (occupied.size() < numParticles) {
-      // First, choose an x and y position at random from the (i) and (ii) bounds.
-      int x = randInt(-sideLen + 1, sideLen);
-      int y = randInt(1, 2 * sideLen);
-      Node node(x, y);
-
-      // If the node satisfies (iii) and is unoccupied, place a particle there.
-      if (0 < x + y && x + y < 2 * sideLen
-          && occupied.find(node) == occupied.end()) {
-        insert(new MetricsDemoParticle(node, -1, randDir(), *this, counterMax));
-        occupied.insert(node);
-      }
-    }
+    // Set up metrics.
+    _counts.push_back(new Count("# Wall Bumps"));
+    _measures.push_back(new PercentRedMeasure("% Red", 1, *this));
   }
 
-  PercentageRedMeasure::PercentageRedMeasure(const QString name, const unsigned int freq,
-                                             MetricsDemoSystem& system)
-    : Measure(name, freq),
-      _system(system) {}
+The ``PercentRedMeasure`` constructor is straightforward, calling its parent constructor with the input name and frequency and then assigning the system reference.
 
-  double PercentageRedMeasure::calculate() const {
+.. code-block:: c++
+
+  PercentRedMeasure::PercentRedMeasure(const QString name,
+                                       const unsigned int freq,
+                                       MetricsDemoSystem& system)
+      : Measure(name, freq),
+        _system(system) {}
+
+The most important part of every custom measure is the implementation of its ``calculate()`` function.
+For ``PercentRedMeasure``, we want to tally the total number of particles in ``State::Red`` and divide that by the total number of particles in the system to obtain the percentage of red particles.
+This implementation is fairly straightforward, with two caveats.
+First, because the system's collection of particles is defined at the ``AmoebotSystem``/``AmoebotParticle`` level, the pointer must first be cast as a ``MetricsDemoParticle*`` in order to access its ``_state``.
+Second, we need to take care that the final fraction of red particles is calculated with floating point division instead of integer division.
+
+.. code-block:: c++
+
+  double PercentRedMeasure::calculate() const {
     int numRed = 0;
 
+    // Loop through all particles of the system.
     for (const auto& p : _system.particles) {
+      // Convert the pointer to a MetricsDemoParticle so its color can be checked.
       auto metr_p = dynamic_cast<MetricsDemoParticle*>(p);
       if (metr_p->_state == MetricsDemoParticle::State::Red) {
         numRed++;
       }
     }
 
-    return ( (double(numRed) / double(_system.size())) * 100);
+    return numRed / static_cast<double>(_system.size()) * 100;
   }
 
-Congratulations! You have just created your first measure metric!
+Great, you've just finished your first custom measure!
+Running AmoebotSim now, we can see our "% Red" measure just below our custom "# Wall Bumps" count and the default metrics.
 
-Run the simulator and select "Demo: Metrics" to see the simulation in action.
-You should see now your measure ("Percentage Red") in the GUI next to the other metrics.
 
-.. image:: graphics/metrics_measure1.gif
+Measuring the Maximum Pairwise Particle Distance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Measures Cont. - Greatest Distance Between Any Pair of Particles
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+By this point, you've already learned how to create your own custom metrics, both a count and a measure.
+Here, we are going to leverage the global information available to measures to monitor the *maximum Cartesian distance between any pair of particles in the system*.
+This last measure will have the same format and setup as outlined in the previous section, but will have a more complicated ``calculate()`` function.
 
-You have already learned how to create your own custom metrics, both a count and a measure.
-Here, we are going to create another measure that will monitor the *greatest distance between any pair of particles in the system*, the maximum two-particle distance.
-
-Although we will be following the same format and setup as was outlined in the previous section, this measure will have a more complicated ``calculate()`` function, thus giving you more thorough practice with measures.
-Additionally, we are calculating distances here, an extremely valuable aspect of a particle system.
-You will likely need to calculate distances in your future custom metrics.
-
-Following the same steps as before, let's begin by setting up our new measure class in the header file:
+In ``alg/demo/metricsdemo.h``, following the same steps as for ``PercentRedMeasure``, define a new measure class ``MaxDistanceMeasure`` that inherits from ``Measure`` and make it a friend of ``MetricsDemoSystem``.
+(We only need particle coordinates to calculate pairwise distance, so we do not need the particle memory access that comes being a friend class of ``MetricsDemoParticle``).
 
 .. code-block:: c++
-
-  class MaxDistanceMeasure : public Measure {
-
-  public:
-    MaxDistanceMeasure(const QString name, const unsigned int freq,
-                         MetricsDemoSystem& system);
-
-    double calculate() const final;
-
-  protected:
-    MetricsDemoSystem& _system;
-  };
-
-Next, just as before, we need to make our measure class a friend of the particle system class, adding the following line of code to the top of ``class MetricsDemoSystem : public AmoebotSystem {}`` (Note: For this measure we do not need explicit access to individual particles, so we do not need to make our measure a friend of the ``MetricsDemoParticle`` class):
-
-.. code-block:: c++
-
-  friend class MaxDistanceMeasure;
-
-The completed header file should now look like this:
-
-.. code-block:: c++
-
-  #ifndef AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
-  #define AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
-
-  #include <QString>
-
-  #include "core/amoebotparticle.h"
-  #include "core/amoebotsystem.h"
-
-  class MetricsDemoParticle : public AmoebotParticle {
-    friend class PercentageRedMeasure;
-
-   public:
-    enum class State {
-      Red,
-      Orange,
-      Yellow,
-      Green,
-      Blue,
-      Indigo,
-      Violet
-    };
-
-    // Constructs a new particle with a node position for its head, a global
-    // compass direction from its head to its tail (-1 if contracted), an offset
-    // for its local compass, a system that it belongs to, and a maximum value for
-    // its counter.
-    MetricsDemoParticle(const Node head, const int globalTailDir,
-                      const int orientation, AmoebotSystem& system,
-                      const int counterMax);
-
-    // Executes one particle activation.
-    void activate() override;
-
-    // Functions for altering the particle's color. headMarkColor() (resp.,
-    // tailMarkColor()) returns the color to be used for the ring drawn around the
-    // particle's head (resp., tail) node. In this demo, the tail color simply
-    // matches the head color.
-    int headMarkColor() const override;
-    int tailMarkColor() const override;
-
-    // Returns the string to be displayed when this particle is inspected; used to
-    // snapshot the current values of this particle's memory at runtime.
-    QString inspectionText() const override;
-
-   protected:
-    // Returns a random State.
-    State getRandColor() const;
-
-    // Member variables.
-    State _state;
-    int _counter;
-    const int _counterMax;
-
-   private:
-    friend class MetricsDemoSystem;
-  };
 
   class MetricsDemoSystem : public AmoebotSystem {
-    friend class PercentageRedMeasure;
+    friend class PercentRedMeasure;
     friend class MaxDistanceMeasure;
 
-   public:
-    // Constructs a system of the specified number of MetricsDemoParticles enclosed
-    // by a hexagonal ring of objects.
-    MetricsDemoSystem(unsigned int numParticles = 30, int counterMax = 5);
-
+    // ...
   };
 
-  class PercentageRedMeasure : public Measure {
-
-  public:
-    PercentageRedMeasure(const QString name, const unsigned int freq,
-                         MetricsDemoSystem& system);
-
-    double calculate() const final;
-
-  protected:
-    MetricsDemoSystem& _system;
-  };
+  // ...
 
   class MaxDistanceMeasure : public Measure {
-
-  public:
+   public:
+    // Constructs a MaxDistanceMeasure by using the parent constructor and adding
+    // a reference to the MetricsDemoSystem being measured.
     MaxDistanceMeasure(const QString name, const unsigned int freq,
-                         MetricsDemoSystem& system);
+                       MetricsDemoSystem& system);
 
+    // Calculates the largest Cartesian distance between any pair of particles in
+    // the system.
     double calculate() const final;
 
-  protected:
+   protected:
     MetricsDemoSystem& _system;
   };
 
-  #endif // AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H
-
-Next, moving on to the source file, we need to add our new measure to the top of ``MetricsDemoSystem::MetricsDemoSystem() {}``, using the same parameters as before besides the name:
+Moving on to ``alg/demo/metricsdemo.cpp``, add an instance of ``MaxDistanceMeasure`` to ``MetricsDemoSystem`` in its constructor and define the ``MaxDistanceMeasure`` constructor, just as you did in the last section.
 
 .. code-block:: c++
 
-  _measures.push_back(new MaxDistanceMeasure("Max 2 Particle Dist", 1, *this));
+  MetricsDemoSystem::MetricsDemoSystem(unsigned int numParticles, int counterMax) {
+    // ...
 
-Next, declare our new measure class:
+    // Set up metrics.
+    _counts.push_back(new Count("# Wall Bumps"));
+    _measures.push_back(new PercentRedMeasure("% Red", 1, *this));
+    _measures.push_back(new MaxDistanceMeasure("Max. Distance", 1, *this));
+  }
 
-.. code-block:: c++
+  // ...
 
-  MaxDistanceMeasure::MaxDistanceMeasure(const QString name, const unsigned int freq,
-                                             MetricsDemoSystem& system)
-    : Measure(name, freq),
-      _system(system) {}
+  MaxDistanceMeasure::MaxDistanceMeasure(const QString name,
+                                         const unsigned int freq,
+                                         MetricsDemoSystem& system)
+      : Measure(name, freq),
+        _system(system) {}
 
-Finally, we need to write the measure's ``calculate()`` function.
-
-Before we look at the pseudocode for the ``calculate()`` function, we must consider one very important thing about calculating distance in AmoebotSim.
-The simulator uses a triangular lattice, with the x and y coordinates being determined as follows:
+Finally, we need to write the measure's ``calculate()`` function so that it loops over all pairs of particles and calculates the Cartesian pairwise distance between them, returning the largest such distance.
+(This is as opposed to the L1-distance along edges of the lattice).
+However, as we saw in **DiscoDemo**, particle coordinates are given on the triangular lattice:
 
 .. image:: graphics/coordinates_lattice.jpg
 
-As a result, we need to convert the triangular lattice coordinates to rectangular/Cartesian coordinates before calculating the distance between two points: ::
+As a result, we need to convert the triangular lattice coordinates to Cartesian coordinates before calculating the distance between two points.
+This conversion is given by:::
 
-  x_c = x + (y / 2)
-  y_c = (sqrt(3) / 2) * y
+  x_cart = x_tri + (y_tri / 2)
+  y_cart = (sqrt(3) / 2) * y_tri
 
-The above formulas convert the lattice coordinates (``x`` and ``y``) to Cartesian coordinates (``x_c`` and ``y_c``).
-Once converted to Cartesian coordinates, you can calculate distances between points using the typical distance formula.
-(Note: This method of converting lattice coordinates to Cartesian coordinates and then using the standard distance formula returns the Euclidian distance between the two nodes, not the distance that particles would have to move along the paths of the lattice)
+Once converted to Cartesian coordinates, distance can be calculated using the typical formula.:::
 
-Here is the psuedocode for the ``calculate()`` function of our ``MaxDistanceMeasure``: ::
+  dist = sqrt((x2_cart - x1_cart)^2 + (y2_cart - y1_cart)^2);
 
-  maxDist <- 0
-
-  for (P1 in system.particles) :    // loop through all particles in the system to find the first particle of the pair of particles
-    x1_c = P1.x + (P1.y / 2)    // convert to Cartesian coordinates
-    y1_c = (sqrt(3) / 2) * P1.y
-    for (P2 in system.particles) :    // loop through all particles again to get second particle of the pair
-      x2_c = P2.x + (P2.y / 2)    // convert to Cartesian
-      y2_c = (sqrt(3) / 2) * P2.y
-      dist <- sqrt( ((x2_c - x1_c) * (x2_c - x1_c)) + ((y2_c - y1_c) * (y2_c - y1_c)) )   // distance formula
-      if (dist > maxDist), then do :
-        maxDist <- dist
-      end if
-    end for
-  end for
-
-  return maxDist
-
-Now, the actual code to add to the source file:
+With these pieces in place, the full implementation of the ``calculate()`` function for ``MaxDistanceMeasure`` is straightforward.
+(This particular double for-loop implementation is meant for clarity and not efficiency).
 
 .. code-block:: c++
 
   double MaxDistanceMeasure::calculate() const {
-    double dist;
     double maxDist = 0.0;
-
     for (const auto& p1 : _system.particles) {
-      double x1_c = p1->head.x + p1->head.y/2.0;
-      double y1_c = sqrt(3.0)/2 * p1->head.y;
+      double x1 = p1->head.x + p1->head.y / 2.0;
+      double y1 = std::sqrt(3.0) / 2 * p1->head.y;
       for (const auto& p2 : _system.particles) {
-        double x2_c = p2->head.x + p2->head.y/2.0;
-        double y2_c = sqrt(3.0)/2 * p2->head.y;
-        dist = sqrt( pow((x2_c - x1_c), 2) + pow((y2_c - y1_c), 2) );
-        if (dist > maxDist) {
-          maxDist = dist;
-        }
+        double x2 = p2->head.x + p2->head.y / 2.0;
+        double y2 = std::sqrt(3.0) / 2 * p2->head.y;
+        maxDist = std::max(std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2)),
+                           maxDist);
       }
     }
 
     return maxDist;
   }
 
-With everything, your ``metricsdemo.cpp`` file should now look like this:
+This completes **MetricsDemo**, which now has all three of its custom metrics. Great job!
 
-.. code-block:: c++
+.. image:: graphics/metricsanimation.gif
 
-  /* Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
-   * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
-   * notice can be found at the top of main/main.cpp. */
-
-  #include "alg/demo/metricsdemo.h"
-
-  MetricsDemoParticle::MetricsDemoParticle(const Node head, const int globalTailDir,
-                                       const int orientation,
-                                       AmoebotSystem& system,
-                                       const int counterMax)
-      : AmoebotParticle(head, globalTailDir, orientation, system),
-        _counter(counterMax),
-        _counterMax(counterMax) {
-    _state = getRandColor();
-  }
-
-  void MetricsDemoParticle::activate() {
-    // First decrement the particle's counter. If it's zero, reset the counter and
-    // get a new color.
-    _counter--;
-    if (_counter == 0) {
-      _counter = _counterMax;
-      _state = getRandColor();
-    }
-
-    // Next, handle movement. If the particle is contracted, choose a random
-    // direction to try to expand towards, but only do so if the node in that
-    // direction is unoccupied. Otherwise, if the particle is expanded, simply
-    // contract its tail.
-    if (isContracted()) {
-      int expandDir = randDir();
-      if (canExpand(expandDir)) {
-        expand(expandDir);
-      } else {
-        if (hasObjectAtLabel(expandDir)) {
-          system.getCount("# Bumps Into Wall").record();
-        }
-      }
-    } else {  // isExpanded().
-      contractTail();
-    }
-  }
-
-  int MetricsDemoParticle::headMarkColor() const {
-    switch(_state) {
-      case State::Red:    return 0xff0000;
-      case State::Orange: return 0xff9000;
-      case State::Yellow: return 0xffff00;
-      case State::Green:  return 0x00ff00;
-      case State::Blue:   return 0x0000ff;
-      case State::Indigo: return 0x4b0082;
-      case State::Violet: return 0xbb00ff;
-    }
-
-    return -1;
-  }
-
-  int MetricsDemoParticle::tailMarkColor() const {
-    return headMarkColor();
-  }
-
-  QString MetricsDemoParticle::inspectionText() const {
-    QString text;
-    text += "Global Info:\n";
-    text += "  head: (" + QString::number(head.x) + ", "
-                        + QString::number(head.y) + ")\n";
-    text += "  orientation: " + QString::number(orientation) + "\n";
-    text += "  globalTailDir: " + QString::number(globalTailDir) + "\n\n";
-    text += "Local Info:\n";
-    text += "  state: ";
-    text += [this](){
-      switch(_state) {
-        case State::Red:    return "red\n";
-        case State::Orange: return "orange\n";
-        case State::Yellow: return "yellow\n";
-        case State::Green:  return "green\n";
-        case State::Blue:   return "blue\n";
-        case State::Indigo: return "indigo\n";
-        case State::Violet: return "violet\n";
-      }
-      return "no state\n";
-    }();
-    text += "  counter: " + QString::number(_counter);
-
-    return text;
-  }
-
-  MetricsDemoParticle::State MetricsDemoParticle::getRandColor() const {
-    // Randomly select an integer and return the corresponding state via casting.
-    return static_cast<State>(randInt(0, 7));
-  }
-
-  MetricsDemoSystem::MetricsDemoSystem(unsigned int numParticles, int counterMax) {
-    _counts.push_back(new Count("# Bumps Into Wall"));
-    _measures.push_back(new PercentageRedMeasure("Percentage Red", 1, *this));
-    _measures.push_back(new MaxDistanceMeasure("Max 2 Particle Dist", 1, *this));
-
-    // In order to enclose an area that's roughly 3.7x the # of particles using a
-    // regular hexagon, the hexagon should have side length 1.4*sqrt(# particles).
-    int sideLen = static_cast<int>(std::round(1.4 * std::sqrt(numParticles)));
-    Node boundNode(0, 0);
-    for (int dir = 0; dir < 6; ++dir) {
-      for (int i = 0; i < sideLen; ++i) {
-        insert(new Object(boundNode));
-        boundNode = boundNode.nodeInDir(dir);
-      }
-    }
-
-    // Let s be the bounding hexagon side length. When the hexagon is created as
-    // above, the nodes (x,y) strictly within the hexagon have (i) -s < x < s,
-    // (ii) 0 < y < 2s, and (iii) 0 < x+y < 2s. Choose interior nodes at random to
-    // place particles, ensuring at most one particle is placed at each node.
-    std::set<Node> occupied;
-    while (occupied.size() < numParticles) {
-      // First, choose an x and y position at random from the (i) and (ii) bounds.
-      int x = randInt(-sideLen + 1, sideLen);
-      int y = randInt(1, 2 * sideLen);
-      Node node(x, y);
-
-      // If the node satisfies (iii) and is unoccupied, place a particle there.
-      if (0 < x + y && x + y < 2 * sideLen
-          && occupied.find(node) == occupied.end()) {
-        insert(new MetricsDemoParticle(node, -1, randDir(), *this, counterMax));
-        occupied.insert(node);
-      }
-    }
-  }
-
-  PercentageRedMeasure::PercentageRedMeasure(const QString name, const unsigned int freq,
-                                             MetricsDemoSystem& system)
-    : Measure(name, freq),
-      _system(system) {}
-
-  double PercentageRedMeasure::calculate() const {
-    int numRed = 0;
-
-    for (const auto& p : _system.particles) {
-      auto metr_p = dynamic_cast<MetricsDemoParticle*>(p);
-      if (metr_p->_state == MetricsDemoParticle::State::Red) {
-        numRed++;
-      }
-    }
-
-    return ( (double(numRed) / double(_system.size())) * 100);
-  }
-
-  MaxDistanceMeasure::MaxDistanceMeasure(const QString name, const unsigned int freq,
-                                             MetricsDemoSystem& system)
-    : Measure(name, freq),
-      _system(system) {}
-
-  double MaxDistanceMeasure::calculate() const {
-    double dist;
-    double maxDist = 0.0;
-
-    for (const auto& p1 : _system.particles) {
-      double x1_c = p1->head.x + p1->head.y/2.0;
-      double y1_c = sqrt(3.0)/2 * p1->head.y;
-      for (const auto& p2 : _system.particles) {
-        double x2_c = p2->head.x + p2->head.y/2.0;
-        double y2_c = sqrt(3.0)/2 * p2->head.y;
-        dist = sqrt( pow((x2_c - x1_c), 2) + pow((y2_c - y1_c), 2) );
-        if (dist > maxDist) {
-          maxDist = dist;
-        }
-      }
-    }
-
-    return maxDist;
-  }
-
-Run the simulation and you should now see your new measure, "Max 2 Particle Dist"!
-
-.. image:: graphics/metrics_measure2.gif
 
 Exporting Data
 ^^^^^^^^^^^^^^
 
 AmoebotSim automatically tracks metrics and stores their historical data, which can be exported as a JSON for further analysis or plotting.
-To export metrics data, you can either use the GUI Metrics button (shown below) or use the shortcut Ctrl+E/Cmd+E.
+To export metrics data, you can either use the *Metrics* button (shown below) or use the keyboard shortcut ``Ctrl+E`` on Windows or ``Cmd+E`` on macOS.
 
 .. image:: graphics/metrics_exportButton.png
 
-This writes the metrics file with all of the historical data as ``your_AmoebotSim_build_directory/debug/metrics/metrics_<secs_since_epoch>.json`` (debug is assuming that the simulator has been built and run in the debug mode in Qt, as opposed to profile or release).
-
-Under Usage, see :ref:`"Exporting Metrics Data" <usage-export-metrics-data>` for the specific structure of these JSON files.
+This writes the metrics file with all of the historical data as ``your_build_directory/metrics/metrics_<secs_since_epoch>.json``.
+You can read more about the structure and format of these JSON data files under :ref:`Exporting Metrics Data <usage-export-metrics-data>` in Usage.
+The exported data can then be post-processed, analyzed, and plotted using your favorite analysis tools (e.g., `matplotlib <https://matplotlib.org/>`_, `MATLAB <https://www.mathworks.com/products/matlab.html>`_, etc.).

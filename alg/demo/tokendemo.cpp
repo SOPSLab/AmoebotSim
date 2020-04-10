@@ -4,7 +4,7 @@
 
 #include "alg/demo/tokendemo.h"
 
-TokenDemoParticle::TokenDemoParticle(const Node head, const int globalTailDir,
+TokenDemoParticle::TokenDemoParticle(const Node& head, const int globalTailDir,
                                      const int orientation,
                                      AmoebotSystem& system)
   : AmoebotParticle(head, globalTailDir, orientation, system) {}
