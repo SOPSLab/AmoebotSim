@@ -299,7 +299,7 @@ ApplicationWindow {
             id: metricValue
             width: sidebar.width - 15 - metricName.width
             color: "black"
-            text: model.modelData[1]
+            text: Math.round(model.modelData[1] * 10000) / 10000
           }
         }
       }

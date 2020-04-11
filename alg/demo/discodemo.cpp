@@ -4,7 +4,7 @@
 
 #include "alg/demo/discodemo.h"
 
-DiscoDemoParticle::DiscoDemoParticle(const Node head, const int globalTailDir,
+DiscoDemoParticle::DiscoDemoParticle(const Node& head, const int globalTailDir,
                                      const int orientation,
                                      AmoebotSystem& system,
                                      const int counterMax)

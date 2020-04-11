@@ -35,7 +35,7 @@ class DiscoDemoParticle : public AmoebotParticle {
   // compass direction from its head to its tail (-1 if contracted), an offset
   // for its local compass, a system that it belongs to, and a maximum value for
   // its counter.
-  DiscoDemoParticle(const Node head, const int globalTailDir,
+  DiscoDemoParticle(const Node& head, const int globalTailDir,
                     const int orientation, AmoebotSystem& system,
                     const int counterMax);
 
