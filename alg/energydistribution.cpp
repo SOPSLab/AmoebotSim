@@ -7,7 +7,7 @@ EnergyDistributionParticle::EnergyDistributionParticle(
     AmoebotSystem& system, const double harvestRate, const double inhibitedRate,
     const double capacity, const double threshold,
     const double environmentEnergy, const double GDH, const int signalSpeed,
-    const State state)
+    const State state, const int systemType)
   : AmoebotParticle (head, globalTailDir, orientation, system),
     _harvestRate(harvestRate),
     _inhibitedRate(inhibitedRate),
@@ -24,8 +24,12 @@ EnergyDistributionParticle::EnergyDistributionParticle(
     _inhibit(false),
     _signalTimer(signalSpeed),
     _state(state),
-    _parentDir(-1) {
+    _systemType(systemType),
+    _parentDir(-1)
+
+{
   _colorState = -1;  // TODO: remove this.
+
 }
 
 void EnergyDistributionParticle::activate() {
@@ -51,7 +55,9 @@ void EnergyDistributionParticle::activate() {
       harvestEnergy();
       harvestRegulant();
       produceRegulant();
-      reproduce();
+      if(_systemType){
+        reproduce();
+      }
     }
   }
 }
@@ -296,7 +302,8 @@ void EnergyDistributionParticle::harvestRegulant(){
 }
 
 void EnergyDistributionParticle::produceRegulant() {
-  if ((_energyBattery >= 1) &&
+
+    if ((_energyBattery >= 1) &&
       (std::min(_regulantBattery, _regulantBuffer) < _capacity)) {  // TODO: can also do <= _threshold here.
     _energyBattery -= (std::min(_harvestRate, (_capacity - _regulantBattery) / _GDH)
                        + std::min(1 - _harvestRate, (_capacity - _regulantBuffer) / _GDH));
@@ -327,7 +334,8 @@ void EnergyDistributionParticle::reproduce() {
                     head.nodeInDir(localToGlobalDir(reproduceDir)), -1,
                     randDir(), system, _harvestRate, _inhibitedRate, _capacity,
                     _threshold, _environmentEnergy, _GDH, _signalSpeed,
-                    State::Idle));
+                    State::Idle,_systemType));
+    system.getCount("# Particles").record();
   }
 }
 
@@ -498,275 +506,77 @@ int EnergyDistributionParticle::interpolate(int color1, int color2, double inten
 }
 
 EnergyDistributionSystem::EnergyDistributionSystem(
-    const double harvestRate, const double inhibitedRate, const double capacity,
-    const double threshold, const double environmentEnergy, const double GDH,
-    const int signalSpeed) {
-  // Initialize the root particle.
-  Node origin(0, 0);
-  insert(new EnergyDistributionParticle(
-           origin, -1, randDir(), *this, harvestRate, inhibitedRate, capacity,
-           threshold, environmentEnergy, GDH, signalSpeed,
-           EnergyDistributionParticle::State::Root));
+    const int numParticles, const int systemType, const double harvestRate,
+        const double inhibitedRate, const double capacity, const double threshold,
+        const double environmentEnergy,const double GDH,const int signalSpeed) {
 
-  // Initialize the surrounding particles.
-  for (int dir = 0; dir < 6; dir++) {
-    insert(new EnergyDistributionParticle(
-             origin.nodeInDir(dir), -1, randDir(), *this, harvestRate,
-             inhibitedRate, capacity, threshold, environmentEnergy, GDH,
-             signalSpeed, EnergyDistributionParticle::State::Idle));
+
+  _counts.push_back(new Count("# Particles"));
+  int x, y;
+  for (int i = 1; i <= numParticles; ++i) {
+    int layer = 1;
+    int position = i - 1;
+    while (position - (6 * layer) >= 0) {
+      position -= 6 * layer;
+      ++layer;
+    }
+
+    switch(position / layer) {
+      case 0: {
+        x = layer;
+        y = (position % layer) - layer;
+        if (position % layer == 0) {x -= 1; y += 1;}  // Corner case.
+        break;
+      }
+      case 1: {
+        x = layer - (position % layer);
+        y = position % layer;
+        break;
+      }
+      case 2: {
+        x = -1 * (position % layer);
+        y = layer;
+        break;
+      }
+      case 3: {
+        x = -1 * layer;
+        y = layer - (position % layer);
+        break;
+      }
+      case 4: {
+        x = (position % layer) - layer;
+        y = -1 * (position % layer);
+        break;
+      }
+      case 5: {
+        x = (position % layer);
+        y = -1 * layer;
+        break;
+      }
+    }
+    if(x==0&&y==0){
+        insert(new EnergyDistributionParticle(
+                 Node(x,y), -1, randDir(), *this, harvestRate,
+                 inhibitedRate, capacity, threshold, environmentEnergy, GDH,
+                 signalSpeed, EnergyDistributionParticle::State::Root,systemType));
+    }
+    else{
+        insert(new EnergyDistributionParticle(
+                 Node(x,y), -1, randDir(), *this, harvestRate,
+                 inhibitedRate, capacity, threshold, environmentEnergy, GDH,
+                 signalSpeed, EnergyDistributionParticle::State::Idle,systemType));
+    }
   }
+  getCount("# Particles").record(numParticles);
 }
-
-/* OLD CODE */
 
 /*
-void EnergyParticle::activate(){
-    //Check signal
-    if(_signalTimer == 0){
-        _signalTimer = _signalSpeed;
-        //We want stressed particles in interior to always be able to eat
-        if(_stressRoot){
-            _canEat = true;
-        }
-        if(_canEat){
-           _effectiveRate = _consumptionRate;
-        }
-        else{
-            _effectiveRate = _restrictedRate*_inhibitedReuptakeRate;
-        }
-        if(_consumedGlutamate >= _hungerThreshold){
-            _effectiveRate = 0.0;
-        }
-        //Consume Glutamate
-        if(hasEmptyNeighbor() != -1){
-            _consumedGlutamate = fmin(_consumedGlutamate + (_environmentalGlutamate*_effectiveRate),_energyStorageCap);
-            _remainingGlutamate = fmin(_remainingGlutamate + (_environmentalGlutamate*(1-_effectiveRate)),_energyStorageCap);
-            updateState();
-        }
-        else{
-            EnergyParticle* m = argMax(1);
-            if(m != nullptr){
-                if(m->_remainingGlutamate==_energyStorageCap){
-                    double temp =_consumedGlutamate;
-                    _consumedGlutamate = fmin(_consumedGlutamate + (m->_remainingGlutamate * _effectiveRate),_energyStorageCap);
-                    double delta = _consumedGlutamate-temp;
-                    m->_remainingGlutamate -= delta;
-                    temp = _remainingGlutamate;
-                    _remainingGlutamate = fmin(_remainingGlutamate + (m->_remainingGlutamate * (1-_effectiveRate)),_energyStorageCap);
-                    delta = _remainingGlutamate-temp;
-                    m->_remainingGlutamate -= delta;
-                    m->updateState();
-                    updateState();
-                }
-            }
-        }
-        if(_canEat){
-           _effectiveRate = _consumptionRate;
-        }
-        else{
-            _effectiveRate = _restrictedRate;
-        }
-        if(_consumedAmmonium >= _hungerThreshold){
-            _effectiveRate = 0.0;
-        }
-        //Consume Ammonium
-        EnergyParticle* m = argMax(0);
-        if(m != nullptr){
-            if(m->_remainingAmmonium==_energyStorageCap){
-                double temp = _consumedAmmonium;
-                _consumedAmmonium = fmin(_consumedAmmonium+(m->_remainingAmmonium * _effectiveRate),_energyStorageCap);
-                double delta = _consumedAmmonium-temp;
-                m->_remainingAmmonium -= delta;
-                temp = _remainingAmmonium;
-                _remainingAmmonium = fmin(_remainingAmmonium + (m->_remainingAmmonium * (1-_effectiveRate)),_energyStorageCap);
-                delta = _remainingAmmonium-temp;
-                m->_remainingAmmonium -= delta;
-                m->updateState();
-                updateState();
-            }
-        }
-        //Production Routine
-        //Reproduce
-        int emptyNeighborDir = hasEmptyNeighbor();
-        if(_inTelophase){
-            if(doGlobalAnalysis){
-                globalInteriorEnergy();
-            }
-            _prevX = this->head.x;
-            _prevY = this->head.y;
-            contractHead();
-            for(int i = 0; i < 6; ++i){
-                if (_children[i] == nullptr){
-                    _children[i] = &mitosis(_prevX,_prevY);
-                    _children[i]->_parent = this;
-                    break;
-                }
-            }
-            _inTelophase = false;
-            _prevX = _prevY = -1;
-        }
-        else if(emptyNeighborDir != -1 && _consumedGlutamate >= _hungerThreshold && _consumedAmmonium >= _hungerThreshold){
-            expand(emptyNeighborDir);
-            _consumedGlutamate = _consumedGlutamate - _hungerThreshold;
-            _consumedAmmonium = _consumedAmmonium - _hungerThreshold;
-            _inTelophase = true;
-        }
-        //Produce Ammonium
-        if(_consumedGlutamate >= _glutamateCost && hasEmptyNeighbor() == -1 && (_remainingAmmonium < _energyStorageCap || _consumedAmmonium < _energyStorageCap)){
-            _consumedAmmonium = fmin(_consumedAmmonium+(_consumptionRate*_ammoniumBenefit),_energyStorageCap);
-            _remainingAmmonium = fmin(_remainingAmmonium+((1.0-_consumptionRate)*_ammoniumBenefit),_energyStorageCap);
-            _consumedGlutamate-=_glutamateCost;
-            updateState();
-        }
-        else if(hasEmptyNeighbor() != -1 && _consumedGlutamate >= _glutamateCost){
-            _consumedGlutamate -= _glutamateCost;
-        }
-        //Cost of Living
-        //_consumedGlutamate -= 0.5;
-        //_consumedAmmonium -= 0.5;
-    }
-    else{
-        _signalTimer--;
-    }
-
-    //Message Passing via ion channels
-    //Hunger triggers root stress
-    if(hasEmptyNeighbor()==-1 && _consumedGlutamate<_hungerThreshold){
-        _stressRoot = true;
-    }
-    //Propagate stress signal to root
-    if(_stressRoot){
-        if(_parent != nullptr){
-            _parent->_stressRoot = true;
-        }
-        else{
-            _stressed = true;
-        }
-    }
-    //System Stress originate from the root. Root checks if any of its neighbors ancestors are stressed. If not, it becomes unstressed, freeing the system,
-    //Stress signal only goes one way. (Toward chilrdren)
-    if(_parent == nullptr){
-        if(_stressRoot){
-            bool stressCheck = false;
-            for(int i = 0; i < 6; ++i){
-                if(_children[i] != nullptr){
-                    if(_children[i]->_stressRoot && _children[i]->hasEmptyNeighbor()==-1){
-                        stressCheck = true;
-                    }
-                }
-            }
-            if(!stressCheck){
-                _stressed = false;
-            }
-        }
-    }
-    //No longer hungry, stop stressing root
-    if(_stressRoot && _consumedGlutamate >= _hungerThreshold){
-        _stressRoot = false;
-    }
-
-    //Propagate either halting signal or resuming signal
-    if(_stressed){
-        for(int i = 0; i< 6; ++i){
-            if(_children[i]!=nullptr){
-                _children[i]->_stressed = true;
-                if(_children[i]->hasEmptyNeighbor()!=-1){
-                    _children[i]->_canEat = false;
-                }
-            }
-        }
-    }
-    else{
-        for(int i = 0; i< 6; ++i){
-            if(_children[i]!=nullptr){
-                _children[i]->_stressed = false;
-                _children[i]->_canEat = true;
-            }
-        }
-    }
-
-
-    //Gather global data
-    if(doGlobalAnalysis){
-       // globalMetrics();
-    }
-}
-
-EnergyDistributionSystem::EnergyDistributionSystem(double consumptionRate, double restrictedRate,
-                                     double hungerThreshold, double energyStorageCap,
-                                     double environmentalGlutamate, double glutamateCost, double ammoniumBenefit, double inhibitedReuptakeRate, int signalSpeed) {
-  list<EnergyDistributionParticle*> allParticles;
-    int x, y;
-    for (int i = 1; i <= numParticles; ++i) {
-      int layer = 1;
-      int position = i - 1;
-      while (position - (6 * layer) >= 0) {
-        position -= 6 * layer;
-        ++layer;
-      }
-
-      switch(position / layer) {
-        case 0: {
-          x = layer;
-          y = (position % layer) - layer;
-          if (position % layer == 0) {x -= 1; y += 1;}  // Corner case.
-          break;
-        }
-        case 1: {
-          x = layer - (position % layer);
-          y = position % layer;
-          break;
-        }
-        case 2: {
-          x = -1 * (position % layer);
-          y = layer;
-          break;
-        }
-        case 3: {
-          x = -1 * layer;
-          y = layer - (position % layer);
-          break;
-        }
-        case 4: {
-          x = (position % layer) - layer;
-          y = -1 * (position % layer);
-          break;
-        }
-        case 5: {
-          x = (position % layer);
-          y = -1 * layer;
-          break;
-        }
-      }
-      if i = 1 put it in as root, else put in as idle
-      insert(new CompressionParticle(Node(x, y), -1, randDir(), *this, lambda));
-
-    //Place Root on periphery
-    allParticles.back()->_parent = nullptr;
-    allParticles.back()->_children[0] = root;
-    root->_parent = allParticles.back();
-    root->_children[6]=nullptr;
-
-    //Initialize outer 12 particles
-    for(int k = 0; k < 6; ++k){
-        for(int i = 0; i<6;++i){
-            for(int j=0; j < 6; ++j){
-                int expandDir = randDir();
-                if(!particles[k]->hasNbrAtLabel(expandDir)){
-                    particles[k]->expandInit(expandDir);
-                    int x = particles[k]->head.x;
-                    int y = particles[k]->head.y;
-                    particles[k]->contractInit();
-                    EnergyParticle* p = &particles[k]->mitosis(x,y);
-                    p->_parent = particles[k];
-                    particles[k]->_children[i] = p;
-                    break;
-                }
-            }
-        }
-    }
-//    numTotalParticles = numPrevParticles = 7;
-    //this->_numMovements = 0;
-    //file.open ("special_data.txt");
-}
+    //Use threshold 5 for flickering
+  double conversionrate = 3.0;
+  if(_energyBattery >= conversionrate  && (_regulantBattery < _capacity || _regulantBuffer < _capacity)){
+      _regulantBattery = fmin(_regulantBattery+(_harvestRate*_GDH),_capacity);
+      _regulantBuffer = fmin(_regulantBuffer+((1.0-_harvestRate)*_GDH),_capacity);
+      _energyBattery-=conversionrate;
+      updateState();
+  }
 */

@@ -124,20 +124,26 @@ void CompressionAlg::instantiate(const int numParticles, const double lambda) {
 
 EnergyDistributionAlg::EnergyDistributionAlg()
     : Algorithm("Energy Distribution", "energydist") {
+  addParameter("# of Particles","19");
+  addParameter("System Type","1");
   addParameter("Harvest Rate", "0.9");
   addParameter("Inhibited Rate", "0.0");
   addParameter("Capacity", "100.0");
-  addParameter("Threshold", "70.0");
+  addParameter("Threshold", "5.0");
   addParameter("Environment Energy", "5.0");
   addParameter("GDH", "10.0");
   addParameter("Signal Speed", "8");
 }
 
 void EnergyDistributionAlg::instantiate(
-    const double harvestRate, const double inhibitedRate, const double capacity,
-    const double threshold, const double environmentEnergy, const double GDH,
-    const int signalSpeed) {
-  if (harvestRate <= 0 || harvestRate > 1) {
+    const int numParticles, const int systemType, const double harvestRate,
+    const double inhibitedRate, const double capacity, const double threshold,
+    const double environmentEnergy,const double GDH,const int signalSpeed) {
+    if(numParticles<1){
+    emit log("number of particles must be positive");
+  } else if (systemType!=0 && systemType!=1){
+    emit log("please choose 0 or 1");
+  } else if (harvestRate <= 0 || harvestRate > 1) {
     emit log("harvestRate must be in (0,1]", true);
   } else if (inhibitedRate < 0 || inhibitedRate > harvestRate) {
     emit log("inhibitedRate must be in [0,harvestRate]", true);
@@ -153,6 +159,7 @@ void EnergyDistributionAlg::instantiate(
     emit log("signalSpeed must be >= 1", true);
   } else {
     emit setSystem(std::make_shared<EnergyDistributionSystem>(
+                     numParticles,systemType,
                      harvestRate, inhibitedRate, capacity, threshold,
                      environmentEnergy, GDH, signalSpeed));
   }

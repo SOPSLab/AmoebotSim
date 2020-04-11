@@ -28,7 +28,8 @@ class EnergyDistributionParticle : public AmoebotParticle {
                              const double capacity, const double threshold,
                              const double environmentEnergy,
                              const double GDH, const int signalSpeed,
-                             const State state);
+                             const State state,
+                             const int systemType);
 
   // Executes one particle activation.
   void activate() override;
@@ -84,6 +85,7 @@ class EnergyDistributionParticle : public AmoebotParticle {
   const double _environmentEnergy;
   const double _GDH;
   const int _signalSpeed;
+  const int _systemType;
 
   // Local variables.
   double _energyBattery;
@@ -106,12 +108,15 @@ class EnergyDistributionParticle : public AmoebotParticle {
 };
 
 class EnergyDistributionSystem : public AmoebotSystem {
+
  public:
-  EnergyDistributionSystem(const double harvestRate, const double inhibitedRate,
+  EnergyDistributionSystem(int numParticles, int systemType,
+                           const double harvestRate,const double inhibitedRate,
                            const double capacity, const double threshold,
                            const double environmentEnergy, const double GDH,
                            const int signalSpeed);
 };
+
 
 #endif  // ALG_ENERGYDISTRIBUTION_H_
 

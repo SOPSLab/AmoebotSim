@@ -111,9 +111,11 @@ class EnergyDistributionAlg : public Algorithm {
   EnergyDistributionAlg();
 
  public slots:
-  void instantiate(const double harvestRate = 0.9,
+  void instantiate(const int numParticles = 19,
+                   const int systemType = 1,
+                   const double harvestRate = 0.9,
                    const double inhibitedRate = 0,
-                   const double capacity = 100, const double threshold = 70,
+                   const double capacity = 100, const double threshold = 5,
                    const double environmentEnergy = 5, const double GDH = 10,
                    const int signalSpeed = 8);
 };
