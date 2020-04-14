@@ -2,7 +2,7 @@
 name: Feature Request
 about: I'd like a new feature or functionality added.
 title: "[One sentence summarizing the new feature.]"
-labels: feature-2d
+labels: feature
 assignees: ''
 
 ---
