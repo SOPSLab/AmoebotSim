@@ -1,5 +1,5 @@
 #include "alg/energydistribution.h"
-
+#include <math.h>
 #include <algorithm>  // for std::min, std::max.
 
 EnergyDistributionParticle::EnergyDistributionParticle(
@@ -28,8 +28,6 @@ EnergyDistributionParticle::EnergyDistributionParticle(
     _parentDir(-1)
 
 {
-  _colorState = -1;  // TODO: remove this.
-
 }
 
 void EnergyDistributionParticle::activate() {
@@ -63,59 +61,25 @@ void EnergyDistributionParticle::activate() {
 }
 
 int EnergyDistributionParticle::headMarkColor() const {
-  int color = 0x00FF00;
-  int color2 = 0x00FFFF;
-  int color3 = 0xFF0000;
-
-  switch(_colorState) {
-    case 0:  return 800080;
-    case 1:  return interpolate(0xFFFFFF,color,1.0);
-    case 2:  return interpolate(0xFFFFFF,color,0.9);
-    case 3:  return interpolate(0xFFFFFF,color,0.8);
-    case 4:  return interpolate(0xFFFFFF,color,0.7);
-    case 5:  return interpolate(0xFFFFFF,color,0.6);
-    case 6:  return interpolate(0xFFFFFF,color,0.5);
-    case 7:  return interpolate(0xFFFFFF,color,0.4);
-    case 8:  return interpolate(0xFFFFFF,color,0.3);
-    case 9:  return interpolate(0xFFFFFF,color,0.27);
-    case 10: return interpolate(0xFFFFFF,color,0.25);
-    case 11: return interpolate(0xFFFFFF,color,0.24);
-    case 12: return interpolate(0xFFFFFF,color,0.22);
-    case 13: return interpolate(0xFFFFFF,color,0.2);
-    case 14: return interpolate(0xFFFFFF,color,0.15);
-
-    case 15: return interpolate(0xFFFFFF,color2,1.0);
-    case 16: return interpolate(0xFFFFFF,color2,0.9);
-    case 17: return interpolate(0xFFFFFF,color2,0.8);
-    case 18: return interpolate(0xFFFFFF,color2,0.7);
-    case 19: return interpolate(0xFFFFFF,color2,0.6);
-    case 20: return interpolate(0xFFFFFF,color2,0.5);
-    case 21: return interpolate(0xFFFFFF,color2,0.4);
-    case 22: return interpolate(0xFFFFFF,color2,0.3);
-    case 23: return interpolate(0xFFFFFF,color2,0.27);
-    case 24: return interpolate(0xFFFFFF,color2,0.25);
-    case 25: return interpolate(0xFFFFFF,color2,0.24);
-    case 26: return interpolate(0xFFFFFF,color2,0.22);
-    case 27: return interpolate(0xFFFFFF,color2,0.2);
-    case 28: return interpolate(0xFFFFFF,color2,0.15);
-
-    case 29: return interpolate(0xFFFFFF,color3,1.0);
-    case 30: return interpolate(0xFFFFFF,color3,0.9);
-    case 31: return interpolate(0xFFFFFF,color3,0.8);
-    case 32: return interpolate(0xFFFFFF,color3,0.7);
-    case 33: return interpolate(0xFFFFFF,color3,0.6);
-    case 34: return interpolate(0xFFFFFF,color3,0.5);
-    case 35: return interpolate(0xFFFFFF,color3,0.4);
-    case 36: return interpolate(0xFFFFFF,color3,0.3);
-    case 37: return interpolate(0xFFFFFF,color3,0.27);
-    case 38: return interpolate(0xFFFFFF,color3,0.25);
-    case 39: return interpolate(0xFFFFFF,color3,0.24);
-    case 40: return interpolate(0xFFFFFF,color3,0.22);
-    case 41: return interpolate(0xFFFFFF,color3,0.2);
-    case 42: return interpolate(0xFFFFFF,color3,0.15);
+  int stressColor = 0xFF0000;
+  int standardColor = 0x00FFFF;
+  int rootColor = 0x000000;
+  double glutamine = std::min(_energyBattery, _regulantBattery);
+  if(_state==State::Root){
+    return interpolate(0xFFFFFF,rootColor,EnergyDistributionParticle::opacity(glutamine,_threshold));
   }
-
+  else if(_stress){
+    return interpolate(0xFFFFFF,stressColor,EnergyDistributionParticle::opacity(glutamine,_threshold));
+  }
+  else{
+    return interpolate(0xFFFFFF,standardColor,EnergyDistributionParticle::opacity(glutamine,_threshold));
+  }
   return -1;
+}
+
+double EnergyDistributionParticle::opacity(double energy,double threshold) const{
+    double minimum = 0.15;
+    return fmax(fmin(((exp(energy-threshold)-1)/(exp(energy-threshold)+1))+1,threshold),minimum);
 }
 
 int EnergyDistributionParticle::headMarkDir() const {
@@ -232,7 +196,6 @@ void EnergyDistributionParticle::harvestEnergy(){
                               _capacity);
     _energyBuffer = std::min(_energyBuffer + (1 - rate) * _environmentEnergy,
                              _capacity);
-    updateState();  // TODO: remove later.
   } else {
     // Look for a neighbor with a full energy buffer.
     int fullNbrDir = -1;
@@ -251,10 +214,6 @@ void EnergyDistributionParticle::harvestEnergy(){
            + std::min((1 - rate) * _capacity, _capacity - _energyBuffer));
       _energyBattery = std::min(_energyBattery + rate * _capacity, _capacity);
       _energyBuffer = std::min(_energyBuffer + (1 - rate) * _capacity, _capacity);
-
-      // TODO: remove later.
-      nbrAtLabel(fullNbrDir).updateState();
-      updateState();
     }
   }
 }
@@ -288,16 +247,11 @@ void EnergyDistributionParticle::harvestRegulant(){
          + std::min((1 - rate) * _capacity, _capacity - _regulantBuffer));
     _regulantBattery = std::min(_regulantBattery + rate * _capacity, _capacity);
     _regulantBuffer = std::min(_regulantBuffer + (1 - rate) * _capacity, _capacity);
-
-    // TODO: remove later.
-    nbrAtLabel(fullNbrDir).updateState();
-    updateState();
   }
 
   // Futile cycle causes peripheral particles to leak regulant.
   if (isOnPeriphery()) {
     _regulantBattery = std::max(_regulantBattery - _GDH, 0.0);
-    updateState();  // TODO: remove later.
   }
 }
 
@@ -309,7 +263,6 @@ void EnergyDistributionParticle::produceRegulant() {
                        + std::min(1 - _harvestRate, (_capacity - _regulantBuffer) / _GDH));
     _regulantBattery = std::min(_regulantBattery + _harvestRate * _GDH, _capacity);
     _regulantBuffer = std::min(_regulantBuffer + (1 - _harvestRate) * _GDH, _capacity);
-    updateState();  // TODO: Remove later
   }
 }
 
@@ -318,7 +271,6 @@ void EnergyDistributionParticle::reproduce() {
     // Pay the energy cost of reproduction.
     _energyBattery -= _threshold;
     _regulantBattery -= _threshold;
-    updateState();  // TODO: remove.
 
     // Find an unoccupied neighboring position.
     int reproduceDir = -1;
@@ -347,140 +299,6 @@ bool EnergyDistributionParticle::isOnPeriphery() const {
   }
 
   return false;
-}
-
-void EnergyDistributionParticle::updateState() {
-  double bracket = _threshold / 14.0;
-  double glutamine = std::min(_energyBattery, _regulantBattery);
-  if (_parentDir == -1) {
-    if (glutamine < bracket) {
-        _colorState = 42;
-    } else if (glutamine < 2 * bracket) {
-        _colorState = 41;
-    } else if (glutamine < 3 * bracket) {
-        _colorState = 40;
-    } else if (glutamine < 4 * bracket) {
-        _colorState = 39;
-    }
-    else if(glutamine < 5*bracket){
-        _colorState = 38;
-    }
-    else if(glutamine < 6*bracket){
-        _colorState =  37;
-    }
-    else if(glutamine < 7*bracket){
-        _colorState = 36;
-    }
-    else if(glutamine < 8*bracket){
-       _colorState = 35;
-    }
-    else if(glutamine < 9*bracket){
-        _colorState = 34;
-    }
-    else if(glutamine < 10*bracket){
-        _colorState = 33;
-    }
-    else if(glutamine < 11*bracket){
-        _colorState = 32;
-    }
-    else if(glutamine < 12*bracket){
-        _colorState = 31;
-    }
-    else if(glutamine < 13*bracket){
-        _colorState = 30;
-    }
-    else if(glutamine <= _capacity){
-        _colorState = 29;
-    }
-  }
-  else if(!isOnPeriphery()){
-      if(glutamine < bracket){
-          _colorState = 14;
-      }
-      else if(glutamine < 2*bracket){
-          _colorState = 13;
-      }
-      else if(glutamine < 3*bracket){
-          _colorState = 12;
-      }
-      else if(glutamine < 4*bracket){
-          _colorState = 11;
-      }
-      else if(glutamine < 5*bracket){
-          _colorState = 10;
-      }
-      else if(glutamine < 6*bracket){
-          _colorState =  9;
-      }
-      else if(glutamine < 7*bracket){
-          _colorState = 8;
-      }
-      else if(glutamine < 8*bracket){
-         _colorState = 7;
-      }
-      else if(glutamine < 9*bracket){
-          _colorState = 6;
-      }
-      else if(glutamine < 10*bracket){
-          _colorState = 5;
-      }
-      else if(glutamine < 11*bracket){
-          _colorState = 4;
-      }
-      else if(glutamine < 12*bracket){
-          _colorState = 3;
-      }
-      else if(glutamine < 13*bracket){
-          _colorState = 2;
-      }
-      else if(glutamine <= _capacity){
-          _colorState = 1;
-      }
-  }
-  else{
-      if(glutamine < bracket){
-          _colorState = 28;
-      }
-      else if(glutamine < 2*bracket){
-          _colorState = 27;
-      }
-      else if(glutamine < 3*bracket){
-          _colorState = 26;
-      }
-      else if(glutamine < 4*bracket){
-          _colorState = 25;
-      }
-      else if(glutamine < 5*bracket){
-          _colorState = 24;
-      }
-      else if(glutamine < 6*bracket){
-          _colorState =  23;
-      }
-      else if(glutamine < 7*bracket){
-          _colorState = 22;
-      }
-      else if(glutamine < 8*bracket){
-         _colorState = 21;
-      }
-      else if(glutamine < 9*bracket){
-          _colorState = 20;
-      }
-      else if(glutamine < 10*bracket){
-          _colorState = 19;
-      }
-      else if(glutamine < 11*bracket){
-          _colorState = 18;
-      }
-      else if(glutamine < 12*bracket){
-          _colorState = 17;
-      }
-      else if(glutamine < 13*bracket){
-          _colorState = 16;
-      }
-      else if(glutamine <= _capacity){
-          _colorState = 15;
-      }
-  }
 }
 
 int EnergyDistributionParticle::interpolate(int color1, int color2, double intensity) const {
@@ -569,14 +387,3 @@ EnergyDistributionSystem::EnergyDistributionSystem(
   }
   getCount("# Particles").record(numParticles);
 }
-
-/*
-    //Use threshold 5 for flickering
-  double conversionrate = 3.0;
-  if(_energyBattery >= conversionrate  && (_regulantBattery < _capacity || _regulantBuffer < _capacity)){
-      _regulantBattery = fmin(_regulantBattery+(_harvestRate*_GDH),_capacity);
-      _regulantBuffer = fmin(_regulantBuffer+((1.0-_harvestRate)*_GDH),_capacity);
-      _energyBattery-=conversionrate;
-      updateState();
-  }
-*/

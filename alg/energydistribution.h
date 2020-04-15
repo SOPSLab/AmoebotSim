@@ -71,10 +71,9 @@ class EnergyDistributionParticle : public AmoebotParticle {
   // TODO: comment. Helper functions.
   bool isOnPeriphery() const;
 
-  // TODO: right now, these have to do with coloring. Ultimately would wrap
-  // into headMarkColor(), probably.
-  void updateState();
+  // TODO: comment. Visualization helper functions
   int interpolate(int,int,double) const;
+  double opacity(double,double) const;
 
  protected:
   // Algorithm parameters.
@@ -100,8 +99,6 @@ class EnergyDistributionParticle : public AmoebotParticle {
   State _state;
   int _parentDir;
   std::set<int> _childrenDirs;
-
-  int _colorState;  // TODO: remove this.
 
  private:
   friend class EnergyDistributionSystem;
