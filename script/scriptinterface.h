@@ -2,7 +2,7 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-// Defines the API for the command line interface in the simulator.
+// Defines the API for the scripting interface in the simulator.
 
 #ifndef AMOEBOTSIM_SCRIPT_SCRIPTINTERFACE_H_
 #define AMOEBOTSIM_SCRIPT_SCRIPTINTERFACE_H_
@@ -21,13 +21,10 @@ class ScriptInterface : public QObject {
   explicit ScriptInterface(ScriptEngine& engine, Simulator& sim, VisItem* vis);
 
  public slots:
-  // These public slots functions are directly accessible from the simulator's
-  // command line.
-
   // Script commands. log writes a message to the simulator engine, optionally
   // flagging an error. runScript loads a JavaScript script from the provided
-  // filepath and executes it in the simulator command line. writeToFile appends
-  // the specified text to a file at the given location.
+  // filepath and executes it. writeToFile appends the specified text to a file
+  // at the given location.
   void log(const QString msg, bool error = false);
   void runScript(const QString scriptFilePath);
   void writeToFile(const QString filePath, const QString text);
