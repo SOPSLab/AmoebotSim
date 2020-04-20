@@ -34,8 +34,6 @@ ApplicationWindow {
   signal exportMetrics()
   signal focusOnCenterOfMass()
 
-  signal executeCommand(string cmd)
-
   function log(msg, isError) {
     fieldLayout.forceActiveFocus()
 

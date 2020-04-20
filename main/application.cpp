@@ -93,7 +93,6 @@ Application::Application(int argc, char *argv[])
               QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
             }
     );
-    connect(qmlRoot, SIGNAL(executeCommand(QString)), scriptEngine.get(), SLOT(executeCommand(QString)));
 
     // Set default step duration.
     sim.setStepDuration(0);
