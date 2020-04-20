@@ -7,8 +7,6 @@
 // Formation Problems in Self-Organizing Particle Systems'
 // [arxiv.org/abs/1504.00744].
 //
-// Run with shapeformation(#particles, hole probability, mode) on the simulator
-// command line.
 // mode == "h" --> hexagon formation
 // mode == "s" --> square formation
 // mode == "t1" --> vertex triangle formation

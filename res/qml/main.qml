@@ -35,12 +35,8 @@ ApplicationWindow {
   signal focusOnCenterOfMass()
 
   signal executeCommand(string cmd)
-  signal commandFieldUp()
-  signal commandFieldDown()
-  signal commandFieldReset()
 
   function log(msg, isError) {
-    commandField.visible = false
     fieldLayout.forceActiveFocus()
 
     resultField.text = msg
@@ -56,10 +52,6 @@ ApplicationWindow {
 
   function setLabelStop() {
     startStopButton.text = "Stop"
-  }
-
-  function setCommand(cmd) {
-    commandField.text = cmd
   }
 
   function setMetrics(metricInfo) {
@@ -93,13 +85,7 @@ ApplicationWindow {
     id: vis
     focus: true
     Keys.onPressed: {
-      if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
-        resultField.visible = false
-        resultFieldFade.running = false
-        commandField.visible = true
-        commandField.forceActiveFocus()
-        event.accepted = true
-      } else if (event.modifiers & Qt.ControlModifier) {
+      if (event.modifiers & Qt.ControlModifier) {
         if (event.key === Qt.Key_H) {
           sidebar.visible = !sidebar.visible
           event.accepted = true
@@ -146,37 +132,6 @@ ApplicationWindow {
     anchors.bottomMargin: 10
     width: sidebar.visible ? vis.width - (sidebar.width + 30) : vis.width - 20
     height: 30
-
-    A_TextField {
-      id: commandField
-      visible: false
-      anchors.fill: parent
-
-      focus: true
-      Keys.onPressed: {
-        if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
-          visible = false
-          if (text != "") {
-            executeCommand(text)
-          }
-          text = ""
-          vis.forceActiveFocus()
-          event.accepted = true
-        } else if (event.key === Qt.Key_Escape) {
-          visible = false
-          text = ""
-          vis.forceActiveFocus()
-          commandFieldReset()
-          event.accepted = true
-        } else if (event.key === Qt.Key_Up) {
-          commandFieldUp()
-          event.accepted = true
-        } else if (event.key === Qt.Key_Down) {
-          commandFieldDown()
-          event.accepted = true
-        }
-      }
-    }
 
     A_ResultTextField {
       id: resultField

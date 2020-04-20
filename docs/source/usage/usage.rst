@@ -16,7 +16,6 @@ As a first introduction to AmoebotSim, we'll discuss the main parts of its inter
 - **Simulation Controls**. Pressing the *Start/Stop* button will start and stop the instanced simulation. When stopped, the *Step* button will execute a single particle activation. The *Step Duration* slider controls how fast the simulation proceeds.
 - **Metrics**. These labels track different simulation statistics as it runs.
 - **Inspection Text**. A particle's inspection text shows various information about its state.
-- **Command Line**. The command line provides a front-end interface to AmoebotSim's JavaScript API, described more :ref:`below <command-line>`.
 
 
 .. _controls:

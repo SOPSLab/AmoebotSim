@@ -86,17 +86,6 @@ Application::Application(int argc, char *argv[])
             }
     );
 
-    // setup connections between GUI and CommmandHistoryManager
-    connect(qmlRoot, SIGNAL(executeCommand(QString)), &commandHistoryManager, SLOT(commandExecuted(QString)));
-    connect(qmlRoot, SIGNAL(commandFieldUp()), &commandHistoryManager, SLOT(up()));
-    connect(qmlRoot, SIGNAL(commandFieldDown()), &commandHistoryManager, SLOT(down()));
-    connect(qmlRoot, SIGNAL(commandFieldReset()), &commandHistoryManager, SLOT(reset()));
-    connect(&commandHistoryManager, &CommandHistoryManager::setCommand,
-            [qmlRoot](const QString& command){
-              QMetaObject::invokeMethod(qmlRoot, "setCommand", Q_ARG(QVariant, command));
-            }
-    );
-
     // setup scripting
     scriptEngine = std::make_shared<ScriptEngine>(sim, vis, parameterModel->getAlgorithmList());
     connect(scriptEngine.get(), &ScriptEngine::log,

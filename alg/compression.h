@@ -7,9 +7,6 @@
 // Self-Organizing Particle Systems' [arxiv.org/abs/1603.07991]. In particular,
 // this simulates the local, distributed, asynchronous algorithm A using the
 // #neighbors metric instead of the #triangles metric.
-//
-// Run with compression(#particles, hole probability) on the simulator command
-// line.
 
 #ifndef AMOEBOTSIM_ALG_COMPRESSION_H_
 #define AMOEBOTSIM_ALG_COMPRESSION_H_

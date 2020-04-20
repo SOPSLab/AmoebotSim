@@ -8,8 +8,6 @@
 // system, moving particles, and changing particles' states. The pseudocode is
 // available in the docs:
 // [https://amoebotsim.rtfd.io/en/latest/tutorials/tutorials.html#discodemo-your-first-algorithm].
-//
-// Run on the simulator command line using discodemo(# particles, counter max).
 
 #ifndef AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
 #define AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
