@@ -89,12 +89,6 @@ void ParameterListModel::createSystem(QString algName) {
   } else if (signature == "compression") {
     dynamic_cast<CompressionAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toDouble());
-  } else if (signature == "dynamicenergy") {
-    dynamic_cast<DynamicEnergyAlg*>(alg)->
-        instantiate(params[0].toInt(), params[1].toDouble(),
-                    params[2].toDouble(), params[3].toDouble(),
-                    params[4].toDouble(), params[5].toDouble(),
-                    params[6].toInt());
   } else if (signature == "energydist") {
     dynamic_cast<EnergyDistributionAlg*>(alg)->
         instantiate(params[0].toInt(),params[1].toInt(),
@@ -113,9 +107,9 @@ void ParameterListModel::createSystem(QString algName) {
         instantiate(params[0].toInt(), params[1].toDouble());
   } else if (signature == "staticenergy") {
     dynamic_cast<StaticEnergyAlg*>(alg)->
-        instantiate(params[0].toInt(), params[1].toDouble(),
+        instantiate(params[0].toInt(), params[1].toInt(),
                     params[2].toDouble(), params[3].toDouble(),
-                    params[4].toDouble());
+                    params[4].toDouble(), params[5].toDouble());
   } else {
     // An unrecognized signature has been entered.
     Q_ASSERT(false);

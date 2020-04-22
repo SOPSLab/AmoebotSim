@@ -103,21 +103,6 @@ class CompressionAlg : public Algorithm {
   void instantiate(const int numParticles = 100, const double lambda = 4.0);
 };
 
-// Energy Distribution: Static Systems.
-class DynamicEnergyAlg : public Algorithm {
-  Q_OBJECT
-
- public:
-  DynamicEnergyAlg();
-
- public slots:
-  void instantiate(int numParticles = 100, const double harvestRate = 0.9,
-                   const double inhibitedRate = 0.5, const double capacity = 20,
-                   const double threshold = 10,
-                   const double environmentEnergy = 1,
-                   const int signalSpeed = 10);
-};
-
 // Energy Distribution.
 class EnergyDistributionAlg : public Algorithm {
   Q_OBJECT
@@ -178,9 +163,9 @@ class StaticEnergyAlg : public Algorithm {
   StaticEnergyAlg();
 
  public slots:
-  void instantiate(int numParticles = 100, const double harvestRate = 0.9,
-                   const double capacity = 20, const double threshold = 10,
-                   const double environmentEnergy = 1);
+  void instantiate(int numParticles = 100, const bool isDynamic = false,
+                   const double harvestRate = 0.9, const double capacity = 20,
+                   const double threshold = 10, const double sourceEnergy = 1);
 };
 
 class AlgorithmList {

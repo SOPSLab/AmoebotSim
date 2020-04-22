@@ -14,7 +14,6 @@ HEADERS += \
     alg/demo/metricsdemo.h \
     alg/demo/tokendemo.h \
     alg/compression.h \
-    alg/dynamicenergy.h \
     alg/infobjcoating.h \
     alg/shapeformation.h \
     alg/energydistribution.h\
@@ -45,7 +44,6 @@ SOURCES += \
     alg/demo/metricsdemo.cpp \
     alg/demo/tokendemo.cpp \
     alg/compression.cpp \
-    alg/dynamicenergy.cpp \
     alg/infobjcoating.cpp \
     alg/shapeformation.cpp \
     alg/energydistribution.cpp\

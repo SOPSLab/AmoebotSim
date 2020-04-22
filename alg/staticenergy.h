@@ -24,8 +24,8 @@ class StaticEnergyParticle : public AmoebotParticle {
   StaticEnergyParticle(const Node& head, int globalTailDir,
                        const int orientation, AmoebotSystem& system,
                        const double harvestRate, const double capacity,
-                       const double threshold, const double environmentEnergy,
-                       const State state);
+                       const double threshold, const double sourceEnergy,
+                       const bool isDynamic, const State state);
 
   // Executes one particle activation.
   void activate() override;
@@ -48,17 +48,10 @@ class StaticEnergyParticle : public AmoebotParticle {
   // hasNbrAtLabel() first if unsure.
   StaticEnergyParticle& nbrAtLabel(int label) const;
 
-  // Returns the label of the first port incident to a neighboring particle in
-  // any of the specified states, starting at the (optionally) specified label
-  // and continuing clockwise.
-  int labelOfFirstNbrInState(std::initializer_list<State> states,
-                             int startLabel = 0) const;
-
-  // Checks whether this particle has a neighbor in any of the given states.
-  bool hasNbrInState(std::initializer_list<State> states) const;
-
-  // TODO: comment. Helper functions.
-  bool isOnPeriphery() const;
+  // Phase functions. TODO: comment.
+  void communicate();
+  void harvestEnergy();
+  void useEnergy();
 
   // TODO: comment. Visualization helper functions
   int energyColor(int color1, int color2) const;
@@ -68,16 +61,18 @@ class StaticEnergyParticle : public AmoebotParticle {
   const double _harvestRate;
   const double _capacity;
   const double _threshold;
-  const double _environmentEnergy;
+  const double _sourceEnergy;
+  const bool _isDynamic;
 
   // Local variables.
-  double _energyBattery;
-  double _energyBuffer;
+  double _battery;
+  double _buffer;
+  bool _stress;
+  bool _inhibit;
 
   // Spanning tree variables.
   State _state;
   int _parentDir;
-  std::set<int> _childrenDirs;
 
  private:
   friend class StaticEnergySystem;
@@ -85,9 +80,9 @@ class StaticEnergyParticle : public AmoebotParticle {
 
 class StaticEnergySystem : public AmoebotSystem {
  public:
-  StaticEnergySystem(int numParticles, const double harvestRate,
-                     const double capacity, const double threshold,
-                     const double environmentEnergy);
+  StaticEnergySystem(int numParticles, const bool isDynamic,
+                     const double harvestRate, const double capacity,
+                     const double threshold, const double sourceEnergy);
 };
 
 
