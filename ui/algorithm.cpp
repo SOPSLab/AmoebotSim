@@ -9,10 +9,12 @@
 #include "alg/demo/metricsdemo.h"
 #include "alg/demo/tokendemo.h"
 #include "alg/compression.h"
+#include "alg/dynamicenergy.h"
 #include "alg/energydistribution.h"
 #include "alg/infobjcoating.h"
 #include "alg/leaderelection.h"
 #include "alg/shapeformation.h"
+#include "alg/staticenergy.h"
 
 Algorithm::Algorithm(QString name, QString signature)
     : _name(name),
@@ -122,6 +124,44 @@ void CompressionAlg::instantiate(const int numParticles, const double lambda) {
   }
 }
 
+DynamicEnergyAlg::DynamicEnergyAlg()
+    : Algorithm("Energy Distribution: Dynamic", "dynamicenergy") {
+  addParameter("# Particles", "100");
+  addParameter("Harvest Rate", "0.9");
+  addParameter("Inhibited Rate", "0.5");
+  addParameter("Capacity", "20.0");
+  addParameter("Threshold", "10.0");
+  addParameter("Environment Energy", "1.0");
+  addParameter("Signal Speed", "10");
+}
+
+void DynamicEnergyAlg::instantiate(int numParticles, const double harvestRate,
+                                   const double inhibitedRate,
+                                   const double capacity,
+                                   const double threshold,
+                                   const double environmentEnergy,
+                                   const int signalSpeed) {
+  if (numParticles <= 0){
+    emit log("# particles must be > 0", true);
+  } else if (harvestRate <= 0 || harvestRate > 1) {
+    emit log("harvestRate must be in (0,1]", true);
+  } else if (inhibitedRate < 0 || inhibitedRate > harvestRate) {
+    emit log("inhibitedRate must be in [0,harvestRate]", true);
+  } else if (capacity <= 0) {
+    emit log("capacity must be > 0", true);
+  } else if (threshold <= 0 || threshold > capacity) {
+    emit log("threshold must be in (0,capacity]", true);
+  } else if (environmentEnergy <= 0 || environmentEnergy > capacity) {
+    emit log("environmentEnergy must be in (0,capacity]", true);
+  } else if (signalSpeed < 1) {
+    emit log("signalSpeed must be >= 1", true);
+  } else {
+    emit setSystem(std::make_shared<DynamicEnergySystem>(
+                     numParticles, harvestRate, inhibitedRate, capacity,
+                     threshold, environmentEnergy, signalSpeed));
+  }
+}
+
 EnergyDistributionAlg::EnergyDistributionAlg()
     : Algorithm("Energy Distribution", "energydist") {
   addParameter("# of Particles","19");
@@ -228,6 +268,35 @@ void ShapeFormationAlg::instantiate(const int numParticles,
   }
 }
 
+StaticEnergyAlg::StaticEnergyAlg()
+    : Algorithm("Energy Distribution: Static", "staticenergy") {
+  addParameter("# Particles", "100");
+  addParameter("Harvest Rate", "0.9");
+  addParameter("Capacity", "20.0");
+  addParameter("Threshold", "10.0");
+  addParameter("Environment Energy", "1.0");
+}
+
+void StaticEnergyAlg::instantiate(int numParticles, const double harvestRate,
+                                  const double capacity, const double threshold,
+                                  const double environmentEnergy) {
+  if (numParticles <= 0){
+    emit log("# particles must be > 0", true);
+  } else if (harvestRate <= 0 || harvestRate > 1) {
+    emit log("harvestRate must be in (0,1]", true);
+  } else if (capacity <= 0) {
+    emit log("capacity must be > 0", true);
+  } else if (threshold <= 0 || threshold > capacity) {
+    emit log("threshold must be in (0,capacity]", true);
+  } else if (environmentEnergy <= 0 || environmentEnergy > capacity) {
+    emit log("environmentEnergy must be in (0,capacity]", true);
+  } else {
+    emit setSystem(std::make_shared<StaticEnergySystem>(
+                     numParticles, harvestRate, capacity, threshold,
+                     environmentEnergy));
+  }
+}
+
 AlgorithmList::AlgorithmList() {
   // Demo algorithms.
   _algorithms.push_back(new DiscoDemoAlg());  
@@ -236,11 +305,13 @@ AlgorithmList::AlgorithmList() {
   _algorithms.push_back(new TokenDemoAlg());
 
   // General algorithms.
-  _algorithms.push_back(new CompressionAlg());  
+  _algorithms.push_back(new CompressionAlg());
+  _algorithms.push_back(new DynamicEnergyAlg());
   _algorithms.push_back(new EnergyDistributionAlg());
   _algorithms.push_back(new InfObjCoatingAlg());    
   _algorithms.push_back(new LeaderElectionAlg());
   _algorithms.push_back(new ShapeFormationAlg());
+  _algorithms.push_back(new StaticEnergyAlg());
 }
 
 AlgorithmList::~AlgorithmList() {

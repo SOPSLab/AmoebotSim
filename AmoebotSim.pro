@@ -14,9 +14,11 @@ HEADERS += \
     alg/demo/metricsdemo.h \
     alg/demo/tokendemo.h \
     alg/compression.h \
+    alg/dynamicenergy.h \
     alg/infobjcoating.h \
     alg/shapeformation.h \
     alg/energydistribution.h\
+    alg/staticenergy.h \
     core/amoebotparticle.h \
     core/amoebotsystem.h \
     core/localparticle.h \
@@ -43,9 +45,11 @@ SOURCES += \
     alg/demo/metricsdemo.cpp \
     alg/demo/tokendemo.cpp \
     alg/compression.cpp \
+    alg/dynamicenergy.cpp \
     alg/infobjcoating.cpp \
     alg/shapeformation.cpp \
     alg/energydistribution.cpp\
+    alg/staticenergy.cpp \
     core/amoebotparticle.cpp \
     core/amoebotsystem.cpp \
     core/localparticle.cpp \
