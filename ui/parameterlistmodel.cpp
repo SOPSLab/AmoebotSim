@@ -89,29 +89,21 @@ void ParameterListModel::createSystem(QString algName) {
   } else if (signature == "compression") {
     dynamic_cast<CompressionAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toDouble());
-  } else if (signature == "energydist") {
-    dynamic_cast<EnergyDistributionAlg*>(alg)->
-        instantiate(params[0].toInt(),params[1].toInt(),
+  } else if (signature == "energysharing") {
+    dynamic_cast<EnergySharingAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toInt(),
                     params[2].toDouble(), params[3].toDouble(),
-                    params[4].toDouble(), params[5].toDouble(),
-                    params[6].toDouble(), params[7].toDouble(),
-                    params[8].toInt());
+                    params[4].toDouble(), params[5].toDouble());
+  } else if (signature == "leaderelection") {
+    dynamic_cast<LeaderElectionAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toDouble());
   } else if (signature == "infobjcoating") {
     dynamic_cast<InfObjCoatingAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toDouble());
   } else if (signature == "shapeformation") {
     dynamic_cast<ShapeFormationAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toDouble(), params[2]);
-  } else if (signature == "leaderelection") {
-    dynamic_cast<LeaderElectionAlg*>(alg)->
-        instantiate(params[0].toInt(), params[1].toDouble());
-  } else if (signature == "staticenergy") {
-    dynamic_cast<StaticEnergyAlg*>(alg)->
-        instantiate(params[0].toInt(), params[1].toInt(),
-                    params[2].toDouble(), params[3].toDouble(),
-                    params[4].toDouble(), params[5].toDouble());
   } else {
-    // An unrecognized signature has been entered.
-    Q_ASSERT(false);
+    Q_ASSERT(false);  // An unrecognized signature has been entered.
   }
 }

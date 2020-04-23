@@ -103,21 +103,17 @@ class CompressionAlg : public Algorithm {
   void instantiate(const int numParticles = 100, const double lambda = 4.0);
 };
 
-// Energy Distribution.
-class EnergyDistributionAlg : public Algorithm {
+// Energy Distribution/Sharing.
+class EnergySharingAlg : public Algorithm {
   Q_OBJECT
 
  public:
-  EnergyDistributionAlg();
+  EnergySharingAlg();
 
  public slots:
-  void instantiate(const int numParticles = 19,
-                   const int systemType = 1,
-                   const double harvestRate = 0.9,
-                   const double inhibitedRate = 0,
-                   const double capacity = 100, const double threshold = 5,
-                   const double environmentEnergy = 5, const double GDH = 10,
-                   const int signalSpeed = 8);
+  void instantiate(int numParticles = 100, const bool isDynamic = false,
+                   const double harvestRate = 0.9, const double capacity = 20,
+                   const double threshold = 10, const double sourceEnergy = 1);
 };
 
 
@@ -153,19 +149,6 @@ class ShapeFormationAlg : public Algorithm {
  public slots:
   void instantiate(const int numParticles = 200, const double holeProb = 0.2,
                    const QString mode = "h");
-};
-
-// Energy Distribution: Static Systems.
-class StaticEnergyAlg : public Algorithm {
-  Q_OBJECT
-
- public:
-  StaticEnergyAlg();
-
- public slots:
-  void instantiate(int numParticles = 100, const bool isDynamic = false,
-                   const double harvestRate = 0.9, const double capacity = 20,
-                   const double threshold = 10, const double sourceEnergy = 1);
 };
 
 class AlgorithmList {
