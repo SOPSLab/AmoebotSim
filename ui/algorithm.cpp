@@ -125,32 +125,29 @@ void CompressionAlg::instantiate(const int numParticles, const double lambda) {
 EnergySharingAlg::EnergySharingAlg()
     : Algorithm("Energy Sharing", "energysharing") {
   addParameter("# Particles", "100");
-  addParameter("System Growth", "0");
-  addParameter("Harvest Rate", "0.9");
-  addParameter("Capacity", "20.0");
-  addParameter("Threshold", "10.0");
-  addParameter("Source Energy", "1.0");
+  addParameter("Energy Usage", "0");
+  addParameter("Capacity", "10.0");
+  addParameter("Harvest Rate", "1.0");
+  addParameter("Battery Fraction", "0.75");
 }
 
-void EnergySharingAlg::instantiate(int numParticles, const bool isDynamic,
-                                   const double harvestRate,
+void EnergySharingAlg::instantiate(int numParticles, const int usage,
                                    const double capacity,
-                                   const double threshold,
-                                   const double sourceEnergy) {
+                                   const double harvestRate,
+                                   const double batteryFrac) {
   if (numParticles <= 0) {
-   emit log("# particles must be > 0", true);
-  } else if (harvestRate <= 0 || harvestRate >= 1) {
-   emit log("harvestRate must be in (0, 1)", true);
+    emit log("# particles must be > 0", true);
+  } else if (usage < 0 || usage > 1) {
+    emit log("usage mode must be 0 or 1");
   } else if (capacity <= 0) {
-   emit log("capacity must be > 0", true);
-  } else if (threshold <= 0 || threshold > capacity) {
-   emit log("threshold must be in (0, capacity]", true);
-  } else if (sourceEnergy <= 0 || sourceEnergy > capacity) {
-   emit log("sourceEnergy must be in (0, capacity]", true);
+    emit log("capacity must be > 0", true);
+  } else if (harvestRate <= 0 || harvestRate > 0.5 * capacity) {
+    emit log("harvestRate must be in (0, capacity/2]", true);
+  } else if (batteryFrac <= 0 || batteryFrac >= 1) {
+    emit log("batteryFrac must be in (0, 1)", true);
   } else {
-   emit setSystem(std::make_shared<EnergySharingSystem>(
-                    numParticles, isDynamic, harvestRate, capacity, threshold,
-                    sourceEnergy));
+    emit setSystem(std::make_shared<EnergySharingSystem>(
+                     numParticles, usage, capacity, harvestRate, batteryFrac));
   }
 }
 

@@ -6,18 +6,17 @@ EnergySharingParticle::EnergySharingParticle(const Node& head,
                                              int globalTailDir,
                                              const int orientation,
                                              AmoebotSystem& system,
-                                             const double harvestRate,
                                              const double capacity,
-                                             const double threshold,
-                                             const double sourceEnergy,
-                                             const bool isDynamic,
+                                             const double harvestRate,
+                                             const double batteryFrac,
+                                             const Usage usage,
                                              const State state)
     : AmoebotParticle (head, globalTailDir, orientation, system),
-      _harvestRate(harvestRate),
       _capacity(capacity),
-      _threshold(threshold),
-      _sourceEnergy(sourceEnergy),
-      _isDynamic(isDynamic),
+      _harvestRate(harvestRate),
+      _batteryFrac(batteryFrac),
+      _demand(0.25 * _capacity),
+      _usage(usage),
       _battery(0),
       _buffer(0),
       _stress(false),
@@ -28,11 +27,11 @@ EnergySharingParticle::EnergySharingParticle(const Node& head,
 void EnergySharingParticle::activate() {
   if (_state == State::Idle) {
     // Setup phase: join the spanning tree by searching for a root or active
-    // neighbor with energy in its buffer. If such a neighbor exists, set it as
-    // this particle's parent and become active.
+    // neighbor. If such a neighbor exists, set it as this particle's parent and
+    // become active.
     auto prop = [&](const EnergySharingParticle& p) {
       for (auto state : {State::Root, State::Active}) {
-        if (p._state == state && p._buffer > 0) {
+        if (p._state == state) {
           return true;
         }
       }
@@ -47,9 +46,7 @@ void EnergySharingParticle::activate() {
   } else {
     communicate();
     harvestEnergy();
-    if (!_inhibit) {
-      useEnergy();
-    }
+    useEnergy();
   }
 }
 
@@ -118,51 +115,54 @@ void EnergySharingParticle::communicate() {
   }
 
   if (_state != State::Root) {
-    _stress = _battery < _threshold || hasStressChild;
+    _stress = _battery < _demand || hasStressChild;
     _inhibit = nbrAtLabel(_parentDir)._inhibit;
   } else {
-    _inhibit = _battery < _threshold || hasStressChild;
+    _inhibit = _battery < _demand || hasStressChild;
   }
 }
 
 void EnergySharingParticle::harvestEnergy() {
-  // Set effective harvesting rate.
-  double rate = (_battery < _capacity) ? _harvestRate : 0;
+  // Set effective battery fraction.
+  double frac = (_battery < _capacity) ? _batteryFrac : 0;
 
   // Particles with energy access take from the source; others take from their
   // parents if they have a full buffer.
   if (_state == State::Root) {
-    _battery = std::min(_battery + rate * _sourceEnergy, _capacity);
-    _buffer = std::min(_buffer + (1 - rate) * _sourceEnergy, _capacity);
-  } else if (std::abs(nbrAtLabel(_parentDir)._buffer - _capacity)
-             < std::numeric_limits<double>::epsilon()) {
+    _battery = std::min(_battery + frac * _harvestRate, _capacity);
+    _buffer = std::min(_buffer + (1 - frac) * _harvestRate, _capacity);
+  } else if (nbrAtLabel(_parentDir)._buffer >= _harvestRate) {
     nbrAtLabel(_parentDir)._buffer -=
-        (std::min(rate * _capacity, _capacity - _battery)
-         + std::min((1 - rate) * _capacity, _capacity - _buffer));
-    _battery = std::min(_battery + rate * _capacity, _capacity);
-    _buffer = std::min(_buffer + (1 - rate) * _capacity, _capacity);
+        (std::min(frac * _harvestRate, _capacity - _battery)
+         + std::min((1 - frac) * _harvestRate, _capacity - _buffer));
+    _battery = std::min(_battery + frac * _harvestRate, _capacity);
+    _buffer = std::min(_buffer + (1 - frac) * _harvestRate, _capacity);
   }
 }
 
 void EnergySharingParticle::useEnergy() {
-  if (!_isDynamic) {
-    _battery = std::max(_battery - 1, 0.0);
-  } else {  // This is a dynamic system that uses energy to reproduce.
-    int reproduceDir = -1;
-    for (int dir = 0; dir < 6; dir++) {
-      if (!hasNbrAtLabel(dir)) {
-        reproduceDir = dir;
-        break;
+  if (!_inhibit && _battery >= _demand) {
+    if (_usage == Usage::Uniform) {
+      _battery -= _demand;
+    } else if (_usage == Usage::Reproduce) {
+      int reproduceDir = -1;
+      for (int dir = 0; dir < 6; dir++) {
+        if (!hasNbrAtLabel(dir)) {
+          reproduceDir = dir;
+          break;
+        }
       }
-    }
 
-    if (reproduceDir != -1 && _battery >= _threshold) {
-      _battery -= _threshold;
-      system.insert(new EnergySharingParticle(
-                      head.nodeInDir(localToGlobalDir(reproduceDir)), -1,
-                      randDir(), system, _harvestRate, _capacity, _threshold,
-                      _sourceEnergy, _isDynamic, State::Idle));
-      system.getCount("# Particles").record();
+      if (reproduceDir != -1) {
+        _battery -= _demand;
+        system.insert(new EnergySharingParticle(
+                        head.nodeInDir(localToGlobalDir(reproduceDir)), -1,
+                        randDir(), system, _capacity, _harvestRate,
+                        _batteryFrac, _usage, State::Idle));
+        system.getCount("# Particles").record();
+      }
+    } else {
+      Q_ASSERT(false);  // An invalid usage type was used.
     }
   }
 }
@@ -178,8 +178,8 @@ int EnergySharingParticle::energyColor(int color1, int color2) const {
   int color2_b = color2 % 256;
 
   // Compute opacity.
-  double opacity = (std::exp(_battery - _threshold) - 1) /
-                   (std::exp(_battery - _threshold) + 1) + 1;
+  double opacity = (std::exp(_battery - _demand) - 1) /
+                   (std::exp(_battery - _demand) + 1) + 1;
   opacity = std::max(std::min(opacity, 1.0), 0.1);
 
   // Compute interpolation.
@@ -195,12 +195,10 @@ int EnergySharingParticle::energyColor(int color1, int color2) const {
   return newColor;
 }
 
-EnergySharingSystem::EnergySharingSystem(const int numParticles,
-                                         const bool isDynamic,
-                                         const double harvestRate,
+EnergySharingSystem::EnergySharingSystem(int numParticles, const int usage,
                                          const double capacity,
-                                         const double threshold,
-                                         const double sourceEnergy) {
+                                         const double harvestRate,
+                                         const double batteryFrac) {
   _counts.push_back(new Count("# Particles"));
 
   // Add a hexagon of idle particles to the system.
@@ -248,8 +246,8 @@ EnergySharingSystem::EnergySharingSystem(const int numParticles,
     }
 
     insert(new EnergySharingParticle(Node(x, y), -1, randDir(), *this,
-                                     harvestRate, capacity, threshold,
-                                     sourceEnergy, isDynamic,
+                                     capacity, harvestRate, batteryFrac,
+                                     static_cast<EnergySharingParticle::Usage>(usage),
                                      EnergySharingParticle::State::Idle));
     getCount("# Particles").record();
   }

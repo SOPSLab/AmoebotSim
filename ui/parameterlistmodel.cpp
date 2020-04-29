@@ -93,7 +93,7 @@ void ParameterListModel::createSystem(QString algName) {
     dynamic_cast<EnergySharingAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toInt(),
                     params[2].toDouble(), params[3].toDouble(),
-                    params[4].toDouble(), params[5].toDouble());
+                    params[4].toDouble());
   } else if (signature == "leaderelection") {
     dynamic_cast<LeaderElectionAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toDouble());

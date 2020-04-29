@@ -12,6 +12,11 @@
 
 class EnergySharingParticle : public AmoebotParticle {
  public:
+  enum class Usage {
+    Uniform,
+    Reproduce
+  };
+
   enum class State {
     Root,
     Idle,
@@ -21,9 +26,9 @@ class EnergySharingParticle : public AmoebotParticle {
   // TODO: comment.
   EnergySharingParticle(const Node& head, int globalTailDir,
                         const int orientation, AmoebotSystem& system,
-                        const double harvestRate, const double capacity,
-                        const double threshold, const double sourceEnergy,
-                        const bool isDynamic, const State state);
+                        const double capacity, const double harvestRate,
+                        const double batteryFrac, const Usage usage,
+                        const State state);
 
   // Executes one particle activation.
   void activate() override;
@@ -56,11 +61,11 @@ class EnergySharingParticle : public AmoebotParticle {
 
  protected:
   // Algorithm parameters.
-  const double _harvestRate;
   const double _capacity;
-  const double _threshold;
-  const double _sourceEnergy;
-  const bool _isDynamic;
+  const double _harvestRate;
+  const double _batteryFrac;
+  const double _demand;
+  const Usage _usage;
 
   // Local variables.
   double _battery;
@@ -78,9 +83,8 @@ class EnergySharingParticle : public AmoebotParticle {
 
 class EnergySharingSystem : public AmoebotSystem {
  public:
-  EnergySharingSystem(int numParticles, const bool isDynamic,
-                     const double harvestRate, const double capacity,
-                     const double threshold, const double sourceEnergy);
+  EnergySharingSystem(int numParticles, const int usage, const double capacity,
+                      const double harvestRate, const double batteryFrac);
 };
 
 #endif  // ALG_ENERGYSHARING_H_

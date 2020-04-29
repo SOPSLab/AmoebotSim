@@ -111,9 +111,9 @@ class EnergySharingAlg : public Algorithm {
   EnergySharingAlg();
 
  public slots:
-  void instantiate(int numParticles = 100, const bool isDynamic = false,
-                   const double harvestRate = 0.9, const double capacity = 20,
-                   const double threshold = 10, const double sourceEnergy = 1);
+  void instantiate(int numParticles = 100, const int usage = 0,
+                   const double capacity = 10, const double harvestRate = 1,
+                   const double batteryFrac = 0.75);
 };
 
 
