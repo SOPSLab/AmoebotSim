@@ -144,6 +144,7 @@ void EnergySharingParticle::useEnergy() {
   if (!_inhibit && _battery >= _demand) {
     if (_usage == Usage::Uniform) {
       _battery -= _demand;
+      system.getCount("# Actions").record();
     } else if (_usage == Usage::Reproduce) {
       int reproduceDir = -1;
       for (int dir = 0; dir < 6; dir++) {
@@ -155,11 +156,11 @@ void EnergySharingParticle::useEnergy() {
 
       if (reproduceDir != -1) {
         _battery -= _demand;
+        system.getCount("# Actions").record();
         system.insert(new EnergySharingParticle(
                         head.nodeInDir(localToGlobalDir(reproduceDir)), -1,
                         randDir(), system, _capacity, _harvestRate,
                         _batteryFrac, _usage, State::Idle));
-        system.getCount("# Particles").record();
       }
     } else {
       Q_ASSERT(false);  // An invalid usage type was used.
@@ -180,7 +181,7 @@ int EnergySharingParticle::energyColor(int color1, int color2) const {
   // Compute opacity.
   double opacity = (std::exp(_battery - _demand) - 1) /
                    (std::exp(_battery - _demand) + 1) + 1;
-  opacity = std::max(std::min(opacity, 1.0), 0.1);
+  opacity = std::max(std::min(opacity, 1.0), 0.05);
 
   // Compute interpolation.
   int newColor_r = color1_r + opacity * (color2_r - color1_r);
@@ -199,7 +200,7 @@ EnergySharingSystem::EnergySharingSystem(int numParticles, const int usage,
                                          const double capacity,
                                          const double harvestRate,
                                          const double batteryFrac) {
-  _counts.push_back(new Count("# Particles"));
+  _counts.push_back(new Count("# Actions"));
 
   // Add a hexagon of idle particles to the system.
   int x, y;
@@ -249,17 +250,21 @@ EnergySharingSystem::EnergySharingSystem(int numParticles, const int usage,
                                      capacity, harvestRate, batteryFrac,
                                      static_cast<EnergySharingParticle::Usage>(usage),
                                      EnergySharingParticle::State::Idle));
-    getCount("# Particles").record();
   }
 
-  // Mark the particles with energy access as roots.
-  for (auto p : particles) {
-    auto ep = dynamic_cast<EnergySharingParticle*>(p);
-    for (int dir = 0; dir < 6; dir++) {
-      if (!ep->hasNbrAtLabel(dir)) {
-        ep->_state = EnergySharingParticle::State::Root;
-        break;
-      }
-    }
-  }
+  // Mark only the first particle as a root with energy access.
+  auto p = particleMap.find(Node(0, 0))->second;
+  auto ep = dynamic_cast<EnergySharingParticle*>(p);
+  ep->_state = EnergySharingParticle::State::Root;
+
+//  // Mark the particles with energy access as roots.
+//  for (auto p : particles) {
+//    auto ep = dynamic_cast<EnergySharingParticle*>(p);
+//    for (int dir = 0; dir < 6; dir++) {
+//      if (!ep->hasNbrAtLabel(dir)) {
+//        ep->_state = EnergySharingParticle::State::Root;
+//        break;
+//      }
+//    }
+//  }
 }

@@ -124,7 +124,7 @@ void CompressionAlg::instantiate(const int numParticles, const double lambda) {
 
 EnergySharingAlg::EnergySharingAlg()
     : Algorithm("Energy Sharing", "energysharing") {
-  addParameter("# Particles", "100");
+  addParameter("# Particles", "91");
   addParameter("Energy Usage", "0");
   addParameter("Capacity", "10.0");
   addParameter("Harvest Rate", "1.0");
