@@ -13,9 +13,9 @@ EnergySharingParticle::EnergySharingParticle(const Node& head,
                                              const State state)
     : AmoebotParticle (head, globalTailDir, orientation, system),
       _capacity(capacity),
+      _demand(0.25 * _capacity),
       _harvestRate(harvestRate),
       _batteryFrac(batteryFrac),
-      _demand(0.25 * _capacity),
       _usage(usage),
       _battery(0),
       _buffer(0),
@@ -52,13 +52,13 @@ void EnergySharingParticle::activate() {
 
 int EnergySharingParticle::headMarkColor() const {
   if (_state == State::Root) {
-    return energyColor(0xffffff, 0x000000);
+    return energyColor(0x000000);
   } else if (_stress) {
-    return energyColor(0xffffff, 0xff0000);
+    return energyColor(0xff0000);
   } else if (_inhibit) {
-    return energyColor(0xffffff, 0xfcd703);
+    return energyColor(0xfcd703);
   } else if (_state == State::Active) {
-    return energyColor(0xffffff, 0x00ff00);
+    return energyColor(0x00ff00);
   } else {  // _state == State::Idle
     return -1;
   }
@@ -168,15 +168,11 @@ void EnergySharingParticle::useEnergy() {
   }
 }
 
-int EnergySharingParticle::energyColor(int color1, int color2) const {
-  // Parse the color ints into RGB values.
-  int color1_r = color1 >> 16;
-  int color1_g = (color1 >> 8) % 256;
-  int color1_b = color1 % 256;
-
-  int color2_r = color2 >> 16;
-  int color2_g = (color2 >> 8) % 256;
-  int color2_b = color2 % 256;
+int EnergySharingParticle::energyColor(int color) const {
+  // Parse the color into RGB values.
+  int r = color >> 16;
+  int g = (color >> 8) % 256;
+  int b = color % 256;
 
   // Compute opacity.
   double opacity = (std::exp(_battery - _demand) - 1) /
@@ -184,16 +180,12 @@ int EnergySharingParticle::energyColor(int color1, int color2) const {
   opacity = std::max(std::min(opacity, 1.0), 0.05);
 
   // Compute interpolation.
-  int newColor_r = color1_r + opacity * (color2_r - color1_r);
-  int newColor_g = color1_g + opacity * (color2_g - color1_g);
-  int newColor_b = color1_b + opacity * (color2_b - color1_b);
+  r = 255 + opacity * (r - 255);
+  g = 255 + opacity * (g - 255);
+  b = 255 + opacity * (b - 255);
 
-  // Return the int form of newColor.
-  int newColor = newColor_r;
-  newColor = (newColor << 8) + newColor_g;
-  newColor = (newColor << 8) + newColor_b;
-
-  return newColor;
+  // Return the int form of the new color.
+  return (((r << 8) + g) << 8) + b;
 }
 
 EnergySharingSystem::EnergySharingSystem(int numParticles, const int usage,
@@ -257,7 +249,7 @@ EnergySharingSystem::EnergySharingSystem(int numParticles, const int usage,
   auto ep = dynamic_cast<EnergySharingParticle*>(p);
   ep->_state = EnergySharingParticle::State::Root;
 
-//  // Mark the particles with energy access as roots.
+//  // Mark the peripheral particles as roots with energy access.
 //  for (auto p : particles) {
 //    auto ep = dynamic_cast<EnergySharingParticle*>(p);
 //    for (int dir = 0; dir < 6; dir++) {

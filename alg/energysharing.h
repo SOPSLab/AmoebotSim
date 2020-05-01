@@ -2,7 +2,9 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-// TODO: header comment.
+// Defines the particle system and composing particles for the Energy
+// Distribution Algorithm defined in 'Bio-Inspired Energy Distribution for
+// Programmable Matter' [arxiv.org/abs/TODO].
 
 #ifndef ALG_ENERGYSHARING_H_
 #define ALG_ENERGYSHARING_H_
@@ -23,7 +25,11 @@ class EnergySharingParticle : public AmoebotParticle {
     Active
   };
 
-  // TODO: comment.
+  // Constructs a new particle with a node position for its head, a global
+  // compass direction from its head to its tail (-1 if contracted), an offset
+  // for its local compass, a system which it belongs to, a capacity for its
+  // battery and buffer, an energy harvesting rate, the fraction of harvested
+  // energy allocated to the battery, an energy usage mode, and a state.
   EnergySharingParticle(const Node& head, int globalTailDir,
                         const int orientation, AmoebotSystem& system,
                         const double capacity, const double harvestRate,
@@ -51,20 +57,25 @@ class EnergySharingParticle : public AmoebotParticle {
   // hasNbrAtLabel() first if unsure.
   EnergySharingParticle& nbrAtLabel(int label) const;
 
-  // Phase functions. TODO: comment.
+  // The three phases of the energy distribution algorithm. The communication
+  // phase propagates signals communicating particles' energy levels, the
+  // harvesting phase gathers energy from the source or a neighbor's buffer, and
+  // the usage phase spends energy to perform actions, if possible.
   void communicate();
   void harvestEnergy();
   void useEnergy();
 
-  // TODO: comment. Visualization helper functions
-  int energyColor(int color1, int color2) const;
+  // Modifies the input color's opacity based on the particle's current battery
+  // level, with a minimum of 5% opacity (for little to no energy) and a maximum
+  // of 100% opacity (for energy >= demand).
+  int energyColor(int color) const;
 
  protected:
   // Algorithm parameters.
   const double _capacity;
+  const double _demand;
   const double _harvestRate;
   const double _batteryFrac;
-  const double _demand;
   const Usage _usage;
 
   // Local variables.
