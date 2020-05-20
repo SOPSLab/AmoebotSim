@@ -94,6 +94,10 @@ class EnergySharingParticle : public AmoebotParticle {
 
 class EnergySharingSystem : public AmoebotSystem {
  public:
+  // Constructs a system of EnergySharingParticles with an optionally specified
+  // size (# particles), energy usage mode (0 for repeating uniform, 1 for
+  // growth), energy capacity, energy harvesting rate, and battery allocation
+  // fraction.
   EnergySharingSystem(int numParticles, const int usage, const double capacity,
                       const double harvestRate, const double batteryFrac);
 };

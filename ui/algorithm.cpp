@@ -9,6 +9,7 @@
 #include "alg/demo/metricsdemo.h"
 #include "alg/demo/tokendemo.h"
 #include "alg/compression.h"
+#include "alg/energyshape.h"
 #include "alg/energysharing.h"
 #include "alg/infobjcoating.h"
 #include "alg/leaderelection.h"
@@ -122,6 +123,39 @@ void CompressionAlg::instantiate(const int numParticles, const double lambda) {
   }
 }
 
+EnergyShapeAlg::EnergyShapeAlg()
+    : Algorithm("Energy + Hexagon Formation", "energyshape") {
+  addParameter("# Particles", "200");
+  addParameter("Hole Prob.", "0.2");
+  addParameter("Capacity", "10.0");
+  addParameter("Demand", "1.0");
+  addParameter("Harvest Rate", "1.0");
+  addParameter("Battery Fraction", "0.75");
+}
+
+void EnergyShapeAlg::instantiate(const int numParticles, const double holeProb,
+                                 const double capacity, const double demand,
+                                 const double harvestRate,
+                                 const double batteryFrac) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    emit log("holeProb in [0,1] required", true);
+  } else if (capacity <= 0) {
+    emit log("capacity must be > 0", true);
+  } else if (demand < 0 || demand > capacity) {
+    emit log("demand must be in [0, capacity]", true);
+  } else if (harvestRate <= 0 || harvestRate > 0.5 * capacity) {
+    emit log("harvestRate must be in (0, capacity/2]", true);
+  } else if (batteryFrac <= 0 || batteryFrac >= 1) {
+    emit log("batteryFrac must be in (0, 1)", true);
+  } else {
+    emit setSystem(std::make_shared<EnergyShapeSystem>(
+                     numParticles, holeProb, capacity, demand, harvestRate,
+                     batteryFrac));
+  }
+}
+
 EnergySharingAlg::EnergySharingAlg()
     : Algorithm("Energy Sharing", "energysharing") {
   addParameter("# Particles", "91");
@@ -223,6 +257,7 @@ AlgorithmList::AlgorithmList() {
 
   // General algorithms.
   _algorithms.push_back(new CompressionAlg());
+  _algorithms.push_back(new EnergyShapeAlg());
   _algorithms.push_back(new EnergySharingAlg());
   _algorithms.push_back(new InfObjCoatingAlg());    
   _algorithms.push_back(new LeaderElectionAlg());

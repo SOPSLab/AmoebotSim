@@ -116,6 +116,18 @@ class EnergySharingAlg : public Algorithm {
                    const double batteryFrac = 0.75);
 };
 
+// Energy Distribution + Hexagon Formation.
+class EnergyShapeAlg : public Algorithm {
+  Q_OBJECT
+
+ public:
+  EnergyShapeAlg();
+
+ public slots:
+  void instantiate(const int numParticles = 200, const double holeProb = 0.2,
+                   const double capacity = 10, const double demand = 1,
+                   const double harvestRate = 1, const double batteryFrac = 0.75);
+};
 
 // Infinite Object Coating.
 class InfObjCoatingAlg : public Algorithm {
