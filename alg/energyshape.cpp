@@ -23,7 +23,7 @@ EnergyShapeParticle::EnergyShapeParticle(const Node& head, int globalTailDir,
       _inhibit(false),
       _prune(false),
       _eState(eState),
-      _parentDir(-1),
+      _parentLabel(-1),
       _lastParentDir(0),
       _sState(sState),
       _constructionDir(-1),
@@ -48,12 +48,12 @@ void EnergyShapeParticle::activate() {
       return false;
     };
 
-    int nbrDir = labelOfFirstNbrWithProperty<EnergyShapeParticle>(
-                   prop, _lastParentDir);
-    if (nbrDir != -1) {
+    int nbrLabel = labelOfFirstNbrWithProperty<EnergyShapeParticle>(prop);
+//                     prop, _lastParentDir);
+    if (nbrLabel != -1) {
       _eState = EnergyState::Active;
-      _parentDir = nbrDir;
-      _lastParentDir = _parentDir;
+      _parentLabel = nbrLabel;
+//      _lastParentDir = _parentDir;
     }
   } else if (_prune) {
     // Pass the prune signal on to this particle's children and then prune.
@@ -81,7 +81,7 @@ int EnergyShapeParticle::headMarkColor() const {
 }
 
 int EnergyShapeParticle::headMarkDir() const {
-  return _parentDir;
+  return _parentLabel == -1 ? -1 : labelToDir(_parentLabel);
 }
 
 int EnergyShapeParticle::tailMarkColor() const {
@@ -96,13 +96,6 @@ QString EnergyShapeParticle::inspectionText() const {
   text += "  orientation: " + QString::number(orientation) + "\n";
   text += "  globalTailDir: " + QString::number(globalTailDir) + "\n\n";
   text += "Local Info (Energy Dist.):\n";
-  text += "  battery: " + QString::number(_battery) + " / "
-                        + QString::number(_capacity) + "\n";
-  text += "  buffer: " + QString::number(_buffer) + " / "
-                       + QString::number(_capacity) + "\n";
-  text += "  stress: " + QString::number(_stress) + "\n";
-  text += "  inhibit: " + QString::number(_inhibit) + "\n";
-  text += "  prune: " + QString::number(_prune) + "\n";
   text += "  energy state: ";
   text += [this](){
     switch(_eState) {
@@ -112,7 +105,14 @@ QString EnergyShapeParticle::inspectionText() const {
     }
     return "no state\n";
   }();
-  text += "  parentDir: " + QString::number(_parentDir) + "\n";
+  text += "  parentLabel: " + QString::number(_parentLabel) + "\n";
+  text += "  battery: " + QString::number(_battery) + " / "
+                        + QString::number(_capacity) + "\n";
+  text += "  buffer: " + QString::number(_buffer) + " / "
+                       + QString::number(_capacity) + "\n";
+  text += "  stress: " + QString::number(_stress) + "\n";
+  text += "  inhibit: " + QString::number(_inhibit) + "\n";
+  text += "  prune: " + QString::number(_prune) + "\n\n";
   text += "Local Info (Shape Form.):\n";
   text += "  shape state: ";
   text += [this](){
@@ -137,26 +137,28 @@ EnergyShapeParticle& EnergyShapeParticle::nbrAtLabel(int label) const {
 }
 
 void EnergyShapeParticle::prune() {
-  int numNbrs = isContracted() ? 6 : 10;
-  for (int nbrDir = 0; nbrDir < numNbrs; nbrDir++) {
-    if (hasNbrAtLabel(nbrDir) && nbrAtLabel(nbrDir)._parentDir != -1
-        && pointsAtMe(nbrAtLabel(nbrDir), nbrAtLabel(nbrDir)._parentDir)) {
-      nbrAtLabel(nbrDir)._prune = true;
+  int labelLimit = isContracted() ? 6 : 10;
+  for (int nbrLabel = 0; nbrLabel < labelLimit; nbrLabel++) {
+    if (hasNbrAtLabel(nbrLabel) && nbrAtLabel(nbrLabel)._parentLabel != -1
+        && pointsAtMe(nbrAtLabel(nbrLabel), nbrAtLabel(nbrLabel)._parentLabel)) {
+      nbrAtLabel(nbrLabel)._prune = true;
     }
   }
 
   _stress = false;
   _inhibit = false;
   _prune = false;
-  _parentDir = -1;
+  _parentLabel = -1;
   _eState = EnergyState::Idle;
 }
 
 void EnergyShapeParticle::communicate() {
   bool hasStressChild = false;
-  for (int nbrDir = 0; nbrDir < 6; nbrDir++) {
-    if (hasNbrAtLabel(nbrDir) && nbrAtLabel(nbrDir)._stress
-        && pointsAtMe(nbrAtLabel(nbrDir), nbrAtLabel(nbrDir)._parentDir)) {
+  int labelLimit = isContracted() ? 6 : 10;
+  for (int nbrLabel = 0; nbrLabel < labelLimit; nbrLabel++) {
+    if (hasNbrAtLabel(nbrLabel) && nbrAtLabel(nbrLabel)._parentLabel != -1
+        && pointsAtMe(nbrAtLabel(nbrLabel), nbrAtLabel(nbrLabel)._parentLabel)
+        && nbrAtLabel(nbrLabel)._stress) {
       hasStressChild = true;
       break;
     }
@@ -164,7 +166,7 @@ void EnergyShapeParticle::communicate() {
 
   if (_eState != EnergyState::Root) {
     _stress = _battery < _demand || hasStressChild;
-    _inhibit = nbrAtLabel(_parentDir)._inhibit;
+    _inhibit = nbrAtLabel(_parentLabel)._inhibit;
   } else {
     _inhibit = _battery < _demand || hasStressChild;
   }
@@ -179,8 +181,8 @@ void EnergyShapeParticle::harvestEnergy() {
   if (_eState == EnergyState::Root) {
     _battery = std::min(_battery + frac * _harvestRate, _capacity);
     _buffer = std::min(_buffer + (1 - frac) * _harvestRate, _capacity);
-  } else if (nbrAtLabel(_parentDir)._buffer >= _harvestRate) {
-    nbrAtLabel(_parentDir)._buffer -=
+  } else if (nbrAtLabel(_parentLabel)._buffer >= _harvestRate) {
+    nbrAtLabel(_parentLabel)._buffer -=
         (std::min(frac * _harvestRate, _capacity - _battery)
          + std::min((1 - frac) * _harvestRate, _capacity - _buffer));
     _battery = std::min(_battery + frac * _harvestRate, _capacity);
@@ -197,12 +199,14 @@ void EnergyShapeParticle::useEnergy() {
       if (_sState == ShapeState::Follow) {
         if (!hasNbrInState({ShapeState::Idle}) && !hasTailFollower()) {
           prune();
+//          _lastParentDir = labelToDir(_lastParentDir);
           contractTail();
           didAction = true;
         }
       } else if (_sState == ShapeState::Lead) {
         if (!hasNbrInState({ShapeState::Idle}) && !hasTailFollower()) {
           prune();
+//          _lastParentDir = labelToDir(_lastParentDir);
           contractTail();
           updateMoveDir();
           didAction = true;
@@ -228,8 +232,10 @@ void EnergyShapeParticle::useEnergy() {
         } else if (hasTailAtLabel(_followDir)) {
           auto nbr = nbrAtLabel(_followDir);
           int nbrContractDir = nbrDirToDir(nbr, (nbr.tailDir() + 3) % 6);
-          nbr.prune();
+          nbrAtLabel(_followDir).prune();  // DO NOT USE nbr.prune()!
+//          nbr._lastParentDir = nbr.labelToDir(nbr._lastParentDir);
           prune();
+//          _lastParentDir = labelToDirAfterExpansion(_lastParentDir, _followDir);
           push(_followDir);
           _followDir = nbrContractDir;
           didAction = true;
@@ -243,10 +249,13 @@ void EnergyShapeParticle::useEnergy() {
           updateMoveDir();
           if (!hasNbrAtLabel(_moveDir)) {
             prune();
+//            _lastParentDir = labelToDirAfterExpansion(_lastParentDir, _moveDir);
             expand(_moveDir);
           } else if (hasTailAtLabel(_moveDir)) {
             nbrAtLabel(_moveDir).prune();
+//            nbr._lastParentDir = nbr.labelToDir(nbr._lastParentDir);
             prune();
+//            _lastParentDir = labelToDirAfterExpansion(_lastParentDir, _moveDir);
             push(_moveDir);
           }
           didAction = true;
@@ -405,8 +414,9 @@ EnergyShapeSystem::EnergyShapeSystem(const int numParticles,
 bool EnergyShapeSystem::hasTerminated() const {
   for (auto p : particles) {
     auto esp = dynamic_cast<EnergyShapeParticle*>(p);
-    if (esp->_sState != EnergyShapeParticle::ShapeState::Seed
-        && esp->_sState != EnergyShapeParticle::ShapeState::Finish) {
+    if (esp->_stress || esp->_inhibit ||
+        (esp->_sState != EnergyShapeParticle::ShapeState::Seed
+         && esp->_sState != EnergyShapeParticle::ShapeState::Finish)) {
       return false;
     }
   }
