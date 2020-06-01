@@ -24,7 +24,7 @@ EnergyShapeParticle::EnergyShapeParticle(const Node& head, int globalTailDir,
       _prune(false),
       _eState(eState),
       _parentLabel(-1),
-      _lastParentDir(0),
+      _lastParent(0),
       _sState(sState),
       _constructionDir(-1),
       _moveDir(-1),
@@ -48,12 +48,12 @@ void EnergyShapeParticle::activate() {
       return false;
     };
 
-    int nbrLabel = labelOfFirstNbrWithProperty<EnergyShapeParticle>(prop);
-//                     prop, _lastParentDir);
+    int nbrLabel = labelOfFirstNbrWithProperty<EnergyShapeParticle>(
+                     prop, _lastParent);
     if (nbrLabel != -1) {
       _eState = EnergyState::Active;
       _parentLabel = nbrLabel;
-//      _lastParentDir = _parentDir;
+      _lastParent = _parentLabel;
     }
   } else if (_prune) {
     // Pass the prune signal on to this particle's children and then prune.
@@ -202,14 +202,14 @@ void EnergyShapeParticle::useEnergy() {
       if (_sState == ShapeState::Follow) {
         if (!hasNbrInState({ShapeState::Idle}) && !hasTailFollower()) {
           prune();
-//          _lastParentDir = labelToDir(_lastParentDir);
+          _lastParent = labelToDir(_lastParent);
           contractTail();
           didAction = true;
         }
       } else if (_sState == ShapeState::Lead) {
         if (!hasNbrInState({ShapeState::Idle}) && !hasTailFollower()) {
           prune();
-//          _lastParentDir = labelToDir(_lastParentDir);
+          _lastParent = labelToDir(_lastParent);
           contractTail();
           updateMoveDir();
           didAction = true;
@@ -236,9 +236,9 @@ void EnergyShapeParticle::useEnergy() {
           auto nbr = nbrAtLabel(_followDir);
           int nbrContractDir = nbrDirToDir(nbr, (nbr.tailDir() + 3) % 6);
           nbrAtLabel(_followDir).prune();  // DO NOT USE nbr.prune()!
-//          nbr._lastParentDir = nbr.labelToDir(nbr._lastParentDir);
+          nbrAtLabel(_followDir)._lastParent = nbr.labelToDir(nbr._lastParent);
           prune();
-//          _lastParentDir = labelToDirAfterExpansion(_lastParentDir, _followDir);
+          _lastParent = labelToDirAfterExpansion(_lastParent, _followDir);
           push(_followDir);
           _followDir = nbrContractDir;
           didAction = true;
@@ -252,13 +252,14 @@ void EnergyShapeParticle::useEnergy() {
           updateMoveDir();
           if (!hasNbrAtLabel(_moveDir)) {
             prune();
-//            _lastParentDir = labelToDirAfterExpansion(_lastParentDir, _moveDir);
+            _lastParent = labelToDirAfterExpansion(_lastParent, _moveDir);
             expand(_moveDir);
           } else if (hasTailAtLabel(_moveDir)) {
-            nbrAtLabel(_moveDir).prune();
-//            nbr._lastParentDir = nbr.labelToDir(nbr._lastParentDir);
+            auto nbr = nbrAtLabel(_moveDir);
+            nbrAtLabel(_moveDir).prune();  // DO NOT USE nbr.prune()!
+            nbrAtLabel(_moveDir)._lastParent = nbr.labelToDir(nbr._lastParent);
             prune();
-//            _lastParentDir = labelToDirAfterExpansion(_lastParentDir, _moveDir);
+            _lastParent = labelToDirAfterExpansion(_lastParent, _moveDir);
             push(_moveDir);
           }
           didAction = true;

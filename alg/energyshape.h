@@ -61,7 +61,7 @@ class EnergyShapeParticle : public AmoebotParticle {
   EnergyShapeParticle& nbrAtLabel(int label) const;
 
   // Sets all energy children's prune flags to true, resets flags in memory,
-  // removes energy parent label, and resets energy state to idle.
+  // removes energy parent label, and resets energy state to idle (if active).
   void prune();
 
   /* Energy Distribution functions. */
@@ -125,7 +125,7 @@ class EnergyShapeParticle : public AmoebotParticle {
   bool _prune;
   EnergyState _eState;
   int _parentLabel;
-  int _lastParentDir;
+  int _lastParent;
 
   // Shape Formation variables.
   ShapeState _sState;
