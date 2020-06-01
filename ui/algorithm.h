@@ -124,9 +124,10 @@ class EnergyShapeAlg : public Algorithm {
   EnergyShapeAlg();
 
  public slots:
-  void instantiate(const int numParticles = 200, const double holeProb = 0.2,
-                   const double capacity = 10, const double demand = 1,
-                   const double harvestRate = 1, const double batteryFrac = 0.75);
+  void instantiate(const int numParticles = 200, const int numEnergyRoots = 1,
+                   const double holeProb = 0.2, const double capacity = 10,
+                   const double demand = 1, const double harvestRate = 1,
+                   const double batteryFrac = 0.75);
 };
 
 // Infinite Object Coating.

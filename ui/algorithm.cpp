@@ -126,6 +126,7 @@ void CompressionAlg::instantiate(const int numParticles, const double lambda) {
 EnergyShapeAlg::EnergyShapeAlg()
     : Algorithm("Energy + Hexagon Formation", "energyshape") {
   addParameter("# Particles", "200");
+  addParameter("# Energy Roots", "1");
   addParameter("Hole Prob.", "0.2");
   addParameter("Capacity", "10.0");
   addParameter("Demand", "1.0");
@@ -133,12 +134,16 @@ EnergyShapeAlg::EnergyShapeAlg()
   addParameter("Battery Fraction", "0.75");
 }
 
-void EnergyShapeAlg::instantiate(const int numParticles, const double holeProb,
+void EnergyShapeAlg::instantiate(const int numParticles,
+                                 const int numEnergyRoots,
+                                 const double holeProb,
                                  const double capacity, const double demand,
                                  const double harvestRate,
                                  const double batteryFrac) {
   if (numParticles <= 0) {
     emit log("# particles must be > 0", true);
+  } else if (numEnergyRoots <= 0 || numEnergyRoots > numParticles) {
+    emit log("# energy roots must be in (0, #particles]", true);
   } else if (holeProb < 0 || holeProb > 1) {
     emit log("holeProb in [0,1] required", true);
   } else if (capacity <= 0) {
@@ -151,8 +156,8 @@ void EnergyShapeAlg::instantiate(const int numParticles, const double holeProb,
     emit log("batteryFrac must be in (0, 1)", true);
   } else {
     emit setSystem(std::make_shared<EnergyShapeSystem>(
-                     numParticles, holeProb, capacity, demand, harvestRate,
-                     batteryFrac));
+                     numParticles, numEnergyRoots, holeProb, capacity, demand,
+                     harvestRate, batteryFrac));
   }
 }
 

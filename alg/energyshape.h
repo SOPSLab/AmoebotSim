@@ -140,12 +140,13 @@ class EnergyShapeParticle : public AmoebotParticle {
 class EnergyShapeSystem : public AmoebotSystem {
  public:
   // Constructs a system of EnergyShapeParticles with an optionally specified
-  // size (# particles), hole probability in [0,1) controlling how sparse the
-  // initial configuration is, energy capacity, energy harvesting rate, and
-  // battery allocation fraction.
-  EnergyShapeSystem(const int numParticles, const double holeProb,
-                    const double capacity, const double demand,
-                    const double harvestRate, const double batteryFrac);
+  // size (# particles), number of energy distribution root particles, hole
+  // probability in [0,1) controlling how sparse the initial configuration is,
+  // energy capacity, energy harvesting rate, and battery allocation fraction.
+  EnergyShapeSystem(const int numParticles, const int numEnergyRoots,
+                    const double holeProb, const double capacity,
+                    const double demand, const double harvestRate,
+                    const double batteryFrac);
 
   // Checks whether the system has completed forming the desired shape (i.e.,
   // all particles are in shape state Finish).

@@ -91,8 +91,9 @@ void ParameterListModel::createSystem(QString algName) {
           params[0].toInt(), params[1].toDouble());
   } else if (signature == "energyshape") {
     dynamic_cast<EnergyShapeAlg*>(alg)->instantiate(
-          params[0].toInt(), params[1].toDouble(), params[2].toDouble(),
-          params[3].toDouble(), params[4].toDouble(), params[5].toDouble());
+          params[0].toInt(), params[1].toInt(), params[2].toDouble(),
+          params[3].toDouble(), params[4].toDouble(), params[5].toDouble(),
+          params[6].toDouble());
   } else if (signature == "energysharing") {
     dynamic_cast<EnergySharingAlg*>(alg)->instantiate(
           params[0].toInt(), params[1].toInt(), params[2].toDouble(),

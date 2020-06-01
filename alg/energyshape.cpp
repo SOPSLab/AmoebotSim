@@ -149,7 +149,10 @@ void EnergyShapeParticle::prune() {
   _inhibit = false;
   _prune = false;
   _parentLabel = -1;
-  _eState = EnergyState::Idle;
+
+  if (_eState != EnergyState::Root) {
+    _eState = EnergyState::Idle;
+  }
 }
 
 void EnergyShapeParticle::communicate() {
@@ -356,6 +359,7 @@ bool EnergyShapeParticle::hasTailFollower() const {
 }
 
 EnergyShapeSystem::EnergyShapeSystem(const int numParticles,
+                                     const int numEnergyRoots,
                                      const double holeProb,
                                      const double capacity,
                                      const double demand,
@@ -367,7 +371,7 @@ EnergyShapeSystem::EnergyShapeSystem(const int numParticles,
   std::set<Node> occupied;
   insert(new EnergyShapeParticle(Node(0, 0), -1, randDir(), *this, capacity,
                                  demand, harvestRate, batteryFrac,
-                                 EnergyShapeParticle::EnergyState::Root,
+                                 EnergyShapeParticle::EnergyState::Idle,
                                  EnergyShapeParticle::ShapeState::Seed));
   occupied.insert(Node(0, 0));
 
@@ -408,6 +412,18 @@ EnergyShapeSystem::EnergyShapeSystem(const int numParticles,
         }
       }
     }
+  }
+
+  // Choose particles at random to make energy ditribution roots.
+  std::vector<int> indices;
+  for (int i = 0; i < numParticles; ++i) {
+    indices.push_back(i);
+  }
+
+  shuffle(indices.begin(), indices.end());
+  for (int i = 0; i < numEnergyRoots; ++i) {
+    auto esp = dynamic_cast<EnergyShapeParticle*>(particles[indices[i]]);
+    esp->_eState = EnergyShapeParticle::EnergyState::Root;
   }
 }
 
