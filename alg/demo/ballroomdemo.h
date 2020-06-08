@@ -2,10 +2,9 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-// Defines a particle system for demonstrating pull/push handover and
-// read & write functionality.
-//
-// Run with ballroomdemo() on the simulator command line.
+// Defines the particle system and composing particles for the Ballroom code
+// tutorial, demonstrating inter-particle coordination. This tutorial covers
+// read/write functionality and pull/push handovers.
 
 #ifndef AMOEBOTSIM_ALG_DEMO_BALLROOMDEMO_H_
 #define AMOEBOTSIM_ALG_DEMO_BALLROOMDEMO_H_
@@ -26,17 +25,20 @@ class BallroomDemoParticle : public AmoebotParticle {
   // compass direction from its head to its tail (-1 if contracted), an offset
   // for its local compass, a system which it belongs to, and an initial state.
   BallroomDemoParticle(const Node head, const int globalTailDir,
-                   const int orientation, AmoebotSystem& system, State state);
+                       const int orientation, AmoebotSystem& system,
+                       State _state);
 
   // Executes one particle activation.
   void activate() override;
 
-  // Functions for altering a particle's cosmetic appearance; headMarkColor
-  // (respectively, tailMarkColor) returns the color to be used for the ring
-  // drawn around the head (respectively, tail) node. Tail color is not shown
-  // when the particle is contracted. headMarkDir returns the label of the port
-  // on which the black head marker is drawn.
+  // Functions for altering the particle's color. headMarkColor() (resp.,
+  // tailMarkColor()) returns the color to be used for the ring drawn around the
+  // particle's head (resp., tail) node. In this demo, the tail color simply
+  // matches the head color. headMarkDir returns the label of the port
+  // on which the head marker is drawn; in this demo, this points from the
+  // follower dance partner to its leader.
   int headMarkColor() const override;
+  int headMarkDir() const override;
   int tailMarkColor() const override;
 
   // Returns the string to be displayed when this particle is inspected; used
@@ -48,13 +50,12 @@ class BallroomDemoParticle : public AmoebotParticle {
   // hasNbrAtLabel() first if unsure.
   BallroomDemoParticle& nbrAtLabel(int label) const;
 
-  // Returns the label each particle's neighbor; A particle always has only one
-  // neighbor.
-  int labelOfNeighbor(BallroomDemoParticle* neighbor) const;
-
  protected:
-  State state;
-  BallroomDemoParticle *neighbor;
+  // Member variables.
+  State _state;
+  int _partnerLbl;
+  int _timesPushed;
+  int _timesPulled;
 
  private:
   friend class BallroomDemoSystem;
@@ -62,8 +63,9 @@ class BallroomDemoParticle : public AmoebotParticle {
 
 class BallroomDemoSystem : public AmoebotSystem {
  public:
-  // Constructs a system of 50 dancing pairs.
-  BallroomDemoSystem(unsigned int numPairs = 30);
+  // Constructs a system of the specified number of BallroomDemoParticles in
+  // "dance partner" pairs enclosed by a rhombic ring of objects.
+  BallroomDemoSystem(unsigned int numParticles = 30);
 };
 
 #endif  // AMOEBOTSIM_ALG_DEMO_BALLROOMDEMO_H_

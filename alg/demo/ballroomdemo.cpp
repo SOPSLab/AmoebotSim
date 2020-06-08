@@ -4,54 +4,58 @@
 
 #include "alg/demo/ballroomdemo.h"
 
-#include <iostream>
-
-BallroomDemoParticle::BallroomDemoParticle(const Node head, const int globalTailDir,
-                                   const int orientation, AmoebotSystem &system,
-                                   State state)
-  : AmoebotParticle(head, globalTailDir, orientation, system),
-    state(state) {}
+BallroomDemoParticle::BallroomDemoParticle(const Node head,
+                                           const int globalTailDir,
+                                           const int orientation,
+                                           AmoebotSystem &system,
+                                           State state)
+    : AmoebotParticle(head, globalTailDir, orientation, system),
+      _state(state),
+      _partnerLbl(-1),
+      _timesPushed(0),
+      _timesPulled(0) {}
 
 void BallroomDemoParticle::activate() {
-  if (isContracted()) {
-    if (state == State::Leader) {
-      int nbrLabel = labelOfNeighbor(&*neighbor);
-      if (canPush(nbrLabel)) {
-        push(nbrLabel);
-        if (randBool()) {
-          (*neighbor).state = State::Leader;
-          state = State::Follower;
-        }
+  if (_state == State::Leader) {
+    if (isContracted()) {
+      // Attempt to expand into an random adjacent position.
+      int expandDir = randDir();
+      if (canExpand(expandDir)) {
+        expand(expandDir);
       }
-      else { // Choose a random move direction not occupied by the follower
-        int moveDir = randDir();
-        if (canExpand(moveDir)) {
-          expand(moveDir);
-          if (randBool()) {
-            (*neighbor).state = State::Leader;
-            state = State::Follower;
+    } else {
+      // Find the follower partner and pull it, if possible.
+      for (int label : tailLabels()) {
+        if (hasNbrAtLabel(label) && nbrAtLabel(label)._partnerLbl != -1
+            && pointsAtMe(nbrAtLabel(label), nbrAtLabel(label)._partnerLbl)) {
+          if (canPull(label)) {
+            nbrAtLabel(label)._partnerLbl =
+                dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
+            nbrAtLabel(label)._timesPulled++;
+            pull(label);
           }
+          break;
         }
       }
     }
-  }
-  else {  // isExpanded().
-    if (state == State::Leader) {
-      int nbrLabel = labelOfNeighbor(&*neighbor);
-      if (canPull(nbrLabel)) {
-        pull(nbrLabel);
-        (*neighbor).contractTail();
-        if (randBool()) {
-          (*neighbor).state = State::Leader;
-          state = State::Follower;
-        }
+  } else {  // _state == State::Follower.
+    if (isContracted()) {
+      // Push the leader partner, if possible.
+      if (canPush(_partnerLbl)) {
+        auto leader = nbrAtLabel(_partnerLbl);
+        int leaderContractDir = nbrDirToDir(leader, (leader.tailDir() + 3) % 6);
+        nbrAtLabel(_partnerLbl)._timesPushed++;
+        push(_partnerLbl);
+        _partnerLbl = leaderContractDir;
       }
+    } else {
+      contractTail();
     }
   }
 }
 
 int BallroomDemoParticle::headMarkColor() const {
-  switch(state) {
+  switch(_state) {
     case State::Leader:   return 0xff0000;
     case State::Follower: return 0x0000ff;
   }
@@ -59,21 +63,12 @@ int BallroomDemoParticle::headMarkColor() const {
   return -1;
 }
 
-int BallroomDemoParticle::tailMarkColor() const {
-  return headMarkColor();
+int BallroomDemoParticle::headMarkDir() const {
+  return _state == State::Follower ? _partnerLbl : -1;
 }
 
-int BallroomDemoParticle::labelOfNeighbor(BallroomDemoParticle *neighbor) const {
-  const int maxNeighbors = isExpanded() ? 12 : 6;
-  for(int i = 0; i < maxNeighbors; ++i) {
-    bool hasnbr = hasNbrAtLabel(i);
-    if (hasnbr) {
-      if(&nbrAtLabel(i) == &*neighbor) {
-        return i;
-      }
-    }
-  }
-  return -1;
+int BallroomDemoParticle::tailMarkColor() const {
+  return headMarkColor();
 }
 
 QString BallroomDemoParticle::inspectionText() const {
@@ -86,12 +81,15 @@ QString BallroomDemoParticle::inspectionText() const {
   text += "Local Info:\n";
   text += "  state: ";
   text += [this](){
-    switch(state) {
+    switch(_state) {
       case State::Leader:   return "leader\n";
       case State::Follower: return "follower\n";
-      default:              return "no state\n";
     }
+    return "no state\n";
   }();
+  text += "  partnerDir: " + QString::number(_partnerLbl) + "\n";
+  text += "  # times pushed: " + QString::number(_timesPushed) + "\n";
+  text += "  # times pulled: " + QString::number(_timesPulled);
 
   return text;
 }
@@ -100,62 +98,50 @@ BallroomDemoParticle& BallroomDemoParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<BallroomDemoParticle>(label);
 }
 
-BallroomDemoSystem::BallroomDemoSystem(unsigned int numPairs) {
-
-  // The Ballroom system is enclosed in a rhombus with side length
-  // of 2 * numPairs.
-  Node boundNode(numPairs, numPairs);
-  int direcitons[4] = {3, 4, 0, 1};
-  for (int j = 0; j < 4; ++j) {
-    int dir = direcitons[j];
-    for (int i = 0; i < 2*numPairs; ++i) {
+BallroomDemoSystem::BallroomDemoSystem(unsigned int numParticles) {
+  // To enclose an area that's roughly 6x the # of particles using a rhombus,
+  // the rhombus should have side length 2.6*sqrt(# particles).
+  int sideLen = static_cast<int>(std::round(2.6 * std::sqrt(numParticles)));
+  Node boundNode(0, 0);
+  std::vector<int> rhombusDirs = {0, 1, 3, 4};
+  for (int dir : rhombusDirs) {
+    for (int i = 0; i < sideLen; ++i) {
       insert(new Object(boundNode));
       boundNode = boundNode.nodeInDir(dir);
     }
   }
 
+  // Let s be the bounding rhombus side length. When the rhombus is created as
+  // above, the nodes (x,y) strictly within the rhombus have (i) 0 < x < s and
+  // (ii) 0 < y < s. We want to instantiate particles in Leader/Follower pairs,
+  // or "dance partners".
   std::set<Node> occupied;
-  while ((occupied.size()/3) < numPairs) {
-    // First, choose an x and y position at random within the rhombus.
-    int x = randInt(-(2*numPairs/3), (2*numPairs/3));
-    int y = randInt(-(2*numPairs/3), (2*numPairs/3));
+  unsigned int numParticlesAdded = 0;
+  while (numParticlesAdded < numParticles) {
+    // Choose an (x,y) position within the rhombus for the Leader and a random
+    // adjacent node for its Follower partner.
+    Node leaderNode(randInt(2, sideLen - 1), randInt(2, sideLen - 1));
+    int followerDir = randDir();
+    Node followerNode = leaderNode.nodeInDir(followerDir);
 
-    // Then, we identify the positions we want to place the expanded particle
-    // and its follower.
-    Node nodeTail(x, y);
-    int partnerDir = randDir();
-    Node flwr = nodeTail.nodeInDir(partnerDir);
-    int leaderExpandDir = randDir();
-    while (leaderExpandDir == partnerDir) {
-      leaderExpandDir = randDir();
-    }
-    Node nodeHead = nodeTail.nodeInDir(leaderExpandDir);
+    // If both nodes are unoccupied, place the pair there, linking them together
+    // by setting their partner directions to face one another.
+    if (occupied.find(leaderNode) == occupied.end()
+        && occupied.find(followerNode) == occupied.end()) {
+      BallroomDemoParticle* leader =
+          new BallroomDemoParticle(leaderNode, -1, randDir(), *this,
+                                   BallroomDemoParticle::State::Leader);
+      insert(leader);
+      occupied.insert(leaderNode);
 
-    // If unoccupied, place the particles there.
-    if ((occupied.find(nodeTail) == occupied.end() &&
-        occupied.find(flwr) == occupied.end()) &&
-        occupied.find(nodeHead) == occupied.end()) {
-      BallroomDemoParticle *one =
-          new BallroomDemoParticle(nodeTail, leaderExpandDir, randDir(), *this,
-                                                  BallroomDemoParticle::State::Leader);
-      insert(one);
+      BallroomDemoParticle* follower =
+          new BallroomDemoParticle(followerNode, -1, randDir(), *this,
+                                   BallroomDemoParticle::State::Follower);
+      follower->_partnerLbl = follower->globalToLocalDir((followerDir + 3) % 6);
+      insert(follower);
+      occupied.insert(followerNode);
 
-      BallroomDemoParticle *two =
-          new BallroomDemoParticle(flwr, -1, randDir(), *this,
-                                                  BallroomDemoParticle::State::Follower);
-      insert(two);
-
-      // Then, we link the two particles by their 'neighbor' variable to keep
-      // track of their dance partner. This ensures the particles only dance
-      // with their original pairing.
-      one->neighbor = &(*two);
-      two->neighbor = &(*one);
-
-      // Here, we insert both the nodeHead and nodeTail positions so we
-      // do not insert particles into occupied positions.
-      occupied.insert(nodeTail);
-      occupied.insert(flwr);
-      occupied.insert(nodeHead);
+      numParticlesAdded += 2;
     }
   }
 }
