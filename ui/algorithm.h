@@ -70,15 +70,15 @@ class MetricsDemoAlg : public Algorithm {
   void instantiate(const int numParticles = 30, const int counterMax = 5);
 };
 
-// Demo: Pull Handovers.
-class PullDemoAlg : public Algorithm {
+// Demo: Ballroom, a tutorial in coordination.
+class BallroomDemoAlg : public Algorithm {
   Q_OBJECT
 
  public:
-  PullDemoAlg();
+  BallroomDemoAlg();
 
  public slots:
-  void instantiate();
+  void instantiate(const int numParticles = 30);
 };
 
 // Demo: Token Passing.

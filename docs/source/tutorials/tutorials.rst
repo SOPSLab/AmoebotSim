@@ -606,11 +606,295 @@ Congratulations, you've implemented your first simulation on AmoebotSim!
 .. image:: graphics/discoanimation.gif
 
 
-CoordinationDemo: Working Together
+.. _ballroom-demo:
+
+BallroomDemo: Working Together
 ----------------------------------
 
-.. todo::
-  Coming soon!
+In AmoebotSim, two particles can achieve coordinated movement through a process called handover. There are two types of handovers:
+
+#. ``push(int label)`` handover: A contracted particle P can initiate a “push” handover with an expanded neighbor Q, located at ``int label``, by expanding into a node occupied by Q, forcing it to contract. In the graphic below, the contracted red particle 'pushes' the expanded blue particle to contract as red expands into its position.
+
+
+.. image:: graphics/pushhandover.gif
+  :scale: 50
+  :align: center
+
+
+#. ``pull(int label)`` handover: An expanded particle Q can initiate a “pull” handover with a contracted neighbor P, located at ``int label``, by contracting, forcing P to expand into the node it is vacating. In the graphic below, the expanded red particle vacates a position 'pulling' the blue particle to expand into the recently vacated spot.
+
+.. image:: graphics/pullhandover.gif
+  :scale: 50
+  :align: center
+
+In this demo, we will be developing an algorithm, ``Ballroom``, that coordinates random dance/movements between adjacent particles. Initially, pairs
+of particles, or dance partners, will be placed next to each other; one will be selected as a ``State::Leader``, and one as a ``State::Follower``. The leader is
+responsible for initiating the coordinated movement and, after the pair achieves the desired coordinated movement, the leader will randomly change its internal state & will write to the
+follower to change its state as well. The dance continues infinitely.
+
+After completing this tutorial, you will be able to:
+
+#. Coordinate movements between particles through both push/pull handovers.
+
+#. Read/Write to nearby particle's memory.
+
+At a high level overview, the psuedocode for the algorithm is as
+
+For **Ballroom**, every particle will keep a state either ``State::Leader`` or ``State::Follower``.
+Initially, ``numPairs`` leader/follower pairs are spawned with leaders expanded into a random direction.
+The leader is responsible for coordninating movement and after the pair is finished, swap roles with its partner.::
+
+        if (contracted())
+          if (state == Leader)
+            int nbrLabel = labelOfNeighbor();
+            if (canPush(nbrLabel))
+              push(nbrLabel);
+              neighbor.state = Leader;
+              state = Follower;
+              if (randBool())
+                neighbor.state = Leader;
+                state = Follower;
+
+          else, do:
+            // Choose a random move direction not occupied by the follower.
+            int moveDir = randDir();
+            if (canExpand(moveDir))
+              expand(moveDir);
+              if (randBool())
+                neighbor.state = Leader;
+                state = Follower;
+
+        else: // particle is expanded
+          if (state == Leader)
+            int nbrLabel = labelOfNeighbor();
+            if (canPull(nbrLabel))
+              pull(nbrLabel);
+              neighbor.contractTail();
+              if (randBool())
+                neighbor.state = Leader;
+                state = Follower;
+
+Similar to the **Disco** algorithm, the ``activate()`` functions follows the algorithm psuedocode.
+
+.. code-block:: c++
+
+    // ...
+
+    void BallroomDemoParticle::activate() {
+      if (isContracted()) {
+        if (state == State::Leader) {
+          int nbrLabel = labelOfNeighbor(&*neighbor);
+          if (canPush(nbrLabel)) {
+            push(nbrLabel);
+            if (randBool()) {
+              (*neighbor).state = State::Leader;
+              state = State::Follower;
+            }
+          }
+          else { // Choose a random move direction not occupied by the follower
+            int moveDir = randDir();
+            if (canExpand(moveDir)) {
+              expand(moveDir);
+              if (randBool()) {
+                (*neighbor).state = State::Leader;
+                state = State::Follower;
+              }
+            }
+          }
+        }
+      }
+      else {  // isExpanded().
+        if (state == State::Leader) {
+          int nbrLabel = labelOfNeighbor(&*neighbor);
+          if (canPull(nbrLabel)) {
+            pull(nbrLabel);
+            (*neighbor).contractTail();
+            if (randBool()) {
+              (*neighbor).state = State::Leader;
+              state = State::Follower;
+            }
+          }
+        }
+      }
+    }
+
+    // ...
+
+Lets break down the ``activate()`` and discuss the individual methods used:
+
+1. ``labelOfNeighbor(.)`` is a function used to find the location of a dance partner. It does this by iterating through a particle's ports, checking to see if there is a neighbor at each port until it is found.
+
+.. code-block:: c++
+
+    // ...
+    int BallroomDemoParticle::labelOfNeighbor(BallroomDemoParticle *neighbor) const {
+      const int maxNeighbors = isExpanded() ? 12 : 6;
+      for(int i = 0; i < maxNeighbors; ++i) {
+        bool hasNbr = hasNbrAtLabel(i);
+        if (hasNbr) {
+          if(&nbrAtLabel(i) == &*neighbor) {
+            return i;
+          }
+        }
+      }
+      return -1;
+    }
+
+    // ...
+
+2. ``canPush(.)`` and ``push(.)`` are used to help coordinate the push handover. First, we check to make sure that a push handover is possible, then executes the push movement.
+
+.. code-block:: c++
+
+    // ...
+
+    bool AmoebotParticle::canPush(int label) const {
+      Q_ASSERT(0 <= label && label < 6);
+
+      return (isContracted() && hasNbrAtLabel(label) &&
+              nbrAtLabel<Particle>(label).isExpanded());
+    }
+
+    void AmoebotParticle::push(int label) {
+      Q_ASSERT(canPush(label));
+
+      const int globalExpansionDir = localToGlobalDir(label);
+      const Node handoverNode = head.nodeInDir(globalExpansionDir);
+      auto& neighbor = nbrAtLabel<AmoebotParticle>(label);
+
+      head = handoverNode;
+      globalTailDir = (globalExpansionDir + 3) % 6;
+      system.particleMap[handoverNode] = this;
+
+      if (handoverNode == neighbor.head) {
+        neighbor.head = neighbor.tail();
+      }
+      neighbor.globalTailDir = -1;
+
+      system.registerMovement(2);
+      system.registerActivation(&neighbor);
+    }
+
+    // ...
+
+
+3. ``canPull(.)`` and ``pull(.)`` are used to help coordinate the pull handover. First, we check to make sure that a pull handover is possible, then executes the movement,  then asks the follower to ``contractTail(.)``.
+
+.. code-block:: c++
+
+    // ...
+
+    bool AmoebotParticle::canPull(int label) const {
+      Q_ASSERT(0 <= label && label < 10);
+
+      return (isExpanded() && hasNbrAtLabel(label) &&
+              nbrAtLabel<Particle>(label).isContracted());
+    }
+
+    void AmoebotParticle::pull(int label) {
+      Q_ASSERT(canPull(label));
+
+      const int globalPullDir = labelToGlobalDir(label);
+      const Node handoverNode = isHeadLabel(label) ? head : tail();
+      auto& neighbor = nbrAtLabel<AmoebotParticle>(label);
+
+      if (isHeadLabel(label)) {
+        head = tail();
+      }
+
+      globalTailDir = -1;
+      neighbor.head = handoverNode;
+      neighbor.globalTailDir = globalPullDir;
+      system.particleMap[handoverNode] = &neighbor;
+
+      system.registerMovement(2);
+      system.registerActivation(&neighbor);
+    }
+
+    void AmoebotParticle::contractTail() {
+      Q_ASSERT(isExpanded());
+
+      system.particleMap.erase(tail());
+      globalTailDir = -1;
+
+      system.registerMovement();
+    }
+
+    // ...
+
+
+
+The system is set up as follows:
+
+.. code-block:: c++
+
+    // ...
+
+    BallroomDemoSystem::BallroomDemoSystem(unsigned int numPairs) {
+
+      // The Ballroom system is enclosed in a rhombus with side length
+      // of 2 * numParticles.
+      Node boundNode(numPairs, numPairs);
+      int direcitons[4] = {3, 4, 0, 1};
+      for (int j = 0; j < 4; ++j) {
+        int dir = direcitons[j];
+        for (int i = 0; i < 2*numPairs; ++i) {
+          insert(new Object(boundNode));
+          boundNode = boundNode.nodeInDir(dir);
+        }
+      }
+
+      std::set<Node> occupied;
+      while ((occupied.size()/3) < numPairs) {
+        // First, choose an x and y position at random within the rhombus.
+        int x = randInt(-(2*numPairs/3), (2*numPairs/3));
+        int y = randInt(-(2*numPairs/3), (2*numPairs/3));
+
+        // Then, we identify the positions we want to place the expanded particle
+        // and its follower.
+        Node nodeTail(x, y);
+        int partnerDir = randDir();
+        Node flwr = nodeTail.nodeInDir(partnerDir);
+        int leaderExpandDir = randDir();
+        while (leaderExpandDir == partnerDir) {
+          leaderExpandDir = randDir();
+        }
+        Node nodeHead = nodeTail.nodeInDir(leaderExpandDir);
+
+        // If unoccupied, place the particles there.
+        if ((occupied.find(nodeTail) == occupied.end() &&
+            occupied.find(flwr) == occupied.end()) &&
+            occupied.find(nodeHead) == occupied.end()) {
+          BallroomDemoParticle *one =
+              new BallroomDemoParticle(nodeTail, leaderExpandDir, randDir(), *this,
+                                                      BallroomDemoParticle::State::Leader);
+          insert(one);
+
+          BallroomDemoParticle *two =
+              new BallroomDemoParticle(flwr, -1, randDir(), *this,
+                                                      BallroomDemoParticle::State::Follower);
+          insert(two);
+
+          // Then, we link the two particles by their 'neighbor' variable to keep
+          // track of their dance partner. This ensures the particles only dance
+          // with their original pairing.
+          one->neighbor = &(*two);
+          two->neighbor = &(*one);
+
+          // Here, we insert both the nodeHead and nodeTail positions so we
+          // do not insert particles into occupied positions.
+          occupied.insert(nodeTail);
+          occupied.insert(flwr);
+          occupied.insert(nodeHead);
+        }
+      }
+    }
+
+    // ...
+
+After registering the algorithm, as per the **Disco** demo, you are ready to run the algorithm. Congratulations!
+
+.. image:: graphics/ballroomdemo.gif
 
 
 .. _token-demo:
