@@ -21,6 +21,16 @@ class BallroomDemoParticle : public AmoebotParticle {
     Follower
   };
 
+  enum class Color {
+    Red,
+    Orange,
+    Yellow,
+    Green,
+    Blue,
+    Indigo,
+    Violet
+  };
+
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
   // for its local compass, a system which it belongs to, and an initial state.
@@ -51,11 +61,13 @@ class BallroomDemoParticle : public AmoebotParticle {
   BallroomDemoParticle& nbrAtLabel(int label) const;
 
  protected:
+  // Returns a random Color.
+  Color getRandColor() const;
+
   // Member variables.
-  State _state;
+  const State _state;
+  Color _color;
   int _partnerLbl;
-  int _timesPushed;
-  int _timesPulled;
 
  private:
   friend class BallroomDemoSystem;

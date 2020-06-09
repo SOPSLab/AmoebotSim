@@ -11,9 +11,9 @@ BallroomDemoParticle::BallroomDemoParticle(const Node head,
                                            State state)
     : AmoebotParticle(head, globalTailDir, orientation, system),
       _state(state),
-      _partnerLbl(-1),
-      _timesPushed(0),
-      _timesPulled(0) {}
+      _partnerLbl(-1) {
+  _color = getRandColor();
+}
 
 void BallroomDemoParticle::activate() {
   if (_state == State::Leader) {
@@ -31,7 +31,6 @@ void BallroomDemoParticle::activate() {
           if (canPull(label)) {
             nbrAtLabel(label)._partnerLbl =
                 dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
-            nbrAtLabel(label)._timesPulled++;
             pull(label);
           }
           break;
@@ -40,11 +39,17 @@ void BallroomDemoParticle::activate() {
     }
   } else {  // _state == State::Follower.
     if (isContracted()) {
-      // Push the leader partner, if possible.
       if (canPush(_partnerLbl)) {
+        // Update the pair's color.
         auto leader = nbrAtLabel(_partnerLbl);
+        if (_color != leader._color) {
+          _color = leader._color;
+        } else {
+          nbrAtLabel(_partnerLbl)._color = getRandColor();
+        }
+
+        // Push the leader and update the partner direction label.
         int leaderContractDir = nbrDirToDir(leader, (leader.tailDir() + 3) % 6);
-        nbrAtLabel(_partnerLbl)._timesPushed++;
         push(_partnerLbl);
         _partnerLbl = leaderContractDir;
       }
@@ -55,16 +60,21 @@ void BallroomDemoParticle::activate() {
 }
 
 int BallroomDemoParticle::headMarkColor() const {
-  switch(_state) {
-    case State::Leader:   return 0xff0000;
-    case State::Follower: return 0x0000ff;
+  switch(_color) {
+    case Color::Red:    return 0xff0000;
+    case Color::Orange: return 0xff9000;
+    case Color::Yellow: return 0xffff00;
+    case Color::Green:  return 0x00ff00;
+    case Color::Blue:   return 0x0000ff;
+    case Color::Indigo: return 0x4b0082;
+    case Color::Violet: return 0xbb00ff;
   }
 
   return -1;
 }
 
 int BallroomDemoParticle::headMarkDir() const {
-  return _state == State::Follower ? _partnerLbl : -1;
+  return _partnerLbl;
 }
 
 int BallroomDemoParticle::tailMarkColor() const {
@@ -87,15 +97,30 @@ QString BallroomDemoParticle::inspectionText() const {
     }
     return "no state\n";
   }();
-  text += "  partnerDir: " + QString::number(_partnerLbl) + "\n";
-  text += "  # times pushed: " + QString::number(_timesPushed) + "\n";
-  text += "  # times pulled: " + QString::number(_timesPulled);
+  text += [this](){
+    switch(_color) {
+      case Color::Red:    return "red\n";
+      case Color::Orange: return "orange\n";
+      case Color::Yellow: return "yellow\n";
+      case Color::Green:  return "green\n";
+      case Color::Blue:   return "blue\n";
+      case Color::Indigo: return "indigo\n";
+      case Color::Violet: return "violet\n";
+    }
+    return "no color\n";
+  }();
+  text += "  partnerLbl: " + QString::number(_partnerLbl);
 
   return text;
 }
 
 BallroomDemoParticle& BallroomDemoParticle::nbrAtLabel(int label) const {
   return AmoebotParticle::nbrAtLabel<BallroomDemoParticle>(label);
+}
+
+BallroomDemoParticle::Color BallroomDemoParticle::getRandColor() const {
+  // Randomly select an integer and return the corresponding color via casting.
+  return static_cast<Color>(randInt(0, 7));
 }
 
 BallroomDemoSystem::BallroomDemoSystem(unsigned int numParticles) {
@@ -125,7 +150,7 @@ BallroomDemoSystem::BallroomDemoSystem(unsigned int numParticles) {
     Node followerNode = leaderNode.nodeInDir(followerDir);
 
     // If both nodes are unoccupied, place the pair there, linking them together
-    // by setting their partner directions to face one another.
+    // by setting the Follower's partner label to face the Leader.
     if (occupied.find(leaderNode) == occupied.end()
         && occupied.find(followerNode) == occupied.end()) {
       BallroomDemoParticle* leader =
