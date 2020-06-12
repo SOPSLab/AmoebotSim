@@ -606,11 +606,470 @@ Congratulations, you've implemented your first simulation on AmoebotSim!
 .. image:: graphics/discoanimation.gif
 
 
-CoordinationDemo: Working Together
+.. _ballroom-demo:
+
+BallroomDemo: Working Together
 ----------------------------------
 
-.. todo::
-  Coming soon!
+In this tutorial, you will learn how to implement particle communication and coordinated movements.
+We'll be developing **BallroomDemo**, an algorithm where pairs of particles move together within a boundary.
+You can follow along with this tutorial by referencing the completed ``alg/demo/ballroomdemo.*`` files in AmoebotSim.
+This tutorial assumes you have read and are comfortable with the **DiscoDemo** :ref:`tutorial <disco-demo>`.
+
+
+A Primer on Particle Coordination
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In the amoebot model, particles coordinate by communicating with their neighbors (i.e., reading and writing constant amounts of information) and performing coordinated movements called *handovers*.
+The key AmoebotSim function for communication is ``nbrAtLabel(label)`` which returns a reference to the neighboring particle incident to label ``label``, if such a particle exists.
+As we will see, reading and writing can both be achieved using this function.
+Moreover, there are two types of handovers:
+
+#. A *push* handover in which a contracted particle ``P`` expands into a node occupied by an expanded neighbor ``Q``, forcing ``Q`` to contract.
+
+#. A *pull* handover in which an expanded particle ``Q`` contracts, forcing a contracted neighbor ``P`` to expand into the node it is vacating.
+
+These handovers are symmetric and produce the same outcome; they only differ in which particle initiates.
+For example, in the graphic below, the blue particle is either pushing or being pulled by the red particle.
+In AmoebotSim, the conditions for pushing or pulling a neighbor at label ``label`` are checked by ``canPush(label)`` and ``canPull(label)``, respectively.
+Similarly, performing the actual handover is done with ``push(label)`` and ``pull(label)``.
+
+.. image:: graphics/handoverexample.gif
+  :scale: 60
+  :align: center
+
+
+.. _ballroom-algorithm:
+
+Algorithm Description
+^^^^^^^^^^^^^^^^^^^^^
+
+The goal of **BallroomDemo** is to coordinate pairs of Leader/Follower dance partners as they move around an arena.
+The Leader will initiate a dance step by expanding in a random direction.
+Either the Leader or Follower can then perform a handover, causing the Leader to contract and the Follower to expand.
+Finally, the dance step completes with the Follower contracting.
+These dance steps continue indefinitely.
+
+To demonstrate communication, we add a ``color`` variable, similar to **DiscoDemo**.
+All particles are initially assigned random colors.
+Whenever a Follower succeeds in pushing its Leader, it first reads the Leader's color and compares it to its own.
+If the Leader's color is different than the Follower's, the Follower adopts the Leader's color; otherwise, the Follower keeps its color and assigns a new random color to the Leader.
+
+The pseudocode for a particle ``P`` is as follows:
+
+.. code-block:: c++
+
+  if P is the leader, then do:
+    if P is contracted, then do:
+      expandDir <- random direction in [0, 6)
+      if (node in direction expandDir is empty), then do:
+        expand towards expandDir
+      end if
+    else, do:  // P is expanded
+      if the follower partner is contracted, then do:
+        pull the follower partner
+      end if
+    end if
+  else if P is the follower, then do:
+    if P is contracted, then do:
+      if the leader partner is expanded, then do:
+        if leader.color != P.color, then do:
+          P.color <- leader.color
+        else, do:
+          leader.color <- getRandColor()
+        end if
+        push the leader partner
+      end if
+    else, do:  // P is expanded
+      contract tail
+    end if
+  end if
+
+
+Setting Up the Files
+^^^^^^^^^^^^^^^^^^^^
+
+We begin by creating the ``alg/demo/ballroomdemo.h`` and ``alg/demo/ballroomdemo.cpp`` files and setting up their structure.
+As with any other new particle or system type, we inherit from ``AmoebotParticle`` or ``AmoebotSystem``, respectively, and set up the necessary function overrides in ``alg/demo/ballroomdemo.h``.
+The particle's ``_state`` variable will keep track of whether it is a leader (``State::Leader``) or follower (``State::Follower``), and ``_partnerLbl`` will be used by the follower to keep track of its partner leader.
+
+.. code-block:: c++
+
+  /* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
+  * notice can be found at the top of main/main.cpp. */
+
+  // Defines the particle system and composing particles for the Ballroom code
+  // tutorial, demonstrating inter-particle coordination. This tutorial covers
+  // read/write functionality and pull/push handovers.
+
+  #ifndef AMOEBOTSIM_ALG_DEMO_BALLROOMDEMO_H_
+  #define AMOEBOTSIM_ALG_DEMO_BALLROOMDEMO_H_
+
+  #include <QString>
+
+  #include "core/amoebotparticle.h"
+  #include "core/amoebotsystem.h"
+
+  class BallroomDemoParticle : public AmoebotParticle {
+   public:
+    enum class State {
+      Leader,
+      Follower
+    };
+
+    enum class Color {
+      Red,
+      Orange,
+      Yellow,
+      Green,
+      Blue,
+      Indigo,
+      Violet
+    };
+
+    // Constructs a new particle with a node position for its head, a global
+    // compass direction from its head to its tail (-1 if contracted), an offset
+    // for its local compass, a system which it belongs to, and an initial state.
+    BallroomDemoParticle(const Node head, const int globalTailDir,
+                         const int orientation, AmoebotSystem& system,
+                         State _state);
+
+    // Executes one particle activation.
+    void activate() override;
+
+    // Functions for altering the particle's color. headMarkColor() (resp.,
+    // tailMarkColor()) returns the color to be used for the ring drawn around the
+    // particle's head (resp., tail) node. In this demo, the tail color simply
+    // matches the head color. headMarkDir returns the label of the port
+    // on which the head marker is drawn; in this demo, this points from the
+    // follower dance partner to its leader.
+    int headMarkColor() const override;
+    int headMarkDir() const override;
+    int tailMarkColor() const override;
+
+    // Returns the string to be displayed when this particle is inspected; used
+    // to snapshot the current values of this particle's memory at runtime.
+    QString inspectionText() const override;
+
+    // Gets a reference to the neighboring particle incident to the specified port
+    // label. Crashes if no such particle exists at this label; consider using
+    // hasNbrAtLabel() first if unsure.
+    BallroomDemoParticle& nbrAtLabel(int label) const;
+
+   protected:
+    // Returns a random Color.
+    Color getRandColor() const;
+
+    // Member variables.
+    const State _state;
+    Color _color;
+    int _partnerLbl;
+
+   private:
+    friend class BallroomDemoSystem;
+  };
+
+  class BallroomDemoSystem : public AmoebotSystem {
+   public:
+    // Constructs a system of the specified number of BallroomDemoParticles in
+    // "dance partner" pairs enclosed by a rhombic ring of objects.
+    BallroomDemoSystem(unsigned int numParticles = 30);
+  };
+
+  #endif  // AMOEBOTSIM_ALG_DEMO_BALLROOMDEMO_H_
+
+The skeleton of ``alg/demo/ballroomdemo.cpp`` is straightforward.
+
+.. code-block:: c++
+
+  /* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+   * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
+   * notice can be found at the top of main/main.cpp. */
+
+  #include "alg/demo/ballroomdemo.h"
+
+  BallroomDemoParticle::BallroomDemoParticle(const Node head,
+                                             const int globalTailDir,
+                                             const int orientation,
+                                             AmoebotSystem &system,
+                                             State state)
+    : AmoebotParticle(head, globalTailDir, orientation, system),
+      _state(state),
+      _partnerLbl(-1) {
+    _color = getRandColor();
+  }
+
+  void BallroomDemoParticle::activate() {}
+
+  int BallroomDemoParticle::headMarkColor() const {}
+
+  int BallroomDemoParticle::headMarkDir() const {}
+
+  int BallroomDemoParticle::tailMarkColor() const {}
+
+  QString BallroomDemoParticle::inspectionText() const {}
+
+  BallroomDemoParticle& BallroomDemoParticle::nbrAtLabel(int label) const {}
+
+  BallroomDemoParticle::Color BallroomDemoParticle::getRandColor() const {}
+
+  BallroomDemoSystem::BallroomDemoSystem(unsigned int numParticles) {}
+
+
+Function Implementations
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+We'll now implement each function, working from the simplest to the most complex.
+We omit a detailed explanation of ``inspectionText()`` and ``getRandColor()`` since they are analogous to their versions in **DiscoDemo**; see ``alg/demo/ballroomdemo.cpp`` for their implementations.
+The color and head marker functions are similarly straightforward.
+As in **DiscoDemo**, ``headMarkColor()`` maps the ``_color`` variable to hexadecimal RGB values and ``tailMarkColor()`` returns the same value:
+
+.. code-block:: c++
+
+  int BallroomDemoParticle::headMarkColor() const {
+    switch(_color) {
+      case Color::Red:    return 0xff0000;
+      case Color::Orange: return 0xff9000;
+      case Color::Yellow: return 0xffff00;
+      case Color::Green:  return 0x00ff00;
+      case Color::Blue:   return 0x0000ff;
+      case Color::Indigo: return 0x4b0082;
+      case Color::Violet: return 0xbb00ff;
+    }
+
+    return -1;
+  }
+
+  // ...
+
+  int BallroomDemoParticle::tailMarkColor() const {
+    return headMarkColor();
+  }
+
+We want the Follower in each dance partner pair to indicate its Leader partner with the head marker.
+Thus, when later implementing the ``activate()`` function, we will maintain that a Follower's ``_partnerLbl`` always points to its Leader and a Leader's ``_partnerLbl`` is always equal to ``-1`` (i.e., it is ignored).
+
+.. code-block:: c++
+
+  int BallroomDemoParticle::headMarkDir() const {
+    return _partnerLbl;
+  }
+
+The critical function for communication is ``nbrAtLabel(label)``, which returns a reference to the particle object occupying the node incident to the edge labeled ``label``.
+Given this reference, the particle's memory can be read using the usual syntax, e.g., ``nbrAtLabel(1)._x`` would return the value of ``_x`` in the memory of the neighbor at label ``1``.
+Analogously, writes can also be performed using the usual syntax, e.g., ``nbrAtLabel(1)._x = 5``.
+
+.. warning::
+
+	``nbrAtLabel(label)`` will cause AmoebotSim to crash if there is no neighboring particle at label ``label``. The function ``hasNbrAtLabel(label)`` should be used to check neighbor existence before calling ``nbrAtLabel(label)``. Note that ``hasNbrAtLabel()`` is implemented in ``AmoebotParticle`` and is automatically available to all inheriting classes, no override necessary.
+
+.. warning::
+
+  It may be convenient to store a ``nbrAtLabel`` reference for reuse within a function, e.g., ``auto nbr = nbrAtLabel(label)``. However, it is important to understand this stored reference *will only process reads reliably* (e.g., ``nbr._x == nbrAtLabel(label)._x``). Writes performed on this stored variable *will not affect the state of the system* (e.g., ``nbr._x = 5; nbrAtLabel(label)._x != 5;``). This is because, once stored, the reference becomes a copied object whose updates do not affect the original object. Be careful with syntax!
+
+The ``nbrAtLabel()`` function is defined as a ``virtual`` function in ``AmoebotParticle`` and thus can be called by any inheriting class without an overridden version.
+However, without an override, calling ``nbrAtLabel()`` will invoke the ``AmoebotParticle`` version, returning an ``AmoebotParticle`` reference.
+This reference cannot see the new variables we've added to ``BallroomDemoParticle`` (e.g., ``_state``), since this is a child class.
+Thus, we implement the following override so that ``nbrAtLabel()`` returns a ``BallroomDemoParticle`` reference.
+
+.. code-block:: c++
+
+  BallroomDemoParticle& BallroomDemoParticle::nbrAtLabel(int label) const {
+    return AmoebotParticle::nbrAtLabel<BallroomDemoParticle>(label);
+  }
+
+The ``BallroomDemoSystem`` constructor is similar to that of ``DiscoDemoSystem``, with two main differences: (1) we want a rhombic arena instead of a hexagonal one, and (2) we're placing pairs of particles randomly instead of individual ones.
+Instantiating the rhombic boundary of ``Objects`` is relatively straightforward, and follows a similar structure to the hexagon instantiation in **DiscoDemo**.
+After calculating the rhombus side length, the key is defining the directions to "grow" the rhombus.
+We start at ``(0,0)`` and extend the rhombus to the right (direction ``0``), then to the up-right (direction ``1``), then to the left (direction ``3``), and finally to the down-left (direction ``4``) back to the origin.
+
+.. code-block:: c++
+
+  BallroomDemoSystem::BallroomDemoSystem(unsigned int numParticles) {
+    // To enclose an area that's roughly 6x the # of particles using a rhombus,
+    // the rhombus should have side length 2.6*sqrt(# particles).
+    int sideLen = static_cast<int>(std::round(2.6 * std::sqrt(numParticles)));
+    Node boundNode(0, 0);
+    std::vector<int> rhombusDirs = {0, 1, 3, 4};
+    for (int dir : rhombusDirs) {
+      for (int i = 0; i < sideLen; ++i) {
+        insert(new Object(boundNode));
+        boundNode = boundNode.nodeInDir(dir);
+      }
+    }
+
+    // ...
+  }
+
+To place pairs of particles randomly, we first choose a node ``(x,y)`` at random within the rhombus that is not directly adjacent to an object; given the rhombus has side length ``s``, this means that ``1 < x,y < s-1``.
+This ``(x,y)`` node represents where we will place the Leader in this pair.
+We then choose a random direction ``dir`` in ``[0, 6)`` and let ``(x,y).nodeInDir(dir)`` be the adjacent node where we will place the Follower.
+If both of these nodes are not occupied, we can insert the Leader and Follower pair into the system.
+Importantly, we can use ``dir`` to set the Follower's ``_partnerLbl``, linking this pair together: ``dir`` points from the Leader to the Follower, so reversing ``dir`` as ``(dir + 3) % 6`` will point from the Follower to the Leader.
+Finally, we need to translate ``(dir + 3) % 6`` into the Follower's own orientation (recall that particles cannot perceive global direction), so we make use of ``globalToLocalDir()``.
+
+.. code-block:: c++
+
+  BallroomDemoSystem::BallroomDemoSystem(unsigned int numParticles) {
+    // ...
+
+    std::set<Node> occupied;
+    unsigned int numParticlesAdded = 0;
+    while (numParticlesAdded < numParticles) {
+      // Choose an (x,y) position within the rhombus for the Leader and a random
+      // adjacent node for its Follower partner.
+      Node leaderNode(randInt(2, sideLen - 1), randInt(2, sideLen - 1));
+      int followerDir = randDir();
+      Node followerNode = leaderNode.nodeInDir(followerDir);
+
+      // If both nodes are unoccupied, place the pair there, linking them together
+      // by setting the Follower's partner label to face the Leader.
+      if (occupied.find(leaderNode) == occupied.end()
+          && occupied.find(followerNode) == occupied.end()) {
+        BallroomDemoParticle* leader =
+            new BallroomDemoParticle(leaderNode, -1, randDir(), *this,
+                                     BallroomDemoParticle::State::Leader);
+        insert(leader);
+        occupied.insert(leaderNode);
+
+        BallroomDemoParticle* follower =
+            new BallroomDemoParticle(followerNode, -1, randDir(), *this,
+                                     BallroomDemoParticle::State::Follower);
+        follower->_partnerLbl = follower->globalToLocalDir((followerDir + 3) % 6);
+        insert(follower);
+        occupied.insert(followerNode);
+
+        numParticlesAdded += 2;
+      }
+    }
+  }
+
+We conclude with the ``activate()`` function, following the :ref:`algorithm description <ballroom-algorithm>` given earlier.
+At a high level, we have four cases: each particle is either a Leader or a Follower, and each particle is either expanded or contracted.
+So we have:
+
+.. code-block:: c++
+
+  void BallroomDemoParticle::activate() {
+    if (_state == State::Leader) {
+      if (isContracted()) {
+        // Attempt to expand into an random adjacent position.
+        // ...
+      } else {
+        // Find the follower partner and pull it, if possible.
+        // ...
+      }
+    } else {  // _state == State::Follower.
+      if (isContracted()) {
+        // Update the pair's color and push the leader, if possible.
+        // ...
+      } else {
+        // Contract tail.
+        // ...
+      }
+    }
+  }
+
+When the Leader is contracted, it attempts to expand in a random direction. This implementation is identical to what was done in **DiscoDemo**:
+
+.. code-block:: c++
+
+  void BallroomDemoParticle::activate() {
+    if (_state == State::Leader) {
+      if (isContracted()) {
+        // Attempt to expand into an random adjacent position.
+        int expandDir = randDir();
+        if (canExpand(expandDir)) {
+          expand(expandDir);
+        }
+      } else {
+        // ...
+      }
+    } else {  // _state == State::Follower.
+      // ...
+    }
+  }
+
+When the Leader is expanded, it needs to find its Follower partner and then pull it, if possible.
+Note that finding its Follower partner is not trivial: this Leader may have multiple Follower neighbors, but only its partner will have ``_partnerLbl`` pointing at it.
+Here, we make use of the ``pointsAtMe(nbr, nbrDir)`` function, which returns ``true`` if and only if ``nbrDir`` points at this particle from the perspective of neighbor ``nbr``.
+The idea is to loop over the possible labels the Follower partner may be incident to until it is found.
+The Leader can then check ``canPull()`` on its Follower partner and ``pull()`` if possible.
+
+.. code-block:: c++
+
+  void BallroomDemoParticle::activate() {
+    if (_state == State::Leader) {
+      if (isContracted()) {
+        // ...
+      } else {
+        // Find the follower partner and pull it, if possible.
+        for (int label : tailLabels()) {
+          if (hasNbrAtLabel(label) && nbrAtLabel(label)._partnerLbl != -1
+              && pointsAtMe(nbrAtLabel(label), nbrAtLabel(label)._partnerLbl)) {
+            if (canPull(label)) {
+              nbrAtLabel(label)._partnerLbl =
+                  dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
+              pull(label);
+            }
+            break;
+          }
+        }
+      }
+    } else {  // _state == State::Follower.
+      // ...
+    }
+  }
+
+Note that write communication is used to update the Follower's ``_partnerLbl`` just before the successful ``pull()``.
+While the actual conversion being done with ``dirToNbrDir()`` is beyond the scope of this tutorial, it is worth noting that the Leader may be in a different direction relative to the Follower after this pull handover; thus, the Leader must update the Follower's ``_partnerLbl`` to avoid becoming unlinked.
+
+An analogous situation arises if the Follower is contracted: it will attempt to perform a push handover with its Leader partner.
+Because the Follower's ``_partnerLbl`` always points to its Leader partner, it does not need to do extra work to locate it.
+Instead, the Follower can immediately check if a ``push()`` is possible using ``canPush()``.
+If possible, the Follower first updates the pair's color according to the algorithm's rules (note the read and write communication in the if/else cases, respectively) and then performs the ``push()`` operation.
+Once again, extra care is taken to ensure ``_partnerLbl`` will still point from the Follower to its Leader partner after the push handover is performed.
+
+.. code-block:: c++
+
+  void BallroomDemoParticle::activate() {
+    if (_state == State::Leader) {
+      // ...
+    } else {  // _state == State::Follower.
+      if (isContracted()) {
+        if (canPush(_partnerLbl)) {
+          // Update the pair's color.
+          auto leader = nbrAtLabel(_partnerLbl);
+          if (_color != leader._color) {
+            _color = leader._color;
+          } else {
+            nbrAtLabel(_partnerLbl)._color = getRandColor();
+          }
+
+          // Push the leader and update the partner direction label.
+          int leaderContractDir = nbrDirToDir(leader, (leader.tailDir() + 3) % 6);
+          push(_partnerLbl);
+          _partnerLbl = leaderContractDir;
+        }
+      } else {
+        // Contract tail.
+        contractTail();
+      }
+    }
+  }
+
+The final case is easily handled: an expanded Follower contracts its tail with a call to ``contractTail()``, as shown above.
+
+
+Wrapping Up
+^^^^^^^^^^^
+
+As in **DiscoDemo**, the last step is to :ref:`register the algorithm <disco-register>`.
+After compiling and running AmoebotSim, you can see **BallroomDemo** in action.
+Congratulations!
+
+.. image:: graphics/ballroomdemo.gif
 
 
 .. _token-demo:
@@ -940,7 +1399,7 @@ This is split into four main parts:
   }
 
 
-Final Touches
+Wrapping Up
 ^^^^^^^^^^^^^
 
 As in the other tutorials, the last step is to :ref:`register the algorithm <disco-register>` in the same way we did with **DiscoDemo**.
