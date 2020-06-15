@@ -26,7 +26,6 @@ class ScriptEngine : public QObject {
   void log(const QString msg, bool error = false);
 
  public slots:
-  void executeCommand(const QString cmd);
   void runScript(const QString scriptFilePath);
 
  private:

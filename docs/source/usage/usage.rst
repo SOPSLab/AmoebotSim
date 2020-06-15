@@ -46,25 +46,6 @@ The following keyboard shortcuts are also available.
   ``Ctrl+E``, ``Cmd+E``, Export metrics data as JSON
 
 
-.. _command-line:
-
-Command Line
-------------
-
-AmoebotSim's command line can be opened by pressing ``Return``.
-The following is a list of all recognized commands.
-
-.. js:function:: log(msg, error)
-
-  :param string msg: A message to log to the command line.
-  :param boolean error: ``true`` if and only if this is an error message.
-
-  Emits the message ``msg`` to the console, and can be denoted as an error message by setting ``error`` to ``true``.
-
-.. todo::
-  The script interface will likely no longer exist as a command line interface, but will still be available for scripting. So this section will likely need to move elsewhere or at least be presented differently.
-  There would of course be more things exposed by ``ScriptInterface``, so we'll need to potentially add everything in there to an API area.
-
 .. _usage-export-metrics-data:
 
 Exporting Metrics Data
