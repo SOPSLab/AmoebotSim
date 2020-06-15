@@ -194,10 +194,6 @@ The following code snippet shows the important elements of your header file.
   // Amoebot Algorithms' [link to paper]." You might also include some notes, like
   // "This simulation differs from the algorithm in the paper in such and such
   // way."
-  //
-  // Next, write the algorithm's command line signature. For example,
-  // "Run with exalg(#particles, parameter1, parameter2) on the simulator command
-  // line."
 
   #ifndef AMOEBOTSIM_ALG_EXAMPLEPARTICLE_H_
   #define AMOEBOTSIM_ALG_EXAMPLEPARTICLE_H_
@@ -227,7 +223,7 @@ The following code snippet shows the important elements of your header file.
 
 A few takeaways from the above example:
 
-- Every header file starts with a `class comment <https://google.github.io/styleguide/cppguide.html#Class_Comments>`_ that describes what the class is/does, and provides any relevant publications and references if applicable. If the class implements an algorithm, this comment also includes the algorithm's command line signature.
+- Every header file starts with a `class comment <https://google.github.io/styleguide/cppguide.html#Class_Comments>`_ that describes what the class is/does, and provides any relevant publications and references if applicable.
 
 - Every header file uses `#define guards <https://google.github.io/styleguide/cppguide.html#The__define_Guard>`_ of the form ``<PROJECT>_<PATH>_<FILE>_H_``.
 

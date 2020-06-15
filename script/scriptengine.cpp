@@ -29,13 +29,6 @@ ScriptEngine::ScriptEngine(Simulator& sim, VisItem* vis, AlgorithmList* algList)
   }
 }
 
-void ScriptEngine::executeCommand(const QString cmd) {
-  auto result = engine.evaluate(cmd);
-  if (!result.isUndefined()) {
-    emit log(result.toString(), result.isError());
-  }
-}
-
 void ScriptEngine::runScript(const QString scriptFilePath) {
   QFile scriptFile(scriptFilePath);
 

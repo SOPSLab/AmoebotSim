@@ -7,8 +7,6 @@
 // defining new token types, modifying token memory contents, and passing tokens
 // between particles. The description and tutorial is available in the docs:
 // [https://amoebotsim.rtfd.io/en/latest/tutorials/tutorials.html#tokendemo-communicating-over-distance].
-//
-// Run with tokendemo(#particles, tokenlifetime) on the simulator command line.
 
 #ifndef AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H_
 #define AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H_

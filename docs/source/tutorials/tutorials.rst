@@ -136,7 +136,7 @@ The Header File
 This section assumes you've read the :ref:`C++ Style Guide <cpp-style>` in our development guide.
 We begin by setting up the header file's structure, which includes the following elements:
 
-- A `class comment <https://google.github.io/styleguide/cppguide.html#Class_Comments>`_ that includes the copyright notice, a brief description of the class(es) this file contains, any relevant publications/references, and this algorithm's command line signature (we'll leave the signature blank for now). **DiscoDemo** doesn't have a publication, but we'll add a reference to this code tutorial.
+- A `class comment <https://google.github.io/styleguide/cppguide.html#Class_Comments>`_ that includes the copyright notice, a brief description of the class(es) this file contains, and any relevant publications/references. **DiscoDemo** doesn't have a publication, but we'll add a reference to this code tutorial.
 
 - `#define guards <https://google.github.io/styleguide/cppguide.html#The__define_Guard>`_ of the form ``<PROJECT>_<PATH>_<FILE>_<H>_``. In our case, this is ``AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_``.
 
@@ -158,8 +158,6 @@ With all these elements in place, we have the following:
   // system, moving particles, and changing particles' states. The pseudocode is
   // available in the docs:
   // [https://amoebotsim.rtfd.io/en/latest/tutorials/tutorials.html#discodemo-your-first-algorithm].
-  //
-  // Run on the simulator command line using discodemo(???).
 
   #ifndef AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
   #define AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
@@ -573,19 +571,6 @@ This will add **DiscoDemo** to the algorithm selection dropdown.
 
     // ...
 
-At this point, we can go back to ``alg/demo/discodemo.h`` and update the part of the class comment that describes the algorithm's signature on the command line:
-
-.. code-block:: c++
-
-  // ...
-  //
-  // Run on the simulator command line using discodemo(# particles, counter max).
-
-  #ifndef AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
-  #define AMOEBOTSIM_ALG_DEMO_DISCODEMO_H_
-
-  // ...
-
 Finally, in ``ui/parameterlistmodel.cpp``, we need to parse the values given by the user in the sidebar's parameter input boxes.
 All parameter values are input as strings, but need to be cast to their correct data types as defined by ``instantiate()``.
 
@@ -599,7 +584,7 @@ All parameter values are input as strings, but need to be cast to their correct 
           instantiate(params[0].toInt(), params[1].toInt());
     } else if (signature ==  // ...
 
-Compiling and running AmoebotSim after these steps will allow you to instantiate the **DiscoDemo** simulation using either the command line or the sidebar interface.
+Compiling and running AmoebotSim after these steps will allow you to instantiate the **DiscoDemo** simulation using the sidebar interface.
 
 Congratulations, you've implemented your first simulation on AmoebotSim!
 
@@ -1149,8 +1134,6 @@ Just as with other new particle types, we inherit from ``AmoebotParticle`` and s
   // defining new token types, modifying token memory contents, and passing tokens
   // between particles. The description and tutorial is available in the docs:
   // [https://amoebotsim.rtfd.io/en/latest/tutorials/tutorials.html#tokendemo-communicating-over-distance].
-  //
-  // Run with tokendemo(#particles, tokenlifetime) on the simulator command line.
 
   #ifndef AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H_
   #define AMOEBOTSIM_ALG_DEMO_TOKENDEMO_H_
@@ -1403,7 +1386,7 @@ Wrapping Up
 ^^^^^^^^^^^^^
 
 As in the other tutorials, the last step is to :ref:`register the algorithm <disco-register>` in the same way we did with **DiscoDemo**.
-Compiling and running AmoebotSim after completing these steps will allow you to instantiate the **TokenDemo** simulation using either the command line or the sidebar interface.
+Compiling and running AmoebotSim after completing these steps will allow you to instantiate the **TokenDemo** simulation using the sidebar interface.
 Well done!
 
 .. image:: graphics/tokenanimation.gif

@@ -16,7 +16,6 @@ As a first introduction to AmoebotSim, we'll discuss the main parts of its inter
 - **Simulation Controls**. Pressing the *Start/Stop* button will start and stop the instanced simulation. When stopped, the *Step* button will execute a single particle activation. The *Step Duration* slider controls how fast the simulation proceeds.
 - **Metrics**. These labels track different simulation statistics as it runs.
 - **Inspection Text**. A particle's inspection text shows various information about its state.
-- **Command Line**. The command line provides a front-end interface to AmoebotSim's JavaScript API, described more :ref:`below <command-line>`.
 
 
 .. _controls:
@@ -46,25 +45,6 @@ The following keyboard shortcuts are also available.
   ``Ctrl+H``, ``Cmd+H``, Hide/show UI elements (useful for presentations)
   ``Ctrl+E``, ``Cmd+E``, Export metrics data as JSON
 
-
-.. _command-line:
-
-Command Line
-------------
-
-AmoebotSim's command line can be opened by pressing ``Return``.
-The following is a list of all recognized commands.
-
-.. js:function:: log(msg, error)
-
-  :param string msg: A message to log to the command line.
-  :param boolean error: ``true`` if and only if this is an error message.
-
-  Emits the message ``msg`` to the console, and can be denoted as an error message by setting ``error`` to ``true``.
-
-.. todo::
-  The script interface will likely no longer exist as a command line interface, but will still be available for scripting. So this section will likely need to move elsewhere or at least be presented differently.
-  There would of course be more things exposed by ``ScriptInterface``, so we'll need to potentially add everything in there to an API area.
 
 .. _usage-export-metrics-data:
 

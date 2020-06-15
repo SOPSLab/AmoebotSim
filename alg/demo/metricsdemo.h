@@ -7,8 +7,6 @@
 // to an algorithm, enabling the capture of quantitative data. The pseudocode is
 // available in the docs:
 // [https://amoebotsim.rtfd.io/en/latest/tutorials/tutorials.html#metricsdemo-capturing-data].
-//
-// Run on the simulator command line using metricsdemo(#particles, counter max).
 
 #ifndef AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H_
 #define AMOEBOTSIM_ALG_DEMO_METRICSDEMO_H_

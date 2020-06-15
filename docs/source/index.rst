@@ -4,6 +4,7 @@
   install/install
   usage/usage
   tutorials/tutorials
+  scripting/scripting
   development/development
 
 
@@ -52,10 +53,7 @@ You're a *researcher* if:
 * You're preparing a paper on an amoebot model algorithm and want to add simulation results and performance statistics.
 
 If this describes you, refer to the :ref:`Installation Guide <install-researchdev>` for instructions on cloning the most recent stable codebase, installing the development environment, and running the project.
-Then, refer to the :doc:`Code Tutorials <tutorials/tutorials>` for a walkthrough of AmoebotSim algorithms and examples.
-
-.. todo::
-  Will we include a full API-like documentation set? If so, it should be mentioned here.
+Then, refer to the :doc:`Code Tutorials <tutorials/tutorials>` for a walkthrough of AmoebotSim algorithms and examples and the :doc:`Scripting Documentation <scripting/scripting>` for a guide to scripting experiments.
 
 
 Developer 💻
@@ -68,7 +66,7 @@ You're a *developer* if:
 * You're a member of the SOPS Lab on the AmoebotSim team.
 
 If this describes you, refer to the :ref:`Installation Guide <install-researchdev>` for instructions on cloning the most recent stable codebase, installing the development environment, and running the project.
-If you're new to AmoebotSim development, refer to the :doc:`Code Tutorials <tutorials/tutorials>` for a walkthrough of AmoebotSim algorithms and examples.
+If you're new to AmoebotSim development, refer to the :doc:`Code Tutorials <tutorials/tutorials>` for a walkthrough of AmoebotSim algorithms and examples and the :doc:`Scripting Documentation <scripting/scripting>` for a guide to scripting experiments.
 All development best practices and guidelines for contributions are discussed under :doc:`Development <development/development>`.
 
 .. tip::

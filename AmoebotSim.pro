@@ -30,7 +30,6 @@ HEADERS += \
     script/scriptengine.h \
     script/scriptinterface.h \
     ui/algorithm.h \
-    ui/commandhistorymanager.h \
     ui/glitem.h \
     ui/parameterlistmodel.h \
     ui/view.h \
@@ -59,7 +58,6 @@ SOURCES += \
     script/scriptengine.cpp \
     script/scriptinterface.cpp \
     ui/algorithm.cpp \
-    ui/commandhistorymanager.cpp \
     ui/glitem.cpp \
     ui/parameterlistmodel.cpp \
     ui/view.cpp \
@@ -74,5 +72,4 @@ OTHER_FILES += \
     res/qml/A_Button.qml \
     res/qml/A_Inspector.qml \
     res/qml/A_ResultTextField.qml \
-    res/qml/A_TextField.qml \
     res/qml/main.qml

@@ -8,9 +8,6 @@
 // complaining used here differs slightly from the complaint flag scheme in the
 // paper, but is functionally equivalent. Also note that pull handovers are not
 // used in this simulation, for simplicity in updating follower move directions.
-//
-// Run with infobjcoating(#particles, hole probability) on the simulator command
-// line.
 
 #ifndef AMOEBOTSIM_ALG_INFOBJCOATING_H_
 #define AMOEBOTSIM_ALG_INFOBJCOATING_H_

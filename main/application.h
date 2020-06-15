@@ -12,7 +12,6 @@
 
 #include "core/simulator.h"
 #include "script/scriptengine.h"
-#include "ui/commandhistorymanager.h"
 #include "ui/parameterlistmodel.h"
 
 class Application : public QGuiApplication {
@@ -23,7 +22,6 @@ class Application : public QGuiApplication {
  protected:
   QQmlApplicationEngine engine;
   Simulator sim;
-  CommandHistoryManager commandHistoryManager;
   std::shared_ptr<ScriptEngine> scriptEngine;
   ParameterListModel* parameterModel;
 };
