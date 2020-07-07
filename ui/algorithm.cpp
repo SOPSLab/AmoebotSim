@@ -129,17 +129,16 @@ EnergyShapeAlg::EnergyShapeAlg()
   addParameter("# Energy Roots", "1");
   addParameter("Hole Prob.", "0.2");
   addParameter("Capacity", "10.0");
-  addParameter("Demand", "1.0");
+  addParameter("Demand", "5.0");
   addParameter("Harvest Rate", "1.0");
-  addParameter("Battery Fraction", "0.75");
 }
 
 void EnergyShapeAlg::instantiate(const int numParticles,
                                  const int numEnergyRoots,
                                  const double holeProb,
-                                 const double capacity, const double demand,
-                                 const double harvestRate,
-                                 const double batteryFrac) {
+                                 const double capacity,
+                                 const double demand,
+                                 const double transferRate) {
   if (numParticles <= 0) {
     emit log("# particles must be > 0", true);
   } else if (numEnergyRoots <= 0 || numEnergyRoots > numParticles) {
@@ -148,16 +147,14 @@ void EnergyShapeAlg::instantiate(const int numParticles,
     emit log("holeProb in [0,1] required", true);
   } else if (capacity <= 0) {
     emit log("capacity must be > 0", true);
-  } else if (demand < 0 || demand > capacity) {
-    emit log("demand must be in [0, capacity]", true);
-  } else if (harvestRate <= 0 || harvestRate > 0.5 * capacity) {
-    emit log("harvestRate must be in (0, capacity/2]", true);
-  } else if (batteryFrac <= 0 || batteryFrac >= 1) {
-    emit log("batteryFrac must be in (0, 1)", true);
+  } else if (demand <= 0 || demand > capacity) {
+    emit log("demand must be in (0, capacity]", true);
+  } else if (transferRate <= 0) {
+    emit log("transferRate must be > 0", true);
   } else {
     emit setSystem(std::make_shared<EnergyShapeSystem>(
                      numParticles, numEnergyRoots, holeProb, capacity, demand,
-                     harvestRate, batteryFrac));
+                     transferRate));
   }
 }
 
@@ -166,27 +163,27 @@ EnergySharingAlg::EnergySharingAlg()
   addParameter("# Particles", "91");
   addParameter("Energy Usage", "0");
   addParameter("Capacity", "10.0");
-  addParameter("Harvest Rate", "1.0");
-  addParameter("Battery Fraction", "0.75");
+  addParameter("Demand", "5.0");
+  addParameter("Transfer Rate", "1.0");
 }
 
 void EnergySharingAlg::instantiate(int numParticles, const int usage,
                                    const double capacity,
-                                   const double harvestRate,
-                                   const double batteryFrac) {
+                                   const double demand,
+                                   const double transferRate) {
   if (numParticles <= 0) {
     emit log("# particles must be > 0", true);
-  } else if (usage < 0 || usage > 1) {
-    emit log("usage mode must be 0 or 1");
+  } else if (usage != 0 && usage != 1) {
+    emit log("usage mode must be 0 or 1", true);
   } else if (capacity <= 0) {
     emit log("capacity must be > 0", true);
-  } else if (harvestRate <= 0 || harvestRate > 0.5 * capacity) {
-    emit log("harvestRate must be in (0, capacity/2]", true);
-  } else if (batteryFrac <= 0 || batteryFrac >= 1) {
-    emit log("batteryFrac must be in (0, 1)", true);
+  } else if (demand <= 0 || demand > capacity) {
+    emit log("demand must be in (0, capacity]", true);
+  } else if (transferRate <= 0) {
+    emit log("transferRate must be > 0", true);
   } else {
     emit setSystem(std::make_shared<EnergySharingSystem>(
-                     numParticles, usage, capacity, harvestRate, batteryFrac));
+                     numParticles, usage, capacity, demand, transferRate));
   }
 }
 

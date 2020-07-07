@@ -7,22 +7,20 @@ EnergySharingParticle::EnergySharingParticle(const Node& head,
                                              const int orientation,
                                              AmoebotSystem& system,
                                              const double capacity,
-                                             const double harvestRate,
-                                             const double batteryFrac,
+                                             const double demand,
+                                             const double transferRate,
                                              const Usage usage,
                                              const State state)
     : AmoebotParticle (head, globalTailDir, orientation, system),
       _capacity(capacity),
-      _demand(0.25 * _capacity),
-      _harvestRate(harvestRate),
-      _batteryFrac(batteryFrac),
+      _demand(demand),
+      _transferRate(transferRate),
       _usage(usage),
       _battery(0),
-      _buffer(0),
       _stress(false),
       _inhibit(false),
       _state(state),
-      _parentDir(-1) {}
+      _parentLabel(-1) {}
 
 void EnergySharingParticle::activate() {
   if (_state == State::Idle) {
@@ -38,14 +36,14 @@ void EnergySharingParticle::activate() {
       return false;
     };
 
-    int nbrDir = labelOfFirstNbrWithProperty<EnergySharingParticle>(prop);
-    if (nbrDir != -1) {
+    int nbrLabel = labelOfFirstNbrWithProperty<EnergySharingParticle>(prop);
+    if (nbrLabel != -1) {
       _state = State::Active;
-      _parentDir = nbrDir;
+      _parentLabel = nbrLabel;
     }
   } else {
     communicate();
-    harvestEnergy();
+    shareEnergy();
     useEnergy();
   }
 }
@@ -65,7 +63,7 @@ int EnergySharingParticle::headMarkColor() const {
 }
 
 int EnergySharingParticle::headMarkDir() const {
-  return _parentDir;
+  return _parentLabel;
 }
 
 int EnergySharingParticle::tailMarkColor() const {
@@ -80,12 +78,6 @@ QString EnergySharingParticle::inspectionText() const {
   text += "  orientation: " + QString::number(orientation) + "\n";
   text += "  globalTailDir: " + QString::number(globalTailDir) + "\n\n";
   text += "Local Info:\n";
-  text += "  battery: " + QString::number(_battery) + " / "
-                        + QString::number(_capacity) + "\n";
-  text += "  buffer: " + QString::number(_buffer) + " / "
-                       + QString::number(_capacity) + "\n";
-  text += "  stress: " + QString::number(_stress) + "\n";
-  text += "  inhibit: " + QString::number(_inhibit) + "\n";
   text += "  state: ";
   text += [this](){
     switch(_state) {
@@ -95,7 +87,11 @@ QString EnergySharingParticle::inspectionText() const {
     }
     return "no state\n";
   }();
-  text += "  parentDir: " + QString::number(_parentDir) + "\n";
+  text += "  parentLabel: " + QString::number(_parentLabel) + "\n";
+  text += "  battery: " + QString::number(_battery) + " / "
+                        + QString::number(_capacity) + "\n";
+  text += "  stress: " + QString::number(_stress) + "\n";
+  text += "  inhibit: " + QString::number(_inhibit) + "\n";
 
   return text;
 }
@@ -108,7 +104,7 @@ void EnergySharingParticle::communicate() {
   bool hasStressChild = false;
   for (int nbrDir = 0; nbrDir < 6; nbrDir++) {
     if (hasNbrAtLabel(nbrDir) && nbrAtLabel(nbrDir)._stress
-        && pointsAtMe(nbrAtLabel(nbrDir), nbrAtLabel(nbrDir)._parentDir)) {
+        && pointsAtMe(nbrAtLabel(nbrDir), nbrAtLabel(nbrDir)._parentLabel)) {
       hasStressChild = true;
       break;
     }
@@ -116,27 +112,37 @@ void EnergySharingParticle::communicate() {
 
   if (_state != State::Root) {
     _stress = _battery < _demand || hasStressChild;
-    _inhibit = nbrAtLabel(_parentDir)._inhibit;
+    _inhibit = nbrAtLabel(_parentLabel)._inhibit;
   } else {
     _inhibit = _battery < _demand || hasStressChild;
   }
 }
 
-void EnergySharingParticle::harvestEnergy() {
-  // Set effective battery fraction.
-  double frac = (_battery < _capacity) ? _batteryFrac : 0;
-
-  // Particles with energy access take from the source; others take from their
-  // parents if they have a full buffer.
+void EnergySharingParticle::shareEnergy() {
+  // Root particles first harvest from the source.
   if (_state == State::Root) {
-    _battery = std::min(_battery + frac * _harvestRate, _capacity);
-    _buffer = std::min(_buffer + (1 - frac) * _harvestRate, _capacity);
-  } else if (nbrAtLabel(_parentDir)._buffer >= _harvestRate) {
-    nbrAtLabel(_parentDir)._buffer -=
-        (std::min(frac * _harvestRate, _capacity - _battery)
-         + std::min((1 - frac) * _harvestRate, _capacity - _buffer));
-    _battery = std::min(_battery + frac * _harvestRate, _capacity);
-    _buffer = std::min(_buffer + (1 - frac) * _harvestRate, _capacity);
+    _battery = std::min(_battery + _transferRate, _capacity);
+  }
+
+  // All particles attempt to share energy if they have sufficient energy.
+  if (_battery >= _transferRate) {
+    // Find all children that do not have full batteries.
+    std::vector<int> needyChildLabels;
+    for (int nbrLabel = 0; nbrLabel < 6; nbrLabel++) {
+      if (hasNbrAtLabel(nbrLabel) && nbrAtLabel(nbrLabel)._parentLabel != -1
+          && pointsAtMe(nbrAtLabel(nbrLabel), nbrAtLabel(nbrLabel)._parentLabel)
+          && nbrAtLabel(nbrLabel)._battery < _capacity) {
+        needyChildLabels.push_back(nbrLabel);
+      }
+    }
+    // If there is a child with a non-full battery, share with one at random.
+    if (!needyChildLabels.empty()) {
+      int childLabel = needyChildLabels[randInt(0, needyChildLabels.size())];
+      auto child = nbrAtLabel(childLabel);
+      _battery -= std::min(_transferRate, _capacity - child._battery);
+      nbrAtLabel(childLabel)._battery = std::min(child._battery + _transferRate,
+                                                 _capacity);
+    }
   }
 }
 
@@ -159,8 +165,8 @@ void EnergySharingParticle::useEnergy() {
         system.getCount("# Actions").record();
         system.insert(new EnergySharingParticle(
                         head.nodeInDir(localToGlobalDir(reproduceDir)), -1,
-                        randDir(), system, _capacity, _harvestRate,
-                        _batteryFrac, _usage, State::Idle));
+                        randDir(), system, _capacity, _demand, _transferRate,
+                        _usage, State::Idle));
       }
     } else {
       Q_ASSERT(false);  // An invalid usage type was used.
@@ -177,7 +183,7 @@ int EnergySharingParticle::energyColor(int color) const {
   // Compute opacity.
   double opacity = (std::exp(_battery - _demand) - 1) /
                    (std::exp(_battery - _demand) + 1) + 1;
-  opacity = std::max(std::min(opacity, 1.0), 0.05);
+  opacity = std::max(std::min(opacity, 1.0), 0.1);
 
   // Compute interpolation.
   r = 255 + opacity * (r - 255);
@@ -190,8 +196,8 @@ int EnergySharingParticle::energyColor(int color) const {
 
 EnergySharingSystem::EnergySharingSystem(int numParticles, const int usage,
                                          const double capacity,
-                                         const double harvestRate,
-                                         const double batteryFrac) {
+                                         const double demand,
+                                         const double transferRate) {
   _counts.push_back(new Count("# Actions"));
 
   // Add a hexagon of idle particles to the system.
@@ -239,7 +245,7 @@ EnergySharingSystem::EnergySharingSystem(int numParticles, const int usage,
     }
 
     insert(new EnergySharingParticle(Node(x, y), -1, randDir(), *this,
-                                     capacity, harvestRate, batteryFrac,
+                                     capacity, demand, transferRate,
                                      static_cast<EnergySharingParticle::Usage>(usage),
                                      EnergySharingParticle::State::Idle));
   }
@@ -248,15 +254,4 @@ EnergySharingSystem::EnergySharingSystem(int numParticles, const int usage,
   auto p = particleMap.find(Node(0, 0))->second;
   auto ep = dynamic_cast<EnergySharingParticle*>(p);
   ep->_state = EnergySharingParticle::State::Root;
-
-//  // Mark the peripheral particles as roots with energy access.
-//  for (auto p : particles) {
-//    auto ep = dynamic_cast<EnergySharingParticle*>(p);
-//    for (int dir = 0; dir < 6; dir++) {
-//      if (!ep->hasNbrAtLabel(dir)) {
-//        ep->_state = EnergySharingParticle::State::Root;
-//        break;
-//      }
-//    }
-//  }
 }

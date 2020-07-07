@@ -8,17 +8,14 @@ EnergyShapeParticle::EnergyShapeParticle(const Node& head, int globalTailDir,
                                          AmoebotSystem& system,
                                          const double capacity,
                                          const double demand,
-                                         const double harvestRate,
-                                         const double batteryFrac,
+                                         const double transferRate,
                                          const EnergyState eState,
                                          const ShapeState sState)
     : AmoebotParticle(head, globalTailDir, orientation, system),
       _capacity(capacity),
       _demand(demand),
-      _harvestRate(harvestRate),
-      _batteryFrac(batteryFrac),
+      _transferRate(transferRate),
       _battery(0),
-      _buffer(0),
       _stress(false),
       _inhibit(false),
       _prune(false),
@@ -61,7 +58,7 @@ void EnergyShapeParticle::activate() {
   } else {
     // Do energy distribution and perform shape formation actions.
     communicate();
-    harvestEnergy();
+    shareEnergy();
     useEnergy();
   }
 }
@@ -108,8 +105,6 @@ QString EnergyShapeParticle::inspectionText() const {
   text += "  parentLabel: " + QString::number(_parentLabel) + "\n";
   text += "  battery: " + QString::number(_battery) + " / "
                         + QString::number(_capacity) + "\n";
-  text += "  buffer: " + QString::number(_buffer) + " / "
-                       + QString::number(_capacity) + "\n";
   text += "  stress: " + QString::number(_stress) + "\n";
   text += "  inhibit: " + QString::number(_inhibit) + "\n";
   text += "  prune: " + QString::number(_prune) + "\n\n";
@@ -175,21 +170,32 @@ void EnergyShapeParticle::communicate() {
   }
 }
 
-void EnergyShapeParticle::harvestEnergy() {
-  // Set effective battery fraction.
-  double frac = (_battery < _capacity) ? _batteryFrac : 0;
-
-  // Particles with energy access take from the source; others take from their
-  // parents if they have a full buffer.
+void EnergyShapeParticle::shareEnergy() {
+  // Root particles first harvest from the source.
   if (_eState == EnergyState::Root) {
-    _battery = std::min(_battery + frac * _harvestRate, _capacity);
-    _buffer = std::min(_buffer + (1 - frac) * _harvestRate, _capacity);
-  } else if (nbrAtLabel(_parentLabel)._buffer >= _harvestRate) {
-    nbrAtLabel(_parentLabel)._buffer -=
-        (std::min(frac * _harvestRate, _capacity - _battery)
-         + std::min((1 - frac) * _harvestRate, _capacity - _buffer));
-    _battery = std::min(_battery + frac * _harvestRate, _capacity);
-    _buffer = std::min(_buffer + (1 - frac) * _harvestRate, _capacity);
+    _battery = std::min(_battery + _transferRate, _capacity);
+  }
+
+  // All particles attempt to share energy if they have sufficient energy.
+  if (_battery >= _transferRate) {
+    // Find all children that do not have full batteries.
+    std::vector<int> needyChildLabels;
+    int labelLimit = isContracted() ? 6 : 10;
+    for (int nbrLabel = 0; nbrLabel < labelLimit; nbrLabel++) {
+      if (hasNbrAtLabel(nbrLabel) && nbrAtLabel(nbrLabel)._parentLabel != -1
+          && pointsAtMe(nbrAtLabel(nbrLabel), nbrAtLabel(nbrLabel)._parentLabel)
+          && nbrAtLabel(nbrLabel)._battery < _capacity) {
+        needyChildLabels.push_back(nbrLabel);
+      }
+    }
+    // If there is a child with a non-full battery, share with one at random.
+    if (!needyChildLabels.empty()) {
+      int childLabel = needyChildLabels[randInt(0, needyChildLabels.size())];
+      auto child = nbrAtLabel(childLabel);
+      _battery -= std::min(_transferRate, _capacity - child._battery);
+      nbrAtLabel(childLabel)._battery = std::min(child._battery + _transferRate,
+                                                 _capacity);
+    }
   }
 }
 
@@ -283,7 +289,7 @@ int EnergyShapeParticle::energyColor(int color) const {
   // Compute opacity.
   double opacity = (std::exp(_battery - _demand) - 1) /
                    (std::exp(_battery - _demand) + 1) + 1;
-  opacity = std::max(std::min(opacity, 1.0), 0.05);
+  opacity = std::max(std::min(opacity, 1.0), 0.1);
 
   // Compute interpolation.
   r = 255 + opacity * (r - 255);
@@ -364,14 +370,13 @@ EnergyShapeSystem::EnergyShapeSystem(const int numParticles,
                                      const double holeProb,
                                      const double capacity,
                                      const double demand,
-                                     const double harvestRate,
-                                     const double batteryFrac) {
+                                     const double transferRate) {
   _counts.push_back(new Count("# Actions"));
 
   // Insert the energy distribution root/shape formation seed at (0,0).
   std::set<Node> occupied;
   insert(new EnergyShapeParticle(Node(0, 0), -1, randDir(), *this, capacity,
-                                 demand, harvestRate, batteryFrac,
+                                 demand, transferRate,
                                  EnergyShapeParticle::EnergyState::Idle,
                                  EnergyShapeParticle::ShapeState::Seed));
   occupied.insert(Node(0, 0));
@@ -400,7 +405,7 @@ EnergyShapeSystem::EnergyShapeSystem(const int numParticles,
     // With probability 1 - holeProb, add a new particle at the candidate node.
     if (randBool(1.0 - holeProb)) {
       insert(new EnergyShapeParticle(randCand, -1, randDir(), *this, capacity,
-                                     demand, harvestRate, batteryFrac,
+                                     demand, transferRate,
                                      EnergyShapeParticle::EnergyState::Idle,
                                      EnergyShapeParticle::ShapeState::Idle));
       occupied.insert(randCand);

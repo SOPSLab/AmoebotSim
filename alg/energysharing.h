@@ -28,12 +28,12 @@ class EnergySharingParticle : public AmoebotParticle {
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
   // for its local compass, a system which it belongs to, a capacity for its
-  // battery and buffer, an energy harvesting rate, the fraction of harvested
-  // energy allocated to the battery, an energy usage mode, and a state.
+  // battery, an energy demand for its actions, an energy transfer rate, an
+  // energy usage mode, and a state.
   EnergySharingParticle(const Node& head, int globalTailDir,
                         const int orientation, AmoebotSystem& system,
-                        const double capacity, const double harvestRate,
-                        const double batteryFrac, const Usage usage,
+                        const double capacity, const double demand,
+                        const double transferRate, const Usage usage,
                         const State state);
 
   // Executes one particle activation.
@@ -59,34 +59,32 @@ class EnergySharingParticle : public AmoebotParticle {
 
   // The three phases of the energy distribution algorithm. The communication
   // phase propagates signals communicating particles' energy levels, the
-  // harvesting phase gathers energy from the source or a neighbor's buffer, and
-  // the usage phase spends energy to perform actions, if possible.
+  // sharing phase gathers energy from the source and shares with a neighbor,
+  // and the usage phase spends energy to perform actions, if possible.
   void communicate();
-  void harvestEnergy();
+  void shareEnergy();
   void useEnergy();
 
   // Modifies the input color's opacity based on the particle's current battery
-  // level, with a minimum of 5% opacity (for little to no energy) and a maximum
-  // of 100% opacity (for energy >= demand).
+  // level, with a min. of 10% opacity (for little to no energy) and a max. of
+  // 100% opacity (for energy >= demand).
   int energyColor(int color) const;
 
  protected:
   // Algorithm parameters.
   const double _capacity;
   const double _demand;
-  const double _harvestRate;
-  const double _batteryFrac;
+  const double _transferRate;
   const Usage _usage;
 
   // Local variables.
   double _battery;
-  double _buffer;
   bool _stress;
   bool _inhibit;
 
   // Spanning tree variables.
   State _state;
-  int _parentDir;
+  int _parentLabel;
 
  private:
   friend class EnergySharingSystem;
@@ -96,10 +94,9 @@ class EnergySharingSystem : public AmoebotSystem {
  public:
   // Constructs a system of EnergySharingParticles with an optionally specified
   // size (# particles), energy usage mode (0 for repeating uniform, 1 for
-  // growth), energy capacity, energy harvesting rate, and battery allocation
-  // fraction.
+  // growth), energy capacity, and energy transfer rate.
   EnergySharingSystem(int numParticles, const int usage, const double capacity,
-                      const double harvestRate, const double batteryFrac);
+                      const double demand, const double transferRate);
 };
 
 #endif  // ALG_ENERGYSHARING_H_

@@ -103,19 +103,6 @@ class CompressionAlg : public Algorithm {
   void instantiate(const int numParticles = 100, const double lambda = 4.0);
 };
 
-// Energy Distribution/Sharing.
-class EnergySharingAlg : public Algorithm {
-  Q_OBJECT
-
- public:
-  EnergySharingAlg();
-
- public slots:
-  void instantiate(int numParticles = 91, const int usage = 0,
-                   const double capacity = 10, const double harvestRate = 1,
-                   const double batteryFrac = 0.75);
-};
-
 // Energy Distribution + Hexagon Formation.
 class EnergyShapeAlg : public Algorithm {
   Q_OBJECT
@@ -126,8 +113,20 @@ class EnergyShapeAlg : public Algorithm {
  public slots:
   void instantiate(const int numParticles = 200, const int numEnergyRoots = 1,
                    const double holeProb = 0.2, const double capacity = 10,
-                   const double demand = 1, const double harvestRate = 1,
-                   const double batteryFrac = 0.75);
+                   const double demand = 5, const double transferRate = 1);
+};
+
+// Energy Distribution/Sharing.
+class EnergySharingAlg : public Algorithm {
+  Q_OBJECT
+
+ public:
+  EnergySharingAlg();
+
+ public slots:
+  void instantiate(int numParticles = 91, const int usage = 0,
+                   const double capacity = 10, const double demand = 5,
+                   const double transferRate = 1);
 };
 
 // Infinite Object Coating.

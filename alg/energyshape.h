@@ -31,13 +31,13 @@ class EnergyShapeParticle : public AmoebotParticle {
   // Constructs a new particle with a node position for its head, a global
   // compass direction from its head to its tail (-1 if contracted), an offset
   // for its local compass, a system which it belongs to, a capacity for its
-  // battery and buffer, an energy harvesting rate, the fraction of harvested
-  // energy allocated to the battery, an energy state, and a shape state.
+  // battery, an energy demand for its actions, an energy transfer rate, an
+  // energy state, and a shape state.
   EnergyShapeParticle(const Node& head, int globalTailDir,
                       const int orientation, AmoebotSystem& system,
                       const double capacity, const double demand,
-                      const double harvestRate, const double batteryFrac,
-                      const EnergyState eState, const ShapeState sState);
+                      const double transferRate, const EnergyState eState,
+                      const ShapeState sState);
 
   // Executes one particle activation.
   void activate() override;
@@ -68,15 +68,15 @@ class EnergyShapeParticle : public AmoebotParticle {
 
   // The three phases of the energy distribution algorithm. The communication
   // phase propagates signals communicating particles' energy levels, the
-  // harvesting phase gathers energy from the source or a neighbor's buffer, and
-  // the usage phase spends energy to perform actions, if possible.
+  // sharing phase gathers energy from the source and shares with a neighbor,
+  // and the usage phase spends energy to perform actions, if possible.
   void communicate();
-  void harvestEnergy();
+  void shareEnergy();
   void useEnergy();
 
   // Modifies the input color's opacity based on the particle's current battery
-  // level, with a minimum of 5% opacity (for little to no energy) and a maximum
-  // of 100% opacity (for energy >= demand).
+  // level, with a min. of 10% opacity (for little to no energy) and a max. of
+  // 100% opacity (for energy >= demand).
   int energyColor(int color) const;
 
   /* Shape Formation functions. */
@@ -114,12 +114,10 @@ class EnergyShapeParticle : public AmoebotParticle {
   // Energy Distribution parameters.
   const double _capacity;
   const double _demand;
-  const double _harvestRate;
-  const double _batteryFrac;
+  const double _transferRate;
 
   // Energy Distribution variables.
   double _battery;
-  double _buffer;
   bool _stress;
   bool _inhibit;
   bool _prune;
@@ -142,11 +140,10 @@ class EnergyShapeSystem : public AmoebotSystem {
   // Constructs a system of EnergyShapeParticles with an optionally specified
   // size (# particles), number of energy distribution root particles, hole
   // probability in [0,1) controlling how sparse the initial configuration is,
-  // energy capacity, energy harvesting rate, and battery allocation fraction.
+  // energy capacity, and energy transfer rate.
   EnergyShapeSystem(const int numParticles, const int numEnergyRoots,
                     const double holeProb, const double capacity,
-                    const double demand, const double harvestRate,
-                    const double batteryFrac);
+                    const double demand, const double transferRate);
 
   // Checks whether the system has completed forming the desired shape (i.e.,
   // all particles are in shape state Finish).
