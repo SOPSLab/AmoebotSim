@@ -307,48 +307,33 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, double holeProb,
   Q_ASSERT(numParticles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
 
-  // Insert the seed at (0,0).
-  insert(new ShapeFormationParticle(Node(0, 0), -1, randDir(), *this,
-                                    ShapeFormationParticle::State::Seed, mode));
+  // Spread factor between 0 and 1, where 0 is the most compact system.
+  const double spreadFactor = 0.3;
+
+  // Create double-ended queue to constuct system.
+  std::deque<Node> sysBuild;
   std::set<Node> occupied;
-  occupied.insert(Node(0, 0));
 
-  std::set<Node> candidates;
-  for (int i = 0; i < 6; ++i) {
-    candidates.insert(Node(0, 0).nodeInDir(i));
-  }
+  // Insert the seed at (0,0).
+  Node seed = Node(0, 0);
+  insert(new ShapeFormationParticle(seed, -1, randDir(), *this,
+                                    ShapeFormationParticle::State::Seed, mode));
+  occupied.insert(seed);
+  sysBuild.push_back(seed);
 
-  // Add inactive particles.
-  int numNonStaticParticles = 0;
-  while (numNonStaticParticles < numParticles && !candidates.empty()) {
-    // Pick random candidate.
-    int randIndex = randInt(0, candidates.size());
-    Node randomCandidate;
-    for (auto it = candidates.begin(); it != candidates.end(); ++it) {
-      if (randIndex == 0) {
-        randomCandidate = *it;
-        candidates.erase(it);
-        break;
-      } else {
-        randIndex--;
-      }
-    }
-
-    occupied.insert(randomCandidate);
-
-    // Add this candidate as a particle if not a hole.
-    if (randBool(1.0 - holeProb)) {
-      insert(new ShapeFormationParticle(randomCandidate, -1, randDir(), *this,
-                                        ShapeFormationParticle::State::Idle,
-                                        mode));
-      ++numNonStaticParticles;
-
-      // Add new candidates.
-      for (int i = 0; i < 6; ++i) {
-        auto neighbor = randomCandidate.nodeInDir(i);
-        if (occupied.find(neighbor) == occupied.end()) {
-          candidates.insert(neighbor);
-        }
+  while (occupied.size() < numParticles) {
+    Node candidate = sysBuild.front();
+    sysBuild.pop_front();
+    for (int i = 0; i < 6; ++i) {
+      Node potentialAdd = candidate.nodeInDir(i);
+      if ((occupied.find(potentialAdd) == occupied.end()) \
+          && (occupied.size() < numParticles)) {
+        insert(new ShapeFormationParticle(potentialAdd, -1, randDir(), *this,
+                                          ShapeFormationParticle::State::Idle,
+                                          mode));
+        occupied.insert(potentialAdd);
+        randBool((1-spreadFactor)) ? sysBuild.push_back(potentialAdd) : \
+                     sysBuild.push_front(potentialAdd);
       }
     }
   }
