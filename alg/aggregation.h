@@ -21,8 +21,12 @@
 #include "core/amoebotsystem.h"
 
 class AggregateParticle : public AmoebotParticle {
-  friend class MaxDistanceMeasure;
-  friend class SumDistancesMeasure;
+//  friend class MaxDistanceMeasure;
+//  friend class SumDistancesMeasure;
+  friend class ConvexHullMeasure;
+//  friend class MECMeasure;
+  friend class DispersionMeasure;
+  friend class ClusterFractionMeasure;
 
  public:
   // Constructs a new particle with a node position for its head, a global
@@ -30,9 +34,9 @@ class AggregateParticle : public AmoebotParticle {
   // for its local compass, a system which it belongs to, the direction of the
   // center of rotation for the particle, and a list containing all of the
   // particles currently within the system.
-  AggregateParticle(const Node head, const int globalTailDir,
-               const int orientation, AmoebotSystem& system, int center,
-               std::vector<AggregateParticle*> particles);
+  AggregateParticle(const Node head, const int globalTailDir, const int
+                    orientation, AmoebotSystem& system, int center,
+                    std::vector<AggregateParticle*> particles);
 
   // Executes one particle activation.
   virtual void activate();
@@ -61,9 +65,12 @@ class AggregateParticle : public AmoebotParticle {
   // ending at (center + 4) % 6
   bool checkIfParticleInSight() const;
 
+
  protected:
   int center;
-  int perturb = 0;
+//  double errorProb;
+  int perturb;
+  bool visited;
   std::vector<AggregateParticle*> particles;
 
  private:
@@ -71,8 +78,12 @@ class AggregateParticle : public AmoebotParticle {
 };
 
 class AggregateSystem : public AmoebotSystem  {
-  friend class MaxDistanceMeasure;
-  friend class SumDistancesMeasure;
+//  friend class MaxDistanceMeasure;
+//  friend class SumDistancesMeasure;
+  friend class ConvexHullMeasure;
+//  friend class MECMeasure;
+  friend class DispersionMeasure;
+  friend class ClusterFractionMeasure;
 
  public:
   // Constructs a system of AggregateParticles with an optionally specified size
@@ -84,12 +95,50 @@ class AggregateSystem : public AmoebotSystem  {
   // Checks whether or not the system's run of the aggregation algorithm has
   // terminated (all particles have clustered together).
   bool hasTerminated() const override;
+
+  double currentval;
+
+
+private:
+  void DFS(AggregateParticle& particle, const AggregateSystem& system,
+           std::vector<AggregateParticle>& clusterVec);
+
 };
 
-class MaxDistanceMeasure : public Measure {
+
+
+double dist(const QVector<double> a, const QVector<double> b);
+
+
+//class MaxDistanceMeasure : public Measure {
+
+//public:
+//  MaxDistanceMeasure(const QString name, const unsigned int freq,
+//                       AggregateSystem& system);
+
+//  double calculate() const final;
+
+//protected:
+//  AggregateSystem& _system;
+//};
+
+//class SumDistancesMeasure : public Measure {
+
+//public:
+//  SumDistancesMeasure(const QString name, const unsigned int freq,
+//                       AggregateSystem& system);
+
+//  double calculate() const final;
+
+//protected:
+//  AggregateSystem& _system;
+//};
+
+
+class ConvexHullMeasure : public Measure {
 
 public:
-  MaxDistanceMeasure(const QString name, const unsigned int freq,
+  ConvexHullMeasure(const QString name, const unsigned int freq,
                        AggregateSystem& system);
 
   double calculate() const final;
@@ -98,11 +147,47 @@ protected:
   AggregateSystem& _system;
 };
 
-class SumDistancesMeasure : public Measure {
+
+//struct Circle;
+//bool isInside(const Circle& c, const QVector<double> p);
+//Circle circleFromThree(const QVector<double> a, const QVector<double> b,
+//                       const QVector<double> c);
+//Circle circleFromTwo(const QVector<double> a, const QVector<double> b);
+//bool isValidCircle(const Circle& c, const QVector< QVector<double> > points);
+
+//class MECMeasure : public Measure {
+
+//public:
+//  MECMeasure(const QString name, const unsigned int freq,
+//                       AggregateSystem& system);
+
+//  double calculate() const final;
+
+//protected:
+//  AggregateSystem& _system;
+//};
+
+
+
+class DispersionMeasure : public Measure {
 
 public:
-  SumDistancesMeasure(const QString name, const unsigned int freq,
-                       AggregateSystem& system);
+  DispersionMeasure(const QString name, const unsigned int freq,
+                    AggregateSystem& system);
+
+  double calculate() const final;
+
+protected:
+  AggregateSystem& _system;
+};
+
+
+
+class ClusterFractionMeasure : public Measure {
+
+public:
+  ClusterFractionMeasure(const QString name, const unsigned int freq,
+                         AggregateSystem& system);
 
   double calculate() const final;
 

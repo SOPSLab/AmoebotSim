@@ -139,3 +139,7 @@ QString ScriptInterface::pad(const int number, const int length) {
 
   return str;
 }
+
+QVariant ScriptInterface::getMetrics() {
+  return sim.metrics();
+}
