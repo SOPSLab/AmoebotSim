@@ -111,7 +111,8 @@ public:
   AggregationAlg();
 
 public slots:
-  void instantiate(const int numParticles = 2);
+  void instantiate(const int numParticles = 2, const QString mode = "d",
+                   const double noiseAmt = 3.0);
 };
 
 // Compression.

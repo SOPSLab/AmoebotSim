@@ -10,114 +10,60 @@ using namespace std;
 AggregateParticle::AggregateParticle(const Node head, const int globalTailDir,
                                      const int orientation,
                                      AmoebotSystem& system,
-                                     int center,
+                                     int center, QString mode, double noiseVal,
                                      std::vector<AggregateParticle*> particles)
   : AmoebotParticle(head, globalTailDir, orientation, system),
     center(center),
+    mode(mode),
+    noiseVal(noiseVal),
     particles(particles) {}
 
 void AggregateParticle::activate() {
   bool particleInSight = checkIfParticleInSight();
 
+  if (mode == "d") {    // deadlock perturbation noise
+    int perturbResetVal = noiseVal + 1;
 
-
-
-//  // Error probability
-//  double probNum = randDouble(0, 1);
-//  if (probNum < errorProb) {
-//    if (particleInSight == true) {
-//      particleInSight = false;
-//    }
-//    else {
-//      particleInSight = true;
-//    }
-//  }
-
-//  if (particleInSight) {
-//    center = (center + 5) % 6;
-//  }
-//  else {
-//   int moveDir = (center + 1) % 6;
-//   if (!hasNbrAtLabel(moveDir)) {
-//     expand(moveDir);
-//     contractTail();
-//     center = (center + 5) % 6;
-//   }
-//  }
-
-
-
-
-  // Perturbation
-  if (particleInSight) {
-    center = (center + 5) % 6;
-//    perturb = perturbResetVal;
-    perturb = 4;
-  }
-  else {
-   int moveDir = (center + 1) % 6;
-   if (!hasNbrAtLabel(moveDir)) {
-     expand(moveDir);
-     contractTail();
-     center = (center + 5) % 6;
-   } else {
-     perturb--;
-     if (perturb <= 0) {
+    if (particleInSight) {
       center = (center + 5) % 6;
-//      perturb = perturbResetVal;
-      perturb = 4;
+      perturb = perturbResetVal;
+    }
+    else {
+     int moveDir = (center + 1) % 6;
+     if (!hasNbrAtLabel(moveDir)) {
+       expand(moveDir);
+       contractTail();
+       center = (center + 5) % 6;
+     } else {
+       perturb--;
+       if (perturb <= 0) {
+        center = (center + 5) % 6;
+        perturb = perturbResetVal;
+       }
      }
-   }
+    }
   }
+  else {    // mode = "e", error probability noise
+    double probNum = randDouble(0, 1);
+    if (probNum < noiseVal) {
+      if (particleInSight == true) {
+        particleInSight = false;
+      } else {
+        particleInSight = true;
+      }
+    }
 
-
-
-
-//  // Different rates for rotate in place vs. move around center of rotation
-//  // 150->.15, 1/.15 = 6.6667, rotating in place happens 6.667 times as often
-//  // (as "fast") as rotating around center of rotation
-//  int rateDiff = 150;
-//  if (particleInSight) {
-//    center = (center + 5) % 6;
-//  }
-//  else {
-//    int randNum = randInt(0, 1000);
-//    if (randNum >= (1000 - rateDiff)) {
-//      int moveDir = (center + 1) % 6;
-//      if (!hasNbrAtLabel(moveDir)) {
-//        expand(moveDir);
-//        contractTail();
-//        center = (center + 5) % 6;
-//      }
-//    }
-//  }
-
-
-
-
-//  // different rates mixed with perturbation
-//  int rateDiff = 150;
-//  if (particleInSight) {
-//    center = (center + 5) % 6;
-//    perturb = 4;
-//  }
-//  else {
-//    int randNum = randInt(0, 1000);
-//    if (randNum >= (1000 - rateDiff)) {
-//      int moveDir = (center + 1) % 6;
-//      if (!hasNbrAtLabel(moveDir)) {
-//        expand(moveDir);
-//        contractTail();
-//        center = (center + 5) % 6;
-//      } else {
-//        perturb--;
-//        if (perturb <= 0) {
-//          center = (center + 5) % 6;
-//          perturb = 4;
-//        }
-//      }
-//    }
-//  }
+    if (particleInSight) {
+      center = (center + 5) % 6;
+    } else {
+      int moveDir = (center + 1) % 6;
+      if (!hasNbrAtLabel(moveDir)) {
+        expand(moveDir);
+        contractTail();
+        center = (center + 5) % 6;
+      }
+    }
+  }
 
 }
 
@@ -151,12 +97,10 @@ AggregateParticle& AggregateParticle::nbrAtLabel(int label) const {
 }
 
 bool AggregateParticle::checkIfParticleInSight() const {
-  int sightScope = (center + 4) % 6;    // MAIN; 90 degree angle from center
-//  int sightScope = (center + 2) % 6;    // optimized for counterclockwise
-//  int sightScope = (center + 3) % 6;    // optimized for clockwise (and for ray)
+  int sightScope = (center + 4) % 6;    // 90 degrees clockwise from center
 
-
-  // FIXED: cone from sightscope variable val to sightScope+1; sightscope val dashed, sightscope+1 included
+  // cone from sightScope variable val to sightScope+1
+  // sightScope val not included, sightScope+1 included
   for (auto p: particles) {
     int distX = abs(p->head.x - head.x);
     int distY = abs(p->head.y - head.y);
@@ -197,147 +141,22 @@ bool AggregateParticle::checkIfParticleInSight() const {
     }
   }
   return false;
-
-
-// // old, incorrect: cone from sightscope variable val to sightScope+1; sightscope val dashed, sightscope+1 included
-//  for (auto p: particles) {
-//    int distX = abs(p->head.x - head.x);
-//    int distY = abs(p->head.y - head.y);
-
-//    switch (sightScope) {
-//      case 0:
-//        if (p->head.y > head.y && p->head.x >= head.x) {
-//          return true;
-//        }
-//        break;
-//      case 1:
-//        if (p->head.y > head.y && p->head.x < head.x && distX >= distY) {
-//          return true;
-//        }
-//        break;
-//      case 2:
-//        if (p->head.y >= head.y && p->head.x < head.x && distY < distX) {
-//          return true;
-//        }
-//        break;
-//      case 3:
-//        if (p->head.y < head.y && p->head.x <= head.x) {
-//          return true;
-//        }
-//        break;
-//      case 4:
-//        if (p->head.y < head.y && p->head.x > head.x && distY >= distX) {
-//          return true;
-//        }
-//        break;
-//      case 5:
-//        if (p->head.y <= head.y && p->head.x > head.x && distY < distX) {
-//          return true;
-//        }
-//        break;
-//      default:
-//        Q_ASSERT(center >= 0 && center < 6);
-//    }
-//  }
-//  return false;
-
-
-//  // cone from sightscope variable val to sightScope+1; sightscope val included, sightscope+1 dashed line
-//  for (auto p: particles) {
-//    int distX = abs(p->head.x - head.x);
-//    int distY = abs(p->head.y - head.y);
-
-//    switch (sightScope) {
-//      case 0:
-//        if (p->head.y >= head.y && p->head.x > head.x) {
-//          return true;
-//        }
-//        break;
-//      case 1:
-//        if (p->head.y > head.y && p->head.x <= head.x && distY > distX) {
-//          return true;
-//        }
-//        break;
-//      case 2:
-//        if (p->head.y > head.y && p->head.x < head.x && distY <= distX) {
-//          return true;
-//        }
-//        break;
-//      case 3:
-//        if (p->head.y <= head.y && p->head.x < head.x) {
-//          return true;
-//        }
-//        break;
-//      case 4:
-//        if (p->head.y < head.y && p->head.x >= head.x && distY > distX) {
-//          return true;
-//        }
-//        break;
-//      case 5:
-//        if (p->head.y < head.y && p->head.x > head.x && distY <= distX) {
-//          return true;
-//        }
-//        break;
-//      default:
-//        Q_ASSERT(center >= 0 && center < 6);
-//    }
-//  }
-//  return false;
-
-
-//  // ray
-//  for (auto p: particles) {
-//    switch (sightScope) {
-//      case 0:
-//        if (p->head.x > head.x && p->head.y == head.y) {
-//          return true;
-//        }
-//        break;
-//      case 1:
-//        if (p->head.x == head.x && p->head.y > head.y) {
-//          return true;
-//        }
-//        break;
-//      case 2:
-//        if (p->head.x < head.x && p->head.y > head.y) {
-//          return true;
-//        }
-//        break;
-//      case 3:
-//        if (p->head.x < head.x && p->head.y == head.y) {
-//          return true;
-//        }
-//        break;
-//      case 4:
-//        if (p->head.x == head.x && p->head.y < head.y) {
-//          return true;
-//        }
-//        break;
-//      case 5:
-//        if (p->head.x > head.x && p->head.y < head.y) {
-//          return true;
-//        }
-//        break;
-//      default:
-//        Q_ASSERT(center >= 0 && center < 6);
-//    }
-//  }
-//  return false;
-
-
 }
 
-AggregateSystem::AggregateSystem(int numParticles) {
-//  _measures.push_back(new MaxDistanceMeasure("MAX 2-Particle Dist", 1, *this));
-//  _measures.push_back(new SumDistancesMeasure("SUM 2-Particle Dists", 1, *this));
-  _measures.push_back(new ConvexHullMeasure("Convex Hull", 1, *this));
-//  _measures.push_back(new MECMeasure("MEC circumference", 1, *this));
+AggregateSystem::AggregateSystem(int numParticles, QString mode,
+                                 double noiseVal) {
+  _measures.push_back(new SEDMeasure("SED circumference", 1, *this));
+  _measures.push_back(new ConvexHullMeasure("Convex Hull Perim", 1, *this));
   _measures.push_back(new DispersionMeasure("Dispersion", 1, *this));
   _measures.push_back(new ClusterFractionMeasure("Cluster Fraction", 1, *this));
 
-//  currentval = 0;
-//  currentval = 1e18;
+  // Set initial value of currentVal to the an extremely non-optimal value of
+  // the relevant metric.
+//  currentval = 0;   // cluster fraction
+//  currentval = 1e18;    // dispersion, convex hull perimeter, SED circumf.
 
+  Q_ASSERT(mode == "d" or mode == "e");
+  Q_ASSERT(noiseVal >= 0);
   Q_ASSERT(numParticles > 0);
   std::set<Node> occupied;
   std::vector<AggregateParticle*> particles;
@@ -353,7 +172,8 @@ AggregateSystem::AggregateSystem(int numParticles) {
     int y = randInt(-1 * boxRadius, boxRadius);
     if (occupied.find(Node(x, y)) == occupied.end()) {
       AggregateParticle* particle =
-          new AggregateParticle(Node(x, y), -1, 0, *this, randDir(), particles);
+          new AggregateParticle(Node(x, y), -1, 0, *this, randDir(), mode,
+                                noiseVal, particles);
       insert(particle);
       particles.insert(particles.end(), particle);
       occupied.insert(Node(x, y));
@@ -375,135 +195,6 @@ double dist(const QVector<double> a, const QVector<double> b) {
 
 
 
-
-//MaxDistanceMeasure::MaxDistanceMeasure(const QString name, const unsigned int freq,
-//                                           AggregateSystem& system)
-//  : Measure(name, freq),
-//    _system(system) {}
-
-//double MaxDistanceMeasure::calculate() const {
-//  QVector< QVector<double> > points;
-
-//  for (const auto& p : _system.particles) {
-//    auto aggr_p = dynamic_cast<AggregateParticle*>(p);
-//    int x_center, y_center;
-//    switch (aggr_p->center) {
-//      case 0 :
-//        x_center = aggr_p->head.x + 1;
-//        y_center = aggr_p->head.y;
-//        break;
-//      case 1 :
-//        x_center = aggr_p->head.x;
-//        y_center = aggr_p->head.y + 1;
-//        break;
-//      case 2 :
-//        x_center = aggr_p->head.x - 1;
-//        y_center = aggr_p->head.y + 1;
-//        break;
-//      case 3 :
-//        x_center = aggr_p->head.x - 1;
-//        y_center = aggr_p->head.y;
-//        break;
-//      case 4 :
-//        x_center = aggr_p->head.x;
-//        y_center = aggr_p->head.y - 1;
-//        break;
-//      case 5 :
-//        x_center = aggr_p->head.x + 1;
-//        y_center = aggr_p->head.y - 1;
-//        break;
-//    }
-
-//    points.push_back( { ( p->head.x + (p->head.y / 2.0) ),
-//                        ( p->head.y * (sqrt(3.0) / 2.0) ) } );
-////    points.push_back( { ( x_center + (y_center / 2.0) ) ,
-////                        ( y_center * (sqrt(3.0) / 2.0) ) } );
-//  }
-
-//  std::sort(points.begin(), points.end());
-//  points.erase(std::unique(points.begin(), points.end()), points.end());
-
-//  int n = points.size();
-
-//  double maxDist = 0.0;
-
-//  for (int a = 0; a < n; a++) {
-//    for (int b = a + 1; b < n; b++) {
-//      if (dist(points[a], points[b]) > maxDist) {
-//        maxDist = dist(points[a], points[b]);
-//      }
-//    }
-//  }
-
-//  return maxDist;
-//}
-
-
-
-//SumDistancesMeasure::SumDistancesMeasure(const QString name, const unsigned int freq,
-//                                           AggregateSystem& system)
-//  : Measure(name, freq),
-//    _system(system) {}
-
-//double SumDistancesMeasure::calculate() const {
-//  QVector< QVector<double> > points;
-
-//  for (const auto& p : _system.particles) {
-//    auto aggr_p = dynamic_cast<AggregateParticle*>(p);
-//    int x_center, y_center;
-//    switch (aggr_p->center) {
-//      case 0 :
-//        x_center = aggr_p->head.x + 1;
-//        y_center = aggr_p->head.y;
-//        break;
-//      case 1 :
-//        x_center = aggr_p->head.x;
-//        y_center = aggr_p->head.y + 1;
-//        break;
-//      case 2 :
-//        x_center = aggr_p->head.x - 1;
-//        y_center = aggr_p->head.y + 1;
-//        break;
-//      case 3 :
-//        x_center = aggr_p->head.x - 1;
-//        y_center = aggr_p->head.y;
-//        break;
-//      case 4 :
-//        x_center = aggr_p->head.x;
-//        y_center = aggr_p->head.y - 1;
-//        break;
-//      case 5 :
-//        x_center = aggr_p->head.x + 1;
-//        y_center = aggr_p->head.y - 1;
-//        break;
-//    }
-
-//    points.push_back( { ( p->head.x + (p->head.y / 2.0) ),
-//                        ( p->head.y * (sqrt(3.0) / 2.0) ) } );
-////    points.push_back( { ( x_center + (y_center / 2.0) ) ,
-////                        ( y_center * (sqrt(3.0) / 2.0) ) } );
-//  }
-
-//  std::sort(points.begin(), points.end());
-//  points.erase(std::unique(points.begin(), points.end()), points.end());
-
-//  int n = points.size();
-
-//  double totalDist = 0.0;
-
-//  for (int a = 0; a < n; a++) {
-//    for (int b = a + 1; b < n; b++) {
-//       totalDist += dist(points[a], points[b]);
-//    }
-//  }
-
-//  return totalDist;
-//}
-
-
-
-
-
 ConvexHullMeasure::ConvexHullMeasure(const QString name, const unsigned int freq,
                                            AggregateSystem& system)
   : Measure(name, freq),
@@ -515,39 +206,8 @@ double ConvexHullMeasure::calculate() const {
   QVector< QVector<double> > points;
 
   for (const auto& p : _system.particles) {
-    auto aggr_p = dynamic_cast<AggregateParticle*>(p);
-    int x_center, y_center;
-    switch (aggr_p->center) {
-      case 0 :
-        x_center = aggr_p->head.x + 1;
-        y_center = aggr_p->head.y;
-        break;
-      case 1 :
-        x_center = aggr_p->head.x;
-        y_center = aggr_p->head.y + 1;
-        break;
-      case 2 :
-        x_center = aggr_p->head.x - 1;
-        y_center = aggr_p->head.y + 1;
-        break;
-      case 3 :
-        x_center = aggr_p->head.x - 1;
-        y_center = aggr_p->head.y;
-        break;
-      case 4 :
-        x_center = aggr_p->head.x;
-        y_center = aggr_p->head.y - 1;
-        break;
-      case 5 :
-        x_center = aggr_p->head.x + 1;
-        y_center = aggr_p->head.y - 1;
-        break;
-    }
-
     points.push_back( { ( p->head.x + (p->head.y / 2.0) ),
                         ( p->head.y * (sqrt(3.0) / 2.0) ) } );
-//    points.push_back( { ( x_center + (y_center / 2.0) ) ,
-//                        ( y_center * (sqrt(3.0) / 2.0) ) } );
   }
 
   std::sort(points.begin(), points.end());
@@ -668,183 +328,162 @@ double ConvexHullMeasure::calculate() const {
 
 
 
+struct Circle {
+    QVector<double> C;
+    double R;
+};
 
-//MECMeasure::MECMeasure(const QString name, const unsigned int freq,
-//                                           AggregateSystem& system)
-//  : Measure(name, freq),
-//    _system(system) {}
+bool isInside(const Circle& c, const QVector<double> p) {
+  return dist(c.C, p) <= c.R;
+}
 
-//struct Circle {
-//    QVector<double> C;
-//    double R;
-//};
+// Find circle given three points A, B, and C that are on it.
+// Uses the fact that the perpendicular bisectors of two chords intersect at the
+// center of the circle.
+Circle circleFromThree(const QVector<double> a, const QVector<double> b,
+                       const QVector<double> c) {
+  double slopeAB, slopeBC, L1slope, L2slope, centerX, centerY = 0.0;
 
-//bool isInside(const Circle& c, const QVector<double> p) {
-//  return dist(c.C, p) <= c.R;
-//}
-
-//// Find circle given three points that are on it.
-//// Uses the fact that the perpendicular bisectors of two chords intersect at the
-//// center of the circle.
-//Circle circleFromThree(const QVector<double> a, const QVector<double> b,
-//                       const QVector<double> c) {
-//  double slopeAB, slopeBC, L1slope, L2slope, centerX, centerY = 0.0;
-
-//  // midpoints of the two chords
-//  const vector<double> mpAB = { (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0 };
-//  const vector<double> mpBC = { (b[0] + c[0]) / 2.0, (b[1] + c[1]) / 2.0 };
+  // midpoints of the two chords
+  const vector<double> mpAB = { (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0 };
+  const vector<double> mpBC = { (b[0] + c[0]) / 2.0, (b[1] + c[1]) / 2.0 };
 
 
-//  if (a[0] == b[0] && b[1] == c[1]) {
-//    centerX = mpBC[0];
-//    centerY = mpAB[1];
-//  } else if (b[0] == c[0] && a[1] == b[1]) {
-//    centerX = mpAB[0];
-//    centerY = mpBC[1];
-//  } else if (a[0] == b[0]) {
-//    centerY = mpAB[1];
-//    slopeBC = (c[1] - b[1]) / (c[0] - b[0]);
-//    L2slope = (-1) * (1/slopeBC);
-//    centerX = ( (centerY - mpBC[1]) / L2slope ) + mpBC[0];
-//  } else if (b[0] == c[0]) {
-//    centerY = mpBC[1];
-//    slopeAB = (b[1] - a[1]) / (b[0] - a[0]);
-//    L1slope = (-1) * (1/slopeAB);
-//    centerX = ( (centerY - mpAB[1]) / L1slope) + mpAB[0];
-//  } else if (a[1] == b[1]) {
-//    centerX = mpAB[0];
-//    slopeBC = (c[1] - b[1]) / (c[0] - b[0]);
-//    L2slope = (-1) * (1/slopeBC);
-//    centerY = ( L2slope * (centerX - mpBC[0]) ) + mpBC[1];
-//  } else if (b[1] == c[1]) {
-//    centerX = mpBC[0];
-//    slopeAB = (b[1] - a[1]) / (b[0] - a[0]);
-//    L1slope = (-1) * (1/slopeAB);
-//    centerY = ( L1slope * (centerX - mpAB[0]) ) + mpAB[1];
-//  } else {
-//    slopeAB = (b[1] - a[1]) / (b[0] - a[0]);
-//    slopeBC = (c[1] - b[1]) / (c[0] - b[0]);
-//    L1slope = (-1) * (1/slopeAB);
-//    L2slope = (-1) * (1/slopeBC);
-//    centerX = ( mpBC[1] - mpAB[1] + (L1slope * mpAB[0]) - (L2slope * mpBC[0]) ) / (L1slope - L2slope);
-//    centerY = ( L1slope * (centerX - mpAB[0]) ) + mpAB[1];
-//  }
+  if (a[0] == b[0] && b[1] == c[1]) {
+    centerX = mpBC[0];
+    centerY = mpAB[1];
+  } else if (b[0] == c[0] && a[1] == b[1]) {
+    centerX = mpAB[0];
+    centerY = mpBC[1];
+  } else if (a[0] == b[0]) {
+    centerY = mpAB[1];
+    slopeBC = (c[1] - b[1]) / (c[0] - b[0]);
+    L2slope = (-1) * (1/slopeBC);
+    centerX = ( (centerY - mpBC[1]) / L2slope ) + mpBC[0];
+  } else if (b[0] == c[0]) {
+    centerY = mpBC[1];
+    slopeAB = (b[1] - a[1]) / (b[0] - a[0]);
+    L1slope = (-1) * (1/slopeAB);
+    centerX = ( (centerY - mpAB[1]) / L1slope) + mpAB[0];
+  } else if (a[1] == b[1]) {
+    centerX = mpAB[0];
+    slopeBC = (c[1] - b[1]) / (c[0] - b[0]);
+    L2slope = (-1) * (1/slopeBC);
+    centerY = ( L2slope * (centerX - mpBC[0]) ) + mpBC[1];
+  } else if (b[1] == c[1]) {
+    centerX = mpBC[0];
+    slopeAB = (b[1] - a[1]) / (b[0] - a[0]);
+    L1slope = (-1) * (1/slopeAB);
+    centerY = ( L1slope * (centerX - mpAB[0]) ) + mpAB[1];
+  } else {
+    slopeAB = (b[1] - a[1]) / (b[0] - a[0]);
+    slopeBC = (c[1] - b[1]) / (c[0] - b[0]);
+    L1slope = (-1) * (1/slopeAB);
+    L2slope = (-1) * (1/slopeBC);
+    centerX = ( mpBC[1] - mpAB[1] + (L1slope * mpAB[0]) - (L2slope * mpBC[0]) ) / (L1slope - L2slope);
+    centerY = ( L1slope * (centerX - mpAB[0]) ) + mpAB[1];
+  }
 
-//  const QVector<double> center{centerX, centerY};
+  const QVector<double> center{centerX, centerY};
 
-//  return {center, dist(center, b)};
-//}
+  return {center, dist(center, b)};
+}
 
-//// Find circle given two points (A, B) that are on it.
-//// Returns circle in which AB is the diamter.
-//// Therefore, center is midpoint of AB and radius is |AB| / 2.
-//Circle circleFromTwo(const QVector<double> a, const QVector<double> b) {
-//  const QVector<double> center = { (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0 };
-//  return {center, dist(a, b) / 2.0};
-//}
+// Find circle given two points A and B that are on it.
+// Returns circle in which AB is the diamter.
+// Therefore, center is midpoint of AB and radius is |AB| / 2.
+Circle circleFromTwo(const QVector<double> a, const QVector<double> b) {
+  const QVector<double> center = { (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0 };
+  return {center, dist(a, b) / 2.0};
+}
 
-//// Checks if all points are inside the circle, therefore making it valid.
-//bool isValidCircle(const Circle& c, const QVector< QVector<double> > points) {
-//  const int n = points.size();
-//  for (int i = 0; i < n; i++) {
-//    if (!isInside(c, points[i])) {
-//      return false;
-//      break;
-//    }
-//  }
-//  return true;
-//}
+// Checks if all points are inside the circle, therefore making it valid.
+bool isValidCircle(const Circle& c, const QVector< QVector<double> > points) {
+  const int n = points.size();
+  for (int i = 0; i < n; i++) {
+    if (!isInside(c, points[i])) {
+      return false;
+      break;
+    }
+  }
+  return true;
+}
+
+Circle minCircleTrivial(QVector< QVector<double> >& points) {
+  assert(points.size() <= 3);
+  if (points.empty()) {
+    return { { 0, 0 }, 0 };
+  } else if (points.size() == 1) {
+    return { points[0], 0 };
+  } else if (points.size() == 2) {
+    return circleFromTwo(points[0], points[1]);
+  }
+
+  // check if SED can be determined by 2 points only
+  for (int i = 0; i < 3; i++) {
+    for (int j = i + 1; j < 3; j++) {
+      Circle c = circleFromTwo(points[i], points[j]);
+      if (isValidCircle(c, points)) {
+        return c;
+      }
+    }
+  }
+  return circleFromThree(points[0], points[1], points[2]);
+}
+
+// Returns the SED using Welzl's algorithm
+// P = set of input points, R = set of points on circle boundary, n = number of
+// points in P not yet processed
+Circle welzlHelper(QVector< QVector<double> >& P,
+          QVector< QVector<double> > R, int n) {
+  // Base case - all points processed or |R| = 3
+  if (n == 0 || R.size() == 3) {
+    return minCircleTrivial(R);
+  }
+
+  // Pick random point
+  int idx = rand() % n;
+  QVector<double> p = P[idx];
+
+  // Put picked point at end of P
+  swap(P[idx], P[n - 1]);
+
+  // SED d from the set of points P - {p}
+  Circle d = welzlHelper(P, R, n - 1);
+
+  if (isInside(d, p)) {
+    return d;
+  }
+  R.push_back(p);
+
+  // Return SED for P - {p} and R U {p}
+  return welzlHelper(P, R, n - 1);
+}
+
+Circle welzl(const QVector< QVector<double> >& P) {
+  QVector< QVector<double> > P_copy = P;
+  random_shuffle(P_copy.begin(), P_copy.end());
+  return welzlHelper(P_copy, {}, P_copy.size());
+}
 
 
-//double MECMeasure::calculate() /*const*/ {
-//  QVector< QVector<double> > points;
-//  for (const auto& p : _system.particles) {
+SEDMeasure::SEDMeasure(const QString name, const unsigned int freq,
+                       AggregateSystem& system)
+  : Measure(name, freq),
+    _system(system) {}
 
-//    auto aggr_p = dynamic_cast<AggregateParticle*>(p);
-//    int x_center, y_center;
-//    switch (aggr_p->center) {
-//      case 0 :
-//        x_center = aggr_p->head.x + 1;
-//        y_center = aggr_p->head.y;
-//        break;
-//      case 1 :
-//        x_center = aggr_p->head.x;
-//        y_center = aggr_p->head.y + 1;
-//        break;
-//      case 2 :
-//        x_center = aggr_p->head.x - 1;
-//        y_center = aggr_p->head.y + 1;
-//        break;
-//      case 3 :
-//        x_center = aggr_p->head.x - 1;
-//        y_center = aggr_p->head.y;
-//        break;
-//      case 4 :
-//        x_center = aggr_p->head.x;
-//        y_center = aggr_p->head.y - 1;
-//        break;
-//      case 5 :
-//        x_center = aggr_p->head.x + 1;
-//        y_center = aggr_p->head.y - 1;
-//        break;
-//    }
+double SEDMeasure::calculate() const {
+  QVector< QVector<double> > points = {};
+  for (const auto& p : _system.particles) {
+    points.push_back( { ( p->head.x + (p->head.y / 2.0) ),
+                        ( p->head.y * (sqrt(3.0) / 2.0) ) } );
+  }
 
-//    points.push_back( { p->head.x + (p->head.y / 2.0),
-//                        p->head.y * (sqrt(3.0) / 2.0) } );
-////    points.push_back( { x_center + (y_center / 2.0) ,
-////                        y_center * (sqrt(3.0) / 2.0) } );
-//  }
+  Circle sed = welzl(points);
 
-//  int n = points.size();
-
-//  Circle mec = {{0, 0}, 1e18};
-
-//  // Situation where MEC intersects 2 points (A, B) and AB = diameter.
-//  for (int a = 0; a < n; a++) {
-//    for (int b = a + 1; b < n; b++) {
-//      Circle tmp = circleFromTwo(points[a], points[b]);
-//      if (tmp.R < mec.R && isValidCircle(tmp, points)) {
-//        mec = tmp;
-//      }
-//    }
-//  }
-
-//  // Situation where MEC intersects 3 or more points (A, B, C).
-//  for (int x = 0; x < n; x++) {
-//    for (int y = x + 1; y < n; y++) {
-//      for (int z = y + 1; z < n; z++) {
-//        Circle temp = circleFromThree(points[x], points[y], points[z]);
-//        if (temp.R < mec.R && isValidCircle(temp, points)) {
-//          mec = temp;
-//        }
-//      }
-//    }
-//  }
-
-////  for (int a = 0; a < n; a++) {
-////    for (int b = 0; b < n; b++) {
-////      Circle tmp = circleFromTwo(points[a], points[b]);
-////      if (tmp.R < mec.R && isValidCircle(tmp, points)) {
-////        mec = tmp;
-////      }
-////    }
-////  }
-
-////  for (int a = 0; a < n; a++) {
-////    for (int b = 0; b < n; b++) {
-////      for (int c = 0; c < n; c++) {
-////        Circle tmp = circleFromThree(points[a], points[b], points[c]);
-////        if (tmp.R < mec.R && isValidCircle(tmp, points)) {
-////          mec = tmp;
-////        }
-////      }
-////    }
-////  }
-
-//  _system.currentval = ( (mec.R) * 2.0 ) * M_PI;
-//  return ( (mec.R) * 2.0 ) * M_PI;
-//}
-
+//  _system.currentval = ( (sed.R) * 2.0 ) * M_PI;
+  return ( (sed.R) * 2.0 ) * M_PI;
+}
 
 
 
@@ -857,39 +496,8 @@ double DispersionMeasure::calculate() const {
   QVector< QVector<double> > points;
 
   for (const auto& p : _system.particles) {
-    auto aggr_p = dynamic_cast<AggregateParticle*>(p);
-    int x_center, y_center;
-    switch (aggr_p->center) {
-      case 0 :
-        x_center = aggr_p->head.x + 1;
-        y_center = aggr_p->head.y;
-        break;
-      case 1 :
-        x_center = aggr_p->head.x;
-        y_center = aggr_p->head.y + 1;
-        break;
-      case 2 :
-        x_center = aggr_p->head.x - 1;
-        y_center = aggr_p->head.y + 1;
-        break;
-      case 3 :
-        x_center = aggr_p->head.x - 1;
-        y_center = aggr_p->head.y;
-        break;
-      case 4 :
-        x_center = aggr_p->head.x;
-        y_center = aggr_p->head.y - 1;
-        break;
-      case 5 :
-        x_center = aggr_p->head.x + 1;
-        y_center = aggr_p->head.y - 1;
-        break;
-    }
-
     points.push_back( { ( p->head.x + (p->head.y / 2.0) ),
                         ( p->head.y * (sqrt(3.0) / 2.0) ) } );
-//    points.push_back( { ( x_center + (y_center / 2.0) ) ,
-//                        ( y_center * (sqrt(3.0) / 2.0) ) } );
   }
 
   int n = points.length();
@@ -913,8 +521,6 @@ double DispersionMeasure::calculate() const {
 
 
 
-
-
 void AggregateSystem::DFS(AggregateParticle& particle, const AggregateSystem& system,
          std::vector<AggregateParticle>& clusterVec) {
   particle.visited = true;
@@ -927,7 +533,6 @@ void AggregateSystem::DFS(AggregateParticle& particle, const AggregateSystem& sy
     }
   }
 }
-
 
 ClusterFractionMeasure::ClusterFractionMeasure(const QString name, const unsigned int freq,
                                            AggregateSystem& system)
@@ -969,16 +574,17 @@ double ClusterFractionMeasure::calculate() const {
 
 
 
-
-
-
-
-
+// To use a stopping condition, uncomment the relevant section of code and
+// comment out the default "return false".
+// To use stopping conditions, currentVal must be made active in the necessary
+// locations. Additionally, the "const" and "const final" attribute of the
+// calculate() function of the Metric/Measure class must be removed.
 bool AggregateSystem::hasTerminated() const {
 //  double num_particles = size();
 
-////  // convex hull per.
-////  double ideal_cluster = 1.959050785 * pow(num_particles, 0.603108546);
+
+//  // convex hull per.
+//  double ideal_cluster = 1.959050785 * pow(num_particles, 0.603108546);
 
 //  // dispersion
 //  int num_rings, ideal_cluster;
@@ -1015,7 +621,6 @@ bool AggregateSystem::hasTerminated() const {
 //  }
 
 
-
 //  // mec circumf.
 //  double ideal_cluster = 2.033785231 * pow(num_particles, 0.6059016911);
 //  if ( currentval <= (1.25 * ideal_cluster) ) {
@@ -1034,5 +639,4 @@ bool AggregateSystem::hasTerminated() const {
 
 
   return false;
-
 }

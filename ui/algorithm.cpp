@@ -134,13 +134,25 @@ void DynamicDemoAlg::instantiate(const unsigned int numParticles,
 
 AggregationAlg::AggregationAlg() : Algorithm("Swarm Aggregation", "aggregation") {
   addParameter("# Particles", "2");
+  addParameter("Noise Form", "d");
+  addParameter("Noise Value", "3.0");
 }
 
-void AggregationAlg::instantiate(const int numParticles) {
+void AggregationAlg::instantiate(const int numParticles, const QString mode,
+                                 const double noiseVal) {
+  std::set<QString> set = {"d", "e"};
   if (numParticles <= 0) {
     emit log("# particles must be > 0", true);
+  } else if (set.find(mode) == set.end()) {
+    QString accepted = "";
+    for(std::set<QString>::iterator it = set.begin(); it != set.end(); ++it) {
+      if (accepted != "") accepted = accepted + ", " + *it;
+      else accepted = *it;
+    }
+    emit log("only accepted modes are: " + accepted, true);
   } else {
-    emit setSystem(std::make_shared<AggregateSystem>(numParticles));
+    emit setSystem(std::make_shared<AggregateSystem>(numParticles, mode,
+                                                     noiseVal));
   }
 }
 
