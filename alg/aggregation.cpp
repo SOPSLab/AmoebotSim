@@ -22,11 +22,11 @@ void AggregateParticle::activate() {
   bool particleInSight = checkIfParticleInSight();
 
   if (mode == "d") {    // deadlock perturbation noise
-    int perturbResetVal = noiseVal + 1;
+    int perturbCounterMax = noiseVal;
 
     if (particleInSight) {
       center = (center + 5) % 6;
-      perturb = perturbResetVal;
+      perturb = 0;
     }
     else {
      int moveDir = (center + 1) % 6;
@@ -35,10 +35,10 @@ void AggregateParticle::activate() {
        contractTail();
        center = (center + 5) % 6;
      } else {
-       perturb--;
-       if (perturb <= 0) {
+       perturb++;
+       if (perturb >= perturbCounterMax) {
         center = (center + 5) % 6;
-        perturb = perturbResetVal;
+        perturb = 0;
        }
      }
     }
