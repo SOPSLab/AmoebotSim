@@ -308,9 +308,9 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, double holeProb,
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
 
   // Insert the seed at (0,0).
+  std::set<Node> occupied;
   insert(new ShapeFormationParticle(Node(0, 0), -1, randDir(), *this,
                                     ShapeFormationParticle::State::Seed, mode));
-  std::set<Node> occupied;
   occupied.insert(Node(0, 0));
 
   std::set<Node> candidates;
@@ -318,36 +318,34 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, double holeProb,
     candidates.insert(Node(0, 0).nodeInDir(i));
   }
 
-  // Add inactive particles.
-  int numNonStaticParticles = 0;
-  while (numNonStaticParticles < numParticles && !candidates.empty()) {
-    // Pick random candidate.
+  // Add all other particles.
+  int particlesAdded = 1;
+  while (particlesAdded < numParticles && !candidates.empty()) {
+    // Pick a random candidate node.
     int randIndex = randInt(0, candidates.size());
-    Node randomCandidate;
-    for (auto it = candidates.begin(); it != candidates.end(); ++it) {
+    Node randCand;
+    for (auto cand = candidates.begin(); cand != candidates.end(); ++cand) {
       if (randIndex == 0) {
-        randomCandidate = *it;
-        candidates.erase(it);
+        randCand = *cand;
+        candidates.erase(cand);
         break;
       } else {
         randIndex--;
       }
     }
 
-    occupied.insert(randomCandidate);
-
-    // Add this candidate as a particle if not a hole.
+    // With probability 1 - holeProb, add a new particle at the candidate node.
     if (randBool(1.0 - holeProb)) {
-      insert(new ShapeFormationParticle(randomCandidate, -1, randDir(), *this,
+      insert(new ShapeFormationParticle(randCand, -1, randDir(), *this,
                                         ShapeFormationParticle::State::Idle,
                                         mode));
-      ++numNonStaticParticles;
+      occupied.insert(randCand);
+      particlesAdded++;
 
       // Add new candidates.
       for (int i = 0; i < 6; ++i) {
-        auto neighbor = randomCandidate.nodeInDir(i);
-        if (occupied.find(neighbor) == occupied.end()) {
-          candidates.insert(neighbor);
+        if (occupied.find(randCand.nodeInDir(i)) == occupied.end()) {
+          candidates.insert(randCand.nodeInDir(i));
         }
       }
     }
