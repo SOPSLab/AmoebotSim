@@ -4,7 +4,9 @@
 
 // Defines the particle system and composing particles for the Ballroom code
 // tutorial, demonstrating inter-particle coordination. This tutorial covers
-// read/write functionality and pull/push handovers.
+// read/write functionality and pull/push handovers. The pseudocode is
+// available in the docs:
+// [https://amoebotsim.rtfd.io/en/latest/tutorials/tutorials.html#ballroomdemo-working-together].
 
 #ifndef AMOEBOTSIM_ALG_DEMO_BALLROOMDEMO_H_
 #define AMOEBOTSIM_ALG_DEMO_BALLROOMDEMO_H_
