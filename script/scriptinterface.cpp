@@ -71,8 +71,8 @@ void ScriptInterface::exportMetrics() {
   log("Metrics exported to application directory.");
 }
 
-QVariant ScriptInterface::getMetrics(QString name, QString mode) {
-  if (mode == "v") {
+QVariant ScriptInterface::getMetrics(QString name, bool history) {
+  if (!history) {
     for (const auto& c : sim.getSystem()->getCounts()) {
       if (c->_name == name) {
         return c->_value;
@@ -85,7 +85,7 @@ QVariant ScriptInterface::getMetrics(QString name, QString mode) {
     }
     log("no metrics with given name exist", true);
   }
-  else if (mode == "h") {
+  else {
     for (const auto& c : sim.getSystem()->getCounts()) {
       if (c->_name == name) {
         return QVariant::fromValue(c->_history);
@@ -98,9 +98,7 @@ QVariant ScriptInterface::getMetrics(QString name, QString mode) {
     }
     log("no metrics with given name exist", true);
   }
-  else {
-    log("only accepted modes for getMetrics(): 'v', 'h'", true);
-  }
+  return QVariant();
 }
 
 void ScriptInterface::setWindowSize(int width, int height) {

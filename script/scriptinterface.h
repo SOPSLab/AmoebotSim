@@ -41,12 +41,13 @@ class ScriptInterface : public QObject {
   // Simulator metrics commands. getNumParticles and getNumObjects return the
   // number of particles and objects in the given instance, respectively.
   // exportMetrics writes the metrics to JSON. See simulator.h for further
-  // discussion. getMetrics returns either the current value (mode = 'v') or the
-  // entire history (mode = 'h') of the metric with parameter-defined name.
+  // discussion. getMetrics returns either the current value (history = false)
+  // or the entire history (history = true) of the metric with parameter-defined
+  // name.
   int getNumParticles();
   int getNumObjects();
   void exportMetrics();
-  QVariant getMetrics(QString name, QString mode);
+  QVariant getMetrics(QString name, bool history = false);
 
   // Visualization commands. focusOn centers the window at the given (x,y) node.
   // setZoom sets the zoom level of the window. saveScreenshot saves the current
