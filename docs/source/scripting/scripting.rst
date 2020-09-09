@@ -63,9 +63,9 @@ The following is a list of all recognized commands.
 .. js:function:: getMetrics(name, mode)
 
   :param string name: The name of a metric.
-  :param string mode: ``"v"`` to return the metric's current value and ``"h"`` to return the metric's history.
+  :param boolean mode: ``true`` to return the metric's history or ``false`` to return the metric's current value; ``false`` by default.
 
-  For a metric with specified ``name``, returns either its current value (``mode = "v"``) or historical data (``mode = "h"``).
+  For a metric with specified ``name``, returns either its current value (``history = false``) or historical data (``history = true``).
 
 .. js:function:: setWindowSize(width, height)
 
