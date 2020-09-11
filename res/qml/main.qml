@@ -6,6 +6,7 @@ import QtQuick 2.2
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.1
 import QtQuick.Layouts 1.1
+import QtQuick.Dialogs 1.0
 
 import VisItem 1.0
 
@@ -33,6 +34,8 @@ ApplicationWindow {
   signal step()
   signal exportMetrics()
   signal focusOnCenterOfMass()
+
+  signal runScriptFile(string filePath)
 
   function log(msg, isError) {
     fieldLayout.forceActiveFocus()
@@ -228,6 +231,41 @@ ApplicationWindow {
         vis.forceActiveFocus()
         instantiate(algorithmSelectBox.currentText)
       }
+    }
+
+    A_Button {
+        id: runScriptButton
+        text: "Run Script"
+        Layout.preferredWidth: parent.width
+
+        onClicked: {
+            getBuildDirectory.open()
+            getBuildDirectory.close()
+            runScriptFileDialog.open()
+        }
+    }
+
+    FileDialog {
+        id: getBuildDirectory
+    }
+
+    FileDialog {
+        id: runScriptFileDialog
+        title: "Choose script file"
+        nameFilters: [ "JavaScript files (*.js)" ]
+        selectedNameFilter: "JavaScript files (*.js)"
+
+        property string scriptFilePath: ""
+        readonly property string buildDirectory: getBuildDirectory.folder.toString()
+
+        onAccepted: {
+            scriptFilePath = runScriptFileDialog.fileUrl.toString().replace(buildDirectory + "/", "")
+            log("File accepted: " + scriptFilePath, false)
+            runScriptFile(scriptFilePath)
+        }
+        onRejected: {
+            log("File rejected", true)
+        }
     }
 
     ScrollView {

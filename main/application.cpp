@@ -87,6 +87,8 @@ Application::Application(int argc, char *argv[])
           }
   );
 
+  connect(qmlRoot, SIGNAL(runScriptFile(QString)), scriptEngine.get(), SLOT(runScript(QString)));
+
   // Set default step duration.
   sim.setStepDuration(0);
 }
