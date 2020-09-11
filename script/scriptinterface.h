@@ -42,8 +42,8 @@ class ScriptInterface : public QObject {
   // number of particles and objects in the given instance, respectively.
   // exportMetrics writes the metrics to JSON. See simulator.h for further
   // discussion. getMetrics returns either the current value (history = false)
-  // or the entire history (history = true) of the metric with parameter-defined
-  // name.
+  // or the historical data (history = true) of the metric with parameter-
+  // defined name.
   int getNumParticles();
   int getNumObjects();
   void exportMetrics();
