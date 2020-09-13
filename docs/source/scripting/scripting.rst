@@ -3,8 +3,46 @@ Scripting
 
 This scripting reference is for researchers 🧪 and developers 💻 learning how to write custom JavaScript experiments for AmoebotSim.
 
-.. todo::
-  Add an introduction to scripting in AmoebotSim.
+Instead of simply using the user interface controls to run a single algorithm instance, AmoebotSim also allows for scripts to be run, enabling more complex and custom control of the simulator.
+Applications and benefits of scripting include: running large numbers of algorithm instances automatically and consecutively, adjusting algorithm parameters more fluidly, using metrics data in different ways, lowering runtime due to graphics being streamlined, etc.
+
+
+Writing Scripts
+---------------
+
+Writing custom JavaScript experiments for AmoebotSim follows the same exact syntax and process as writing any other standard script in JavaScript.
+The only difference is the added set of custom commands specific to AmoebotSim (listed below in the :ref:`JavaScript API <script-api>`), which can all be easily added to your script.
+
+Here is an example of a simple JavaScript experiment:
+
+.. code-block:: javascript
+
+  for (var run = 0; run < 25; run++) {
+    shapeformation(100, 0.2, "h");
+    runUntilTermination();
+    writeToFile('shapeformation_data.txt', getMetrics("# Rounds") + '\n');
+  }
+
+In the above script, AmoebotSim will run 25 instances of the shape formation algorithm (with given parameters), writing the value of a metric ("# Rounds") at the end of each individual algorithm instance to a text file.
+It is clear how scripting could be expanded to carry out more complex experiments.
+
+.. warning::
+  The JavaScript file must be saved in a location that is within the application's build directory.
+  Otherwise, AmoebotSim's JavaScript engine will not be able to locate or execute the script.
+
+
+Running/Executing Scripts
+-------------------------
+
+Once you have written your JavaScript experiment and saved it in an accepted location, press the *Run Script* button in the sidebar of the user interface (see the :ref:`usage guide <usage-at-a-glance>`) to run your script.
+This will open a file manager window where you will be prompted to find and select the desired JavaScript file.
+Immediately after the file is selected and accepted by the dialog, the script will begin to run.
+Notably, graphics (moving particles, etc.) are not updated or displayed by AmoebotSim while a script is being executed.
+When the script execution completes, graphics will return, showing the new state of the particle system, and the following message will be logged to the simulator: ``File accepted/executed: path_to_file/your_script.js``.
+
+The following animation illustrates the process of loading and running a script in AmoebotSim:
+
+.. image:: graphics/runscript.gif
 
 
 .. _script-api:
