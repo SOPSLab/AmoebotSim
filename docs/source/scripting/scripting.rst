@@ -10,7 +10,7 @@ Applications and benefits of scripting include: running large numbers of algorit
 Writing Scripts
 ---------------
 
-Writing custom JavaScript experiments for AmoebotSim follows the same exact syntax and process as writing any other standard script in JavaScript.
+Writing custom JavaScript experiments for AmoebotSim follows the same exact syntax and process as writing any other standard JavaScript file.
 The only difference is the added set of custom commands specific to AmoebotSim (listed below in the :ref:`JavaScript API <script-api>`), which can all be easily added to your script.
 
 Here is an example of a simple JavaScript experiment:
@@ -23,8 +23,9 @@ Here is an example of a simple JavaScript experiment:
     writeToFile('shapeformation_data.txt', getMetrics("# Rounds") + '\n');
   }
 
-In the above script, AmoebotSim will run 25 instances of the shape formation algorithm (with given parameters), writing the value of a metric ("# Rounds") at the end of each individual algorithm instance to a text file.
-It is clear how scripting could be expanded to carry out more complex experiments.
+In the above script, AmoebotSim will run 25 instances of the shape formation algorithm (with given parameters), writing the value of the "# Rounds" metric at the end of each individual algorithm instance to a text file.
+
+It is clear how the simple scripting above can be expanded to carry out much more complex experiments.
 
 .. warning::
   The JavaScript file must be saved in a location that is within the application's build directory.
@@ -38,11 +39,15 @@ Once you have written your JavaScript experiment and saved it in an accepted loc
 This will open a file manager window where you will be prompted to find and select the desired JavaScript file.
 Immediately after the file is selected and accepted by the dialog, the script will begin to run.
 Notably, graphics (moving particles, etc.) are not updated or displayed by AmoebotSim while a script is being executed.
-When the script execution completes, graphics will return, showing the new state of the particle system, and the following message will be logged to the simulator: ``File accepted/executed: path_to_file/your_script.js``.
+When the script execution completes, graphics will return, showing the new state of the particle system, and the following message will be logged to the simulator: ``File accepted: path_to_file/your_script.js``.
 
 The following animation illustrates the process of loading and running a script in AmoebotSim:
 
-.. image:: graphics/runscript.gif
+.. image:: graphics/scriptinganimation.gif
+
+.. note::
+  As seen in the video demonstration, the simulator will likely emit a message reading *"Not Responding"* while the script is in the process of executing.
+  Ignore this error message; it is simply acknowledging that graphics are not currently being updating.
 
 
 .. _script-api:
