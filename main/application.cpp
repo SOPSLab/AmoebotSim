@@ -5,6 +5,7 @@
 #include "main/application.h"
 
 #include <QDebug>
+#include <QDir>
 #include <QQmlContext>
 #include <QString>
 #include <QStringList>
@@ -87,6 +88,7 @@ Application::Application(int argc, char *argv[])
           }
   );
 
+  qmlRoot->findChild<QObject*>("runScriptFileDialog")->setProperty("executableDir", QDir::currentPath());
   connect(qmlRoot, SIGNAL(runScriptFile(QString)), scriptEngine.get(), SLOT(runScript(QString)));
 
   // Set default step duration.

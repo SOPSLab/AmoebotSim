@@ -234,38 +234,32 @@ ApplicationWindow {
     }
 
     A_Button {
-        id: runScriptButton
-        text: "Run Script"
-        Layout.preferredWidth: parent.width
+      id: runScriptButton
+      text: "Run Script"
+      Layout.preferredWidth: parent.width
 
-        onClicked: {
-            getBuildDirectory.open()
-            getBuildDirectory.close()
-            runScriptFileDialog.open()
-        }
+      onClicked: {
+        runScriptFileDialog.open()
+      }
     }
 
     FileDialog {
-        id: getBuildDirectory
-    }
+      id: runScriptFileDialog
+      objectName: "runScriptFileDialog"
+      title: "Choose script file"
+      nameFilters: [ "JavaScript files (*.js)" ]
+      selectedNameFilter: "JavaScript files (*.js)"
 
-    FileDialog {
-        id: runScriptFileDialog
-        title: "Choose script file"
-        nameFilters: [ "JavaScript files (*.js)" ]
-        selectedNameFilter: "JavaScript files (*.js)"
+      property string executableDir: ""
 
-        property string scriptFilePath: ""
-        readonly property string buildDirectory: getBuildDirectory.folder.toString()
-
-        onAccepted: {
-            scriptFilePath = runScriptFileDialog.fileUrl.toString().replace(buildDirectory + "/", "")
-            log("File accepted: " + scriptFilePath, false)
-            runScriptFile(scriptFilePath)
-        }
-        onRejected: {
-            log("File rejected", true)
-        }
+      onAccepted: {
+        var scriptPath = fileUrl.toString().replace("file:///" + executableDir + "/", "")
+        log("File accepted: " + scriptPath, false)
+        runScriptFile(scriptPath)
+      }
+      onRejected: {
+        log("File rejected", true)
+      }
     }
 
     ScrollView {
