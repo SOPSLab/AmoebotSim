@@ -71,7 +71,7 @@ void ScriptInterface::exportMetrics() {
   log("Metrics exported to application directory.");
 }
 
-QVariant ScriptInterface::getMetrics(QString name, bool history) {
+QVariant ScriptInterface::getMetric(QString name, bool history) {
   for (const auto& c : sim.getSystem()->getCounts()) {
     if (c->_name == name) {
       return history ? QVariant::fromValue(c->_history) : c->_value;
