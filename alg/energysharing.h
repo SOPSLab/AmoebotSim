@@ -2,9 +2,9 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-// Defines the particle system and composing particles for the Energy
-// Distribution Algorithm defined in 'Bio-Inspired Energy Distribution for
-// Programmable Matter' [arxiv.org/abs/TODO].
+// Defines the particle system and composing particles for the Energy-Sharing
+// algorithm defined in 'Bio-Inspired Energy Distribution for Programmable
+// Matter' [arxiv.org/abs/2007.04377].
 
 #ifndef ALG_ENERGYSHARING_H_
 #define ALG_ENERGYSHARING_H_

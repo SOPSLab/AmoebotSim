@@ -87,25 +87,26 @@ void ParameterListModel::createSystem(QString algName) {
     dynamic_cast<TokenDemoAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toInt());
   } else if (signature == "compression") {
-    dynamic_cast<CompressionAlg*>(alg)->instantiate(
-          params[0].toInt(), params[1].toDouble());
+    dynamic_cast<CompressionAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toDouble());
   } else if (signature == "energyshape") {
-    dynamic_cast<EnergyShapeAlg*>(alg)->instantiate(
-          params[0].toInt(), params[1].toInt(), params[2].toDouble(),
-          params[3].toDouble(), params[4].toDouble(), params[5].toDouble());
+    dynamic_cast<EnergyShapeAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toInt(), params[2].toDouble(),
+                    params[3].toDouble(), params[4].toDouble(),
+                    params[5].toDouble());
   } else if (signature == "energysharing") {
-    dynamic_cast<EnergySharingAlg*>(alg)->instantiate(
-          params[0].toInt(), params[1].toInt(), params[2].toDouble(),
-          params[3].toDouble(), params[4].toDouble());
-  } else if (signature == "leaderelection") {
-    dynamic_cast<LeaderElectionAlg*>(alg)->instantiate(
-          params[0].toInt(), params[1].toDouble());
+    dynamic_cast<EnergySharingAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toInt(), params[2].toDouble(),
+                    params[3].toDouble(), params[4].toDouble());
   } else if (signature == "infobjcoating") {
-    dynamic_cast<InfObjCoatingAlg*>(alg)->instantiate(
-          params[0].toInt(), params[1].toDouble());
+    dynamic_cast<InfObjCoatingAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toDouble());
+  } else if (signature == "leaderelection") {
+    dynamic_cast<LeaderElectionAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toDouble());
   } else if (signature == "shapeformation") {
-    dynamic_cast<ShapeFormationAlg*>(alg)->instantiate(
-          params[0].toInt(), params[1].toDouble(), params[2]);
+    dynamic_cast<ShapeFormationAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toDouble(), params[2]);
   } else {
     Q_ASSERT(false);  // An unrecognized signature has been entered.
   }

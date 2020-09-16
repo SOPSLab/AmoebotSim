@@ -3,8 +3,8 @@
  * notice can be found at the top of main/main.cpp. */
 
 // Defines the particle system and composing particles for the composition of
-// hexagon formation and energy distribution as described in 'Bio-Inspired
-// Energy Distribution for Programmable Matter' [arxiv.org/abs/TODO].
+// hexagon formation and Energy-Sharing as described in 'Bio-Inspired Energy
+// Distribution for Programmable Matter' [arxiv.org/abs/2007.04377].
 
 #ifndef ALG_ENERGYSHAPE_H_
 #define ALG_ENERGYSHAPE_H_

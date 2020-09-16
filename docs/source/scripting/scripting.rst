@@ -97,6 +97,27 @@ All algorithms are instantiated based on their signatures and parameters defined
 
   Instantiates a system running the **Compression** algorithm with the given parameters.
 
+.. js:function:: energyshape(numParticles, numEnergyRoots, holeProb, capacity, demand, transferRate)
+
+  :param int numParticles: The number of particles in the system.
+  :param int numEnergyRoots: The number of particles with access to external energy sources.
+  :param float holeProb: The system's hole probability capturing how spread out the initial configuration is.
+  :param float capacity: The capacity of each particle's battery.
+  :param float demand: The energy cost for each particle's actions.
+  :param float transferRate: The maximum amount of energy a particle can transfer to a neighbor.
+
+  Instantiates a system running the **Energy Sharing** algorithm composed with **Hexagon Formation** with the given parameters.
+
+.. js:function:: energysharing(numParticles, usage, capacity, demand, transferRate)
+
+  :param int numParticles: The number of particles in the system.
+  :param int usage: Whether the system uses energy for "invisible" actions (``usage = 0``) or for reproduction (``usage = 1``).
+  :param float capacity: The capacity of each particle's battery.
+  :param float demand: The energy cost for each particle's actions.
+  :param float transferRate: The maximum amount of energy a particle can transfer to a neighbor.
+
+  Instantiates a system running the **Energy Sharing** algorithm with the given parameters.
+
 .. js:function:: infobjcoating(numParticles, holeProb)
 
   :param int numParticles: The number of particles in the system.
