@@ -39,14 +39,14 @@ Once you have written your JavaScript experiment and saved it in an accepted loc
 This will open a file manager window where you will be prompted to find and select the desired JavaScript file.
 Immediately after the file is selected and accepted by the dialog, the script will begin to run.
 Notably, graphics (moving particles, etc.) are not updated or displayed by AmoebotSim while a script is being executed.
-When the script execution completes, graphics will return, showing the new state of the particle system, and the following message will be logged to the simulator: ``File accepted: path_to_file/your_script.js``.
+When the script execution completes, graphics will return, showing the new state of the particle system, and the following message will be logged to the simulator: ``Ran script: path_to_file/your_script.js``.
 
 The following animation illustrates the process of loading and running a script in AmoebotSim:
 
 .. image:: graphics/scriptinganimation.gif
 
 .. note::
-  While the script is in the process of executing, the simulator window may emit a message reading *"Not Responding"*.
+  As seen in the video demonstration, the simulator window may emit a message reading *"Not Responding"* while the script is in the process of executing.
   Ignore this error message; it is simply acknowledging that graphics are not currently being updating.
 
 
