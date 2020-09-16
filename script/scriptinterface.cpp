@@ -71,6 +71,21 @@ void ScriptInterface::exportMetrics() {
   log("Metrics exported to application directory.");
 }
 
+QVariant ScriptInterface::getMetric(QString name, bool history) {
+  for (const auto& c : sim.getSystem()->getCounts()) {
+    if (c->_name == name) {
+      return history ? QVariant::fromValue(c->_history) : c->_value;
+    }
+  }
+  for (const auto& m : sim.getSystem()->getMeasures()) {
+    if (m->_name == name) {
+      return history ? QVariant::fromValue(m->_history) : m->_history.back();
+    }
+  }
+  log("no metrics with given name exist", true);
+  return QVariant();
+}
+
 void ScriptInterface::setWindowSize(int width, int height) {
   if(vis != nullptr) {
     vis->setWindowSize(width, height);
