@@ -20,7 +20,7 @@ Here is an example of a simple JavaScript experiment:
   for (var run = 0; run < 25; run++) {
     shapeformation(100, 0.2, "h");
     runUntilTermination();
-    writeToFile('shapeformation_data.txt', getMetrics("# Rounds") + '\n');
+    writeToFile('shapeformation_data.txt', getMetric("# Rounds") + '\n');
   }
 
 In the above script, AmoebotSim will run 25 instances of the shape formation algorithm (with given parameters), writing the value of the "# Rounds" metric at the end of each individual algorithm instance to a text file.
@@ -28,7 +28,7 @@ In the above script, AmoebotSim will run 25 instances of the shape formation alg
 It is clear how the simple scripting above can be expanded to carry out much more complex experiments.
 
 .. warning::
-  The JavaScript file must be saved in a location that is within the application's build directory.
+  The JavaScript file must be saved in a location that is within the application's executable/build directory.
   Otherwise, AmoebotSim's JavaScript engine will not be able to locate or execute the script.
 
 
@@ -46,7 +46,7 @@ The following animation illustrates the process of loading and running a script 
 .. image:: graphics/scriptinganimation.gif
 
 .. note::
-  As seen in the video demonstration, the simulator will likely emit a message reading *"Not Responding"* while the script is in the process of executing.
+  While the script is in the process of executing, the simulator window may emit a message reading *"Not Responding"*.
   Ignore this error message; it is simply acknowledging that graphics are not currently being updating.
 
 
@@ -103,7 +103,7 @@ The following is a list of all recognized commands.
 
   Writes the metrics (all metrics' historical data) to JSON as ``your_build_directory/metrics/metrics_<secs_since_epoch>.json``.
 
-.. js:function:: getMetrics(name, history)
+.. js:function:: getMetric(name, history)
 
   :param string name: The name of a metric.
   :param boolean history: ``true`` to return the metric's history or ``false`` to return the metric's current value; ``false`` by default.
