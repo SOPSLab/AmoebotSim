@@ -87,9 +87,8 @@ Application::Application(int argc, char *argv[])
             QMetaObject::invokeMethod(qmlRoot, "log", Q_ARG(QVariant, msg), Q_ARG(QVariant, isError));
           }
   );
-
   qmlRoot->findChild<QObject*>("runScriptFileDialog")->setProperty("executableDir", QDir::currentPath());
-  connect(qmlRoot, SIGNAL(runScriptFile(QString)), scriptEngine.get(), SLOT(runScript(QString)));
+  connect(qmlRoot, SIGNAL(runScript(QString)), scriptEngine.get(), SLOT(runScript(QString)));
 
   // Set default step duration.
   sim.setStepDuration(0);

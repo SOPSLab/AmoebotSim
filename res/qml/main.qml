@@ -29,13 +29,13 @@ ApplicationWindow {
   signal algSelected(string algName)
   signal instantiate(string algName)
 
+  signal runScript(string scriptPath)
+
   signal start()
   signal stop()
   signal step()
   signal exportMetrics()
   signal focusOnCenterOfMass()
-
-  signal runScriptFile(string filePath)
 
   function log(msg, isError) {
     fieldLayout.forceActiveFocus()
@@ -254,11 +254,11 @@ ApplicationWindow {
 
       onAccepted: {
         var scriptPath = fileUrl.toString().replace("file:///" + executableDir + "/", "")
-        log("File accepted: " + scriptPath, false)
-        runScriptFile(scriptPath)
+        runScript(scriptPath)
+        log("Ran script: " + scriptPath, false)
       }
       onRejected: {
-        log("File rejected", true)
+        log("No script selected", true)
       }
     }
 
