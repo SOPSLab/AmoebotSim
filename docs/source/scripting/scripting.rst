@@ -35,8 +35,8 @@ It is clear how the simple scripting above can be expanded to carry out much mor
 Running/Executing Scripts
 -------------------------
 
-Once you have written your JavaScript experiment and saved it in an accepted location, press the *Run Script* button in the sidebar of the user interface (see the :ref:`usage guide <usage-at-a-glance>`) to run your script.
-This will open a file manager window where you will be prompted to find and select the desired JavaScript file.
+Once you have written your JavaScript experiment and saved it in an accepted location, press the *Run Script* button in the sidebar of the user interface to run your script.
+This will open a file manager window where you will be prompted to select the desired JavaScript file.
 Immediately after the file is selected and accepted by the dialog, the script will begin to run.
 Notably, graphics (moving particles, etc.) are not updated or displayed by AmoebotSim while a script is being executed.
 When the script execution completes, graphics will return, showing the new state of the particle system, and the following message will be logged to the simulator: ``Ran script: path_to_file/your_script.js``.
@@ -57,65 +57,16 @@ Scripting API
 
 The following is a list of all recognized commands.
 
-.. js:function:: log(msg, error)
-
-  :param string msg: A message to log to AmoebotSim's interface.
-  :param boolean error: ``true`` if and only if this is an error message.
-
-  Emits the message ``msg`` to the console, and can be denoted as an error message by setting ``error`` to ``true``.
-
-.. js:function:: runScript(scriptFilePath)
-
-  :param string scriptFilePath: The file path of a JavaScript script to be run by the simulator's engine.
-
-  Loads a JavaScript script from the provided filepath ``scriptFilePath`` and executes it.
-
-.. js:function:: writeToFile(filePath, text)
-
-  :param string filePath: The path of a file to write text to.
-  :param string text: A piece of text to write to a specified file.
-
-  Appends the specified ``text`` to a file at the given location ``filePath``.
-
-.. js:function:: step()
-
-  Executes a single particle activation.
-
-.. js:function:: setStepDuration(ms)
-
-  :param int ms: The number of milliseconds (positive integer) between individual particle activations.
-
-  Sets the simulator's delay between particle activations to the given value ``ms``.
-
-.. js:function:: runUntilTermination()
-
-  Runs the current algorithm instance until its ``hasTerminated`` function returns true.
-
-.. js:function:: getNumParticles()
-
-  Returns the number of particles in the system in the given instance.
-
-.. js:function:: getNumObjects()
-
-  Returns the number of objects in the system in the given instance.
-
 .. js:function:: exportMetrics()
 
   Writes the metrics (all metrics' historical data) to JSON as ``your_build_directory/metrics/metrics_<secs_since_epoch>.json``.
 
-.. js:function:: getMetric(name, history)
+.. js:function:: filmSimulation(filePath, stepLimit)
 
-  :param string name: The name of a metric.
-  :param boolean history: ``true`` to return the metric's history or ``false`` to return the metric's current value; ``false`` by default.
+  :param string filePath: A filepath of the images to be captured.
+  :param int stepLimit: A maximum number of steps that will be captured by the screenshots.
 
-  For a metric with specified ``name``, returns either its current value (``history = false``) or historical data (``history = true``).
-
-.. js:function:: setWindowSize(width, height)
-
-  :param int width: The width in pixels; 800 by default.
-  :param int height: The height in pixels; 600 by default.
-
-  Sets the size of the application window to the specified ``width`` and ``height``.
+  Saves a series of screenshots to the specified location ``filePath``, up to the specified number of steps ``stepLimit``.
 
 .. js:function:: focusOn(x, y)
 
@@ -125,11 +76,37 @@ The following is a list of all recognized commands.
   Sets the window's center of focus to the given (``x``, ``y``) node.
   Zoom level is unaffected.
 
-.. js:function:: setZoom(zoom)
+.. js:function:: getMetric(name, history)
 
-  :param float zoom: A value defining the level/amount of zoom.
+  :param string name: The name of a metric.
+  :param boolean history: ``true`` to return the metric's history or ``false`` to return the metric's current value; ``false`` by default.
 
-  Sets the zoom level of the window to the given value ``zoom``.
+  For a metric with specified ``name``, returns either its current value (``history = false``) or historical data (``history = true``).
+
+.. js:function:: getNumObjects()
+
+  Returns the number of objects in the system in the given instance.
+
+.. js:function:: getNumParticles()
+
+  Returns the number of particles in the system in the given instance.
+
+.. js:function:: log(msg, error)
+
+  :param string msg: A message to log to AmoebotSim's interface.
+  :param boolean error: ``true`` if and only if this is an error message.
+
+  Emits the message ``msg`` to the console, and can be denoted as an error message by setting ``error`` to ``true``.
+
+.. js:function:: runScript(scriptFilePath)
+
+  :param string scriptFilePath: The file path (relative to the application's executable directory) of a JavaScript script to be run by the simulator's engine.
+
+  Loads a JavaScript script from the provided filepath ``scriptFilePath`` and executes it.
+
+.. js:function:: runUntilTermination()
+
+  Runs the current algorithm instance until its ``hasTerminated`` function returns true.
 
 .. js:function:: saveScreenshot(filePath)
 
@@ -137,9 +114,32 @@ The following is a list of all recognized commands.
 
   Saves the current window as a .png in the specified location ``filePath``.
 
-.. js:function:: filmSimulation(filePath, stepLimit)
+.. js:function:: setStepDuration(ms)
 
-  :param string filePath: A filepath of the images to be captured.
-  :param int stepLimit: A maximum number of steps that will be captured by the screenshots.
+  :param int ms: The number of milliseconds (positive integer) between individual particle activations.
 
-  Saves a series of screenshots to the specified location ``filePath``, up to the specified number of steps ``stepLimit``.
+  Sets the simulator's delay between particle activations to the given value ``ms``.
+
+.. js:function:: setWindowSize(width, height)
+
+  :param int width: The width in pixels; 800 by default.
+  :param int height: The height in pixels; 600 by default.
+
+  Sets the size of the application window to the specified ``width`` and ``height``.
+
+.. js:function:: setZoom(zoom)
+
+  :param float zoom: A value defining the level/amount of zoom.
+
+  Sets the zoom level of the window to the given value ``zoom``.
+
+.. js:function:: step()
+
+  Executes a single particle activation.
+
+.. js:function:: writeToFile(filePath, text)
+
+  :param string filePath: The path (relative to the application's executable directory) of a file to write text to.
+  :param string text: A piece of text to write to a specified file.
+
+  Appends the specified ``text`` to a file at the given location ``filePath``.

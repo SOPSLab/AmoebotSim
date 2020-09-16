@@ -4,8 +4,6 @@ Usage
 This usage guide is for explorers 🔎, researchers 🧪, and developers 💻 learning how to use AmoebotSim's front-end user interface.
 
 
-.. _usage-at-a-glance:
-
 At A Glance
 -----------
 
