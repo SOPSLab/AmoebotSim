@@ -72,32 +72,17 @@ void ScriptInterface::exportMetrics() {
 }
 
 QVariant ScriptInterface::getMetrics(QString name, bool history) {
-  if (history) {
-    for (const auto& c : sim.getSystem()->getCounts()) {
-      if (c->_name == name) {
-        return QVariant::fromValue(c->_history);
-      }
+  for (const auto& c : sim.getSystem()->getCounts()) {
+    if (c->_name == name) {
+      return history ? QVariant::fromValue(c->_history) : c->_value;
     }
-    for (const auto& m : sim.getSystem()->getMeasures()) {
-      if (m->_name == name) {
-        return QVariant::fromValue(m->_history);
-      }
-    }
-    log("no metrics with given name exist", true);
   }
-  else {
-    for (const auto& c : sim.getSystem()->getCounts()) {
-      if (c->_name == name) {
-        return c->_value;
-      }
+  for (const auto& m : sim.getSystem()->getMeasures()) {
+    if (m->_name == name) {
+      return history ? QVariant::fromValue(m->_history) : m->_history.back();
     }
-    for (const auto& m : sim.getSystem()->getMeasures()) {
-      if (m->_name == name) {
-        return m->_history.back();
-      }
-    }
-    log("no metrics with given name exist", true);
   }
+  log("no metrics with given name exist", true);
   return QVariant();
 }
 
