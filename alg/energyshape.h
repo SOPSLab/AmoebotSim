@@ -140,7 +140,7 @@ class EnergyShapeSystem : public AmoebotSystem {
   // Constructs a system of EnergyShapeParticles with an optionally specified
   // size (# particles), number of energy distribution root particles, hole
   // probability in [0,1) controlling how sparse the initial configuration is,
-  // energy capacity, and energy transfer rate.
+  // energy capacity, energy demand per action, and energy transfer rate.
   EnergyShapeSystem(const int numParticles, const int numEnergyRoots,
                     const double holeProb, const double capacity,
                     const double demand, const double transferRate);

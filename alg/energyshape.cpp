@@ -421,15 +421,14 @@ EnergyShapeSystem::EnergyShapeSystem(const int numParticles,
   }
 
   // Choose particles at random to make energy ditribution roots.
-  std::vector<int> indices;
-  for (int i = 0; i < numParticles; ++i) {
-    indices.push_back(i);
-  }
-
   // BUG: If holeProb is large (e.g., > 0.7), then not all n particles will be
   // instantiated in the system. That will cause the particles[large index] call
   // to seg-fault and AmoebotSim to crash. This is an issue with all system
   // constructors that use the random tree algorithm.
+  std::vector<int> indices;
+  for (int i = 0; i < numParticles; ++i) {
+    indices.push_back(i);
+  }
   shuffle(indices.begin(), indices.end());
   for (int i = 0; i < numEnergyRoots; ++i) {
     auto esp = dynamic_cast<EnergyShapeParticle*>(particles[indices[i]]);

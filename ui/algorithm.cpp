@@ -161,18 +161,23 @@ void EnergyShapeAlg::instantiate(const int numParticles,
 EnergySharingAlg::EnergySharingAlg()
     : Algorithm("Energy Sharing", "energysharing") {
   addParameter("# Particles", "91");
+  addParameter("# Energy Roots", "1");
   addParameter("Energy Usage", "0");
   addParameter("Capacity", "10.0");
   addParameter("Demand", "5.0");
   addParameter("Transfer Rate", "1.0");
 }
 
-void EnergySharingAlg::instantiate(int numParticles, const int usage,
+void EnergySharingAlg::instantiate(int numParticles,
+                                   const int numEnergyRoots,
+                                   const int usage,
                                    const double capacity,
                                    const double demand,
                                    const double transferRate) {
   if (numParticles <= 0) {
     emit log("# particles must be > 0", true);
+  } else if (numEnergyRoots <= 0 || numEnergyRoots > numParticles) {
+    emit log("# energy roots must be in (0, #particles]", true);
   } else if (usage != 0 && usage != 1) {
     emit log("usage mode must be 0 or 1", true);
   } else if (capacity <= 0) {
@@ -183,7 +188,8 @@ void EnergySharingAlg::instantiate(int numParticles, const int usage,
     emit log("transferRate must be > 0", true);
   } else {
     emit setSystem(std::make_shared<EnergySharingSystem>(
-                     numParticles, usage, capacity, demand, transferRate));
+                     numParticles, numEnergyRoots, usage, capacity, demand,
+                     transferRate));
   }
 }
 

@@ -194,7 +194,9 @@ int EnergySharingParticle::energyColor(int color) const {
   return (((r << 8) + g) << 8) + b;
 }
 
-EnergySharingSystem::EnergySharingSystem(int numParticles, const int usage,
+EnergySharingSystem::EnergySharingSystem(int numParticles,
+                                         const int numEnergyRoots,
+                                         const int usage,
                                          const double capacity,
                                          const double demand,
                                          const double transferRate) {
@@ -250,8 +252,14 @@ EnergySharingSystem::EnergySharingSystem(int numParticles, const int usage,
                                      EnergySharingParticle::State::Idle));
   }
 
-  // Mark only the first particle as a root with energy access.
-  auto p = particleMap.find(Node(0, 0))->second;
-  auto ep = dynamic_cast<EnergySharingParticle*>(p);
-  ep->_state = EnergySharingParticle::State::Root;
+  // Choose particles at random to make energy ditribution roots.
+  std::vector<int> indices;
+  for (int i = 0; i < numParticles; ++i) {
+    indices.push_back(i);
+  }
+  shuffle(indices.begin(), indices.end());
+  for (int i = 0; i < numEnergyRoots; ++i) {
+    auto ep = dynamic_cast<EnergySharingParticle*>(particles[indices[i]]);
+    ep->_state = EnergySharingParticle::State::Root;
+  }
 }

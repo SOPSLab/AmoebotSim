@@ -124,9 +124,9 @@ class EnergySharingAlg : public Algorithm {
   EnergySharingAlg();
 
  public slots:
-  void instantiate(int numParticles = 91, const int usage = 0,
-                   const double capacity = 10, const double demand = 5,
-                   const double transferRate = 1);
+  void instantiate(int numParticles = 91, const int numEnergyRoots = 1,
+                   const int usage = 0, const double capacity = 10,
+                   const double demand = 5, const double transferRate = 1);
 };
 
 // Infinite Object Coating.

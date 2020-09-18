@@ -108,9 +108,10 @@ All algorithms are instantiated based on their signatures and parameters defined
 
   Instantiates a system running the **Energy Sharing** algorithm composed with **Hexagon Formation** with the given parameters.
 
-.. js:function:: energysharing(numParticles, usage, capacity, demand, transferRate)
+.. js:function:: energysharing(numParticles, numEnergyRoots, usage, capacity, demand, transferRate)
 
   :param int numParticles: The number of particles in the system.
+  :param int numEnergyRoots: The number of particles with access to external energy sources.
   :param int usage: Whether the system uses energy for "invisible" actions (``usage = 0``) or for reproduction (``usage = 1``).
   :param float capacity: The capacity of each particle's battery.
   :param float demand: The energy cost for each particle's actions.
