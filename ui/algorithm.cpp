@@ -9,6 +9,8 @@
 #include "alg/demo/metricsdemo.h"
 #include "alg/demo/tokendemo.h"
 #include "alg/compression.h"
+#include "alg/energyshape.h"
+#include "alg/energysharing.h"
 #include "alg/infobjcoating.h"
 #include "alg/leaderelection.h"
 #include "alg/shapeformation.h"
@@ -121,6 +123,76 @@ void CompressionAlg::instantiate(const int numParticles, const double lambda) {
   }
 }
 
+EnergyShapeAlg::EnergyShapeAlg()
+    : Algorithm("Energy + Hexagon Formation", "energyshape") {
+  addParameter("# Particles", "200");
+  addParameter("# Energy Roots", "1");
+  addParameter("Hole Prob.", "0.2");
+  addParameter("Capacity", "10.0");
+  addParameter("Demand", "5.0");
+  addParameter("Transfer Rate", "1.0");
+}
+
+void EnergyShapeAlg::instantiate(const int numParticles,
+                                 const int numEnergyRoots,
+                                 const double holeProb,
+                                 const double capacity,
+                                 const double demand,
+                                 const double transferRate) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (numEnergyRoots <= 0 || numEnergyRoots > numParticles) {
+    emit log("# energy roots must be in (0, #particles]", true);
+  } else if (holeProb < 0 || holeProb > 1) {
+    emit log("holeProb in [0,1] required", true);
+  } else if (capacity <= 0) {
+    emit log("capacity must be > 0", true);
+  } else if (demand <= 0 || demand > capacity) {
+    emit log("demand must be in (0, capacity]", true);
+  } else if (transferRate <= 0) {
+    emit log("transferRate must be > 0", true);
+  } else {
+    emit setSystem(std::make_shared<EnergyShapeSystem>(
+                     numParticles, numEnergyRoots, holeProb, capacity, demand,
+                     transferRate));
+  }
+}
+
+EnergySharingAlg::EnergySharingAlg()
+    : Algorithm("Energy Sharing", "energysharing") {
+  addParameter("# Particles", "91");
+  addParameter("# Energy Roots", "1");
+  addParameter("Energy Usage", "0");
+  addParameter("Capacity", "10.0");
+  addParameter("Demand", "5.0");
+  addParameter("Transfer Rate", "1.0");
+}
+
+void EnergySharingAlg::instantiate(int numParticles,
+                                   const int numEnergyRoots,
+                                   const int usage,
+                                   const double capacity,
+                                   const double demand,
+                                   const double transferRate) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (numEnergyRoots <= 0 || numEnergyRoots > numParticles) {
+    emit log("# energy roots must be in (0, #particles]", true);
+  } else if (usage != 0 && usage != 1) {
+    emit log("usage mode must be 0 or 1", true);
+  } else if (capacity <= 0) {
+    emit log("capacity must be > 0", true);
+  } else if (demand <= 0 || demand > capacity) {
+    emit log("demand must be in (0, capacity]", true);
+  } else if (transferRate <= 0) {
+    emit log("transferRate must be > 0", true);
+  } else {
+    emit setSystem(std::make_shared<EnergySharingSystem>(
+                     numParticles, numEnergyRoots, usage, capacity, demand,
+                     transferRate));
+  }
+}
+
 InfObjCoatingAlg::InfObjCoatingAlg() :
   Algorithm("Infinite Object Coating", "infobjcoating") {
   addParameter("# Particles", "100");
@@ -192,7 +264,9 @@ AlgorithmList::AlgorithmList() {
   _algorithms.push_back(new TokenDemoAlg());
 
   // General algorithms.
-  _algorithms.push_back(new CompressionAlg());  
+  _algorithms.push_back(new CompressionAlg());
+  _algorithms.push_back(new EnergyShapeAlg());
+  _algorithms.push_back(new EnergySharingAlg());
   _algorithms.push_back(new InfObjCoatingAlg());    
   _algorithms.push_back(new LeaderElectionAlg());
   _algorithms.push_back(new ShapeFormationAlg());
