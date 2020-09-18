@@ -130,7 +130,7 @@ EnergyShapeAlg::EnergyShapeAlg()
   addParameter("Hole Prob.", "0.2");
   addParameter("Capacity", "10.0");
   addParameter("Demand", "5.0");
-  addParameter("Harvest Rate", "1.0");
+  addParameter("Transfer Rate", "1.0");
 }
 
 void EnergyShapeAlg::instantiate(const int numParticles,
