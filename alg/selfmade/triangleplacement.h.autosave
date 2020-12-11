@@ -58,7 +58,11 @@ class TriangleParticle:public AmoebotParticle{
         struct MovementInitToken :public Token {std::stack<int> L; int _lifetime; int _dirpassed;
                                                bool _contract;};
         //used to initiate chain movement
+        //L: the path that the chain should follow
+        //_contract: whether or not the chain should be fully contracted at the end
         struct ChainToken : public Token {std::stack<int> L; bool _contract;};
+        
+        //_final: whether the final chain should be contracted (used byd 
         struct ContractToken : public Token{bool _final;};
         struct DepthToken : public Token{int _passeddir; int _depth;};
         struct ConfirmContractToken : public Token{};

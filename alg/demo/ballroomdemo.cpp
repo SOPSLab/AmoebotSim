@@ -3,6 +3,7 @@
  * notice can be found at the top of main/main.cpp. */
 
 #include "alg/demo/ballroomdemo.h"
+#include <QDebug>
 
 BallroomDemoParticle::BallroomDemoParticle(const Node head,
                                            const int globalTailDir,
@@ -29,9 +30,12 @@ void BallroomDemoParticle::activate() {
         if (hasNbrAtLabel(label) && nbrAtLabel(label)._partnerLbl != -1
             && pointsAtMe(nbrAtLabel(label), nbrAtLabel(label)._partnerLbl)) {
           if (canPull(label)) {
+              qDebug() << "lol";
             nbrAtLabel(label)._partnerLbl =
                 dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
+            qDebug() << "ldr perserved" << pointsAtMe(nbrAtLabel(label), nbrAtLabel(label)._partnerLbl);
             pull(label);
+            qDebug() << "ldr perserved" << pointsAtMe(nbrAtLabel(label), nbrAtLabel(label)._partnerLbl);
           }
           break;
         }
