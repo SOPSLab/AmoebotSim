@@ -12,12 +12,12 @@ HEADERS += \
     alg/demo/ballroomdemo.h \
     alg/demo/discodemo.h \
     alg/demo/metricsdemo.h \
-    alg/demo/pa.h \
     alg/demo/tokendemo.h \
     alg/compression.h \
     alg/energyshape.h \
     alg/energysharing.h \
     alg/infobjcoating.h \
+    alg/selfmade/generalshapeformation.h \
     alg/shapeformation.h \
     core/amoebotparticle.h \
     core/amoebotsystem.h \
@@ -44,13 +44,13 @@ SOURCES += \
     alg/demo/ballroomdemo.cpp \
     alg/demo/discodemo.cpp \
     alg/demo/metricsdemo.cpp \
-    alg/demo/pa.cpp \
-    alg/demo/pa_silly.cpp \
     alg/demo/tokendemo.cpp \
     alg/compression.cpp \
     alg/energyshape.cpp \
     alg/energysharing.cpp \
     alg/infobjcoating.cpp \
+    alg/selfmade/generalshapeformation.cpp \
+    alg/selfmade/generalshapeformation/chain_phase.cpp \
     alg/shapeformation.cpp \
     core/amoebotparticle.cpp \
     core/amoebotsystem.cpp \
