@@ -80,6 +80,9 @@ void ParameterListModel::createSystem(QString algName) {
   } else if (signature == "metricsdemo") {
     dynamic_cast<MetricsDemoAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toInt());
+  }else if (signature == "gsf") {
+      dynamic_cast<GeneralShapeFormationAlg*>(alg)->
+          instantiate(params[0].toInt());
   } else if (signature == "ballroomdemo") {
     dynamic_cast<BallroomDemoAlg*>(alg)->
         instantiate(params[0].toInt());

@@ -173,6 +173,16 @@ class TriangleAlgo : public Algorithm{
         void instantiate(unsigned int sideLen);
 };
 
+class GeneralShapeFormationAlg : public Algorithm{
+    Q_OBJECT
+
+    public:
+        GeneralShapeFormationAlg();
+
+    public slots:
+        void instantiate(unsigned int sideLen);
+};
+
 class AlgorithmList {
  public:
   // Constructs a list of algorithms recognized by the simulator (for now, this

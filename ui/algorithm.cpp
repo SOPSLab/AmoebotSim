@@ -15,6 +15,7 @@
 #include "alg/leaderelection.h"
 #include "alg/shapeformation.h"
 #include "alg/selfmade/triangleplacement.h"
+#include "alg/selfmade/generalshapeformation.h"
 
 Algorithm::Algorithm(QString name, QString signature)
     : _name(name),
@@ -270,14 +271,28 @@ void TriangleAlgo::instantiate(unsigned int sideLen){
     }
 }
 
+GeneralShapeFormationAlg::GeneralShapeFormationAlg():
+    Algorithm("A General Shape Formation", "gsf"){
+    addParameter("side length", "6");
+}
+
+void GeneralShapeFormationAlg::instantiate(unsigned int sideLen){
+    if(sideLen <= 0){
+        emit log("SideLen should be > 0");
+    } else {
+        emit setSystem(std::make_shared<GSFSystem>(sideLen));
+    }
+}
+
 
 AlgorithmList::AlgorithmList() {
   // Demo algorithms.
-  _algorithms.push_back(new DiscoDemoAlg());  
+   _algorithms.push_back(new DiscoDemoAlg());
   _algorithms.push_back(new MetricsDemoAlg());
   _algorithms.push_back(new BallroomDemoAlg());  
   _algorithms.push_back(new TokenDemoAlg());
   _algorithms.push_back(new TriangleAlgo());
+  _algorithms.push_back(new GeneralShapeFormationAlg());
 
   // General algorithms.
   _algorithms.push_back(new CompressionAlg());

@@ -17,6 +17,7 @@ HEADERS += \
     alg/energyshape.h \
     alg/energysharing.h \
     alg/infobjcoating.h \
+    alg/selfmade/generalshapeformation.h \
     alg/shapeformation.h \
     core/amoebotparticle.h \
     core/amoebotsystem.h \
@@ -48,6 +49,8 @@ SOURCES += \
     alg/energyshape.cpp \
     alg/energysharing.cpp \
     alg/infobjcoating.cpp \
+    alg/selfmade/generalshapeformation.cpp \
+    alg/selfmade/generalshapeformation/chain_phase.cpp \
     alg/shapeformation.cpp \
     core/amoebotparticle.cpp \
     core/amoebotsystem.cpp \
