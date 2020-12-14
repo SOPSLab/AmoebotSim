@@ -83,3 +83,6 @@ OTHER_FILES += \
     res/qml/A_Inspector.qml \
     res/qml/A_ResultTextField.qml \
     res/qml/main.qml
+
+DISTFILES += \
+    readme.md
