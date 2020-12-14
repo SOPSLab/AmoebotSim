@@ -1,5 +1,7 @@
 # GeneralShapeFormation guideline
 
+
+## Code structure
 We distinguish different phases (which can depend on each other). For example:
 
 - chain movement primitive
@@ -13,3 +15,8 @@ Every method, struct, etc. belonging to a specific phase is prefixed with the na
 Each phase has at least its own activate function, e.g. `chain_activate()`
 
 Keep your code DRY :)
+
+
+## Adding new features
+
+When adding a new feature (phase), start on a new branch `feature/...`, and make a Pull Request when you're ready.
