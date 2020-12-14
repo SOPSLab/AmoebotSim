@@ -4,6 +4,7 @@
 
 #include "ui/algorithm.h"
 
+#include "alg/demo/pa.h"
 #include "alg/demo/ballroomdemo.h"
 #include "alg/demo/discodemo.h"
 #include "alg/demo/metricsdemo.h"
@@ -55,6 +56,18 @@ QStringList Algorithm::getParameterDefaults() const {
 
 void Algorithm::addParameter(QString parameter, QString defaultValue) {
   _parameters.push_back(std::make_pair(parameter, defaultValue));
+}
+
+PAAlg::PAAlg() : Algorithm("Demo: PA", "pa") {
+  addParameter("# Particles", "5");
+};
+
+void PAAlg::instantiate(const int numParticles) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else {
+    emit setSystem(std::make_shared<PASystem>(numParticles));
+  }
 }
 
 DiscoDemoAlg::DiscoDemoAlg() : Algorithm("Demo: Disco", "discodemo") {
@@ -258,7 +271,8 @@ void ShapeFormationAlg::instantiate(const int numParticles,
 
 AlgorithmList::AlgorithmList() {
   // Demo algorithms.
-  _algorithms.push_back(new DiscoDemoAlg());  
+   _algorithms.push_back(new PAAlg());
+   _algorithms.push_back(new DiscoDemoAlg());
   _algorithms.push_back(new MetricsDemoAlg());
   _algorithms.push_back(new BallroomDemoAlg());  
   _algorithms.push_back(new TokenDemoAlg());

@@ -12,6 +12,7 @@ HEADERS += \
     alg/demo/ballroomdemo.h \
     alg/demo/discodemo.h \
     alg/demo/metricsdemo.h \
+    alg/demo/pa.h \
     alg/demo/tokendemo.h \
     alg/compression.h \
     alg/energyshape.h \
@@ -42,6 +43,8 @@ SOURCES += \
     alg/demo/ballroomdemo.cpp \
     alg/demo/discodemo.cpp \
     alg/demo/metricsdemo.cpp \
+    alg/demo/pa.cpp \
+    alg/demo/pa_silly.cpp \
     alg/demo/tokendemo.cpp \
     alg/compression.cpp \
     alg/energyshape.cpp \

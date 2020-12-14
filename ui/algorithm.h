@@ -48,6 +48,17 @@ class Algorithm : public QObject {
 
 /* Algorithm classes for handling the instantiation of specific algorithms */
 
+// Demo: PA, a PA algorithm
+class PAAlg : public Algorithm {
+  Q_OBJECT
+
+ public:
+  PAAlg();
+
+ public slots:
+  void instantiate(const int numParticles = 30);
+};
+
 // Demo: Disco, a first tutorial.
 class DiscoDemoAlg : public Algorithm {
   Q_OBJECT

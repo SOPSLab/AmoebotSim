@@ -20,6 +20,7 @@ void BallroomDemoParticle::activate() {
     if (isContracted()) {
       // Attempt to expand into an random adjacent position.
       int expandDir = randDir();
+      expandDir = 1;
       if (canExpand(expandDir)) {
         expand(expandDir);
       }
