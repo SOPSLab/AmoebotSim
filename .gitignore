@@ -1,3 +1,5 @@
 AmoebotSim.pro.*
 docs/build/*
 *.DS_Store
+
+alg/local/*

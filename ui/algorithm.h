@@ -174,6 +174,16 @@ class ShapeFormationAlg : public Algorithm {
                    const QString mode = "h");
 };
 
+class TriangleAlgo : public Algorithm{
+    Q_OBJECT
+
+    public:
+        TriangleAlgo();
+
+    public slots:
+        void instantiate(unsigned int sideLen);
+};
+
 class AlgorithmList {
  public:
   // Constructs a list of algorithms recognized by the simulator (for now, this

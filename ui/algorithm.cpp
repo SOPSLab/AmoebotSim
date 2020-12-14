@@ -15,6 +15,7 @@
 #include "alg/infobjcoating.h"
 #include "alg/leaderelection.h"
 #include "alg/shapeformation.h"
+#include "alg/selfmade/triangleplacement.h"
 
 Algorithm::Algorithm(QString name, QString signature)
     : _name(name),
@@ -269,6 +270,20 @@ void ShapeFormationAlg::instantiate(const int numParticles,
   }
 }
 
+TriangleAlgo::TriangleAlgo():
+    Algorithm("Triangle Setup", "triangle"){
+    addParameter("side length", "6");
+}
+
+void TriangleAlgo::instantiate(unsigned int sideLen){
+    if(sideLen <= 0){
+        emit log("SideLen should be > 0");
+    } else {
+        emit setSystem(std::make_shared<TriangleSystem>(sideLen));
+    }
+}
+
+
 AlgorithmList::AlgorithmList() {
   // Demo algorithms.
    _algorithms.push_back(new PAAlg());
@@ -276,6 +291,7 @@ AlgorithmList::AlgorithmList() {
   _algorithms.push_back(new MetricsDemoAlg());
   _algorithms.push_back(new BallroomDemoAlg());  
   _algorithms.push_back(new TokenDemoAlg());
+  _algorithms.push_back(new TriangleAlgo());
 
   // General algorithms.
   _algorithms.push_back(new CompressionAlg());

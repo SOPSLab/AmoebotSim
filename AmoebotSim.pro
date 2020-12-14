@@ -37,7 +37,8 @@ HEADERS += \
     ui/parameterlistmodel.h \
     ui/view.h \
     ui/visitem.h \
-    alg/leaderelection.h
+    alg/leaderelection.h \
+    alg/selfmade/triangleplacement.h
 
 SOURCES += \
     alg/demo/ballroomdemo.cpp \
@@ -69,7 +70,8 @@ SOURCES += \
     ui/parameterlistmodel.cpp \
     ui/view.cpp \
     ui/visitem.cpp \
-    alg/leaderelection.cpp
+    alg/leaderelection.cpp \
+    alg/selfmade/triangleplacement.cpp
 
 RESOURCES += \
     res/qml.qrc \
