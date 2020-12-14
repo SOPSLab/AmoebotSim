@@ -24,7 +24,7 @@ TriangleParticle::TriangleParticle(Node& head, const int globalTailDir,
 void TriangleParticle::activate(){
 
     if(hasToken<ChainToken>()){
-        Q_ASSERT(_state == State::CHAIN_COORDINATOR);
+        Q_ASSERT(_state == State::CHAIN_COORDINATOR || _state == State::COORDINATOR);
         chain();
     }
     //Token to initialize a certian movement pattern. This is just used for debugging.
@@ -44,19 +44,21 @@ void TriangleParticle::activate(){
         t->L = token->L;
         putToken(t);
         _ldrlabel = -1;
-        _state = State::CHAIN_COORDINATOR;
 
         //send a token to followers with their respective depth value
-        if(hasNbrAtLabel((token->_dirpassed + 2) % 6)){
-            auto t = std::make_shared<DepthToken>();
-            t->_passeddir = (token->_dirpassed + 2) % 6;
-            t->_depth = 1;
-            nbrAtLabel((token->_dirpassed + 2) % 6).putToken(t);
-        } else {
-            auto t = std::make_shared<DepthToken>();
-            t->_passeddir = (token->_dirpassed - 2) % 6;
-            t->_depth = 1;
-            nbrAtLabel((token->_dirpassed - 2) % 6).putToken(t);
+        if(_state != State::COORDINATOR){
+            _state = State::CHAIN_COORDINATOR;
+            if(hasNbrAtLabel((token->_dirpassed + 2) % 6)){
+                auto t = std::make_shared<DepthToken>();
+                t->_passeddir = (token->_dirpassed + 2) % 6;
+                t->_depth = 1;
+                nbrAtLabel((token->_dirpassed + 2) % 6).putToken(t);
+            } else {
+                auto t = std::make_shared<DepthToken>();
+                t->_passeddir = (token->_dirpassed - 2) % 6;
+                t->_depth = 1;
+                nbrAtLabel((token->_dirpassed - 2) % 6).putToken(t);
+            }
         }
     }
 
@@ -144,12 +146,16 @@ void TriangleParticle::chain(){
             }
         } else {
             if(token->_contract){
-                for(int label : headLabels()){
-                    if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level&&
-                            nbrAtLabel(label)._depth == _depth+1){
-                        auto t = std::make_shared<ContractToken>();
-                        t->_final = true;
-                        nbrAtLabel(label).putToken(t);
+                if(_state == State::COORDINATOR){
+                    auto token = takeToken<ChainToken>();
+                } else {
+                    for(int label : headLabels()){
+                        if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level&&
+                                nbrAtLabel(label)._depth == _depth+1){
+                            auto t = std::make_shared<ContractToken>();
+                            t->_final = true;
+                            nbrAtLabel(label).putToken(t);
+                        }
                     }
                 }
             }
@@ -180,29 +186,39 @@ void TriangleParticle::chain(){
         } else {
             //Contract the entire chain if so desired
             if (token->_contract){
-                for(int label : tailLabels()){
-                    if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level&&
-                            nbrAtLabel(label)._depth == _depth+1){
-                        if(canPull(label)){
-                            auto t = std::make_shared<ContractToken>();
-                            t->_final = true;
-                            nbrAtLabel(label).putToken(t);
+                if(_state == State::COORDINATOR){
+                    contractTail();
+                    auto token = takeToken<ChainToken>();
+                } else {
+                    for(int label : tailLabels()){
+                        if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level&&
+                                nbrAtLabel(label)._depth == _depth+1){
+                            if(canPull(label)){
+                                auto t = std::make_shared<ContractToken>();
+                                t->_final = true;
+                                nbrAtLabel(label).putToken(t);
 
-                            nbrAtLabel(label)._ldrlabel =
-                                        dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
-                            pull(label);
-                        } else {
-                            auto t = std::make_shared<ContractToken>();
-                            t->_final = true;
-                            nbrAtLabel(label).putToken(t);
+                                nbrAtLabel(label)._ldrlabel =
+                                            dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
+                                pull(label);
+                            } else {
+                                auto t = std::make_shared<ContractToken>();
+                                t->_final = true;
+                                nbrAtLabel(label).putToken(t);
+                            }
                         }
                     }
                 }
             //otherwise stop chain execution
             } else {
-                auto token = takeToken<ChainToken>();
-                _state = State::FOLLOWER;
-                _ldrlabel = -1;
+                if(_state != State::COORDINATOR){
+                    auto token = takeToken<ChainToken>();
+                    _state = State::FOLLOWER;
+                    _ldrlabel = -1;
+                } else {
+                    auto token = takeToken<ChainToken>();
+                    _ldrlabel = -1;
+                }
             }
         }
     }
@@ -268,6 +284,20 @@ TriangleSystem::TriangleSystem(int sideLen){
     Node current(0,0);
     auto coordinator = new TriangleParticle(current, -1, 0, *this, sideLen,
                                         TriangleParticle::State::COORDINATOR, 0, -1, 0);
+
+    //debug token for some movement protocol using chains
+    auto token = std::make_shared<TriangleParticle::MovementInitToken>();
+
+    //path of the chain
+    token->L = std::stack<int>();
+    token->L.push(2);
+
+
+    token->_dirpassed = dir; //Move protocol token
+    token->_lifetime = 1; //how many times it needs to be passed
+    token->_contract = false; //if the final configuration should be fully contracted
+    coordinator->putToken(token);
+
     insert(coordinator);
     current = current.nodeInDir(dir%6);
     for(int i = 1; i < sideLen; i++){
@@ -276,14 +306,12 @@ TriangleSystem::TriangleSystem(int sideLen){
                                           i, -1, 0);
 
         //Set the 3rd token from the left side of the triangle to be a chain_coordinator
-        if(i == 3){
+        if(i == 0){
             //debug token for some movement protocol using chains
             auto token = std::make_shared<TriangleParticle::MovementInitToken>();
 
             //path of the chain
             token->L = std::stack<int>();
-            token->L.push(2);
-            token->L.push(2);
             token->L.push(2);
 
 
