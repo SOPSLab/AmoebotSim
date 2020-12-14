@@ -85,4 +85,4 @@ OTHER_FILES += \
     res/qml/main.qml
 
 DISTFILES += \
-    readme.md
+    seminar_readme.md
