@@ -1,33 +1,69 @@
 #include "generalshapeformation.h"
 
 GSFParticle::GSFParticle(Node& head, const int globalTailDir,
-                                   const int orientation, AmoebotSystem& system,
-                                   const int sideLen, const State state)
+                         const int orientation, AmoebotSystem& system,
+                         const int sideLen, const State state,
+                         unsigned int level, unsigned int ldrlabel,
+                         int depth)
         : AmoebotParticle(head, globalTailDir, orientation, system),
-          sideLen(sideLen),
-          _state(state){
+          _initialSideLen(sideLen),
+          _state(state),
+          _level(level),
+          _ldrlabel(ldrlabel),
+          _depth(depth){
 
 }
 
 //Implement activate
 void GSFParticle::activate(){
-
+    chain_activate();
 }
+
+GSFParticle& GSFParticle::nbrAtLabel(int label) const {
+  return AmoebotParticle::nbrAtLabel<GSFParticle>(label);
+}
+
 
 int GSFParticle::headMarkColor() const{
     switch(_state){
         case State::COORDINATOR: return 0x00ff00;
+        case State::CHAIN_COORDINATOR: return 0x0000ff;
+        case State::FOLLOWER: return 0xff9000;
     }
     return -1;
 }
 
+int GSFParticle::headMarkDir() const{
+    return _ldrlabel;
+}
+
 int GSFParticle::tailMarkColor() const{
-    headMarkColor();
+    return headMarkColor();
 }
 
 QString GSFParticle::inspectionText() const{
     QString text;
-    text += "We're no strangers to looooove";
+    text += "We're no strangers to looooove\n";
+    text += " state:";
+    text += [this](){
+        switch (_state) {
+            case State::CHAIN_COORDINATOR: return "chain_coordinator\n";
+            case State::COORDINATOR: return "coordinator\n";
+            case State::FOLLOWER: return "follower\n";
+        }
+        return "no state??\n";
+    }();
+    text += " level: " + QString::number(_level) + "\n";
+    text += " depth: " + QString::number(_depth) + "\n";
+    if(hasToken<ContractToken>()){
+        text+= "has contractToken\n";
+    }
+    if(hasToken<ChainToken>()){
+        text+= "has chainToken\n";
+    }
+    if(hasToken<ConfirmContractToken>()){
+        text+= "has chainToken\n";
+    }
     return text;
 }
 
@@ -35,19 +71,41 @@ GSFSystem::GSFSystem(int sideLen){
     int dir  = 4;
     std::set<Node> occupied;
     Node current(0,0);
-    auto coordinator = new GSFParticle(current, -1, randDir(), *this, sideLen,
-                                        GSFParticle::State::COORDINATOR);
+    auto coordinator = new GSFParticle(current, -1, 0, *this, sideLen,
+                                        GSFParticle::State::COORDINATOR, 0, -1, 0);
+
     insert(coordinator);
     current = current.nodeInDir(dir%6);
     for(int i = 1; i < sideLen; i++){
-        auto sideP = new GSFParticle(current, -1, randDir(), *this, sideLen,
-                                          GSFParticle::State::FOLLOWER);
+        auto sideP = new GSFParticle(current, -1, 0, *this, sideLen,
+                                          GSFParticle::State::FOLLOWER,
+                                          i, -1, 0);
+
+        //Set the 3rd particle from the left side of the triangle to be a chain_coordinator
+        if(i == 3){
+            //debug token for some movement protocol using chains
+            auto token = std::make_shared<GSFParticle::MovementInitToken>();
+
+            //path of the chain
+            token->L = std::stack<int>();
+            token->L.push(2);
+            token->L.push(2);
+            token->L.push(2);
+
+            token->_dirpassed = dir; //Move protocol token
+            token->_lifetime = 1; //how many times it needs to be passed
+            token->_contract = true; //if the final configuration should be fully contracted
+            sideP->putToken(token);
+        }
+
+
         insert(sideP);
         Node temp = current.nodeInDir((dir+2)%6);
         for(int j = 0; j<i; j++){
 
-            auto innerP = new GSFParticle(temp, -1, randDir(), *this, sideLen,
-                                              GSFParticle::State::FOLLOWER);
+            auto innerP = new GSFParticle(temp, -1, 0, *this, sideLen,
+                                              GSFParticle::State::FOLLOWER,
+                                               i, -1, 0);
             insert(innerP);
             temp = temp.nodeInDir((dir+2)%6);
         }
