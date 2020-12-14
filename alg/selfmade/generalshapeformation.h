@@ -4,6 +4,7 @@
 
 #include "core/amoebotparticle.h"
 #include "core/amoebotsystem.h"
+#include <stack>
 
 
 class GSFParticle:public AmoebotParticle{
@@ -11,19 +12,27 @@ class GSFParticle:public AmoebotParticle{
         //states that a particle can be in
         enum class State{
             COORDINATOR,
-            FOLLOWER
+            CHAIN_COORDINATOR,
+            CHAIN_FOLLOWER
         };
 
         //constructor for TriangleParticle
         GSFParticle(Node& head, const int globalTailDir,
-                         const int orientation, AmoebotSystem& system,
-                         const int sideLen, State state);
+                    const int orientation, AmoebotSystem& system,
+                    const int sideLen, int triangleDirection, State state, unsigned int level,
+                    unsigned int ldrlabel, int depth);
 
         //what to be done during activation
         void activate() override;
 
+        // Chain Primitive Phase
+        // Allows a chain of particles to move along a certain path
+        void chain_activate();
+        void chain_handleChainToken();
+
         //set color of the particle
         int headMarkColor() const override;
+        int headMarkDir() const override;
         int tailMarkColor() const override;
 
 
@@ -33,14 +42,45 @@ class GSFParticle:public AmoebotParticle{
 
     protected:
         //private vars
-        const int sideLen;
+        const int _initialSideLen;
+        int _triangleDirection; // Direction of the left leg of the triangle as seen from the leader
         State _state;
 
-        //add tokens
+        unsigned int _level = 0;
+        int _ldrlabel = -1;
+        int _depth = -1;
 
+        //used for chain movement
+        bool _sent_pull = false;
+
+        //add tokens
+        struct MovementInitToken :public Token {std::stack<int> L; int _lifetime; int _dirpassed;
+                                               bool _contract;};
+        //used to initiate chain movement
+        //L: the path that the chain should follow
+        //_contract: whether or not the chain should be fully contracted at the end
+        struct chain_ChainToken : public Token {std::stack<int> L; bool _contract;};
+
+        //_final: whether the final chain should be contracted (set by chain)
+        struct chain_ContractToken : public Token{bool _final;};
+
+        //Sets the depth of all tokens in the chain
+        //_passeddir: the direction from which the token was passed. Used to
+        // set what particle should be followed
+        //_depth: location of the particle in the chain
+        struct chain_DepthToken : public Token{int _passeddir; int _depth;};
+
+        //used for confirming whether the chain is contracted when _final = true
+        // in chain token
+        struct chain_ConfirmContractToken : public Token{};
     private:
         friend class GSFSystem;
 
+        void chain_handleContractToken();
+        void chain_handleMovementInitToken();
+        void chain_handleDepthToken();
+        void chain_handleConfirmContractToken();
+        void triangle_expand_activate();
 };
 
 class GSFSystem:public AmoebotSystem{
@@ -48,6 +88,8 @@ class GSFSystem:public AmoebotSystem{
         GSFSystem(int sideLen = 6);
 
 
+private:
+        void initializeTriangle(int sideLen, Node current, int dir);
 };
 
 

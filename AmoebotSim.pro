@@ -51,6 +51,7 @@ SOURCES += \
     alg/infobjcoating.cpp \
     alg/selfmade/generalshapeformation.cpp \
     alg/selfmade/generalshapeformation/chain_phase.cpp \
+    alg/selfmade/generalshapeformation/triangle_expand_phase.cpp \
     alg/shapeformation.cpp \
     core/amoebotparticle.cpp \
     core/amoebotsystem.cpp \
@@ -82,3 +83,6 @@ OTHER_FILES += \
     res/qml/A_Inspector.qml \
     res/qml/A_ResultTextField.qml \
     res/qml/main.qml
+
+DISTFILES += \
+    readme.md
