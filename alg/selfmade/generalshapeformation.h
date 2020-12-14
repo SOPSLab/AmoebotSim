@@ -22,6 +22,11 @@ class GSFParticle:public AmoebotParticle{
         //what to be done during activation
         void activate() override;
 
+        // Chain Primitive Phase
+        // Allows a chain of particles to move along a certain path
+        void activateChain();
+
+
         //set color of the particle
         int headMarkColor() const override;
         int tailMarkColor() const override;
@@ -33,7 +38,7 @@ class GSFParticle:public AmoebotParticle{
 
     protected:
         //private vars
-        const int sideLen;
+        const int _initialSideLen;
         State _state;
 
         //add tokens
