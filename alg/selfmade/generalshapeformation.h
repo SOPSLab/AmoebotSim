@@ -73,6 +73,12 @@ class GSFParticle:public AmoebotParticle{
         //used for confirming whether the chain is contracted when _final = true
         // in chain token
         struct chain_ConfirmContractToken : public Token{};
+
+        struct triangle_shift_TriggerShiftToken: public Token{int _dir; bool _initiated;};
+        struct triangle_shift_ShiftToken: public Token{int _level; int _left; int _dirpassed;};
+        struct triangle_shift_CoordinatorToken: public Token{};
+
+
     private:
         friend class GSFSystem;
 
@@ -81,6 +87,12 @@ class GSFParticle:public AmoebotParticle{
         void chain_handleDepthToken();
         void chain_handleConfirmContractToken();
         void triangle_expand_activate();
+        void triangle_shift_activate();
+
+        void triangle_shift_coordinatorActivate();
+        void triangle_shift_particleActivate();
+
+
 };
 
 class GSFSystem:public AmoebotSystem{

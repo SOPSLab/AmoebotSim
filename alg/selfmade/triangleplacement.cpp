@@ -314,7 +314,6 @@ TriangleSystem::TriangleSystem(int sideLen){
             token->L = std::stack<int>();
             token->L.push(2);
 
-
             token->_dirpassed = dir; //Move protocol token
             token->_lifetime = 1; //how many times it needs to be passed
             token->_contract = true; //if the final configuration should be fully contracted

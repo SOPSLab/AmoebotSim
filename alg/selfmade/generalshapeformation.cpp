@@ -1,5 +1,6 @@
 #include "generalshapeformation.h"
 
+
 GSFParticle::GSFParticle(Node& head, const int globalTailDir,
                          const int orientation, AmoebotSystem& system,
                          const int sideLen, int triangleDirection, const State state,
@@ -18,6 +19,7 @@ GSFParticle::GSFParticle(Node& head, const int globalTailDir,
 //Implement activate
 void GSFParticle::activate(){
     chain_activate();
+    triangle_shift_activate();
 }
 
 GSFParticle& GSFParticle::nbrAtLabel(int label) const {
@@ -56,6 +58,8 @@ QString GSFParticle::inspectionText() const{
     }();
     text += " level: " + QString::number(_level) + "\n";
     text += " depth: " + QString::number(_depth) + "\n";
+
+
     if(hasToken<chain_ContractToken>()){
         text+= "has contractToken\n";
     }
@@ -64,6 +68,15 @@ QString GSFParticle::inspectionText() const{
     }
     if(hasToken<chain_ConfirmContractToken>()){
         text+= "has chainToken\n";
+    }
+    if (hasToken<triangle_shift_CoordinatorToken>()){
+        text += "has shift coordinator token";
+    }
+    if (hasToken<triangle_shift_TriggerShiftToken>()){
+        text += "has trigger shift Token";
+    }
+    if (hasToken<triangle_shift_ShiftToken>()){
+        text += "has shiftToken";
     }
     return text;
 }
@@ -75,10 +88,21 @@ GSFSystem::GSFSystem(int sideLen){
     auto coordinator = new GSFParticle(current, -1, 0, *this, sideLen, dir,
                                         GSFParticle::State::COORDINATOR, 0, -1, 0);
 
+    //TESTTTTTT
+        //debug token for some movement protocol using chains
+        auto token = std::make_shared<GSFParticle::triangle_shift_TriggerShiftToken>();
+        token->_dir = 0;
+        token->_initiated = false;
+
+        coordinator->putToken(token);
+    //TESTTTTTT
+
+
     insert(coordinator);
     current = current.nodeInDir(dir%6);
     initializeTriangle(sideLen, current, dir);
 }
+
 
 void GSFSystem::initializeTriangle(int sideLen, Node current, int dir)
 {

@@ -52,6 +52,7 @@ SOURCES += \
     alg/selfmade/generalshapeformation.cpp \
     alg/selfmade/generalshapeformation/chain_phase.cpp \
     alg/selfmade/generalshapeformation/triangle_expand_phase.cpp \
+    alg/selfmade/generalshapeformation/triangle_shift_phase.cpp \
     alg/shapeformation.cpp \
     core/amoebotparticle.cpp \
     core/amoebotsystem.cpp \
