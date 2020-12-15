@@ -9,7 +9,7 @@ void GSFParticle::chain_activate(){
     //Token to initialize a certian movement pattern. This is just used for debugging.
     //Should be replaced by a token of a specific primitive for a certian result.
     //Can give an idea of how to setup a movement primitive however.
-    if(hasToken<MovementInitToken>()){
+    if(hasToken<chain_MovementInitToken>()){
         chain_handleMovementInitToken();
     }
 
@@ -75,7 +75,7 @@ void GSFParticle::chain_handleContractToken()
 // FOR DEBUG PURPOSES ONLY
 void GSFParticle::chain_handleMovementInitToken()
 {
-    auto token = takeToken<MovementInitToken>();
+    auto token = takeToken<chain_MovementInitToken>();
 
     //pass token to next particle allong the side of the triangle if necissary
     //and put chaintoken on this particle
