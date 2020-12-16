@@ -23,7 +23,7 @@ void GSFParticle::triangle_expand_coordinatorActivate(){
             // Set token attributes based on whether the triangle has to expand left or right.
             if(triggerToken->_left){
                 dirpassed = _triangleDirection;
-                movementDir = (_triangleDirection - 2 )% 6;
+                movementDir = (_triangleDirection + 4 )% 6;
             }else{
                 dirpassed = (_triangleDirection + 1) % 6;
                 movementDir = (_triangleDirection + 3 )% 6;
