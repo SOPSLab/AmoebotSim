@@ -79,7 +79,7 @@ QString GSFParticle::inspectionText() const{
     return text;
 }
 
-GSFSystem::GSFSystem(int sideLen){
+GSFSystem::GSFSystem(int sideLen, QString expanddir){
     int dir  = 4;
     std::set<Node> occupied;
     Node current(0,0);
@@ -89,7 +89,12 @@ GSFSystem::GSFSystem(int sideLen){
     insert(coordinator);
 
     auto expandToken = std::make_shared<GSFParticle::triangle_expand_TriggerExpandToken>();
-    expandToken->_left = false;
+
+    if(expanddir == "l"){
+        expandToken->_left = false;
+    } else {
+        expandToken->_left = true;
+    }
 
     coordinator->putToken(expandToken);
 
