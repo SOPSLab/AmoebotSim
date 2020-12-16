@@ -48,6 +48,8 @@ void GSFParticle::triangle_shift_coordinatorActivate(){
 
 
 
+
+
                 // cannot move
                 //pass down coordinator-token to the corners
 

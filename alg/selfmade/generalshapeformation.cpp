@@ -91,7 +91,7 @@ GSFSystem::GSFSystem(int sideLen){
     //TESTTTTTT
         //debug token for some movement protocol using chains
         auto token = std::make_shared<GSFParticle::triangle_shift_TriggerShiftToken>();
-        token->_dir = 0;
+        token->_dir = 3;
         token->_initiated = false;
 
         coordinator->putToken(token);
