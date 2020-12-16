@@ -197,9 +197,10 @@ void GSFParticle::chain_handleChainToken(){
                     auto token = takeToken<chain_ChainToken>();
                 } else {
                     for(int label : tailLabels()){
-                        qDebug() << " test " << isContracted() ;
+                        qDebug() << " label " << label ;
                         if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level&&
                                 nbrAtLabel(label)._depth == _depth+1){
+                            qDebug() << " neigbour at: " << isContracted() ;
                             if(canPull(label)){
                                 auto t = std::make_shared<chain_ContractToken>();
                                 t->_final = true;
@@ -213,8 +214,8 @@ void GSFParticle::chain_handleChainToken(){
                                 t->_final = true;
                                 nbrAtLabel(label).putToken(t);
                             }
+                            break;
                         }
-                        break;
                     }
                 }
             //otherwise stop chain execution
