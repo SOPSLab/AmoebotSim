@@ -1,4 +1,5 @@
 #include "../generalshapeformation.h"
+#include <QDebug>
 
 // All methods required to perform a Chain movement
 void GSFParticle::chain_activate(){
@@ -48,6 +49,7 @@ void GSFParticle::chain_handleContractToken()
                     } else {
                         nbrAtLabel(label).putToken(token);
                     }
+                    break;
                 }
             }
         } else {
@@ -157,6 +159,8 @@ void GSFParticle::chain_handleChainToken(){
                             auto t = std::make_shared<chain_ContractToken>();
                             t->_final = true;
                             nbrAtLabel(label).putToken(t);
+
+                            break;
                         }
                     }
                 }
@@ -193,6 +197,7 @@ void GSFParticle::chain_handleChainToken(){
                     auto token = takeToken<chain_ChainToken>();
                 } else {
                     for(int label : tailLabels()){
+                        qDebug() << " test " << isContracted() ;
                         if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level&&
                                 nbrAtLabel(label)._depth == _depth+1){
                             if(canPull(label)){
@@ -209,6 +214,7 @@ void GSFParticle::chain_handleChainToken(){
                                 nbrAtLabel(label).putToken(t);
                             }
                         }
+                        break;
                     }
                 }
             //otherwise stop chain execution
