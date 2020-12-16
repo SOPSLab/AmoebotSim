@@ -38,17 +38,10 @@ void GSFParticle::triangle_shift_coordinatorActivate(){
             if (!(hasNbrAtLabel(moveDir)) && !(hasNbrAtLabel(moveDir + 3) % 6)) {
                 shiftToken->_left = (triggerToken->_dir == 3) ? true : false;
                 putToken(shiftToken);
-                int passTo;
-                // token doorpasen langs de linkerzijde van de driehoek
-                if (shiftToken->_left) {
-                    passTo = (moveDir + 1) % 6;
-                    nbrAtLabel(passTo).putToken(shiftToken);
-                }
-                // token langs de rechterzijde van de driehoek
-                else {
-                    passTo = (moveDir + 5) % 6;
-                    nbrAtLabel(passTo).putToken(shiftToken);
-                }
+                // token doorpasen langs de linkerzijde van de driehoek anders rechterzijde
+                int passTo = (shiftToken->_left) ? (moveDir + 1) % 6: (moveDir + 5) % 6;
+                shiftToken->_dirpassed = passTo ; //  from perspective of receiver
+                nbrAtLabel(passTo).putToken(shiftToken);
             }
             else {
 
@@ -77,7 +70,13 @@ void GSFParticle::triangle_shift_coordinatorActivate(){
 
 void GSFParticle::triangle_shift_particleActivate(){
     if (hasToken<triangle_shift_ShiftToken>()) {
+        auto shiftToken = peekAtToken<triangle_shift_ShiftToken>();
+        int passTo = shiftToken->_dirpassed;
+        if (hasNbrAtLabel(passTo)){
+            nbrAtLabel(passTo).putToken(shiftToken);
+        }
+        _state = State::CHAIN_COORDINATOR;
         auto chainCoorToken = std::make_shared<chain_ChainToken>();
-//        putToken()
+        putToken(chainCoorToken);
     }
 }
