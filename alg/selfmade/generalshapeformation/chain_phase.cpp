@@ -38,18 +38,39 @@ void GSFParticle::chain_handleContractToken()
     auto token = peekAtToken<chain_ContractToken>();
     if(isExpanded()){
         if(!(_level == _depth)){
-            for(int label : tailLabels()){
-                if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
-                        nbrAtLabel(label)._depth == _depth+1){
-                    if(canPull(label)){
-                        nbrAtLabel(label)._ldrlabel =
-                                dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
-                        pull(label);
-                        token = takeToken<chain_ContractToken>();
-                    } else {
-                        nbrAtLabel(label).putToken(token);
+            if(token->_final){
+                for(int label : tailLabels()){
+                    if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
+                            nbrAtLabel(label)._depth == _depth+1){
+                        if(canPull(label)){
+                            nbrAtLabel(label)._ldrlabel =
+                                    dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
+                            pull(label);
+                            token = takeToken<chain_ContractToken>();
+                        } else {
+                            nbrAtLabel(label).putToken(token);
+                        }
+                        break;
                     }
-                    break;
+                }
+            } else {
+                for(int label : tailLabels()){
+                    if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
+                            nbrAtLabel(label)._depth == _depth+1){
+                        if(canPull(label)){
+                            nbrAtLabel(label)._ldrlabel =
+                                    dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
+                            pull(label);
+                            token = takeToken<chain_ContractToken>();
+                            _sent_pull = false;
+                        } else {
+                            if(!_sent_pull){
+                                nbrAtLabel(label).putToken(token);
+                                _sent_pull = true;
+                            }
+                        }
+                        break;
+                    }
                 }
             }
         } else {
