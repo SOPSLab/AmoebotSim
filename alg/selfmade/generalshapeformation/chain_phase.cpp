@@ -53,7 +53,7 @@ void GSFParticle::chain_handleContractToken()
                 }
             }
         } else {
-            takeToken<chain_ContractToken>();
+            token = takeToken<chain_ContractToken>();
             contractTail();
             if(token->_final){
                 if(isContracted()){
@@ -64,11 +64,22 @@ void GSFParticle::chain_handleContractToken()
             }
         }
     } else {
-        for(int label : headLabels()){
-            if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
-                    nbrAtLabel(label)._depth == _depth+1){
-                token = takeToken<chain_ContractToken>();
-                nbrAtLabel(label).putToken(token);
+        if(!(_level == _depth)){
+            for(int label : headLabels()){
+                if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
+                        nbrAtLabel(label)._depth == _depth+1){
+                    token = takeToken<chain_ContractToken>();
+                    nbrAtLabel(label).putToken(token);
+                }
+            }
+        } else {
+            token = takeToken<chain_ContractToken>();
+            if(token->_final){
+                if(isContracted()){
+                    Q_ASSERT(hasNbrAtLabel(_ldrlabel));
+                    auto t = std::make_shared<chain_ConfirmContractToken>();
+                    nbrAtLabel(_ldrlabel).putToken(t);
+                }
             }
         }
     }
