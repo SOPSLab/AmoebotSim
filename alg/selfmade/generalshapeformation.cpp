@@ -91,9 +91,9 @@ GSFSystem::GSFSystem(int sideLen, QString expanddir){
     auto expandToken = std::make_shared<GSFParticle::triangle_expand_TriggerExpandToken>();
 
     if(expanddir == "l"){
-        expandToken->_left = false;
-    } else {
         expandToken->_left = true;
+    } else {
+        expandToken->_left = false;
     }
 
     coordinator->putToken(expandToken);
