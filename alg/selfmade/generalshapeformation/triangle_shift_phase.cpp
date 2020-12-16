@@ -33,14 +33,15 @@ void GSFParticle::triangle_shift_coordinatorActivate(){
 
             auto shiftToken = std::make_shared<triangle_shift_ShiftToken>();
             int moveDir = triggerToken->_dir;
-            // if direction is to the left or right (3 = left, 6 = right)
 
-            if (!(hasNbrAtLabel(moveDir)) && !(hasNbrAtLabel(moveDir + 3) % 6)) {
+
+            if (!(hasNbrAtLabel(moveDir)) && !(hasNbrAtLabel((moveDir + 3) % 6))) {
+                // do this only if triangle has to move left or right from perspective of coordinator
                 shiftToken->_left = (triggerToken->_dir == 3) ? true : false;
                 putToken(shiftToken);
                 // token doorpasen langs de linkerzijde van de driehoek anders rechterzijde
                 int passTo = (shiftToken->_left) ? (moveDir + 1) % 6: (moveDir + 5) % 6;
-                shiftToken->_dirpassed = passTo ; //  from perspective of receiver
+                shiftToken->_dirpassed = passTo ;
                 nbrAtLabel(passTo).putToken(shiftToken);
             }
             else {
