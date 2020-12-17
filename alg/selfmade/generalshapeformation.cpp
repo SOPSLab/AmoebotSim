@@ -57,6 +57,7 @@ QString GSFParticle::inspectionText() const{
     }();
     text += " level: " + QString::number(_level) + "\n";
     text += " depth: " + QString::number(_depth) + "\n";
+    text += " triangleDirection: " + QString::number(_triangleDirection) + "\n";
 
     if(hasToken<chain_ContractToken>()){
         text+= "has contractToken\n";
@@ -73,8 +74,16 @@ QString GSFParticle::inspectionText() const{
     if(hasToken<triangle_expand_TriggerExpandToken>()){
         text+= "has triangle_expand_TriggerExpandToken\n";
     }
+    if(hasToken<triangle_expand_ConfirmExpandToken>()){
+        text+= "has triangle_expand_ConfirmExpandToken\n";
+    }else{
+        text+= "NOPE!\n";
+    }
     if(hasToken<triangle_expand_ExpandToken>()){
-        text+= "has triangle_expand_ExpandToken\n";
+        text+= "has a triangle_expand_ExpandToken\n";
+    }
+    if(hasToken<chain_MovementInitToken>()){
+        text+= "has a chain_MovementInitToken\n";
     }
     return text;
 }
