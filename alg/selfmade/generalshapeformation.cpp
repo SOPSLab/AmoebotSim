@@ -94,7 +94,7 @@ QString GSFParticle::inspectionText() const{
     return text;
 }
 
-GSFSystem::GSFSystem(int sideLen, QString expanddir){
+GSFSystem::GSFSystem(int sideLen, int shiftdir){
     int dir  = 4;
     std::set<Node> occupied;
     Node current(0,0);
@@ -104,7 +104,7 @@ GSFSystem::GSFSystem(int sideLen, QString expanddir){
     //TESTTTTTT
         //debug token for some movement protocol using chains
         auto token = std::make_shared<GSFParticle::triangle_shift_TriggerShiftToken>();
-        token->_dir = 0;
+        token->_dir = shiftdir % 6;
         token->_initiated = false;
 
         coordinator->putToken(token);

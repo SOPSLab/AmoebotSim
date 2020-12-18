@@ -31,12 +31,13 @@ void GSFParticle::triangle_shift_coordinatorActivate(){
 
                 std::cout << "h2" << std::endl;
                 // do this only if triangle has to move left or right from perspective of coordinator
-                shiftToken->_left = (triggerToken->_dir == 3) ? true : false;
+                shiftToken->_left = hasNbrAtLabel((moveDir + 1) % 6) ? true : false;
 
                 // token doorpasen langs de linkerzijde van de driehoek anders rechterzijde
                 int passTo = (shiftToken->_left) ? (moveDir + 1) % 6: (moveDir + 5) % 6;
                 shiftToken->_dirpassed = passTo;
                 shiftToken->_level = 1;
+                _level = 0;
                 nbrAtLabel(passTo).putToken(shiftToken);
 
 
@@ -68,9 +69,8 @@ void GSFParticle::triangle_shift_coordinatorActivate(){
                 else if (hasNbrAtLabel(moveDir) && hasNbrAtLabel((moveDir + 5) % 6) && !hasNbrAtLabel((moveDir + 3) % 6)) {
                 // if pointing right downwards
                     passCoordTo = (moveDir + 5) % 6;
-                    coordToken->_shiftdir = 5;
+                    coordToken->_shiftdir = 1;
                 }
-
                 // move coordinator state to right bottom vertex
                 else if (!hasNbrAtLabel(moveDir) && hasNbrAtLabel((moveDir + 3) % 6) && hasNbrAtLabel((moveDir + 4) % 6)) {
                 // if pointing right upwards
@@ -99,8 +99,10 @@ void GSFParticle::triangle_shift_coordinatorActivate(){
 void GSFParticle::triangle_shift_particleActivate(){
     if (hasToken<triangle_shift_ShiftToken>()) {
         auto shiftToken = takeToken<triangle_shift_ShiftToken>();
+        _level = shiftToken->_level;
         int passTo = shiftToken->_dirpassed;
         if (hasNbrAtLabel(passTo)){
+            shiftToken->_level++;
             nbrAtLabel(passTo).putToken(shiftToken);
         }
         _state = State::CHAIN_COORDINATOR;
@@ -109,6 +111,7 @@ void GSFParticle::triangle_shift_particleActivate(){
         movementToken->_contract = true;
         movementToken->_lifetime = 0;
         movementToken->_dirpassed = shiftToken->_dirpassed;
+        movementToken->_level = _level;
         int dir = (shiftToken->_left) ? (shiftToken->_dirpassed + 5) % 6 : (shiftToken->_dirpassed + 1) % 6;
         movementToken->L.push(dir);
         putToken(movementToken);

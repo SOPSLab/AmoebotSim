@@ -71,7 +71,7 @@ protected:
 
         // debug token:
         struct chain_MovementInitToken :public Token {std::stack<int> L; int _lifetime; int _dirpassed;
-                                               bool _contract;};
+                                               bool _contract; int _level;};
         //used to initiate chain movement
         //L: the path that the chain should follow
         //_contract: whether or not the chain should be fully contracted at the end
@@ -84,7 +84,7 @@ protected:
         //_passeddir: the direction from which the token was passed. Used to
         // set what particle should be followed
         //_depth: location of the particle in the chain
-        struct chain_DepthToken : public Token{int _passeddir; int _depth;};
+        struct chain_DepthToken : public Token{int _passeddir; int _depth; int _level;};
 
         //used for confirming whether the chain is contracted when _final = true
         // in chain token
@@ -118,7 +118,7 @@ protected:
 
 class GSFSystem:public AmoebotSystem{
     public:
-        GSFSystem(int sideLen = 6, QString expanddir="l");
+        GSFSystem(int sideLen = 6, int shiftdir=0);
 
 
 private:

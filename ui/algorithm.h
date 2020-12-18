@@ -180,7 +180,7 @@ class GeneralShapeFormationAlg : public Algorithm{
         GeneralShapeFormationAlg();
 
     public slots:
-        void instantiate(unsigned int sideLen, QString expanddir);
+        void instantiate(unsigned int sideLen, int shiftdir);
 };
 
 class AlgorithmList {

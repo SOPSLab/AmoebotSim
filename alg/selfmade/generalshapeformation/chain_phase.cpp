@@ -111,6 +111,7 @@ void GSFParticle::chain_handleContractToken()
 void GSFParticle::chain_handleMovementInitToken()
 {
     auto token = takeToken<chain_MovementInitToken>();
+    _level = token->_level;
 
     //pass token to next particle along the side of the triangle if necissary
     //and put chaintoken on this particle
@@ -135,6 +136,7 @@ void GSFParticle::chain_handleMovementInitToken()
         int followerDir = (token->L.top() == ((token->_dirpassed + 5) % 6)) ? (token->_dirpassed + 2) % 6 : (token->_dirpassed + 4) % 6;
 
         auto t = std::make_shared<chain_DepthToken>();
+        t->_level = _level;
         t->_passeddir = followerDir;
         t->_depth = 1;
         nbrAtLabel(followerDir).putToken(t);
@@ -146,6 +148,7 @@ void GSFParticle::chain_handleDepthToken()
     Q_ASSERT(_state == State::CHAIN_FOLLOWER);
     auto token = takeToken<chain_DepthToken>();
     _ldrlabel = (token->_passeddir+3)%6;
+    _level = token->_level;
     _depth = token->_depth;
     token->_depth++;
     if(hasNbrAtLabel(token->_passeddir)){
