@@ -9,6 +9,7 @@ QMAKE_INFO_PLIST = res/Info.plist
 win32:RC_FILE = res/AmoebotSim.rc
 
 HEADERS += \
+    alg/debugparticle.h \
     alg/demo/ballroomdemo.h \
     alg/demo/discodemo.h \
     alg/demo/metricsdemo.h \
@@ -41,6 +42,7 @@ HEADERS += \
     alg/selfmade/triangleplacement.h
 
 SOURCES += \
+    alg/debugparticle.cpp \
     alg/demo/ballroomdemo.cpp \
     alg/demo/discodemo.cpp \
     alg/demo/metricsdemo.cpp \

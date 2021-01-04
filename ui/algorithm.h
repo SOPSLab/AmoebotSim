@@ -48,6 +48,18 @@ class Algorithm : public QObject {
 
 /* Algorithm classes for handling the instantiation of specific algorithms */
 
+// Debug Algorithm
+class DebugAlg : public Algorithm {
+  Q_OBJECT
+
+ public:
+  DebugAlg();
+
+ public slots:
+  void instantiate();
+};
+
+
 // Demo: Disco, a first tutorial.
 class DiscoDemoAlg : public Algorithm {
   Q_OBJECT

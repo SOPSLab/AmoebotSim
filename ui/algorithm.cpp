@@ -14,6 +14,7 @@
 #include "alg/infobjcoating.h"
 #include "alg/leaderelection.h"
 #include "alg/shapeformation.h"
+#include "alg/debugparticle.h"
 #include "alg/selfmade/triangleplacement.h"
 #include "alg/selfmade/generalshapeformation.h"
 
@@ -58,6 +59,14 @@ QStringList Algorithm::getParameterDefaults() const {
 void Algorithm::addParameter(QString parameter, QString defaultValue) {
   _parameters.push_back(std::make_pair(parameter, defaultValue));
 }
+
+DebugAlg::DebugAlg() : Algorithm("Debugger", "debugger") {
+};
+
+void DebugAlg::instantiate() {
+    emit setSystem(std::make_shared<DebugSystem>());
+}
+
 
 DiscoDemoAlg::DiscoDemoAlg() : Algorithm("Demo: Disco", "discodemo") {
   addParameter("# Particles", "30");
@@ -294,6 +303,7 @@ AlgorithmList::AlgorithmList() {
   _algorithms.push_back(new TokenDemoAlg());
   _algorithms.push_back(new TriangleAlgo());
   _algorithms.push_back(new GeneralShapeFormationAlg());
+  _algorithms.push_back(new DebugAlg());
 
   // General algorithms.
   _algorithms.push_back(new CompressionAlg());
