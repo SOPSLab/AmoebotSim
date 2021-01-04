@@ -1,4 +1,5 @@
 #include "../generalshapeformation.h"
+#include <QDebug>
 
 // All methods required to perform a Chain movement
 void GSFParticle::chain_activate(){
@@ -9,7 +10,7 @@ void GSFParticle::chain_activate(){
     //Token to initialize a certian movement pattern. This is just used for debugging.
     //Should be replaced by a token of a specific primitive for a certian result.
     //Can give an idea of how to setup a movement primitive however.
-    if(hasToken<MovementInitToken>()){
+    if(hasToken<chain_MovementInitToken>()){
         chain_handleMovementInitToken();
     }
 
@@ -37,21 +38,43 @@ void GSFParticle::chain_handleContractToken()
     auto token = peekAtToken<chain_ContractToken>();
     if(isExpanded()){
         if(!(_level == _depth)){
-            for(int label : tailLabels()){
-                if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
-                        nbrAtLabel(label)._depth == _depth+1){
-                    if(canPull(label)){
-                        nbrAtLabel(label)._ldrlabel =
-                                dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
-                        pull(label);
-                        token = takeToken<chain_ContractToken>();
-                    } else {
-                        nbrAtLabel(label).putToken(token);
+            if(token->_final){
+                for(int label : tailLabels()){
+                    if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
+                            nbrAtLabel(label)._depth == _depth+1){
+                        if(canPull(label)){
+                            nbrAtLabel(label)._ldrlabel =
+                                    dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
+                            pull(label);
+                            token = takeToken<chain_ContractToken>();
+                        } else {
+                            nbrAtLabel(label).putToken(token);
+                        }
+                        break;
+                    }
+                }
+            } else {
+                for(int label : tailLabels()){
+                    if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
+                            nbrAtLabel(label)._depth == _depth+1){
+                        if(canPull(label)){
+                            nbrAtLabel(label)._ldrlabel =
+                                    dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
+                            pull(label);
+                            token = takeToken<chain_ContractToken>();
+                            _sent_pull = false;
+                        } else {
+                            if(!_sent_pull){
+                                nbrAtLabel(label).putToken(token);
+                                _sent_pull = true;
+                            }
+                        }
+                        break;
                     }
                 }
             }
         } else {
-            takeToken<chain_ContractToken>();
+            token = takeToken<chain_ContractToken>();
             contractTail();
             if(token->_final){
                 if(isContracted()){
@@ -62,11 +85,22 @@ void GSFParticle::chain_handleContractToken()
             }
         }
     } else {
-        for(int label : headLabels()){
-            if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
-                    nbrAtLabel(label)._depth == _depth+1){
-                token = takeToken<chain_ContractToken>();
-                nbrAtLabel(label).putToken(token);
+        if(!(_level == _depth)){
+            for(int label : headLabels()){
+                if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
+                        nbrAtLabel(label)._depth == _depth+1){
+                    token = takeToken<chain_ContractToken>();
+                    nbrAtLabel(label).putToken(token);
+                }
+            }
+        } else {
+            token = takeToken<chain_ContractToken>();
+            if(token->_final){
+                if(isContracted()){
+                    Q_ASSERT(hasNbrAtLabel(_ldrlabel));
+                    auto t = std::make_shared<chain_ConfirmContractToken>();
+                    nbrAtLabel(_ldrlabel).putToken(t);
+                }
             }
         }
     }
@@ -75,7 +109,7 @@ void GSFParticle::chain_handleContractToken()
 // FOR DEBUG PURPOSES ONLY
 void GSFParticle::chain_handleMovementInitToken()
 {
-    auto token = takeToken<MovementInitToken>();
+    auto token = takeToken<chain_MovementInitToken>();
 
     //pass token to next particle allong the side of the triangle if necissary
     //and put chaintoken on this particle
@@ -97,7 +131,7 @@ void GSFParticle::chain_handleMovementInitToken()
     //send a token to followers with their respective depth value
     if(_state != State::COORDINATOR){
         _state = State::CHAIN_COORDINATOR;
-        int followerDir = hasNbrAtLabel((token->_dirpassed + 2) % 6) ? (token->_dirpassed + 2) % 6 : (token->_dirpassed - 2) % 6;
+        int followerDir = hasNbrAtLabel((token->_dirpassed + 2) % 6) ? (token->_dirpassed + 2) % 6 : (token->_dirpassed + 4) % 6;
 
         auto t = std::make_shared<chain_DepthToken>();
         t->_passeddir = followerDir;
@@ -157,6 +191,8 @@ void GSFParticle::chain_handleChainToken(){
                             auto t = std::make_shared<chain_ContractToken>();
                             t->_final = true;
                             nbrAtLabel(label).putToken(t);
+
+                            break;
                         }
                     }
                 }
@@ -193,8 +229,10 @@ void GSFParticle::chain_handleChainToken(){
                     auto token = takeToken<chain_ChainToken>();
                 } else {
                     for(int label : tailLabels()){
+                        qDebug() << " label " << label ;
                         if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level&&
                                 nbrAtLabel(label)._depth == _depth+1){
+                            qDebug() << " neigbour at: " << isContracted() ;
                             if(canPull(label)){
                                 auto t = std::make_shared<chain_ContractToken>();
                                 t->_final = true;
@@ -208,6 +246,7 @@ void GSFParticle::chain_handleChainToken(){
                                 t->_final = true;
                                 nbrAtLabel(label).putToken(t);
                             }
+                            break;
                         }
                     }
                 }

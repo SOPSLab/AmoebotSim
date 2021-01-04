@@ -18,6 +18,7 @@ GSFParticle::GSFParticle(Node& head, const int globalTailDir,
 //Implement activate
 void GSFParticle::activate(){
     chain_activate();
+    triangle_expand_activate();
 }
 
 GSFParticle& GSFParticle::nbrAtLabel(int label) const {
@@ -56,6 +57,8 @@ QString GSFParticle::inspectionText() const{
     }();
     text += " level: " + QString::number(_level) + "\n";
     text += " depth: " + QString::number(_depth) + "\n";
+    text += " triangleDirection: " + QString::number(_triangleDirection) + "\n";
+
     if(hasToken<chain_ContractToken>()){
         text+= "has contractToken\n";
     }
@@ -65,10 +68,27 @@ QString GSFParticle::inspectionText() const{
     if(hasToken<chain_ConfirmContractToken>()){
         text+= "has chainToken\n";
     }
+    if(hasToken<chain_DepthToken>()){
+        text+= "has depthToken\n";
+    }
+    if(hasToken<triangle_expand_TriggerExpandToken>()){
+        text+= "has triangle_expand_TriggerExpandToken\n";
+    }
+    if(hasToken<triangle_expand_ConfirmExpandToken>()){
+        text+= "has triangle_expand_ConfirmExpandToken\n";
+    }else{
+        text+= "NOPE!\n";
+    }
+    if(hasToken<triangle_expand_ExpandToken>()){
+        text+= "has a triangle_expand_ExpandToken\n";
+    }
+    if(hasToken<chain_MovementInitToken>()){
+        text+= "has a chain_MovementInitToken\n";
+    }
     return text;
 }
 
-GSFSystem::GSFSystem(int sideLen){
+GSFSystem::GSFSystem(int sideLen, QString expanddir){
     int dir  = 4;
     std::set<Node> occupied;
     Node current(0,0);
@@ -76,6 +96,18 @@ GSFSystem::GSFSystem(int sideLen){
                                         GSFParticle::State::COORDINATOR, 0, -1, 0);
 
     insert(coordinator);
+
+    auto expandToken = std::make_shared<GSFParticle::triangle_expand_TriggerExpandToken>();
+
+    if(expanddir == "l"){
+        expandToken->_left = true;
+    } else {
+        expandToken->_left = false;
+    }
+
+    coordinator->putToken(expandToken);
+
+
     current = current.nodeInDir(dir%6);
     initializeTriangle(sideLen, current, dir);
 }

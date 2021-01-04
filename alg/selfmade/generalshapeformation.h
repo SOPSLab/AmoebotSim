@@ -40,7 +40,8 @@ class GSFParticle:public AmoebotParticle{
 
         GSFParticle& nbrAtLabel(int label) const;
 
-    protected:
+
+protected:
         //private vars
         const int _initialSideLen;
         int _triangleDirection; // Direction of the left leg of the triangle as seen from the leader
@@ -54,7 +55,25 @@ class GSFParticle:public AmoebotParticle{
         bool _sent_pull = false;
 
         //add tokens
-        struct MovementInitToken :public Token {std::stack<int> L; int _lifetime; int _dirpassed;
+
+        // TRIANGLE EXPAND tokens:
+
+        // CHAIN tokens:
+
+        // Used to initialize a triangle expansions from a coordinator
+        // _left => expand the triangle at the left leg, looking at the triangle with the leader on top.
+        // !_left => expand the triangle at the right leg, looking at the triangle with the leader on top.
+        // _initiated <=> the triangle expansion has been initiated
+        struct triangle_expand_TriggerExpandToken :public Token {bool _left; bool _initated = false;};
+
+        // Used to inform all particles at a side of the triangle of the initiated expansion
+        struct triangle_expand_ExpandToken :public Token {int _level; int _movementdir; int _dirpassed; int _confirmationdir;};
+
+        // Used to confirm the coordinator of a succesful triangle expansion, from the last particlein the triangle edge
+        struct triangle_expand_ConfirmExpandToken :public Token {int _dirpassed;};
+
+        // debug token:
+        struct chain_MovementInitToken :public Token {std::stack<int> L; int _lifetime; int _dirpassed;
                                                bool _contract;};
         //used to initiate chain movement
         //L: the path that the chain should follow
@@ -81,11 +100,17 @@ class GSFParticle:public AmoebotParticle{
         void chain_handleDepthToken();
         void chain_handleConfirmContractToken();
         void triangle_expand_activate();
+        void triangle_expand_coordinatorActivate();
+        void triangle_expand_particleActivate();
+        void triangle_expand_createMovementInitToken(std::shared_ptr<triangle_expand_ExpandToken> expandToken);
+        void triangle_expand_forwardExpandToken(std::shared_ptr<triangle_expand_ExpandToken> expandToken);
+        void triangle_expand_handleTriggerExpandToken();
+        void triangle_expand_handleConfirmExpandToken();
 };
 
 class GSFSystem:public AmoebotSystem{
     public:
-        GSFSystem(int sideLen = 6);
+        GSFSystem(int sideLen = 6, QString expanddir="l");
 
 
 private:
