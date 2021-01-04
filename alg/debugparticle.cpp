@@ -44,7 +44,7 @@ void DebugParticle::activate() {
             }
         }
 
-        // If no neighbor was found...
+        // If no neighbor was found, then I'm last in the chain, so just contract tail.
         // This also needs to be polished in final implementation
         if(!performedHandover){
             _leaderLabel = labelToDir(_leaderLabel);
