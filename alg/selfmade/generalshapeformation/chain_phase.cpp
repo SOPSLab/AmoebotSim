@@ -1,5 +1,6 @@
 #include "../generalshapeformation.h"
 #include <QDebug>
+#include <iostream>
 
 // All methods required to perform a Chain movement
 void GSFParticle::chain_activate(){
@@ -36,70 +37,91 @@ void GSFParticle::chain_handleContractToken()
 {
     Q_ASSERT(_state == State::CHAIN_FOLLOWER);
     auto token = peekAtToken<chain_ContractToken>();
+
+    int followerLabel = -1;
+
+
     if(isExpanded()){
-        if(!(_level == _depth)){
-            if(token->_final){
-                for(int label : tailLabels()){
-                    if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
-                            nbrAtLabel(label)._depth == _depth+1){
-                        if(canPull(label)){
-                            nbrAtLabel(label)._ldrlabel =
-                                    dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
-                            pull(label);
-                            token = takeToken<chain_ContractToken>();
-                        } else {
-                            nbrAtLabel(label).putToken(token);
+        //check if has follower
+        for(int label : tailLabels()){
+            if(hasNbrAtLabel(label)){
+                auto nbr = nbrAtLabel(label);
+                if(nbr.hasToken<chain_DepthToken>()){
+                    followerLabel = -2;
+                    break;
+                }
+                if(nbr._ldrlabel>-1 && pointsAtMe(nbr, nbr.dirToHeadLabel(nbr._ldrlabel))){
+                    followerLabel = label;
+                    break;
+                }
+            }
+        }
+        if(followerLabel!= -2){ // check if setup is still in progress
+            if(followerLabel>-1){
+                auto follower = nbrAtLabel(followerLabel);
+                if(token->_final){
+                    if(follower.isExpanded()){
+                        follower.putToken(token);
+                    } else {
+                        follower._ldrlabel =
+                                    dirToNbrDir(nbrAtLabel(followerLabel), (tailDir() + 3) % 6);
+                        pull(followerLabel);
+                        token = takeToken<chain_ContractToken>();
+                    }
+                } else {
+                    auto nbr = nbrAtLabel(followerLabel);
+                    if(nbr.isExpanded()){
+                        if(!_sent_pull){
+                            follower.putToken(token);
+                            _sent_pull = true;
                         }
-                        break;
+
+                    } else {
+                        follower._ldrlabel =
+                                    dirToNbrDir(nbrAtLabel(followerLabel), (tailDir() + 3) % 6);
+                        pull(followerLabel);
+                        token = takeToken<chain_ContractToken>();
+                        _sent_pull = false;
                     }
                 }
             } else {
-                for(int label : tailLabels()){
-                    if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
-                            nbrAtLabel(label)._depth == _depth+1){
-                        if(canPull(label)){
-                            nbrAtLabel(label)._ldrlabel =
-                                    dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
-                            pull(label);
-                            token = takeToken<chain_ContractToken>();
-                            _sent_pull = false;
-                        } else {
-                            if(!_sent_pull){
-                                nbrAtLabel(label).putToken(token);
-                                _sent_pull = true;
-                            }
-                        }
-                        break;
+                token = takeToken<chain_ContractToken>();
+                contractTail();
+                if(token->_final){
+                    if(isContracted()){
+                        Q_ASSERT(hasNbrAtLabel(_ldrlabel));
+                        auto t = std::make_shared<chain_ConfirmContractToken>();
+                        nbrAtLabel(_ldrlabel).putToken(t);
                     }
-                }
-            }
-        } else {
-            token = takeToken<chain_ContractToken>();
-            contractTail();
-            if(token->_final){
-                if(isContracted()){
-                    Q_ASSERT(hasNbrAtLabel(_ldrlabel));
-                    auto t = std::make_shared<chain_ConfirmContractToken>();
-                    nbrAtLabel(_ldrlabel).putToken(t);
                 }
             }
         }
     } else {
-        if(!(_level == _depth)){
-            for(int label : headLabels()){
-                if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
-                        nbrAtLabel(label)._depth == _depth+1){
-                    token = takeToken<chain_ContractToken>();
-                    nbrAtLabel(label).putToken(token);
+        for(int label : headLabels()){
+            if(hasNbrAtLabel(label)){
+                auto nbr = nbrAtLabel(label);
+                if(nbr.hasToken<chain_DepthToken>()){
+                    followerLabel = -2;
+                    break;
+                }
+                if(nbr._ldrlabel>-1 && pointsAtMe(nbr, nbr.dirToHeadLabel(nbr._ldrlabel))){
+                    followerLabel = label;
+                    break;
                 }
             }
-        } else {
-            token = takeToken<chain_ContractToken>();
-            if(token->_final){
-                if(isContracted()){
-                    Q_ASSERT(hasNbrAtLabel(_ldrlabel));
-                    auto t = std::make_shared<chain_ConfirmContractToken>();
-                    nbrAtLabel(_ldrlabel).putToken(t);
+        }
+        if(followerLabel != -2){
+            if(followerLabel>-1){
+                token = takeToken<chain_ContractToken>();
+                nbrAtLabel(followerLabel).putToken(token);
+            } else {
+                token = takeToken<chain_ContractToken>();
+                if(token->_final){
+                    if(isContracted()){
+                        Q_ASSERT(hasNbrAtLabel(_ldrlabel));
+                        auto t = std::make_shared<chain_ConfirmContractToken>();
+                        nbrAtLabel(_ldrlabel).putToken(t);
+                    }
                 }
             }
         }
@@ -111,7 +133,7 @@ void GSFParticle::chain_handleMovementInitToken()
 {
     auto token = takeToken<chain_MovementInitToken>();
 
-    //pass token to next particle allong the side of the triangle if necissary
+    //pass token to next particle along the side of the triangle if necissary
     //and put chaintoken on this particle
     if(hasNbrAtLabel(token->_dirpassed) && token->_lifetime>0){
         token->_lifetime--;
@@ -131,11 +153,10 @@ void GSFParticle::chain_handleMovementInitToken()
     //send a token to followers with their respective depth value
     if(_state != State::COORDINATOR){
         _state = State::CHAIN_COORDINATOR;
-        int followerDir = hasNbrAtLabel((token->_dirpassed + 2) % 6) ? (token->_dirpassed + 2) % 6 : (token->_dirpassed + 4) % 6;
+        int followerDir = (token->L.top() == ((token->_dirpassed + 5) % 6)) ? (token->_dirpassed + 2) % 6 : (token->_dirpassed + 4) % 6;
 
         auto t = std::make_shared<chain_DepthToken>();
         t->_passeddir = followerDir;
-        t->_depth = 1;
         nbrAtLabel(followerDir).putToken(t);
     }
 }
@@ -145,8 +166,6 @@ void GSFParticle::chain_handleDepthToken()
     Q_ASSERT(_state == State::CHAIN_FOLLOWER);
     auto token = takeToken<chain_DepthToken>();
     _ldrlabel = (token->_passeddir+3)%6;
-    _depth = token->_depth;
-    token->_depth++;
     if(hasNbrAtLabel(token->_passeddir)){
         nbrAtLabel(token->_passeddir).putToken(token);
     }
@@ -159,8 +178,6 @@ void GSFParticle::chain_handleConfirmContractToken()
         if(isContracted()){
             if(_ldrlabel>-1){
                 Q_ASSERT(hasNbrAtLabel(_ldrlabel));
-                Q_ASSERT(nbrAtLabel(_ldrlabel)._depth == _depth-1);
-                Q_ASSERT(nbrAtLabel(_ldrlabel)._level == _level);
                 nbrAtLabel(_ldrlabel).putToken(token);
             }
         }
@@ -171,8 +188,25 @@ void GSFParticle::chain_handleConfirmContractToken()
 void GSFParticle::chain_handleChainToken(){
     Q_ASSERT(_state == State::CHAIN_COORDINATOR || _state == State::COORDINATOR);
     auto token = peekAtToken<chain_ChainToken>();
-    //expend to space if the chain coordinator is contracted
+    int followerLabel = -1;
+
+    //expand to space if the chain coordinator is contracted
     if(isContracted()){
+        //find follower
+        for(int label : headLabels()){
+            if(hasNbrAtLabel(label)){
+                auto nbr = nbrAtLabel(label);
+                if(nbr.hasToken<chain_DepthToken>()){
+                    followerLabel = -2;
+                    break;
+                }
+                if(nbr._ldrlabel>-1 && pointsAtMe(nbr, nbr.dirToHeadLabel(nbr._ldrlabel))){
+                    followerLabel = label;
+                    break;
+                }
+            }
+        }
+
         //take top direction of token
         if(!token->L.empty()){
             int dir = token->L.top();
@@ -185,40 +219,43 @@ void GSFParticle::chain_handleChainToken(){
                 if(_state == State::COORDINATOR){
                     auto token = takeToken<chain_ChainToken>();
                 } else {
-                    for(int label : headLabels()){
-                        if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level&&
-                                nbrAtLabel(label)._depth == _depth+1){
-                            auto t = std::make_shared<chain_ContractToken>();
-                            t->_final = true;
-                            nbrAtLabel(label).putToken(t);
-
-                            break;
-                        }
-                    }
+                    auto t = std::make_shared<chain_ContractToken>();
+                    t->_final = true;
+                    nbrAtLabel(followerLabel).putToken(t);
                 }
             }
         }
     //otherwise pull next node in the chain
     } else {
-        if(!token->L.empty()){
-            for(int label : tailLabels()){
-                if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level &&
-                        nbrAtLabel(label)._depth == _depth+1){
-                    if(canPull(label)){
-                        auto part = nbrAtLabel(label);
-                        nbrAtLabel(label)._ldrlabel =
-                                dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
-                        pull(label);
-                        _sent_pull = false;
-                    } else {
-                        if(!_sent_pull){
-                            _sent_pull = true;
-                            auto t = std::make_shared<chain_ContractToken>();
-                            t->_final = false;
-                            nbrAtLabel(label).putToken(t);
-                        }
-                    }
+        for(int label : tailLabels()){
+            if(hasNbrAtLabel(label)){
+                auto nbr = nbrAtLabel(label);
+                if(nbr.hasToken<chain_DepthToken>()){
+                    followerLabel = -2;
                     break;
+                }
+                if(nbr._ldrlabel>-1 && pointsAtMe(nbr, nbr.dirToHeadLabel(nbr._ldrlabel))){
+                    followerLabel = label;
+                    break;
+                }
+            }
+        }
+
+        if(!token->L.empty()){
+            if(followerLabel>-1){
+                if(canPull(followerLabel)){
+                    auto part = nbrAtLabel(followerLabel);
+                    nbrAtLabel(followerLabel)._ldrlabel =
+                            dirToNbrDir(nbrAtLabel(followerLabel), (tailDir() + 3) % 6);
+                    pull(followerLabel);
+                    _sent_pull = false;
+                } else {
+                    if(!_sent_pull){
+                        _sent_pull = true;
+                        auto t = std::make_shared<chain_ContractToken>();
+                        t->_final = false;
+                        nbrAtLabel(followerLabel).putToken(t);
+                    }
                 }
             }
         } else {
@@ -228,25 +265,19 @@ void GSFParticle::chain_handleChainToken(){
                     contractTail();
                     auto token = takeToken<chain_ChainToken>();
                 } else {
-                    for(int label : tailLabels()){
-                        qDebug() << " label " << label ;
-                        if(hasNbrAtLabel(label) && nbrAtLabel(label)._level == _level&&
-                                nbrAtLabel(label)._depth == _depth+1){
-                            qDebug() << " neigbour at: " << isContracted() ;
-                            if(canPull(label)){
-                                auto t = std::make_shared<chain_ContractToken>();
-                                t->_final = true;
-                                nbrAtLabel(label).putToken(t);
+                    if(followerLabel>-1){
+                        if(canPull(followerLabel)){
+                            auto t = std::make_shared<chain_ContractToken>();
+                            t->_final = true;
+                            nbrAtLabel(followerLabel).putToken(t);
 
-                                nbrAtLabel(label)._ldrlabel =
-                                            dirToNbrDir(nbrAtLabel(label), (tailDir() + 3) % 6);
-                                pull(label);
-                            } else {
-                                auto t = std::make_shared<chain_ContractToken>();
-                                t->_final = true;
-                                nbrAtLabel(label).putToken(t);
-                            }
-                            break;
+                            nbrAtLabel(followerLabel)._ldrlabel =
+                                        dirToNbrDir(nbrAtLabel(followerLabel), (tailDir() + 3) % 6);
+                            pull(followerLabel);
+                        } else {
+                            auto t = std::make_shared<chain_ContractToken>();
+                            t->_final = true;
+                            nbrAtLabel(followerLabel).putToken(t);
                         }
                     }
                 }
@@ -257,8 +288,10 @@ void GSFParticle::chain_handleChainToken(){
                     _state = State::CHAIN_FOLLOWER;
                     _ldrlabel = -1;
                 } else {
-                    auto token = takeToken<chain_ChainToken>();
-                    _ldrlabel = -1;
+                    if(followerLabel>=-1){
+                        auto token = takeToken<chain_ChainToken>();
+                        _ldrlabel = -1;
+                    }
                 }
             }
         }

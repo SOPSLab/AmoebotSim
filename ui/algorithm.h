@@ -48,6 +48,18 @@ class Algorithm : public QObject {
 
 /* Algorithm classes for handling the instantiation of specific algorithms */
 
+// Debug Algorithm
+class DebugAlg : public Algorithm {
+  Q_OBJECT
+
+ public:
+  DebugAlg();
+
+ public slots:
+  void instantiate();
+};
+
+
 // Demo: Disco, a first tutorial.
 class DiscoDemoAlg : public Algorithm {
   Q_OBJECT
@@ -180,7 +192,7 @@ class GeneralShapeFormationAlg : public Algorithm{
         GeneralShapeFormationAlg();
 
     public slots:
-        void instantiate(unsigned int sideLen, QString expanddir);
+        void instantiate(unsigned int sideLen, int shiftdir);
 };
 
 class AlgorithmList {

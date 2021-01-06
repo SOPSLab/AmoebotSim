@@ -74,7 +74,7 @@ protected:
 
         // debug token:
         struct chain_MovementInitToken :public Token {std::stack<int> L; int _lifetime; int _dirpassed;
-                                               bool _contract;};
+                                               bool _contract; int _level;};
         //used to initiate chain movement
         //L: the path that the chain should follow
         //_contract: whether or not the chain should be fully contracted at the end
@@ -87,11 +87,17 @@ protected:
         //_passeddir: the direction from which the token was passed. Used to
         // set what particle should be followed
         //_depth: location of the particle in the chain
-        struct chain_DepthToken : public Token{int _passeddir; int _depth;};
+        struct chain_DepthToken : public Token{int _passeddir; int _depth; int _level;};
 
         //used for confirming whether the chain is contracted when _final = true
         // in chain token
         struct chain_ConfirmContractToken : public Token{};
+
+        struct triangle_shift_TriggerShiftToken: public Token{int _dir; bool _initiated;};
+        struct triangle_shift_ShiftToken: public Token{int _level; int _left; int _dirpassed;};
+        struct triangle_shift_CoordinatorToken: public Token{int _dirpassed; int _shiftdir;};
+
+
     private:
         friend class GSFSystem;
 
@@ -100,6 +106,12 @@ protected:
         void chain_handleDepthToken();
         void chain_handleConfirmContractToken();
         void triangle_expand_activate();
+
+        void triangle_shift_activate();
+
+        void triangle_shift_coordinatorActivate();
+        void triangle_shift_particleActivate();
+
         void triangle_expand_coordinatorActivate();
         void triangle_expand_particleActivate();
         void triangle_expand_createMovementInitToken(std::shared_ptr<triangle_expand_ExpandToken> expandToken);
@@ -110,7 +122,7 @@ protected:
 
 class GSFSystem:public AmoebotSystem{
     public:
-        GSFSystem(int sideLen = 6, QString expanddir="l");
+        GSFSystem(int sideLen = 6, int shiftdir=0);
 
 
 private:

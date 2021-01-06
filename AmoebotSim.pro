@@ -9,6 +9,7 @@ QMAKE_INFO_PLIST = res/Info.plist
 win32:RC_FILE = res/AmoebotSim.rc
 
 HEADERS += \
+    alg/debugparticle.h \
     alg/demo/ballroomdemo.h \
     alg/demo/discodemo.h \
     alg/demo/metricsdemo.h \
@@ -41,6 +42,7 @@ HEADERS += \
     alg/selfmade/triangleplacement.h
 
 SOURCES += \
+    alg/debugparticle.cpp \
     alg/demo/ballroomdemo.cpp \
     alg/demo/discodemo.cpp \
     alg/demo/metricsdemo.cpp \
@@ -52,6 +54,7 @@ SOURCES += \
     alg/selfmade/generalshapeformation.cpp \
     alg/selfmade/generalshapeformation/chain_phase.cpp \
     alg/selfmade/generalshapeformation/triangle_expand_phase.cpp \
+    alg/selfmade/generalshapeformation/triangle_shift_phase.cpp \
     alg/shapeformation.cpp \
     core/amoebotparticle.cpp \
     core/amoebotsystem.cpp \

@@ -61,18 +61,10 @@ class TriangleParticle:public AmoebotParticle{
         //L: the path that the chain should follow
         //_contract: whether or not the chain should be fully contracted at the end
         struct ChainToken : public Token {std::stack<int> L; bool _contract;};
-
-        //_final: whether the final chain should be contracted (set by chain)
+        
+        //_final: whether the final chain should be contracted (used byd 
         struct ContractToken : public Token{bool _final;};
-
-        //Sets the depth of all tokens in the chain
-        //_passeddir: the direction from which the token was passed. Used to
-        // set what particle should be followed
-        //_depth: location of the particle in the chain
         struct DepthToken : public Token{int _passeddir; int _depth;};
-
-        //used for confirming whether the chain is contracted when _final = true
-        // in chain token
         struct ConfirmContractToken : public Token{};
 
     private:
