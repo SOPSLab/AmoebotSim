@@ -118,7 +118,7 @@ protected:
 
 class GSFSystem:public AmoebotSystem{
     public:
-        GSFSystem(int sideLen = 6, int shiftdir=0);
+        GSFSystem(int sideLen = 6, QString expanddir="l");
 
 
 private:
