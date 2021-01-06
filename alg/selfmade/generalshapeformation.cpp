@@ -20,7 +20,7 @@ GSFParticle::GSFParticle(Node& head, const int globalTailDir,
 void GSFParticle::activate(){
     chain_activate();
     triangle_shift_activate();
-    // triangle_expand_activate();
+    triangle_expand_activate();
 
 }
 

@@ -40,8 +40,8 @@ Application::Application(int argc, char *argv[])
   auto algBox = qmlRoot->findChild<QObject*>("algorithmSelectBox");
   QStringList names = parameterModel->getAlgorithmList()->getAlgNames();
   algBox->setProperty("model", QVariant::fromValue(names));
-  algBox->setProperty("currentIndex", names.indexOf("Debugger"));
-  parameterModel->updateAlgParameters("Debugger");
+  algBox->setProperty("currentIndex", names.indexOf("A General Shape Formation"));
+  parameterModel->updateAlgParameters("A General Shape Formation");
 
   // Connect the parameter list model to the UI elements that use it.
   connect(qmlRoot, SIGNAL(algSelected(QString)),
