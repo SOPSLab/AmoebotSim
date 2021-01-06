@@ -286,11 +286,11 @@ GeneralShapeFormationAlg::GeneralShapeFormationAlg():
     addParameter("expand-direction", "l");
 }
 
-void GeneralShapeFormationAlg::instantiate(unsigned int sideLen, int shiftdir){
+void GeneralShapeFormationAlg::instantiate(unsigned int sideLen, QString expanddir){
     if(sideLen <= 0){
         emit log("SideLen should be > 0");
     } else {
-        emit setSystem(std::make_shared<GSFSystem>(sideLen, shiftdir));
+        emit setSystem(std::make_shared<GSFSystem>(sideLen, expanddir));
     }
 }
 

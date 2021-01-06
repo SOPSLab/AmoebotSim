@@ -82,7 +82,7 @@ void ParameterListModel::createSystem(QString algName) {
         instantiate(params[0].toInt(), params[1].toInt());
   }else if (signature == "gsf") {
       dynamic_cast<GeneralShapeFormationAlg*>(alg)->
-        instantiate(params[0].toInt(), params[1].toInt());}
+        instantiate(params[0].toInt(), params[1]);}
     else if (signature == "debugger") {
     dynamic_cast<DebugAlg*>(alg)->
         instantiate();
