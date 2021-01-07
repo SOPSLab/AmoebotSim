@@ -45,13 +45,14 @@ void GSFParticle::chain_handleContractToken()
         //check if has follower
         for(int label : tailLabels()){
             if(hasNbrAtLabel(label)){
-                auto nbr = nbrAtLabel(label);
-                if(nbr.hasToken<chain_DepthToken>()){
+                if(nbrAtLabel(label).hasToken<chain_DepthToken>()){
                     followerLabel = -2;
                     break;
                 }
-                if(nbr._ldrlabel>-1 && pointsAtMe(nbr, nbr.dirToHeadLabel(nbr._ldrlabel))){
+                if(nbrAtLabel(label)._ldrlabel>-1 &&
+                        pointsAtMe(nbrAtLabel(label), nbrAtLabel(label).dirToHeadLabel(nbrAtLabel(label)._ldrlabel))){
                     followerLabel = label;
+                    qDebug() << "neighbour found at label " << QString::number(followerLabel);
                     break;
                 }
             }
@@ -60,10 +61,10 @@ void GSFParticle::chain_handleContractToken()
             if(followerLabel>-1){
                 auto follower = nbrAtLabel(followerLabel);
                 if(token->_final){
-                    if(follower.isExpanded()){
-                        follower.putToken(token);
+                    if(nbrAtLabel(followerLabel).isExpanded()){
+                        nbrAtLabel(followerLabel).putToken(token);
                     } else {
-                        follower._ldrlabel =
+                        nbrAtLabel(followerLabel)._ldrlabel =
                                     dirToNbrDir(nbrAtLabel(followerLabel), (tailDir() + 3) % 6);
                         pull(followerLabel);
                         token = takeToken<chain_ContractToken>();
@@ -72,12 +73,12 @@ void GSFParticle::chain_handleContractToken()
                     auto nbr = nbrAtLabel(followerLabel);
                     if(nbr.isExpanded()){
                         if(!_sent_pull){
-                            follower.putToken(token);
+                            nbrAtLabel(followerLabel).putToken(token);
                             _sent_pull = true;
                         }
 
                     } else {
-                        follower._ldrlabel =
+                        nbrAtLabel(followerLabel)._ldrlabel =
                                     dirToNbrDir(nbrAtLabel(followerLabel), (tailDir() + 3) % 6);
                         pull(followerLabel);
                         token = takeToken<chain_ContractToken>();
@@ -100,12 +101,15 @@ void GSFParticle::chain_handleContractToken()
         for(int label : headLabels()){
             if(hasNbrAtLabel(label)){
                 auto nbr = nbrAtLabel(label);
-                if(nbr.hasToken<chain_DepthToken>()){
+                if(nbrAtLabel(label).hasToken<chain_DepthToken>()){
                     followerLabel = -2;
                     break;
                 }
-                if(nbr._ldrlabel>-1 && pointsAtMe(nbr, nbr.dirToHeadLabel(nbr._ldrlabel))){
+                if(nbrAtLabel(label)._ldrlabel>-1 &&
+                        pointsAtMe(nbrAtLabel(label),
+                                   nbrAtLabel(label).dirToHeadLabel(nbrAtLabel(label)._ldrlabel))){
                     followerLabel = label;
+                    qDebug() << "neighbour found at label " << QString::number(followerLabel);
                     break;
                 }
             }
@@ -153,7 +157,8 @@ void GSFParticle::chain_handleMovementInitToken()
     //send a token to followers with their respective depth value
     if(_state != State::COORDINATOR){
         _state = State::CHAIN_COORDINATOR;
-        int followerDir = (token->L.top() == ((token->_dirpassed + 5) % 6)) ? (token->_dirpassed + 2) % 6 : (token->_dirpassed + 4) % 6;
+        int followerDir = (hasNbrAtLabel((token->_dirpassed + 2) % 6) ? (token->_dirpassed + 2) % 6 : (token->_dirpassed + 4) % 6);
+        Q_ASSERT(hasNbrAtLabel(followerDir));
 
         auto t = std::make_shared<chain_DepthToken>();
         t->_passeddir = followerDir;

@@ -66,7 +66,13 @@ QString GSFParticle::inspectionText() const{
         text+= "has contractToken\n";
     }
     if(hasToken<chain_ChainToken>()){
+        auto t = peekAtToken<chain_ChainToken>();
         text+= "has chainToken\n";
+        if(t->L.empty()){
+            text+= "stack L is empty\n";
+        } else {
+            text+= "stack L is not empty\n";
+        }
     }
     if(hasToken<chain_ConfirmContractToken>()){
         text+= "has chainToken\n";
