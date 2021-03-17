@@ -11,6 +11,7 @@ win32:RC_FILE = res/AmoebotSim.rc
 HEADERS += \
     alg/demo/ballroomdemo.h \
     alg/demo/discodemo.h \
+    alg/demo/dynamicdemo.h \
     alg/demo/metricsdemo.h \
     alg/demo/tokendemo.h \
     alg/compression.h \
@@ -41,6 +42,7 @@ HEADERS += \
 SOURCES += \
     alg/demo/ballroomdemo.cpp \
     alg/demo/discodemo.cpp \
+    alg/demo/dynamicdemo.cpp \
     alg/demo/metricsdemo.cpp \
     alg/demo/tokendemo.cpp \
     alg/compression.cpp \

@@ -82,7 +82,7 @@ Here's the color-changing part of the pseudocode for a particle ``P``::
 
 We'd also like our particles to "dance" around in the boundary.
 We'll achieve this using the amoebot model's expansion and contraction movements.
-However, the amoebot model doesn't allow multiple particles to be on the same node, so we need to be careful not to let particles expand into nodes that are already occupied:::
+However, the amoebot model doesn't allow multiple particles to be on the same node, so we need to be careful not to let particles expand into nodes that are already occupied::
 
   if (P is contracted), then do:
     expandDir <- random direction in [0, 6)
@@ -1744,3 +1744,188 @@ To export metrics data, you can either use the *Metrics* button (shown below) or
 This writes the metrics file with all of the historical data as ``your_build_directory/metrics/metrics_<secs_since_epoch>.json``.
 You can read more about the structure and format of these JSON data files under :ref:`Exporting Metrics Data <usage-export-metrics-data>` in Usage.
 The exported data can then be post-processed, analyzed, and plotted using your favorite analysis tools (e.g., `matplotlib <https://matplotlib.org/>`_, `MATLAB <https://www.mathworks.com/products/matlab.html>`_, etc.).
+
+
+.. _dynamic_demo:
+
+DynamicDemo: Adding and Removing Particles
+------------------------------------------
+
+In this tutorial, you will learn how to add and remove particles at runtime, enabling the simulation of systems that dynamically grow or shrink.
+While this is not a functionality that is explicitly assumed by the amoebot model, it is a reasonable extension that has been used, e.g., in the conclusion of `this paper <https://arxiv.org/abs/2007.04377>`_.
+We'll be developing **DynamicDemo**, an algorithm where particles grow and/or die in their activations based on fixed probabilities.
+The completed ``alg/demo/dynamicdemo.*`` files are available in AmoebotSim for you to follow along.
+This tutorial assumes you have read and are comfortable with the **DiscoDemo** :ref:`tutorial <disco-demo>`.
+
+
+Algorithm Description
+^^^^^^^^^^^^^^^^^^^^^
+
+Each particle has two fixed probabilities: a growth probability ``_growProb`` and a death probability ``_dieProb``.
+On activation, a particle adds a new particle in a random unoccupied adjacent node with probability ``_growProb`` and then removes itself with probability ``_dieProb``.
+
+
+Setting Up the Files
+^^^^^^^^^^^^^^^^^^^^
+
+We begin by creating the ``alg/demo/dynamicdemo.h`` and ``alg/demo/dynamicdemo.cpp`` files and setting up their structure.
+As in the other tutorials, we set up our ``DynamicDemoParticle`` by inheriting from ``AmoebotParticle`` and defining the necessary function overrides in ``alg/demo/dynamicdemo.h``.
+
+.. code-block:: c++
+
+  /* Copyright (C) 2021 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
+  * notice can be found at the top of main/main.cpp. */
+
+  // Defines the particle system and composing particles for the DynamicDemo code
+  // tutorial. DynamicDemo demonstrates how to add and remove particles from the
+  // system at runtime. The pseudocode is available in the docs:
+  // [https://amoebotsim.rtfd.io/en/latest/tutorials/tutorials.html#dynamicdemo-adding-and-removing-particles].
+
+  #ifndef AMOEBOTSIM_ALG_DEMO_DYNAMICDEMO_H_
+  #define AMOEBOTSIM_ALG_DEMO_DYNAMICDEMO_H_
+
+  #include "core/amoebotparticle.h"
+  #include "core/amoebotsystem.h"
+
+  class DynamicDemoParticle : public AmoebotParticle {
+   public:
+    // Constructs a new particle with a node position for its head, a global
+    // compass direction from its head to its tail (-1 if contracted), an offset
+    // for its local compass, a system which it belongs to, and growth and death
+    // probabilities.
+    DynamicDemoParticle(const Node& head, const int globalTailDir,
+                        const int orientation, AmoebotSystem& system,
+                        const double growProb, const double dieProb);
+
+    // Executes one particle activation.
+    void activate() override;
+
+    // Returns the string to be displayed when this particle is inspected; used
+    // to snapshot the current values of this particle's memory at runtime.
+    QString inspectionText() const override;
+
+   protected:
+    // Member variables.
+    const double _growProb;
+    const double _dieProb;
+
+   private:
+    friend class DynamicDemoSystem;
+  };
+
+  // ...
+
+  #endif  // AMOEBOTSIM_ALG_DEMO_DYNAMICDEMO_H_
+
+We next declare a ``DynamicDemoSystem`` inheriting from ``AmoebotSystem``.
+Because this algorithm has a termination condition (when all particles have died), we include an override for ``hasTerminated()``.
+
+.. code-block:: c++
+
+  class DynamicDemoSystem : public AmoebotSystem {
+   public:
+    // Constructs a system of DynamicDemoParticles with an optionally specified
+    // size (#particles) and particle growth and death probabilities.
+    DynamicDemoSystem(unsigned int numParticles = 10, double growProb = 0.02,
+                      double dieProb = 0.01);
+
+    // Returns true when the simulation has completed; i.e, when all particles
+    // have died.
+    bool hasTerminated() const override;
+  };
+
+We complete our setup with a skeleton of ``alg/demo/dynamicdemo.cpp``.
+
+.. code-block:: c++
+
+  /* Copyright (C) 2021 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+   * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
+   * notice can be found at the top of main/main.cpp. */
+
+  # include "alg/demo/dynamicdemo.h"
+
+  DynamicDemoParticle::DynamicDemoParticle(const Node& head,
+                                           const int globalTailDir,
+                                           const int orientation,
+                                           AmoebotSystem& system,
+                                           const double growProb,
+                                           const double dieProb)
+      : AmoebotParticle(head, globalTailDir, orientation, system),
+        _growProb(growProb),
+        _dieProb(dieProb) {}
+
+  void DynamicDemoParticle::activate() {}
+
+  QString DynamicDemoParticle::inspectionText() const {}
+
+  DynamicDemoSystem::DynamicDemoSystem(unsigned int numParticles, double growProb,
+                                       double dieProb) {}
+
+  bool DynamicDemoSystem::hasTerminated() const {}
+
+
+Function Implementations
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+We now turn to function implementations.
+As an advanced tutorial, we will skip the implementations of the ``DynamicDemoParticle`` constructor and ``inspectionText()`` since they are straightforward.
+We will also skip the implementation of the ``DynamicDemoSystem`` constructor; though it may appear complicated, all it is doing is placing newly instantiated particles in the shape of a hexagon.
+See ``alg/demo/dynamicdemo.cpp`` for more details.
+
+Instead, we focus on the functions that involve particle addition and removal.
+We start with ``activate()``, which does the majority of the work:
+
+.. code-block:: c++
+
+  void DynamicDemoParticle::activate() {
+    // With the specified growth probability, choose a random direction and add
+    // a particle in the incident node if it is unoccupied.
+    if (randDouble(0, 1) < _growProb) {
+      int growDir = randDir();
+      if (!hasNbrAtLabel(growDir)) {
+        system.insert(new DynamicDemoParticle(
+                        head.nodeInDir(localToGlobalDir(growDir)), -1, randDir(),
+                        system, _growProb, _dieProb));
+      }
+    }
+
+    // With the specified death probability, die (i.e., remove this particle).
+    if (randDouble(0, 1) < _dieProb) {
+      system.remove(this);
+    }
+  }
+
+This particle adds a new particle to the system using ``system.insert(new DynamicDemoParticle(...))``.
+Note that the insertion only occurs if the intended node is unoccupied; otherwise, we would be inserting a particle on top of another particle, which would cause AmoebotSim to crash.
+Breaking down the parameters used in the particle addition:
+
+- ``head.nodeInDir(localToGlobalDir(growDir))`` defines the head node for the new particle, translating the calling particle's local ``growDir`` to the coordinate actually being referenced.
+
+- ``-1``, ``randDir()``, and ``system`` are the usual values for the tail direction, orientation, and system parameters.
+
+- ``_growProb`` and ``_dieProb`` are the probabilities used in this **DynamicDemo** algorithm, and are passed to the newly added particle verbatim since all particles have the same growth and death probabilities.
+
+This particle removes itself using ``system.remove(this)``, where ``this`` is the self-referencing pointer.
+
+.. warning::
+
+  If a particle removes itself, this should be the **last** instruction in the corresponding control flow of its ``activate()`` function.
+  ``AmoebotSystem::remove(AmoebotParticle* particle)`` will free the memory associated with this particle (i.e., ``delete particle``), so any further instructions involving this particle will cause undefined behavior or crashes.
+
+Since it is possible for all particles in the system to die, resulting in an empty system, we must implement ``DynamicDemoSystem::hasTerminated()`` in order to stop AmoebotSim from trying to activate nonexistent particles.
+
+.. code-block:: c++
+
+  bool DynamicDemoSystem::hasTerminated() const {
+    return particles.size() == 0;
+  }
+
+
+Wrapping Up
+^^^^^^^^^^^
+
+As in the other tutorials, we conclude by :ref:`registering the algorithm <disco-register>`.
+Compiling and running AmoebotSim will then allow you to instantiate the **DynamicDemo** simulation using the sidebar interface.
+
+.. image:: graphics/dynamicanimation.gif

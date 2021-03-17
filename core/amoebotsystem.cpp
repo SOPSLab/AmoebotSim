@@ -36,16 +36,16 @@ AmoebotSystem::~AmoebotSystem() {
 }
 
 void AmoebotSystem::activate() {
-  int rand = randInt(0, particles.size());
-  particles.at(rand)->activate();
-  registerActivation(particles.at(rand));
+  AmoebotParticle* particle = particles.at(randInt(0, particles.size()));
+  registerActivation(particle);
+  particle->activate();
 }
 
 void AmoebotSystem::activateParticleAt(Node node) {
   auto it = particleMap.find(node);
   if (it != particleMap.end()) {
-    it->second->activate();
     registerActivation(it->second);
+    it->second->activate();
   }
 }
 
@@ -84,6 +84,22 @@ void AmoebotSystem::insert(Object* object) {
 
   objects.push_back(object);
   objectMap[object->_node] = object;
+}
+
+void AmoebotSystem::remove(AmoebotParticle* particle) {
+  particles.erase(std::remove(particles.begin(), particles.end(), particle),
+                  particles.end());
+  auto it = particleMap.begin();
+  while (it != particleMap.end()) {
+    if (it->second == particle) {
+      it = particleMap.erase(it);
+    } else {
+      it++;
+    }
+  }
+  activatedParticles.erase(particle);
+
+  delete particle;
 }
 
 void AmoebotSystem::registerMovement(unsigned int numMoves) {
