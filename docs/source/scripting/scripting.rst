@@ -90,6 +90,14 @@ All algorithms are instantiated based on their signatures and parameters defined
 
   Instantiates a system running the **TokenDemo** algorithm with the given parameters.
 
+.. js:function:: dynamicdemo(numParticles, growProb, dieProb)
+
+  :param int numParticles: The number of particles in the system.
+  :param float growProb: The probability of adding a new particle on activation.
+  :param float dieProb: The probability of removing this particle on activation.
+
+  Instantiates a system running the **DynamicDemo** algorithm with the given parameters.
+
 .. js:function:: compression(numParticles, lambda)
 
   :param int numParticles: The number of particles in the system.

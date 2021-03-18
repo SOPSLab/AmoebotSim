@@ -6,6 +6,7 @@
 
 #include "alg/demo/ballroomdemo.h"
 #include "alg/demo/discodemo.h"
+#include "alg/demo/dynamicdemo.h"
 #include "alg/demo/metricsdemo.h"
 #include "alg/demo/tokendemo.h"
 #include "alg/compression.h"
@@ -107,6 +108,26 @@ void TokenDemoAlg::instantiate(const int numParticles, const int lifetime) {
     emit log("token lifetime must be > 0", true);
   } else {
     emit setSystem(std::make_shared<TokenDemoSystem>(numParticles, lifetime));
+  }
+}
+
+DynamicDemoAlg::DynamicDemoAlg() : Algorithm("Demo: Dynamic", "dynamicdemo") {
+  addParameter("# Particles", "10");
+  addParameter("Growth Prob.", "0.02");
+  addParameter("Death Prob.", "0.01");
+}
+
+void DynamicDemoAlg::instantiate(const unsigned int numParticles,
+                                 const double growProb, const double dieProb) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (growProb < 0 || growProb > 1) {
+    emit log("growProb in [0,1] required", true);
+  } else if (dieProb < 0 || dieProb > 1) {
+    emit log("dieProb in [0,1] required", true);
+  } else {
+    emit setSystem(std::make_shared<DynamicDemoSystem>(numParticles, growProb,
+                                                       dieProb));
   }
 }
 
@@ -262,6 +283,7 @@ AlgorithmList::AlgorithmList() {
   _algorithms.push_back(new MetricsDemoAlg());
   _algorithms.push_back(new BallroomDemoAlg());  
   _algorithms.push_back(new TokenDemoAlg());
+  _algorithms.push_back(new DynamicDemoAlg());
 
   // General algorithms.
   _algorithms.push_back(new CompressionAlg());

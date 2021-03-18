@@ -92,6 +92,17 @@ class TokenDemoAlg : public Algorithm {
   void instantiate(const int numParticles = 48, const int lifetime = 100);
 };
 
+class DynamicDemoAlg : public Algorithm {
+  Q_OBJECT
+
+ public:
+  DynamicDemoAlg();
+
+ public slots:
+  void instantiate(const unsigned int numParticles = 10,
+                   const double growProb = 0.02, const double dieProb = 0.01);
+};
+
 // Compression.
 class CompressionAlg : public Algorithm {
   Q_OBJECT
