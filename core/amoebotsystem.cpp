@@ -36,9 +36,11 @@ AmoebotSystem::~AmoebotSystem() {
 }
 
 void AmoebotSystem::activate() {
-  AmoebotParticle* particle = particles.at(randInt(0, particles.size()));
-  registerActivation(particle);
-  particle->activate();
+  if (particles.size() > 0) {
+    AmoebotParticle* particle = particles.at(randInt(0, particles.size()));
+    registerActivation(particle);
+    particle->activate();
+  }
 }
 
 void AmoebotSystem::activateParticleAt(Node node) {
