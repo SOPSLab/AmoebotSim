@@ -12,15 +12,12 @@ AmoebotSim
 ==========
 
 Welcome to `AmoebotSim <https://github.com/SOPSLab/AmoebotSim>`_, a visual simulator for the amoebot model developed by the `Self-Organizing Particle Systems (SOPS) Lab <https://sops.engineering.asu.edu/>`_ at Arizona State University and the University of Paderborn.
-The `amoebot model <link-todo>`_ is an abstraction of *programmable matter*, a material that can dynamically change its physical properties (e.g., shape, size, color, etc.) based on user input or stimuli from its environment.
+The `amoebot model <https://sops.engineering.asu.edu/sops/amoebot/>`_ is an abstraction of *programmable matter*, a material that can dynamically change its physical properties (e.g., shape, size, color, etc.) based on user input or stimuli from its environment.
 This simulator is designed for students and researchers who want to:
 
 * Visualize and learn about current distributed algorithms for the amoebot model
 * Experiment with new ideas for amoebot model algorithms
 * Validate correctness and runtime claims for new or existing amoebot model algorithms
-
-.. todo::
-  Need to add a link under "amoebot model" that points to the website's dedicated page for the chapter once it exists.
 
 
 Getting Started
@@ -76,14 +73,21 @@ All development best practices and guidelines for contributions are discussed un
 Acknowledgements
 ----------------
 
-AmoebotSim was originally created by `Robert Gmyr <https://gmyr.net/>`_ during his PhD studies at the University of Paderborn, and is now actively maintained by `Joshua J. Daymude <https://github.com/jdaymude>`_ and `Kristian Hinnenthal <link-todo>`_, current PhD students in the SOPS Lab.
+AmoebotSim was originally created by `Robert Gmyr <https://gmyr.net/>`_ during his PhD studies at the University of Paderborn, and is now actively maintained by `Joshua J. Daymude <https://github.com/jdaymude>`_ and other members of the SOPS Lab.
 Many other hands have helped (and are currently helping) build AmoebotSim.
 We'd like to thank:
 
-*
-
-.. todo::
-  Need to add a GitHub account for Kristian and need to fill out past contributors.
+* `Joseph Briones <https://github.com/josephbriones>`_
+* `Noble Harasha <https://github.com/nharasha1202>`_
+* `Jamison Weber <https://github.com/jwweber>`_
+* Kristian Hinnenthal
+* `Ryan Yiu <https://github.com/ryanyiu>`_
+* `Ziad Abdelkarim <https://github.com/ZiadAbdelkarim>`_
+* `Kevin Lough <https://github.com/kjlough>`_
+* Alexandra Porter
+* `Zahra Derakhshandeh <https://www.zderakhshandeh.com/>`_
+* Stainslaw Eppinger
+* `Brian Parker <https://github.com/rparker214>`_
 
 
 Licensing
@@ -93,7 +97,7 @@ AmoebotSim is licensed under the `GNU General Public License v3.0 <https://choos
 You're welcome to do pretty much anything you'd like with our code, but you cannot distribute a closed source version commercially and you must keep all copyright and license notices intact.
 
   AmoebotSim: a visual simulator for the amoebot model of programmable matter.
-  Copyright (C) 2019 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+  Copyright (C) 2021 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
   Please direct all questions and communications to sopslab@asu.edu.
 
   This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -110,19 +114,18 @@ Citing AmoebotSim
 
 If you utilize AmoebotSim in your research, we ask that you cite the project as:
 
-  TODO
-
-.. todo::
-  Need to figure out what the citation would actually be.
+  Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal. "AmoebotSim: A Visual Simulator for the Amoebot Model of Programmable Matter", Available online at `https://github.com/SOPSLab/AmoebotSim <https://github.com/SOPSLab/AmoebotSim>`_, 2021.
 
 You can also use the following BibTeX entry, if more convenient:
 
 .. code-block:: tex
 
-  TODO
-
-.. todo::
-  Need to build out the BibTeX reference.
+  @unpublished{Daymude2021-amoebotsim,
+    title = {{AmoebotSim: A Visual Simulator for the Amoebot Model of Programmable Matter}},
+    author = {Daymude, Joshua J. and Gmyr, Robert and Hinnenthal, Kristian},
+    year = {2021},
+    note = {Available online at \url{https://github.com/SOPSLab/AmoebotSim}}
+  }
 
 
 .. _faqs:
@@ -130,8 +133,7 @@ You can also use the following BibTeX entry, if more convenient:
 FAQs
 ----
 
-.. todo::
-  Coming soon!
+We'll add frequently-asked questions in the future as they become relevant.
 
 
 .. _contact-us:
@@ -148,6 +150,3 @@ Changelog
 ---------
 
 In the future, this will contain the changelog for AmoebotSim.
-
-.. todo::
-  Coming soon!

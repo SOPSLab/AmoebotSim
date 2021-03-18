@@ -3,13 +3,10 @@ Tutorials
 
 These tutorials are for researchers 🧪 and developers 💻 wanting to implement distributed algorithms for programmable matter in AmoebotSim.
 As a prerequisite, make sure you've followed the instructions in the :doc:`Installation Guide </install/install>` so that everything builds and runs correctly.
-Additionally, you should be comfortable with how the `amoebot model <link-todo>`_ is defined.
+Additionally, you should be comfortable with how the `amoebot model <https://sops.engineering.asu.edu/sops/amoebot/>`_ is defined.
 
 All tutorials can be found in the ``alg/demo/`` directory of AmoebotSim so you can build and run them yourself.
 Note that the coding style in these tutorials follows our :ref:`C++ Style Guide <cpp-style>` which we will not re-explain here.
-
-.. todo::
-  Add links.
 
 
 Anatomy of AmoebotSim
@@ -31,12 +28,9 @@ AmoebotSim is organized into seven main directories that loosely collect similar
 
 * ``res/`` contains AmoebotSim's resources, including textures for graphics rendering, icons, GUI layout, etc.
 
-* ``script/`` contains the classes used for interpreting and executing commands issued to AmoebotSim via its `JavaScript API <link-todo>`_.
+* ``script/`` contains the classes used for interpreting and executing commands issued to AmoebotSim via its :ref:`JavaScript API <script-api>`.
 
 * ``ui/`` contains the classes used for front end GUI rendering and visualization.
-
-.. todo::
-  Add links.
 
 The most important classes for implemeting new distributed algorithms in AmoebotSim are:
 
@@ -148,7 +142,7 @@ With all these elements in place, we have the following:
 
 .. code-block:: c++
 
-  /* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+  /* Copyright (C) 2021 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
    * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
    * notice can be found at the top of main/main.cpp. */
 
@@ -292,7 +286,7 @@ It begins with the copyright notice and an ``#include`` of the header file, and 
 
 .. code-block:: c++
 
-  /* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+  /* Copyright (C) 2021 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
    * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
    * notice can be found at the top of main/main.cpp. */
 
@@ -680,7 +674,7 @@ The particle's ``_state`` variable will keep track of whether it is a leader (``
 
 .. code-block:: c++
 
-  /* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+  /* Copyright (C) 2021 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
   * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
   * notice can be found at the top of main/main.cpp. */
 
@@ -770,7 +764,7 @@ The skeleton of ``alg/demo/ballroomdemo.cpp`` is straightforward.
 
 .. code-block:: c++
 
-  /* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+  /* Copyright (C) 2021 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
    * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
    * notice can be found at the top of main/main.cpp. */
 
@@ -1127,7 +1121,7 @@ Just as with other new particle types, we inherit from ``AmoebotParticle`` and s
 
 .. code-block:: c++
 
-  /* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+  /* Copyright (C) 2021 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
    * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
    * notice can be found at the top of main/main.cpp. */
 
@@ -1218,7 +1212,7 @@ We complete our setup with a skeleton of ``alg/demo/tokendemo.cpp``.
 
 .. code-block:: c++
 
-  /* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+  /* Copyright (C) 2021 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
    * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
    * notice can be found at the top of main/main.cpp. */
 
