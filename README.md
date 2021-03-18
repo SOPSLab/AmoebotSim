@@ -31,7 +31,7 @@ AmoebotSim is licensed under the [GNU General Public License v3.0](https://choos
 You're welcome to do pretty much anything you'd like with our code, but you cannot distribute a closed source version commercially and you must keep all copyright and license notices intact.
 
 > AmoebotSim: a visual simulator for the amoebot model of programmable matter.
-> Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+> Copyright (C) 2021 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
 > Please direct all questions and communications to sopslab@asu.edu.
 >
 > This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.

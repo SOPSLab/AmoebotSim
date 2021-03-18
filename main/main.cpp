@@ -1,5 +1,5 @@
 /* AmoebotSim: a visual simulator for the amoebot model of programmable matter.
- * Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+ * Copyright (C) 2021 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * Please direct all questions and communications to sopslab@asu.edu.
  *
  * This program is free software: you can redistribute it and/or modify it under

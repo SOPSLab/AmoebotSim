@@ -1,4 +1,4 @@
-/* Copyright (C) 2020 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+/* Copyright (C) 2021 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
@@ -279,9 +279,9 @@ void ShapeFormationAlg::instantiate(const int numParticles,
 
 AlgorithmList::AlgorithmList() {
   // Demo algorithms.
-  _algorithms.push_back(new DiscoDemoAlg());  
+  _algorithms.push_back(new DiscoDemoAlg());
   _algorithms.push_back(new MetricsDemoAlg());
-  _algorithms.push_back(new BallroomDemoAlg());  
+  _algorithms.push_back(new BallroomDemoAlg());
   _algorithms.push_back(new TokenDemoAlg());
   _algorithms.push_back(new DynamicDemoAlg());
 
@@ -289,7 +289,7 @@ AlgorithmList::AlgorithmList() {
   _algorithms.push_back(new CompressionAlg());
   _algorithms.push_back(new EnergyShapeAlg());
   _algorithms.push_back(new EnergySharingAlg());
-  _algorithms.push_back(new InfObjCoatingAlg());    
+  _algorithms.push_back(new InfObjCoatingAlg());
   _algorithms.push_back(new LeaderElectionAlg());
   _algorithms.push_back(new ShapeFormationAlg());
 }
