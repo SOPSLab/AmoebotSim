@@ -124,6 +124,9 @@ class ShapeFormationSystem : public AmoebotSystem  {
   // Returns a set of strings containing the current accepted modes of
   // Shapeformation.
   static std::set<QString> getAcceptedModes();
+
+  // Returns the L1-distance between a given node and the origin (0,0).
+  int L1Dist(Node particle);
 };
 
 #endif  // AMOEBOTSIM_ALG_SHAPEFORMATION_H_

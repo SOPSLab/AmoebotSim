@@ -374,3 +374,20 @@ std::set<QString> ShapeFormationSystem::getAcceptedModes() {
   std::set<QString> set = {"h", "t1", "t2", "s", "l"};
   return set;
 }
+
+int ShapeFormationSystem::L1Dist(Node particle) {
+  int x = particle.x;
+  int y = particle.y;
+
+  if ( (x >= 0 && y >= 0) || (x <= 0 && y <= 0) ) {
+    return abs(x) + abs(y);
+  }
+  else {
+    if (abs(x) >= abs(y)) {
+      return abs(x);
+    }
+    else {
+      return abs(y);
+    }
+  }
+}
