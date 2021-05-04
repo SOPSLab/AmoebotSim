@@ -170,7 +170,7 @@ class ShapeFormationAlg : public Algorithm {
   ShapeFormationAlg();
 
  public slots:
-  void instantiate(const int numParticles = 200, const double holeProb = 0.2,
+  void instantiate(const int numParticles = 200, const double sparseness = 0.2,
                    const QString mode = "h");
 };
 

@@ -106,7 +106,7 @@ class ShapeFormationParticle : public AmoebotParticle {
 class ShapeFormationSystem : public AmoebotSystem  {
  public:
   // Constructs a system of ShapeFormationParticles with an optionally specified
-  // size (#particles), hole probability, and shape to form. holeProb in [0,1]
+  // size (#particles), hole probability, and shape to form. sparseness in [0,1]
   // controls how "spread out" the system is; closer to 0 is more compressed,
   // closer to 1 is more expanded. The current shapes accepted are...
   //   "h"  --> hexagon
@@ -114,7 +114,7 @@ class ShapeFormationSystem : public AmoebotSystem  {
   //   "t1" --> vertex triangle
   //   "t2" --> center triangle
   //   "l"  --> line
-  ShapeFormationSystem(int numParticles = 200, double holeProb = 0.2,
+  ShapeFormationSystem(int numParticles = 200, double sparseness = 0.2,
                        QString mode = "h");
 
   // Checks whether or not the system's run of the ShapeFormation formation
@@ -126,7 +126,10 @@ class ShapeFormationSystem : public AmoebotSystem  {
   static std::set<QString> getAcceptedModes();
 
   // Returns the L1-distance between a given node and the origin (0,0).
-  int L1Dist(Node particle);
+  int L1Dist(Node p);
+
+  std::vector<double> probabilityWeights(std::vector<double> dists, double
+                                         sparseness);
 };
 
 #endif  // AMOEBOTSIM_ALG_SHAPEFORMATION_H_

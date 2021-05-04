@@ -253,16 +253,16 @@ void LeaderElectionAlg::instantiate(const int numParticles,
 ShapeFormationAlg::ShapeFormationAlg() :
   Algorithm("Basic Shape Formation", "shapeformation") {
   addParameter("# Particles", "200");
-  addParameter("Hole Prob.", "0.2");
+  addParameter("Sparseness", "0.2");
   addParameter("Shape", "h");
 }
 
 void ShapeFormationAlg::instantiate(const int numParticles,
-                                    const double holeProb, const QString mode) {
+                                    const double sparseness, const QString mode) {
   std::set<QString> set = ShapeFormationSystem::getAcceptedModes();
   if (numParticles <= 0) {
     emit log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
+  } else if (sparseness < 0 || sparseness > 1) {
     emit log("holeProb in [0,1] required", true);
   } else if (set.find(mode) == set.end()) {
     QString accepted = "";
@@ -273,7 +273,7 @@ void ShapeFormationAlg::instantiate(const int numParticles,
     emit log("only accepted modes are: " + accepted, true);
   } else {
     emit setSystem(std::make_shared<ShapeFormationSystem>(numParticles,
-                                                          holeProb, mode));
+                                                          sparseness, mode));
   }
 }
 
