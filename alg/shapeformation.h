@@ -106,7 +106,7 @@ class ShapeFormationParticle : public AmoebotParticle {
 class ShapeFormationSystem : public AmoebotSystem  {
  public:
   // Constructs a system of ShapeFormationParticles with an optionally specified
-  // size (#particles), hole probability, and shape to form. sparseness in [0,1]
+  // size (#particles), sparseness, and shape to form. sparseness in [0,1]
   // controls how "spread out" the system is; closer to 0 is more compressed,
   // closer to 1 is more expanded. The current shapes accepted are...
   //   "h"  --> hexagon

@@ -305,58 +305,6 @@ bool ShapeFormationParticle::hasTailFollower() const {
   return labelOfFirstNbrWithProperty<ShapeFormationParticle>(prop) != -1;
 }
 
-//ShapeFormationSystem::ShapeFormationSystem(int numParticles, double holeProb,
-//                                           QString mode) {
-//  Q_ASSERT(mode == "h" || mode == "s" || mode == "t1" || mode == "t2" ||
-//           mode == "l");
-//  Q_ASSERT(numParticles > 0);
-//  Q_ASSERT(0 <= holeProb && holeProb <= 1);
-
-//  // Insert the seed at (0,0).
-//  std::set<Node> occupied;
-//  insert(new ShapeFormationParticle(Node(0, 0), -1, randDir(), *this,
-//                                    ShapeFormationParticle::State::Seed, mode));
-//  occupied.insert(Node(0, 0));
-
-//  std::set<Node> candidates;
-//  for (int i = 0; i < 6; ++i) {
-//    candidates.insert(Node(0, 0).nodeInDir(i));
-//  }
-
-//  // Add all other particles.
-//  int particlesAdded = 1;
-//  while (particlesAdded < numParticles && !candidates.empty()) {
-//    // Pick a random candidate node.
-//    int randIndex = randInt(0, candidates.size());
-//    Node randCand;
-//    for (auto cand = candidates.begin(); cand != candidates.end(); ++cand) {
-//      if (randIndex == 0) {
-//        randCand = *cand;
-//        candidates.erase(cand);
-//        break;
-//      } else {
-//        randIndex--;
-//      }
-//    }
-
-//    // With probability 1 - holeProb, add a new particle at the candidate node.
-//    if (randBool(1.0 - holeProb)) {
-//      insert(new ShapeFormationParticle(randCand, -1, randDir(), *this,
-//                                        ShapeFormationParticle::State::Idle,
-//                                        mode));
-//      occupied.insert(randCand);
-//      particlesAdded++;
-
-//      // Add new candidates.
-//      for (int i = 0; i < 6; ++i) {
-//        if (occupied.find(randCand.nodeInDir(i)) == occupied.end()) {
-//          candidates.insert(randCand.nodeInDir(i));
-//        }
-//      }
-//    }
-//  }
-//}
-
 ShapeFormationSystem::ShapeFormationSystem(int numParticles, double sparseness,
                                            QString mode) {
   Q_ASSERT(mode == "h" || mode == "s" || mode == "t1" || mode == "t2" ||
@@ -370,31 +318,17 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, double sparseness,
 
   std::vector<Node> candidates;
   std::vector<double> l1dists;
-//  std::vector<double> probWeights;
   for (int i = 0; i < 6; ++i) {
     candidates.push_back(Node(0, 0).nodeInDir(i));
     l1dists.push_back(L1Dist(Node(0, 0).nodeInDir(i)));
   }
 
-//  std::default_random_engine generator(std::random_device{}());
-
   // Add all other particles.
   int particlesAdded = 1;
   while (particlesAdded < numParticles) {
-//    probWeights = l1dists;
-//    double constant = 1/std::accumulate(probWeights.begin(), probWeights.end(), 0.0);
-//    std::transform(probWeights.begin(), probWeights.end(), probWeights.begin(), [constant](double &c){ return c*constant; });
-
-//    std::discrete_distribution<> distribution(l1dists.begin(), l1dists.end());
-
-//    int index = distribution(generator);
-//    Node nextParticle = *std::next(candidates.begin(), index);
-
-
     int index = randInt(0, candidates.size());
 
-    std::vector<double> probs = probabilityWeights(l1dists,sparseness);
-//    std::vector<double> probs = l1dists;
+    std::vector<double> probs = probabilityWeights(l1dists, sparseness);
 
     if (randBool(probs[index]/std::accumulate(probs.begin(), probs.end(), 0.0))) {
       Node nextParticle = candidates[index];
@@ -420,34 +354,7 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, double sparseness,
           }
         }
       }
-
     }
-
-
-//    insert(new ShapeFormationParticle(nextParticle, -1, randDir(), *this,
-//                                      ShapeFormationParticle::State::Idle,
-//                                      mode));
-//    particlesAdded++;
-
-//    ShapeFormationParticle tmp = ShapeFormationParticle(nextParticle, -1, 0, *this,
-//                                                        ShapeFormationParticle::State::Idle,
-//                                                        mode);
-
-//    candidates.erase(std::remove(candidates.begin(), candidates.end(), nextParticle), candidates.end());
-//    l1dists.erase(std::remove(l1dists.begin(), l1dists.end(), L1Dist(nextParticle)), l1dists.end());
-//    candidates.erase(candidates.begin()+index);
-//    l1dists.erase(l1dists.begin()+index);
-
-//    // Add new candidates.
-//    for (int i = 0; i < 6; ++i) {
-//      if (!tmp.hasNbrAtLabel(i)) {
-//        if(std::find(candidates.begin(), candidates.end(), nextParticle.nodeInDir(i)) == candidates.end()) {
-//          candidates.push_back(nextParticle.nodeInDir(i));
-//          l1dists.push_back(L1Dist(nextParticle.nodeInDir(i)));
-//        }
-//      }
-//    }
-
   }
 }
 
@@ -497,6 +404,7 @@ int ShapeFormationSystem::L1Dist(Node p) {
 std::vector<double> ShapeFormationSystem::probabilityWeights(std::vector<double>
                                                              dists, double
                                                              sparseness) {
+
   int n = dists.size();
 
   if ( std::equal(dists.begin() + 1, dists.end(), dists.begin()) ) {
@@ -506,8 +414,9 @@ std::vector<double> ShapeFormationSystem::probabilityWeights(std::vector<double>
     return dists;
   }
 
+  double expon_factor = pow(100, sparseness);
   for (int i = 0; i < n; i++) {
-    dists[i] = pow(dists[i], 3);
+    dists[i] = pow(dists[i], expon_factor);
   }
 
   if (sparseness < .5) {
