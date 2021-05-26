@@ -182,12 +182,11 @@ bool InfObjCoatingParticle::hasFollowerChild() const {
   return labelOfFirstNbrWithProperty<InfObjCoatingParticle>(prop) != -1;
 }
 
-InfObjCoatingSystem::InfObjCoatingSystem(uint numParticles, double holeProb) {
+InfObjCoatingSystem::InfObjCoatingSystem(uint numParticles, double sparseness) {
   Q_ASSERT(numParticles > 0);
-  Q_ASSERT(0 <= holeProb && holeProb <= 1);
+  Q_ASSERT(0 <= sparseness && sparseness <= 1);
 
   std::set<Node> objNodes;  // Nodes occupied by object.
-  std::set<Node> particleNodes;  // Nodes occupied by non-object particles.
 
   // Instantiate the object as a single line with turns. "Infinite" in this case
   // just means the object's surface is longer than the number of particles.
@@ -203,9 +202,12 @@ InfObjCoatingSystem::InfObjCoatingSystem(uint numParticles, double holeProb) {
     objPos = objPos.nodeInDir(offset);
   }
 
+  const Node root = *std::next(objNodes.begin(), 0);
+
   // Construct a forest structure of particles connected to the surface. Begin
   // with unoccupied positions above/adjacent to the surface as candidates.
-  std::set<Node> candidates;
+  std::vector<Node> candidates;
+  std::vector<double> l1dists;
   for (auto objPos = objNodes.rbegin(); objPos != objNodes.rend(); ++objPos) {
     // Want some forest structure, so only include sqrt(n) positions on surface.
     if (candidates.size() > sqrt(numParticles)) {
@@ -215,37 +217,43 @@ InfObjCoatingSystem::InfObjCoatingSystem(uint numParticles, double holeProb) {
     for (int dir = 1; dir <= 2; ++dir) {
       const Node node = objPos->nodeInDir(dir);
       if (objNodes.find(node) == objNodes.end()
-          && candidates.find(node) == candidates.end()) {
-        candidates.insert(node);
+          && std::find(candidates.begin(), candidates.end(), node) ==
+          candidates.end()) {
+        candidates.push_back(node);
+        l1dists.push_back(L1Dist(node, root));
       }
     }
   }
 
-  while (particleNodes.size() < numParticles) {
-    std::set<Node> lastAdded;
-    for (auto candPos : candidates) {
-      // Place a particle at the candidate position with probability 1 - hole.
-      if (particleNodes.size() < numParticles && randBool(1 - holeProb)) {
-        insert(new InfObjCoatingParticle(candPos, -1, randDir(), *this,
-                                       InfObjCoatingParticle::State::Inactive));
-        particleNodes.insert(candPos);
-        lastAdded.insert(candPos);
-      }
-    }
+  // Add all particles.
+  uint particlesAdded = 1;
+  while (particlesAdded < numParticles) {
+    int index = randInt(0, candidates.size());
 
-    // Create new set of candidate nodes from the unoccupied positions adjacent
-    // and above nodes occupied by newly added particles. Reuse last candidate
-    // set if no particles were added, since it would be the same.
-    if (lastAdded.size() > 0) {
-      candidates.clear();
-      for (auto prtPos : lastAdded) {
-        for (int dir = 1; dir <= 2; ++dir) {
-          const Node node = prtPos.nodeInDir(dir);
-          if (objNodes.find(node) == objNodes.end()
-              && particleNodes.find(node) == particleNodes.end()
-              && candidates.find(node) == candidates.end()) {
-            candidates.insert(node);
-          }
+    std::vector<double> probs = probabilityWeights(l1dists, sparseness);
+
+    if (randBool(probs[index]/std::accumulate(probs.begin(), probs.end(), 0.0)))
+    {
+      Node nextParticle = candidates[index];
+      insert(new InfObjCoatingParticle(nextParticle, -1, randDir(), *this,
+                                       InfObjCoatingParticle::State::Inactive));
+      particlesAdded++;
+      candidates.erase(candidates.begin()+index);
+      l1dists.erase(l1dists.begin()+index);
+      InfObjCoatingParticle tmp = InfObjCoatingParticle(nextParticle, -1, 0,
+                                                        *this,
+                                                        InfObjCoatingParticle::\
+                                                        State::Inactive);
+
+      // Create new set of candidate nodes from the unoccupied positions
+      // adjacent and above nodes occupied by newly added particles.
+      for (int dir = 1; dir <= 2; ++dir) {
+        const Node node = nextParticle.nodeInDir(dir);
+        if (objNodes.find(node) == objNodes.end() &&
+            std::find(candidates.begin(), candidates.end(), node) ==
+            candidates.end() && !tmp.hasNbrAtLabel(dir)) {
+          candidates.push_back(node);
+          l1dists.push_back(L1Dist(node, root));
         }
       }
     }
@@ -264,4 +272,60 @@ bool InfObjCoatingSystem::hasTerminated() const {
   }
 
   return true;
+}
+
+int InfObjCoatingSystem::L1Dist(Node p, Node root) {
+  if (p.x >= root.x && p.y >= root.x) {
+    return abs(p.x - root.x) + abs(p.y - root.y);
+  }
+  else if (p.x <= root.x && p.y <= root.y) {
+    return abs(p.x - root.x) + abs(p.y - root.y);
+  }
+  else {
+    if (abs(p.x - root.x) >= abs(p.y - root.y)) {
+      return abs(p.x - root.x);
+    }
+    else {
+      return abs(p.y - root.y);
+    }
+  }
+}
+
+std::vector<double> InfObjCoatingSystem::probabilityWeights(std::vector<double>
+                                                             dists, double
+                                                             sparseness) {
+
+  int n = dists.size();
+
+  if ( std::equal(dists.begin() + 1, dists.end(), dists.begin()) ) {
+    for (int i = 0; i < n; i++) {
+      dists[i] = 0.5;
+    }
+    return dists;
+  }
+
+  double expon_factor = pow(100, sparseness);
+  for (int i = 0; i < n; i++) {
+    dists[i] = pow(dists[i], expon_factor);
+  }
+
+  if (sparseness < .5) {
+    for (int k = 0; k < n; k++) {
+      dists[k] = 1/dists[k];
+    }
+  } else if (sparseness > .5) {
+    sparseness = 1 - sparseness;
+  }
+
+  double min_map_bound = 0 + sparseness;
+  double max_map_bound = 1 - sparseness;
+
+  double min = *std::min_element(dists.begin(), dists.end());
+  double max = *std::max_element(dists.begin(), dists.end());
+  for (int k = 0; k < n; k++) {
+    dists[k] = ((dists[k]-min)/(max-min)) * (max_map_bound - min_map_bound) +
+        min_map_bound;
+  }
+
+  return dists;
 }

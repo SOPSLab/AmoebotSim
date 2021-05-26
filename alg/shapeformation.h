@@ -128,6 +128,8 @@ class ShapeFormationSystem : public AmoebotSystem  {
   // Returns the L1-distance between a given node and the origin (0,0).
   int L1Dist(Node p);
 
+  // Translates L1-distances into probabilities according to the specified level
+  // of sparseness.
   std::vector<double> probabilityWeights(std::vector<double> dists, double
                                          sparseness);
 };

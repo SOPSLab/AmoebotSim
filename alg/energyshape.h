@@ -138,16 +138,24 @@ class EnergyShapeParticle : public AmoebotParticle {
 class EnergyShapeSystem : public AmoebotSystem {
  public:
   // Constructs a system of EnergyShapeParticles with an optionally specified
-  // size (# particles), number of energy distribution root particles, hole
-  // probability in [0,1) controlling how sparse the initial configuration is,
-  // energy capacity, energy demand per action, and energy transfer rate.
+  // size (# particles), number of energy distribution root particles,
+  // sparseness in [0,1] controlling how "spread out" the initial configuration
+  // is, energy capacity, energy demand per action, and energy transfer rate.
   EnergyShapeSystem(const int numParticles, const int numEnergyRoots,
-                    const double holeProb, const double capacity,
+                    const double sparseness, const double capacity,
                     const double demand, const double transferRate);
 
   // Checks whether the system has completed forming the desired shape (i.e.,
   // all particles are in shape state Finish).
   bool hasTerminated() const override;
+
+  // Returns the L1-distance between a given node and the origin (0,0).
+  int L1Dist(Node p);
+
+  // Translates L1-distances into probabilities according to the specified level
+  // of sparseness.
+  std::vector<double> probabilityWeights(std::vector<double> dists, double
+                                         sparseness);
 };
 
 #endif  // ALG_ENERGYSHAPE_H_

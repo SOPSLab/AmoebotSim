@@ -123,7 +123,7 @@ class EnergyShapeAlg : public Algorithm {
 
  public slots:
   void instantiate(const int numParticles = 200, const int numEnergyRoots = 1,
-                   const double holeProb = 0.2, const double capacity = 10,
+                   const double sparseness = 0.2, const double capacity = 10,
                    const double demand = 5, const double transferRate = 1);
 };
 
@@ -148,7 +148,7 @@ class InfObjCoatingAlg : public Algorithm {
   InfObjCoatingAlg();
 
  public slots:
-  void instantiate(const int numParticles = 100, const double holeProb = 0.2);
+  void instantiate(const int numParticles = 100, const double sparseness = 0.2);
 };
 
 // Leader Election.
@@ -159,7 +159,7 @@ class LeaderElectionAlg : public Algorithm {
   LeaderElectionAlg();
 
  public slots:
-  void instantiate(const int numParticles = 100, const double holeProb = 0.2);
+  void instantiate(const int numParticles = 100, const double sparseness = 0.2);
 };
 
 // Basic Shape Formation.

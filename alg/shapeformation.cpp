@@ -330,7 +330,8 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, double sparseness,
 
     std::vector<double> probs = probabilityWeights(l1dists, sparseness);
 
-    if (randBool(probs[index]/std::accumulate(probs.begin(), probs.end(), 0.0))) {
+    if (randBool(probs[index]/std::accumulate(probs.begin(), probs.end(), 0.0)))
+    {
       Node nextParticle = candidates[index];
 
       insert(new ShapeFormationParticle(nextParticle, -1, randDir(), *this,
@@ -341,14 +342,17 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, double sparseness,
       candidates.erase(candidates.begin()+index);
       l1dists.erase(l1dists.begin()+index);
 
-      ShapeFormationParticle tmp = ShapeFormationParticle(nextParticle, -1, 0, *this,
-                                                              ShapeFormationParticle::State::Idle,
-                                                              mode);
+      ShapeFormationParticle tmp = ShapeFormationParticle(nextParticle, -1, 0,
+                                                          *this,
+                                                          ShapeFormationParticle\
+                                                          ::State::Idle,
+                                                          mode);
 
       // Add new candidates.
       for (int i = 0; i < 6; ++i) {
         if (!tmp.hasNbrAtLabel(i)) {
-          if(std::find(candidates.begin(), candidates.end(), nextParticle.nodeInDir(i)) == candidates.end()) {
+          if(std::find(candidates.begin(), candidates.end(),
+                       nextParticle.nodeInDir(i)) == candidates.end()) {
             candidates.push_back(nextParticle.nodeInDir(i));
             l1dists.push_back(L1Dist(nextParticle.nodeInDir(i)));
           }
@@ -382,21 +386,18 @@ std::set<QString> ShapeFormationSystem::getAcceptedModes() {
 }
 
 int ShapeFormationSystem::L1Dist(Node p) {
-  double x = p.x;
-  double y = p.y;
-
-  if (x >= 0 && y >= 0) {
-    return abs(x) + abs(y);
+  if (p.x >= 0 && p.y >= 0) {
+    return abs(p.x) + abs(p.y);
   }
-  else if (x <= 0 && y <= 0) {
-    return abs(x) + abs(y);
+  else if (p.x <= 0 && p.y <= 0) {
+    return abs(p.x) + abs(p.y);
   }
   else {
-    if (abs(x) >= abs(y)) {
-      return abs(x);
+    if (abs(p.x) >= abs(p.y)) {
+      return abs(p.x);
     }
     else {
-      return abs(y);
+      return abs(p.y);
     }
   }
 }
@@ -433,7 +434,8 @@ std::vector<double> ShapeFormationSystem::probabilityWeights(std::vector<double>
   double min = *std::min_element(dists.begin(), dists.end());
   double max = *std::max_element(dists.begin(), dists.end());
   for (int k = 0; k < n; k++) {
-    dists[k] = ((dists[k]-min)/(max-min)) * (max_map_bound - min_map_bound) + min_map_bound;
+    dists[k] = ((dists[k]-min)/(max-min)) * (max_map_bound - min_map_bound) +
+        min_map_bound;
   }
 
   return dists;

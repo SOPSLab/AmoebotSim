@@ -148,7 +148,7 @@ EnergyShapeAlg::EnergyShapeAlg()
     : Algorithm("Energy + Hexagon Formation", "energyshape") {
   addParameter("# Particles", "200");
   addParameter("# Energy Roots", "1");
-  addParameter("Hole Prob.", "0.2");
+  addParameter("Sparseness", "0.2");
   addParameter("Capacity", "10.0");
   addParameter("Demand", "5.0");
   addParameter("Transfer Rate", "1.0");
@@ -156,7 +156,7 @@ EnergyShapeAlg::EnergyShapeAlg()
 
 void EnergyShapeAlg::instantiate(const int numParticles,
                                  const int numEnergyRoots,
-                                 const double holeProb,
+                                 const double sparseness,
                                  const double capacity,
                                  const double demand,
                                  const double transferRate) {
@@ -164,8 +164,8 @@ void EnergyShapeAlg::instantiate(const int numParticles,
     emit log("# particles must be > 0", true);
   } else if (numEnergyRoots <= 0 || numEnergyRoots > numParticles) {
     emit log("# energy roots must be in (0, #particles]", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    emit log("holeProb in [0,1] required", true);
+  } else if (sparseness < 0 || sparseness > 1) {
+    emit log("sparseness in [0,1] required", true);
   } else if (capacity <= 0) {
     emit log("capacity must be > 0", true);
   } else if (demand <= 0 || demand > capacity) {
@@ -174,7 +174,7 @@ void EnergyShapeAlg::instantiate(const int numParticles,
     emit log("transferRate must be > 0", true);
   } else {
     emit setSystem(std::make_shared<EnergyShapeSystem>(
-                     numParticles, numEnergyRoots, holeProb, capacity, demand,
+                     numParticles, numEnergyRoots, sparseness, capacity, demand,
                      transferRate));
   }
 }
@@ -217,36 +217,36 @@ void EnergySharingAlg::instantiate(int numParticles,
 InfObjCoatingAlg::InfObjCoatingAlg() :
   Algorithm("Infinite Object Coating", "infobjcoating") {
   addParameter("# Particles", "100");
-  addParameter("Hole Prob.", "0.2");
+  addParameter("Sparseness", "0.2");
 }
 
 void InfObjCoatingAlg::instantiate(const int numParticles,
-                                   const double holeProb) {
+                                   const double sparseness) {
   if (numParticles <= 0) {
     emit log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    emit log("holeProb in [0,1] required", true);
+  } else if (sparseness < 0 || sparseness > 1) {
+    emit log("sparseness in [0,1] required", true);
   } else {
     emit setSystem(std::make_shared<InfObjCoatingSystem>(numParticles,
-                                                         holeProb));
+                                                         sparseness));
   }
 }
 
 LeaderElectionAlg::LeaderElectionAlg() :
   Algorithm("Leader Election", "leaderelection") {
   addParameter("# Particles", "100");
-  addParameter("Hole Prob.", "0.2");
+  addParameter("Sparseness", "0.2");
 }
 
 void LeaderElectionAlg::instantiate(const int numParticles,
-                                    const double holeProb) {
+                                    const double sparseness) {
   if (numParticles <= 0) {
     emit log("# particles must be > 0", true);
-  } else if (holeProb < 0 || holeProb > 1) {
-    emit log("holeProb in [0,1] required", true);
+  } else if (sparseness < 0 || sparseness > 1) {
+    emit log("sparseness in [0,1] required", true);
   } else {
     emit setSystem(std::make_shared<LeaderElectionSystem>(numParticles,
-                                                          holeProb));
+                                                          sparseness));
   }
 }
 
@@ -263,7 +263,7 @@ void ShapeFormationAlg::instantiate(const int numParticles,
   if (numParticles <= 0) {
     emit log("# particles must be > 0", true);
   } else if (sparseness < 0 || sparseness > 1) {
-    emit log("holeProb in [0,1] required", true);
+    emit log("sparseness in [0,1] required", true);
   } else if (set.find(mode) == set.end()) {
     QString accepted = "";
     for(std::set<QString>::iterator it = set.begin(); it != set.end(); ++it) {

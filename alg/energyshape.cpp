@@ -371,7 +371,7 @@ bool EnergyShapeParticle::hasTailFollower() const {
 
 EnergyShapeSystem::EnergyShapeSystem(const int numParticles,
                                      const int numEnergyRoots,
-                                     const double holeProb,
+                                     const double sparseness,
                                      const double capacity,
                                      const double demand,
                                      const double transferRate) {
@@ -383,52 +383,56 @@ EnergyShapeSystem::EnergyShapeSystem(const int numParticles,
                                  demand, transferRate,
                                  EnergyShapeParticle::EnergyState::Idle,
                                  EnergyShapeParticle::ShapeState::Seed));
-  occupied.insert(Node(0, 0));
 
-  std::set<Node> candidates;
+  std::vector<Node> candidates;
+  std::vector<double> l1dists;
   for (int i = 0; i < 6; ++i) {
-    candidates.insert(Node(0, 0).nodeInDir(i));
+    candidates.push_back(Node(0, 0).nodeInDir(i));
+    l1dists.push_back(L1Dist(Node(0, 0).nodeInDir(i)));
   }
 
   // Add all other particles.
   int particlesAdded = 1;
-  while (particlesAdded < numParticles && !candidates.empty()) {
-    // Pick a random candidate node.
-    int randIndex = randInt(0, candidates.size());
-    Node randCand;
-    for (auto cand = candidates.begin(); cand != candidates.end(); ++cand) {
-      if (randIndex == 0) {
-        randCand = *cand;
-        candidates.erase(cand);
-        break;
-      } else {
-        randIndex--;
-      }
-    }
+  while (particlesAdded < numParticles) {
+    int index = randInt(0, candidates.size());
 
-    // With probability 1 - holeProb, add a new particle at the candidate node.
-    if (randBool(1.0 - holeProb)) {
-      insert(new EnergyShapeParticle(randCand, -1, randDir(), *this, capacity,
-                                     demand, transferRate,
+    std::vector<double> probs = probabilityWeights(l1dists, sparseness);
+
+    if (randBool(probs[index]/std::accumulate(probs.begin(), probs.end(), 0.0)))
+    {
+      Node nextParticle = candidates[index];
+
+      insert(new EnergyShapeParticle(nextParticle, -1, randDir(), *this,
+                                     capacity, demand, transferRate,
                                      EnergyShapeParticle::EnergyState::Idle,
                                      EnergyShapeParticle::ShapeState::Idle));
-      occupied.insert(randCand);
       particlesAdded++;
+
+      candidates.erase(candidates.begin()+index);
+      l1dists.erase(l1dists.begin()+index);
+
+      EnergyShapeParticle tmp = EnergyShapeParticle(nextParticle, -1, 0, *this,
+                                                    capacity, demand,
+                                                    transferRate,
+                                                    EnergyShapeParticle::\
+                                                    EnergyState::Idle,
+                                                    EnergyShapeParticle::\
+                                                    ShapeState::Idle);
 
       // Add new candidates.
       for (int i = 0; i < 6; ++i) {
-        if (occupied.find(randCand.nodeInDir(i)) == occupied.end()) {
-          candidates.insert(randCand.nodeInDir(i));
+        if (!tmp.hasNbrAtLabel(i)) {
+          if(std::find(candidates.begin(), candidates.end(),
+                       nextParticle.nodeInDir(i)) == candidates.end()) {
+            candidates.push_back(nextParticle.nodeInDir(i));
+            l1dists.push_back(L1Dist(nextParticle.nodeInDir(i)));
+          }
         }
       }
     }
   }
 
   // Choose particles at random to make energy ditribution roots.
-  // BUG: If holeProb is large (e.g., > 0.7), then not all n particles will be
-  // instantiated in the system. That will cause the particles[large index] call
-  // to seg-fault and AmoebotSim to crash. This is an issue with all system
-  // constructors that use the random tree algorithm.
   std::vector<int> indices;
   for (int i = 0; i < numParticles; ++i) {
     indices.push_back(i);
@@ -451,4 +455,60 @@ bool EnergyShapeSystem::hasTerminated() const {
   }
 
   return true;
+}
+
+int EnergyShapeSystem::L1Dist(Node p) {
+  if (p.x >= 0 && p.y >= 0) {
+    return abs(p.x) + abs(p.y);
+  }
+  else if (p.x <= 0 && p.y <= 0) {
+    return abs(p.x) + abs(p.y);
+  }
+  else {
+    if (abs(p.x) >= abs(p.y)) {
+      return abs(p.x);
+    }
+    else {
+      return abs(p.y);
+    }
+  }
+}
+
+std::vector<double> EnergyShapeSystem::probabilityWeights(std::vector<double>
+                                                             dists, double
+                                                             sparseness) {
+
+  int n = dists.size();
+
+  if ( std::equal(dists.begin() + 1, dists.end(), dists.begin()) ) {
+    for (int i = 0; i < n; i++) {
+      dists[i] = 0.5;
+    }
+    return dists;
+  }
+
+  double expon_factor = pow(100, sparseness);
+  for (int i = 0; i < n; i++) {
+    dists[i] = pow(dists[i], expon_factor);
+  }
+
+  if (sparseness < .5) {
+    for (int k = 0; k < n; k++) {
+      dists[k] = 1/dists[k];
+    }
+  } else if (sparseness > .5) {
+    sparseness = 1 - sparseness;
+  }
+
+  double min_map_bound = 0 + sparseness;
+  double max_map_bound = 1 - sparseness;
+
+  double min = *std::min_element(dists.begin(), dists.end());
+  double max = *std::max_element(dists.begin(), dists.end());
+  for (int k = 0; k < n; k++) {
+    dists[k] = ((dists[k]-min)/(max-min)) * (max_map_bound - min_map_bound) +
+        min_map_bound;
+  }
+
+  return dists;
 }

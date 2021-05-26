@@ -87,14 +87,22 @@ class InfObjCoatingSystem : public AmoebotSystem {
  public:
   // Constructs a system of InfObjCoatingParticles connected to a randomly
   // generated surface (with no tunnels). Takes an optionally specified size
-  // (#particles) and a hole probability. holeProb in [0,1] controls how "spread
+  // (#particles) and sparseness value. sparseness in [0,1] controls how "spread
   // out" the system is; closer to 0 is more compressed, closer to 1 is more
   // expanded.
-  InfObjCoatingSystem(uint numParticles = 100, double holeProb = 0.2);
+  InfObjCoatingSystem(uint numParticles = 100, double sparseness = 0.2);
 
   // Checks whether or not the system has completed infinite object coating (all
   // particles contracted and on the object.
   bool hasTerminated() const override;
+
+  // Returns the L1-distance between a given node and the origin (0,0).
+  int L1Dist(Node p, Node root);
+
+  // Translates L1-distances into probabilities according to the specified level
+  // of sparseness.
+  std::vector<double> probabilityWeights(std::vector<double> dists, double
+                                         sparseness);
 };
 
 #endif  // AMOEBOTSIM_ALG_INFOBJCOATING_H_
