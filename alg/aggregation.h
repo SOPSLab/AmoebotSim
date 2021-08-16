@@ -1,10 +1,10 @@
+/* Copyright (C) 2021 Joshua J. Daymude, Robert Gmyr, and Kristian Hinnenthal.
+ * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
+ * notice can be found at the top of main/main.cpp. */
+
 // Defines the particle system and composing particles for the swarm aggregation
-// algorithm as defined in 'Self-organized aggregation without computation'
-// [journals.sagepub.com/doi/abs/10.1177/0278364914525244]. This implementation
-// varies from the above Gauci et. al algorithm due to the inclusion of noise.
-//
-// Run with aggregation(#particles, mode, noiseVal) on the
-// simulator command line.
+// algorithm as defined in 'Invited Paper: Deadlcok and Noise in Self-Organized
+// Aggregation Without Computation' [arxiv link TODO].
 //
 // Basic description:
 // The initial state of the system is created by randomly distributing particles
