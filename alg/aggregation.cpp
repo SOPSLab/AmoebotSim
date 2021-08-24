@@ -21,7 +21,7 @@ AggregateParticle::AggregateParticle(const Node head, const int globalTailDir,
 void AggregateParticle::activate() {
   bool particleInSight = checkIfParticleInSight();
 
-  if (mode == "d") {    // deadlock perturbation noise
+  if (mode == "d") {    // Deadlock perturbation noise.
     int perturbCounterMax = noiseVal;
 
     if (particleInSight) {
@@ -43,7 +43,7 @@ void AggregateParticle::activate() {
      }
     }
   }
-  else {    // mode = "e", error probability noise
+  else {    // Mode = "e", error probability noise.
     double probNum = randDouble(0, 1);
     if (probNum < noiseVal) {
       if (particleInSight == true) {
@@ -97,10 +97,8 @@ AggregateParticle& AggregateParticle::nbrAtLabel(int label) const {
 }
 
 bool AggregateParticle::checkIfParticleInSight() const {
-  int sightScope = (center + 4) % 6;    // 90 degrees clockwise from center
+  int sightScope = (center + 4) % 6;
 
-  // cone from sightScope variable val to sightScope+1
-  // sightScope val not included, sightScope+1 included
   for (auto p: particles) {
     int distX = abs(p->head.x - head.x);
     int distY = abs(p->head.y - head.y);
@@ -150,11 +148,6 @@ AggregateSystem::AggregateSystem(int numParticles, QString mode,
   _measures.push_back(new DispersionMeasure("Dispersion", 1, *this));
   _measures.push_back(new ClusterFractionMeasure("Cluster Fraction", 1, *this));
 
-  // Set initial value of currentVal to the an extremely non-optimal value of
-  // the relevant metric.
-//  currentval = 0;   // cluster fraction
-//  currentval = 1e18;    // dispersion, convex hull perimeter, SED circumf.
-
   Q_ASSERT(mode == "d" or mode == "e");
   Q_ASSERT(noiseVal >= 0);
   Q_ASSERT(numParticles > 0);
@@ -186,14 +179,9 @@ AggregateSystem::AggregateSystem(int numParticles, QString mode,
   }
 }
 
-
-
-
 double dist(const QVector<double> a, const QVector<double> b) {
   return sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2));
 }
-
-
 
 ConvexHullMeasure::ConvexHullMeasure(const QString name, const unsigned int freq,
                                            AggregateSystem& system)
@@ -322,11 +310,8 @@ double ConvexHullMeasure::calculate() const {
     }
   }
 
-//  _system.currentval = perimeter;
   return perimeter;
 }
-
-
 
 struct Circle {
     QVector<double> C;
@@ -337,17 +322,12 @@ bool isInside(const Circle& c, const QVector<double> p) {
   return dist(c.C, p) <= c.R;
 }
 
-// Find circle given three points A, B, and C that are on it.
-// Uses the fact that the perpendicular bisectors of two chords intersect at the
-// center of the circle.
 Circle circleFromThree(const QVector<double> a, const QVector<double> b,
                        const QVector<double> c) {
   double slopeAB, slopeBC, L1slope, L2slope, centerX, centerY = 0.0;
 
-  // midpoints of the two chords
   const vector<double> mpAB = { (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0 };
   const vector<double> mpBC = { (b[0] + c[0]) / 2.0, (b[1] + c[1]) / 2.0 };
-
 
   if (a[0] == b[0] && b[1] == c[1]) {
     centerX = mpBC[0];
@@ -389,15 +369,11 @@ Circle circleFromThree(const QVector<double> a, const QVector<double> b,
   return {center, dist(center, b)};
 }
 
-// Find circle given two points A and B that are on it.
-// Returns circle in which AB is the diamter.
-// Therefore, center is midpoint of AB and radius is |AB| / 2.
 Circle circleFromTwo(const QVector<double> a, const QVector<double> b) {
   const QVector<double> center = { (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0 };
   return {center, dist(a, b) / 2.0};
 }
 
-// Checks if all points are inside the circle, therefore making it valid.
 bool isValidCircle(const Circle& c, const QVector< QVector<double> > points) {
   const int n = points.size();
   for (int i = 0; i < n; i++) {
@@ -419,7 +395,6 @@ Circle minCircleTrivial(QVector< QVector<double> >& points) {
     return circleFromTwo(points[0], points[1]);
   }
 
-  // check if SED can be determined by 2 points only
   for (int i = 0; i < 3; i++) {
     for (int j = i + 1; j < 3; j++) {
       Circle c = circleFromTwo(points[i], points[j]);
@@ -431,24 +406,20 @@ Circle minCircleTrivial(QVector< QVector<double> >& points) {
   return circleFromThree(points[0], points[1], points[2]);
 }
 
-// Returns the SED using Welzl's algorithm
+// Returns the smallest enclosing disc (SED) using Welzl's algorithm.
 // P = set of input points, R = set of points on circle boundary, n = number of
-// points in P not yet processed
-Circle welzlHelper(QVector< QVector<double> >& P,
-          QVector< QVector<double> > R, int n) {
-  // Base case - all points processed or |R| = 3
+// points in P not yet processed.
+Circle welzlHelper(QVector< QVector<double> >& P, QVector< QVector<double> > R,
+                   int n) {
   if (n == 0 || R.size() == 3) {
     return minCircleTrivial(R);
   }
 
-  // Pick random point
   int idx = rand() % n;
   QVector<double> p = P[idx];
 
-  // Put picked point at end of P
   swap(P[idx], P[n - 1]);
 
-  // SED d from the set of points P - {p}
   Circle d = welzlHelper(P, R, n - 1);
 
   if (isInside(d, p)) {
@@ -456,7 +427,6 @@ Circle welzlHelper(QVector< QVector<double> >& P,
   }
   R.push_back(p);
 
-  // Return SED for P - {p} and R U {p}
   return welzlHelper(P, R, n - 1);
 }
 
@@ -465,7 +435,6 @@ Circle welzl(const QVector< QVector<double> >& P) {
   random_shuffle(P_copy.begin(), P_copy.end());
   return welzlHelper(P_copy, {}, P_copy.size());
 }
-
 
 SEDMeasure::SEDMeasure(const QString name, const unsigned int freq,
                        AggregateSystem& system)
@@ -481,11 +450,8 @@ double SEDMeasure::calculate() const {
 
   Circle sed = welzl(points);
 
-//  _system.currentval = ( (sed.R) * 2.0 ) * M_PI;
   return ( (sed.R) * 2.0 ) * M_PI;
 }
-
-
 
 DispersionMeasure::DispersionMeasure(const QString name, const unsigned int freq,
                                            AggregateSystem& system)
@@ -502,24 +468,21 @@ double DispersionMeasure::calculate() const {
 
   int n = points.length();
 
-  double x_sum = 0;
-  double y_sum = 0;
+  double xSum = 0;
+  double ySum = 0;
   for (int i = 0; i < n; i++) {
-    x_sum += points[i][0];
-    y_sum += points[i][1];
+    xSum += points[i][0];
+    ySum += points[i][1];
   }
-  QVector<double> centroid = {x_sum / n, y_sum / n};
+  QVector<double> centroid = {xSum / n, ySum / n};
 
-  double dispersion_sum = 0;
+  double dispersionSum = 0;
   for (int i = 0; i < n; i++) {
-    dispersion_sum += dist(centroid, points[i]);
+    dispersionSum += dist(centroid, points[i]);
   }
 
-//  _system.currentval = dispersion_sum;
-  return dispersion_sum;
+  return dispersionSum;
 }
-
-
 
 void AggregateSystem::DFS(AggregateParticle& particle, const AggregateSystem& system,
          std::vector<AggregateParticle>& clusterVec) {
@@ -556,7 +519,6 @@ double ClusterFractionMeasure::calculate() const {
     }
   }
 
-
   int numInMaxCluster = allClusterList[0].size();
   int cn = allClusterList.size();
   for (int i = 0; i < cn; i++) {
@@ -565,78 +527,11 @@ double ClusterFractionMeasure::calculate() const {
     }
   }
 
-  double double_numInMaxCluster = numInMaxCluster;
-  double double_systemSize = _system.size();
-//  _system.currentval = (double_numInMaxCluster / double_systemSize);
-  return (double_numInMaxCluster / double_systemSize);
+  double doubleNumInMaxCluster = numInMaxCluster;
+  double doubleSystemSize = _system.size();
+  return (doubleNumInMaxCluster / doubleSystemSize);
 }
 
-
-
-
-// To use a stopping condition, uncomment the relevant section of code and
-// comment out the default "return false".
-// To use stopping conditions, currentVal must be made active in the necessary
-// locations. Additionally, the "const" and "const final" attribute of the
-// calculate() function of the Metric/Measure class must be removed.
 bool AggregateSystem::hasTerminated() const {
-//  double num_particles = size();
-
-
-//  // convex hull per.
-//  double ideal_cluster = 1.959050785 * pow(num_particles, 0.603108546);
-
-//  // dispersion
-//  int num_rings, ideal_cluster;
-//  if (num_particles >= 169) {
-//   num_rings = 7;
-//   ideal_cluster = (0*1) + (1*6) + (2*12) + (3*18) + (4*24) + (5*30) + (6*36) + (7*42) + ( (num_particles-169) * (num_rings+1) );
-//  } else if (num_particles >= 127) {
-//   num_rings = 6;
-//   ideal_cluster = (0*1) + (1*6) + (2*12) + (3*18) + (4*24) + (5*30) + (6*36) + ( (num_particles-127) * (num_rings+1) );
-//  } else if (num_particles >= 91) {
-//   num_rings = 5;
-//   ideal_cluster = (0*1) + (1*6) + (2*12) + (3*18) + (4*24) + (5*30) + ( (num_particles-91) * (num_rings+1) );
-//  } else if (num_particles >= 61) {
-//   num_rings = 4;
-//   ideal_cluster = (0*1) + (1*6) + (2*12) + (3*18) + (4*24) + ( (num_particles-61) * (num_rings+1) );
-//  } else if (num_particles >= 37) {
-//   num_rings = 3;
-//   ideal_cluster = (0*1) + (1*6) + (2*12) + (3*18) + ( (num_particles-31) * (num_rings+1) );
-//  } else if (num_particles >= 19) {
-//   num_rings = 2;
-//   ideal_cluster = (0*1) + (1*6) + (2*12) + ( (num_particles-19) * (num_rings+1) );
-//  } else if (num_particles >= 7) {
-//   num_rings = 1;
-//   ideal_cluster = (0*1) + (1*6) + ( (num_particles-7) * (num_rings+1) );
-//  } else {
-//   num_rings = 0;
-//   ideal_cluster = (num_particles-1) * 1;
-//  }
-
-//  if ( currentval <= (1.15 * ideal_cluster) ) {
-//    return true;
-//  } else {
-//    return false;
-//  }
-
-
-//  // mec circumf.
-//  double ideal_cluster = 2.033785231 * pow(num_particles, 0.6059016911);
-//  if ( currentval <= (1.25 * ideal_cluster) ) {
-//    return true;
-//  } else {
-//    return false;
-//  }
-
-
-//  // clust frac.
-//  if ( currentval >= 1) {
-//    return true;
-//  } else {
-//    return false;
-//  }
-
-
-  return false;
+    return false;
 }

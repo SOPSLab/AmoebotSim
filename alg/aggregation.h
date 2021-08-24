@@ -2,9 +2,10 @@
  * The full GNU GPLv3 can be found in the LICENSE file, and the full copyright
  * notice can be found at the top of main/main.cpp. */
 
-// Defines the particle system and composing particles for the swarm aggregation
-// algorithm as defined in 'Invited Paper: Deadlcok and Noise in Self-Organized
-// Aggregation Without Computation' [arxiv link TODO].
+// Defines the particle system and composing particles for the noisy, discrete
+// adaptation of the swarm aggregation algorithm as defined in 'Deadlcok and
+// Noise in Self-Organized Aggregation Without Computation'
+// [arxiv.org/abs/2108.09403].
 //
 // Basic description:
 // The initial state of the system is created by randomly distributing particles
@@ -23,7 +24,7 @@
 // deadlock state activations needed before perturbing.
 // 2) Error Probability (mode = "e") - checkIfParticleSight() function outputs
 // the incorrect reading at a certain probability p. noiseVal (double in [0,1])
-// represents the error probability p.
+// represents this error probability p.
 // Note: to achieve an algorithm with zero noise, use mode="e" and noiseVal=0
 
 #ifndef AMOEBOTSIM_ALG_AGGREGATION_H
@@ -73,18 +74,17 @@ class AggregateParticle : public AmoebotParticle {
 
   // Helper function to determine whether or not a particle may be seen within
   // the current particle's field of vision. The field of vision that the
-  // particle uses is determined by the cone starting from (center + 5) % 6 and
-  // ending at (center + 4) % 6
+  // particle uses is determined by the cone starting from (center + 4) % 6 (not
+  // included) and ending at (center + 5) % 6 (included).
   bool checkIfParticleInSight() const;
-
 
  protected:
   int center;
   QString mode;
   double noiseVal;
+  std::vector<AggregateParticle*> particles;
   int perturb;
   bool visited;
-  std::vector<AggregateParticle*> particles;
 
  private:
   friend class AggregateSystem;
@@ -99,37 +99,25 @@ class AggregateSystem : public AmoebotSystem  {
  public:
   // Constructs a system of AggregateParticles with an optionally specified size
   // (#particles), form of noise (mode), and amount/value of noise (noiseVal).
-  // The spread of the particles in the system is limited by a box whose
-  // dimensions are based off of the number of particles available in the system
-  // (with a lower bound of 50 for the box dimensions)
   AggregateSystem(int numParticles = 2, QString mode = "d",
                   double noiseVal = 3.0);
 
   // Checks whether or not the system's run of the aggregation algorithm has
-  // terminated. By default, always returns false. Edit the function in
-  // aggregation.cpp to instead use one of the metric-based stopping conditions
-  // defined there.
+  // terminated. Returns false by defualt.
   bool hasTerminated() const override;
 
-  // Used when a stopping condition is active. Represents the most recent value
-  // of the metric used in the specified stopping condition.
-//  double currentval;
-
 private:
-  // Depth-first search (DFS) for the cluster fraction metric.
+  // Depth-first search (DFS) helper function used in the cluster fraction
+  // metric.
   void DFS(AggregateParticle& particle, const AggregateSystem& system,
            std::vector<AggregateParticle>& clusterVec);
 
 };
 
-
-// Calculates distance between two points. For each point, ccepts a
-// QVector<double> containing the individual coordinates (does not accept
-// AggregateParticle as parameter).
+// Returns the Euclidian distance between two points.
 double dist(const QVector<double> a, const QVector<double> b);
 
-
-// Returns the perimeter of the convex hull of the system
+// Returns the perimeter of the convex hull of the system.
 class ConvexHullMeasure : public Measure {
 
 public:
@@ -142,8 +130,7 @@ protected:
   AggregateSystem& _system;
 };
 
-
-// Helper functions for SEDMeasure
+// Helper functions for SEDMeasure.
 struct Circle;
 bool isInside(const Circle& c, const QVector<double> p);
 Circle circleFromThree(const QVector<double> a, const QVector<double> b,
@@ -151,7 +138,7 @@ Circle circleFromThree(const QVector<double> a, const QVector<double> b,
 Circle circleFromTwo(const QVector<double> a, const QVector<double> b);
 bool isValidCircle(const Circle& c, const QVector< QVector<double> > points);
 
-// Returns the circumference of the smallest enclosing disc(SED) of the system
+// Returns the circumference of the smallest enclosing disc (SED) of the system.
 class SEDMeasure : public Measure {
 
 public:
@@ -164,10 +151,9 @@ protected:
   AggregateSystem& _system;
 };
 
-
 // Returns the dispersion (2nd moment) value of the system. Dispersion is
-// defined as the average distance between all particles and the centroid
-// (x avg, Yavg) of the system.
+// defined as the sum of distances between all particles and the centroid
+// (x avg, y avg) of the system.
 class DispersionMeasure : public Measure {
 
 public:
@@ -179,7 +165,6 @@ public:
 protected:
   AggregateSystem& _system;
 };
-
 
 // Returns the cluster fraction value of the system. Cluster fraction is defined
 // as the fraction of the system's particles that are connected to the largest
