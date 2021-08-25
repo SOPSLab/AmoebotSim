@@ -7,16 +7,6 @@
 // Noise in Self-Organized Aggregation Without Computation'
 // [arxiv.org/abs/2108.09403].
 //
-// Basic description:
-// The initial state of the system is created by randomly distributing particles
-// within a box. After this, the particles attempt to aggregate together by
-// executing the following rules:
-// 1) If there is a particle in sight, rotate in place clockwise, thus shifting
-// the particle's center of rotation.
-// 2) If there is no such particle in sight, move around the center of rotation
-// in a clockwise direction, thus shifting the particle's position as well as
-// the direction of its field of vision.
-//
 // Two forms of noise:
 // 1) Deadlock Perturbation (mode = "d") - If blocked when attempting the move
 // around the center of rotation (deadlock state), rotate in place to break
@@ -91,8 +81,8 @@ class AggregateParticle : public AmoebotParticle {
 };
 
 class AggregateSystem : public AmoebotSystem  {
-  friend class ConvexHullMeasure;
   friend class SEDMeasure;
+  friend class ConvexHullMeasure;
   friend class DispersionMeasure;
   friend class ClusterFractionMeasure;
 
@@ -117,18 +107,19 @@ private:
 // Returns the Euclidian distance between two points.
 double dist(const QVector<double> a, const QVector<double> b);
 
-// Returns the perimeter of the convex hull of the system.
-class ConvexHullMeasure : public Measure {
-
-public:
-  ConvexHullMeasure(const QString name, const unsigned int freq,
-                       AggregateSystem& system);
-
-  double calculate() const final;
-
-protected:
-  AggregateSystem& _system;
-};
+/* Copyright (c) 2020 Project Nayuki
+ * https://www.nayuki.io/page/smallest-enclosing-circle
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program (see COPYING.txt and COPYING.LESSER.txt).
+ * If not, see <http://www.gnu.org/licenses/>. */
 
 // Helper functions for SEDMeasure.
 struct Circle;
@@ -143,6 +134,19 @@ class SEDMeasure : public Measure {
 
 public:
   SEDMeasure(const QString name, const unsigned int freq,
+                       AggregateSystem& system);
+
+  double calculate() const final;
+
+protected:
+  AggregateSystem& _system;
+};
+
+// Returns the perimeter of the convex hull of the system.
+class ConvexHullMeasure : public Measure {
+
+public:
+  ConvexHullMeasure(const QString name, const unsigned int freq,
                        AggregateSystem& system);
 
   double calculate() const final;

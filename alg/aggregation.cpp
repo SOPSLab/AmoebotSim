@@ -25,10 +25,13 @@ void AggregateParticle::activate() {
     int perturbCounterMax = noiseVal;
 
     if (particleInSight) {
+      // Particle in sight, rotate clockwise in place.
       center = (center + 5) % 6;
       perturb = 0;
     }
     else {
+     // No particle in sight, move clockwise around center of rotation (taking
+     // into account perturbation rules).
      int moveDir = (center + 1) % 6;
      if (!hasNbrAtLabel(moveDir)) {
        expand(moveDir);
@@ -54,8 +57,10 @@ void AggregateParticle::activate() {
     }
 
     if (particleInSight) {
+      // "Particle in sight", rotate clockwise in place.
       center = (center + 5) % 6;
     } else {
+      // "No particle in sight", move clockwise around center of rotation.
       int moveDir = (center + 1) % 6;
       if (!hasNbrAtLabel(moveDir)) {
         expand(moveDir);
@@ -181,136 +186,6 @@ AggregateSystem::AggregateSystem(int numParticles, QString mode,
 
 double dist(const QVector<double> a, const QVector<double> b) {
   return sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2));
-}
-
-ConvexHullMeasure::ConvexHullMeasure(const QString name, const unsigned int freq,
-                                           AggregateSystem& system)
-  : Measure(name, freq),
-    _system(system) {}
-
-double ConvexHullMeasure::calculate() const {
-  QVector< QVector<double> > hull;
-
-  QVector< QVector<double> > points;
-
-  for (const auto& p : _system.particles) {
-    points.push_back( { ( p->head.x + (p->head.y / 2.0) ),
-                        ( p->head.y * (sqrt(3.0) / 2.0) ) } );
-  }
-
-  std::sort(points.begin(), points.end());
-  points.erase(std::unique(points.begin(), points.end()), points.end());
-
-  int n = points.size();
-
-
-  int l = 0;
-  for (int i = 0; i < n; i++) {
-    if (points[i][0] <= points[l][0]) {
-      l = i;
-    }
-  }
-
-  QVector<double> pointOnHull = points[l];
-  QVector<double> firstPoint = pointOnHull;
-  QVector<double> endpoint;
-  QVector<double> beforeInitialPoint;
-  double a, b, c, theta, maxTheta;
-  QVector< QVector<double> > maxThetaCandidates;
-
-  int i = 0;
-  do {
-    hull.push_back(pointOnHull);
-    if (i != 0) {
-      points.erase(std::remove(points.begin(), points.end(), pointOnHull));
-    }
-
-    endpoint = points[0];
-    maxTheta = 0;
-    n = points.size();
-    for (int j = 0; j < n; j++) {
-      if (i == 0) {
-        beforeInitialPoint = { hull[i][0], hull[i][1] - 10.0 };
-        a = dist(hull[i], points[j]);
-        b = dist(beforeInitialPoint, points[j]);
-        c = dist(beforeInitialPoint, hull[i]);
-        if (a != 0 && b != 0 && c != 0) {
-          if ( (c+a) == b ) {
-            theta = M_PI;
-          }
-          else {
-            theta = acos( ((a*a) + (c*c) - (b*b)) / (2 * a * c) );
-          }
-        }
-      } else {
-        a = dist(hull[i], points[j]);
-        b = dist(hull[i-1], points[j]);
-        c = dist(hull[i-1], hull[i]);
-        if (a != 0 && b != 0 && c != 0) {
-          if ( (c+a) == b ) {
-            theta = M_PI;
-          }
-          else if ( (a+b) == c ) {
-            theta = 0.0;
-          }
-          else {
-            if ( ( ((a*a) + (c*c) - (b*b)) / (2 * a * c) ) > 1 &&
-                 ( ((a*a) + (c*c) - (b*b)) / (2 * a * c) ) < 1.005 ) {
-              theta = 0.0;
-            }
-            else if ( ( ((a*a) + (c*c) - (b*b)) / (2 * a * c) ) < -1 &&
-                      ( ((a*a) + (c*c) - (b*b)) / (2 * a * c) ) > -1.005 ) {
-              theta = M_PI;
-            }
-            else {
-              theta = acos( ((a*a) + (c*c) - (b*b)) / (2 * a * c) );
-            }
-          }
-        }
-
-        if (i == 1) {
-          if (points[j] == firstPoint) {
-            theta = 0.0;
-          }
-        }
-      }
-
-      if (endpoint == pointOnHull) {
-        endpoint = points[j];
-      }
-      else if (theta > maxTheta) {
-        maxTheta = theta;
-        endpoint = points[j];
-        maxThetaCandidates.clear();
-        maxThetaCandidates.push_back(points[j]);
-      }
-      else if (theta == maxTheta) {
-        maxThetaCandidates.push_back(points[j]);
-        int numCandidates = maxThetaCandidates.size();
-        double maximumDist = 0.0;
-        for (int z = 0; z < numCandidates; z++) {
-          if ( dist(hull[i], maxThetaCandidates[z]) > maximumDist ) {
-            endpoint = maxThetaCandidates[z];
-          }
-        }
-      }
-    }
-
-    pointOnHull = endpoint;
-    i += 1;
-  } while (endpoint != hull[0]);
-
-  int hn = hull.size();
-  double perimeter = 0.0;
-  for (int i = 0; i < hn; i++) {
-    if (i == hn-1) {
-      perimeter += dist(hull[i], hull[0]);
-    } else {
-      perimeter += dist(hull[i], hull[i+1]);
-    }
-  }
-
-  return perimeter;
 }
 
 struct Circle {
@@ -451,6 +326,138 @@ double SEDMeasure::calculate() const {
   Circle sed = welzl(points);
 
   return ( (sed.R) * 2.0 ) * M_PI;
+}
+
+ConvexHullMeasure::ConvexHullMeasure(const QString name, const unsigned int freq,
+                                           AggregateSystem& system)
+  : Measure(name, freq),
+    _system(system) {}
+
+// Returns the perimeter of the convex hull of the system, using the gift
+// wrapping algorithm.
+double ConvexHullMeasure::calculate() const {
+  QVector< QVector<double> > hull;
+
+  QVector< QVector<double> > points;
+
+  for (const auto& p : _system.particles) {
+    points.push_back( { ( p->head.x + (p->head.y / 2.0) ),
+                        ( p->head.y * (sqrt(3.0) / 2.0) ) } );
+  }
+
+  std::sort(points.begin(), points.end());
+  points.erase(std::unique(points.begin(), points.end()), points.end());
+
+  int n = points.size();
+
+
+  int l = 0;
+  for (int i = 0; i < n; i++) {
+    if (points[i][0] <= points[l][0]) {
+      l = i;
+    }
+  }
+
+  QVector<double> pointOnHull = points[l];
+  QVector<double> firstPoint = pointOnHull;
+  QVector<double> endpoint;
+  QVector<double> beforeInitialPoint;
+  double a, b, c, theta, maxTheta;
+  QVector< QVector<double> > maxThetaCandidates;
+
+  int i = 0;
+  do {
+    hull.push_back(pointOnHull);
+    if (i != 0) {
+      points.erase(std::remove(points.begin(), points.end(), pointOnHull));
+    }
+
+    endpoint = points[0];
+    maxTheta = 0;
+    n = points.size();
+    for (int j = 0; j < n; j++) {
+      if (i == 0) {
+        beforeInitialPoint = { hull[i][0], hull[i][1] - 10.0 };
+        a = dist(hull[i], points[j]);
+        b = dist(beforeInitialPoint, points[j]);
+        c = dist(beforeInitialPoint, hull[i]);
+        if (a != 0 && b != 0 && c != 0) {
+          if ( (c+a) == b ) {
+            theta = M_PI;
+          }
+          else {
+            theta = acos( ((a*a) + (c*c) - (b*b)) / (2 * a * c) );
+          }
+        }
+      } else {
+        a = dist(hull[i], points[j]);
+        b = dist(hull[i-1], points[j]);
+        c = dist(hull[i-1], hull[i]);
+        if (a != 0 && b != 0 && c != 0) {
+          if ( (c+a) == b ) {
+            theta = M_PI;
+          }
+          else if ( (a+b) == c ) {
+            theta = 0.0;
+          }
+          else {
+            if ( ( ((a*a) + (c*c) - (b*b)) / (2 * a * c) ) > 1 &&
+                 ( ((a*a) + (c*c) - (b*b)) / (2 * a * c) ) < 1.005 ) {
+              theta = 0.0;
+            }
+            else if ( ( ((a*a) + (c*c) - (b*b)) / (2 * a * c) ) < -1 &&
+                      ( ((a*a) + (c*c) - (b*b)) / (2 * a * c) ) > -1.005 ) {
+              theta = M_PI;
+            }
+            else {
+              theta = acos( ((a*a) + (c*c) - (b*b)) / (2 * a * c) );
+            }
+          }
+        }
+
+        if (i == 1) {
+          if (points[j] == firstPoint) {
+            theta = 0.0;
+          }
+        }
+      }
+
+      if (endpoint == pointOnHull) {
+        endpoint = points[j];
+      }
+      else if (theta > maxTheta) {
+        maxTheta = theta;
+        endpoint = points[j];
+        maxThetaCandidates.clear();
+        maxThetaCandidates.push_back(points[j]);
+      }
+      else if (theta == maxTheta) {
+        maxThetaCandidates.push_back(points[j]);
+        int numCandidates = maxThetaCandidates.size();
+        double maximumDist = 0.0;
+        for (int z = 0; z < numCandidates; z++) {
+          if ( dist(hull[i], maxThetaCandidates[z]) > maximumDist ) {
+            endpoint = maxThetaCandidates[z];
+          }
+        }
+      }
+    }
+
+    pointOnHull = endpoint;
+    i += 1;
+  } while (endpoint != hull[0]);
+
+  int hn = hull.size();
+  double perimeter = 0.0;
+  for (int i = 0; i < hn; i++) {
+    if (i == hn-1) {
+      perimeter += dist(hull[i], hull[0]);
+    } else {
+      perimeter += dist(hull[i], hull[i+1]);
+    }
+  }
+
+  return perimeter;
 }
 
 DispersionMeasure::DispersionMeasure(const QString name, const unsigned int freq,
