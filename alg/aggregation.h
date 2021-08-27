@@ -3,7 +3,7 @@
  * notice can be found at the top of main/main.cpp. */
 
 // Defines the particle system and composing particles for the noisy, discrete
-// adaptation of the swarm aggregation algorithm as defined in 'Deadlcok and
+// adaptation of the swarm aggregation algorithm as defined in 'Deadlock and
 // Noise in Self-Organized Aggregation Without Computation'
 // [arxiv.org/abs/2108.09403].
 //
