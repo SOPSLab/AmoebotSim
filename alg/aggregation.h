@@ -8,14 +8,14 @@
 // [arxiv.org/abs/2108.09403].
 //
 // Two forms of noise:
-// 1) Deadlock Perturbation (mode = "d") - If blocked when attempting the move
+// 1) Deadlock Perturbation (mode = "d") - If blocked when attempting to move
 // around the center of rotation (deadlock state), rotate in place to break
 // symmetry. noiseVal (integer > 0) represents the number of consecutive
 // deadlock state activations needed before perturbing.
 // 2) Error Probability (mode = "e") - checkIfParticleSight() function outputs
 // the incorrect reading at a certain probability p. noiseVal (double in [0,1])
 // represents this error probability p.
-// Note: to achieve an algorithm with zero noise, use mode="e" and noiseVal=0
+// Note: to achieve an algorithm with zero noise, use mode="e" and noiseVal=0.
 
 #ifndef AMOEBOTSIM_ALG_AGGREGATION_H
 #define AMOEBOTSIM_ALG_AGGREGATION_H
@@ -97,8 +97,7 @@ class AggregateSystem : public AmoebotSystem  {
   bool hasTerminated() const override;
 
 private:
-  // Depth-first search (DFS) helper function used in the cluster fraction
-  // metric.
+  // Depth-first search (DFS) used in the cluster fraction metric.
   void DFS(AggregateParticle& particle, const AggregateSystem& system,
            std::vector<AggregateParticle>& clusterVec);
 

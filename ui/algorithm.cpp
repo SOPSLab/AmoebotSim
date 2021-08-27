@@ -143,13 +143,12 @@ void AggregationAlg::instantiate(const int numParticles, const QString mode,
   std::set<QString> set = {"d", "e"};
   if (numParticles <= 0) {
     emit log("# particles must be > 0", true);
-  } else if (set.find(mode) == set.end()) {
-    QString accepted = "";
-    for(std::set<QString>::iterator it = set.begin(); it != set.end(); ++it) {
-      if (accepted != "") accepted = accepted + ", " + *it;
-      else accepted = *it;
-    }
-    emit log("only accepted modes are: " + accepted, true);
+  } else if (mode != "d" && mode != "e") {
+    emit log("only accepted modes are: d, e", true);
+  } else if (mode == "d" && noiseVal <= 0) {
+    emit log("noiseVal must be > 0", true);
+  } else if (mode == "e" && (noiseVal < 0 || noiseVal > 1)) {
+    emit log("noiseVal must be in [0,1]", true);
   } else {
     emit setSystem(std::make_shared<AggregateSystem>(numParticles, mode,
                                                      noiseVal));

@@ -333,7 +333,7 @@ ConvexHullMeasure::ConvexHullMeasure(const QString name, const unsigned int freq
   : Measure(name, freq),
     _system(system) {}
 
-// Returns the perimeter of the convex hull of the system, using the gift
+// Returns the perimeter of the convex hull of the system using the gift
 // wrapping algorithm.
 double ConvexHullMeasure::calculate() const {
   QVector< QVector<double> > hull;
