@@ -14,6 +14,7 @@ HEADERS += \
     alg/demo/dynamicdemo.h \
     alg/demo/metricsdemo.h \
     alg/demo/tokendemo.h \
+    alg/aggregation.h \
     alg/compression.h \
     alg/energyshape.h \
     alg/energysharing.h \
@@ -45,6 +46,7 @@ SOURCES += \
     alg/demo/dynamicdemo.cpp \
     alg/demo/metricsdemo.cpp \
     alg/demo/tokendemo.cpp \
+    alg/aggregation.cpp \
     alg/compression.cpp \
     alg/energyshape.cpp \
     alg/energysharing.cpp \

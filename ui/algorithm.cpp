@@ -9,6 +9,7 @@
 #include "alg/demo/dynamicdemo.h"
 #include "alg/demo/metricsdemo.h"
 #include "alg/demo/tokendemo.h"
+#include "alg/aggregation.h"
 #include "alg/compression.h"
 #include "alg/energyshape.h"
 #include "alg/energysharing.h"
@@ -128,6 +129,29 @@ void DynamicDemoAlg::instantiate(const unsigned int numParticles,
   } else {
     emit setSystem(std::make_shared<DynamicDemoSystem>(numParticles, growProb,
                                                        dieProb));
+  }
+}
+
+AggregationAlg::AggregationAlg() : Algorithm("Swarm Aggregation", "aggregation") {
+  addParameter("# Particles", "2");
+  addParameter("Noise Form", "d");
+  addParameter("Noise Value", "3.0");
+}
+
+void AggregationAlg::instantiate(const int numParticles, const QString mode,
+                                 const double noiseVal) {
+  std::set<QString> set = {"d", "e"};
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (mode != "d" && mode != "e") {
+    emit log("only accepted modes are: d, e", true);
+  } else if (mode == "d" && noiseVal <= 0) {
+    emit log("noiseVal must be > 0", true);
+  } else if (mode == "e" && (noiseVal < 0 || noiseVal > 1)) {
+    emit log("noiseVal must be in [0,1]", true);
+  } else {
+    emit setSystem(std::make_shared<AggregateSystem>(numParticles, mode,
+                                                     noiseVal));
   }
 }
 
@@ -286,6 +310,7 @@ AlgorithmList::AlgorithmList() {
   _algorithms.push_back(new DynamicDemoAlg());
 
   // General algorithms.
+  _algorithms.push_back(new AggregationAlg());
   _algorithms.push_back(new CompressionAlg());
   _algorithms.push_back(new EnergyShapeAlg());
   _algorithms.push_back(new EnergySharingAlg());

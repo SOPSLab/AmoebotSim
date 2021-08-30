@@ -103,6 +103,18 @@ class DynamicDemoAlg : public Algorithm {
                    const double growProb = 0.02, const double dieProb = 0.01);
 };
 
+// Aggregation.
+class AggregationAlg : public Algorithm {
+  Q_OBJECT
+
+public:
+  AggregationAlg();
+
+public slots:
+  void instantiate(const int numParticles = 2, const QString mode = "d",
+                   const double noiseAmt = 3.0);
+};
+
 // Compression.
 class CompressionAlg : public Algorithm {
   Q_OBJECT
