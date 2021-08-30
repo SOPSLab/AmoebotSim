@@ -96,11 +96,10 @@ class AggregateSystem : public AmoebotSystem  {
   // terminated. Returns false by defualt.
   bool hasTerminated() const override;
 
-private:
+ private:
   // Depth-first search (DFS) used in the cluster fraction metric.
   void DFS(AggregateParticle& particle, const AggregateSystem& system,
            std::vector<AggregateParticle>& clusterVec);
-
 };
 
 // Returns the Euclidian distance between two points.
@@ -130,27 +129,25 @@ bool isValidCircle(const Circle& c, const QVector< QVector<double> > points);
 
 // Returns the circumference of the smallest enclosing disc (SED) of the system.
 class SEDMeasure : public Measure {
-
-public:
+ public:
   SEDMeasure(const QString name, const unsigned int freq,
-                       AggregateSystem& system);
+             AggregateSystem& system);
 
   double calculate() const final;
 
-protected:
+ protected:
   AggregateSystem& _system;
 };
 
 // Returns the perimeter of the convex hull of the system.
 class ConvexHullMeasure : public Measure {
-
-public:
+ public:
   ConvexHullMeasure(const QString name, const unsigned int freq,
-                       AggregateSystem& system);
+                    AggregateSystem& system);
 
   double calculate() const final;
 
-protected:
+ protected:
   AggregateSystem& _system;
 };
 
@@ -158,14 +155,13 @@ protected:
 // defined as the sum of distances between all particles and the centroid
 // (x avg, y avg) of the system.
 class DispersionMeasure : public Measure {
-
-public:
+ public:
   DispersionMeasure(const QString name, const unsigned int freq,
                     AggregateSystem& system);
 
   double calculate() const final;
 
-protected:
+ protected:
   AggregateSystem& _system;
 };
 
@@ -173,14 +169,13 @@ protected:
 // as the fraction of the system's particles that are connected to the largest
 // (by number of particles) cluster of the system.
 class ClusterFractionMeasure : public Measure {
-
-public:
+ public:
   ClusterFractionMeasure(const QString name, const unsigned int freq,
                          AggregateSystem& system);
 
   double calculate() const final;
 
-protected:
+ protected:
   AggregateSystem& _system;
 };
 

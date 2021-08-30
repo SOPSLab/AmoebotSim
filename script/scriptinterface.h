@@ -61,8 +61,6 @@ class ScriptInterface : public QObject {
   void saveScreenshot(QString filePath = "");
   void filmSimulation(QString filePath, const int stepLimit);
 
-  QVariant getMetrics();
-
  private:
   ScriptEngine& engine;
   Simulator& sim;

@@ -28,32 +28,25 @@ void AggregateParticle::activate() {
       // Particle in sight, rotate clockwise in place.
       center = (center + 5) % 6;
       perturb = 0;
-    }
-    else {
-     // No particle in sight, move clockwise around center of rotation (taking
-     // into account perturbation rules).
-     int moveDir = (center + 1) % 6;
-     if (!hasNbrAtLabel(moveDir)) {
-       expand(moveDir);
-       contractTail();
-       center = (center + 5) % 6;
-     } else {
-       perturb++;
-       if (perturb >= perturbCounterMax) {
+    } else {
+      // No particle in sight, move clockwise around center of rotation (taking
+      // into account perturbation rules).
+      int moveDir = (center + 1) % 6;
+      if (!hasNbrAtLabel(moveDir)) {
+        expand(moveDir);
+        contractTail();
         center = (center + 5) % 6;
-        perturb = 0;
-       }
-     }
-    }
-  }
-  else {    // Mode = "e", error probability noise.
-    double probNum = randDouble(0, 1);
-    if (probNum < noiseVal) {
-      if (particleInSight == true) {
-        particleInSight = false;
       } else {
-        particleInSight = true;
+        perturb++;
+        if (perturb >= perturbCounterMax) {
+          center = (center + 5) % 6;
+          perturb = 0;
+        }
       }
+    }
+  } else {    // Mode = "e", error probability noise.
+    if (randBool(noiseVal)) {
+      particleInSight = !particleInSight;
     }
 
     if (particleInSight) {
@@ -69,7 +62,6 @@ void AggregateParticle::activate() {
       }
     }
   }
-
 }
 
 int AggregateParticle::headMarkColor() const {
@@ -86,14 +78,15 @@ int AggregateParticle::headMarkDir() const {
 
 QString AggregateParticle::inspectionText() const {
   QString text;
-  text += "head: (" + QString::number(head.x) + ", " + QString::number(head.y) +
-    ")\n";
+  text += "head: (" + QString::number(head.x) + ", " + QString::number(head.y)
+          + ")\n";
   text += "orientation: " + QString::number(orientation) + "\n";
   text += "globalTailDir: " + QString::number(globalTailDir) + "\n";
   text += "\n";
   text += "center: " + QString::number(center) + "\n";
   text += "sight: " + QString::number((center + 5) % 6) + "\n";
-  text += "particle in sight: " + QString::number(this->checkIfParticleInSight()) + "\n";
+  text += "particle in sight: "
+          + QString::number(this->checkIfParticleInSight()) + "\n";
   return text;
 }
 
@@ -214,29 +207,30 @@ Circle circleFromThree(const QVector<double> a, const QVector<double> b,
     centerY = mpAB[1];
     slopeBC = (c[1] - b[1]) / (c[0] - b[0]);
     L2slope = (-1) * (1/slopeBC);
-    centerX = ( (centerY - mpBC[1]) / L2slope ) + mpBC[0];
+    centerX = ((centerY - mpBC[1]) / L2slope) + mpBC[0];
   } else if (b[0] == c[0]) {
     centerY = mpBC[1];
     slopeAB = (b[1] - a[1]) / (b[0] - a[0]);
     L1slope = (-1) * (1/slopeAB);
-    centerX = ( (centerY - mpAB[1]) / L1slope) + mpAB[0];
+    centerX = ((centerY - mpAB[1]) / L1slope) + mpAB[0];
   } else if (a[1] == b[1]) {
     centerX = mpAB[0];
     slopeBC = (c[1] - b[1]) / (c[0] - b[0]);
     L2slope = (-1) * (1/slopeBC);
-    centerY = ( L2slope * (centerX - mpBC[0]) ) + mpBC[1];
+    centerY = (L2slope * (centerX - mpBC[0])) + mpBC[1];
   } else if (b[1] == c[1]) {
     centerX = mpBC[0];
     slopeAB = (b[1] - a[1]) / (b[0] - a[0]);
     L1slope = (-1) * (1/slopeAB);
-    centerY = ( L1slope * (centerX - mpAB[0]) ) + mpAB[1];
+    centerY = (L1slope * (centerX - mpAB[0])) + mpAB[1];
   } else {
     slopeAB = (b[1] - a[1]) / (b[0] - a[0]);
     slopeBC = (c[1] - b[1]) / (c[0] - b[0]);
     L1slope = (-1) * (1/slopeAB);
     L2slope = (-1) * (1/slopeBC);
-    centerX = ( mpBC[1] - mpAB[1] + (L1slope * mpAB[0]) - (L2slope * mpBC[0]) ) / (L1slope - L2slope);
-    centerY = ( L1slope * (centerX - mpAB[0]) ) + mpAB[1];
+    centerX = (mpBC[1] - mpAB[1] + (L1slope * mpAB[0]) - (L2slope * mpBC[0]))
+              / (L1slope - L2slope);
+    centerY = (L1slope * (centerX - mpAB[0])) + mpAB[1];
   }
 
   const QVector<double> center{centerX, centerY};
@@ -245,11 +239,11 @@ Circle circleFromThree(const QVector<double> a, const QVector<double> b,
 }
 
 Circle circleFromTwo(const QVector<double> a, const QVector<double> b) {
-  const QVector<double> center = { (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0 };
+  const QVector<double> center = {(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0};
   return {center, dist(a, b) / 2.0};
 }
 
-bool isValidCircle(const Circle& c, const QVector< QVector<double> > points) {
+bool isValidCircle(const Circle& c, const QVector<QVector<double>> points) {
   const int n = points.size();
   for (int i = 0; i < n; i++) {
     if (!isInside(c, points[i])) {
@@ -260,12 +254,12 @@ bool isValidCircle(const Circle& c, const QVector< QVector<double> > points) {
   return true;
 }
 
-Circle minCircleTrivial(QVector< QVector<double> >& points) {
+Circle minCircleTrivial(QVector<QVector<double>>& points) {
   assert(points.size() <= 3);
   if (points.empty()) {
-    return { { 0, 0 }, 0 };
+    return {{0, 0}, 0};
   } else if (points.size() == 1) {
-    return { points[0], 0 };
+    return {points[0], 0};
   } else if (points.size() == 2) {
     return circleFromTwo(points[0], points[1]);
   }
@@ -278,13 +272,14 @@ Circle minCircleTrivial(QVector< QVector<double> >& points) {
       }
     }
   }
+
   return circleFromThree(points[0], points[1], points[2]);
 }
 
 // Returns the smallest enclosing disc (SED) using Welzl's algorithm.
 // P = set of input points, R = set of points on circle boundary, n = number of
 // points in P not yet processed.
-Circle welzlHelper(QVector< QVector<double> >& P, QVector< QVector<double> > R,
+Circle welzlHelper(QVector<QVector<double>>& P, QVector<QVector<double>> R,
                    int n) {
   if (n == 0 || R.size() == 3) {
     return minCircleTrivial(R);
@@ -305,8 +300,8 @@ Circle welzlHelper(QVector< QVector<double> >& P, QVector< QVector<double> > R,
   return welzlHelper(P, R, n - 1);
 }
 
-Circle welzl(const QVector< QVector<double> >& P) {
-  QVector< QVector<double> > P_copy = P;
+Circle welzl(const QVector<QVector<double>>& P) {
+  QVector<QVector<double>> P_copy = P;
   random_shuffle(P_copy.begin(), P_copy.end());
   return welzlHelper(P_copy, {}, P_copy.size());
 }
@@ -317,40 +312,38 @@ SEDMeasure::SEDMeasure(const QString name, const unsigned int freq,
     _system(system) {}
 
 double SEDMeasure::calculate() const {
-  QVector< QVector<double> > points = {};
+  QVector<QVector<double>> points = {};
   for (const auto& p : _system.particles) {
-    points.push_back( { ( p->head.x + (p->head.y / 2.0) ),
-                        ( p->head.y * (sqrt(3.0) / 2.0) ) } );
+    points.push_back({(p->head.x + (p->head.y / 2.0)),
+                      (p->head.y * (sqrt(3.0) / 2.0))});
   }
 
   Circle sed = welzl(points);
 
-  return ( (sed.R) * 2.0 ) * M_PI;
+  return sed.R * 2.0 * M_PI;
 }
 
 ConvexHullMeasure::ConvexHullMeasure(const QString name, const unsigned int freq,
-                                           AggregateSystem& system)
+                                     AggregateSystem& system)
   : Measure(name, freq),
     _system(system) {}
 
 // Returns the perimeter of the convex hull of the system using the gift
 // wrapping algorithm.
 double ConvexHullMeasure::calculate() const {
-  QVector< QVector<double> > hull;
+  QVector<QVector<double>> hull;
 
-  QVector< QVector<double> > points;
+  QVector<QVector<double>> points;
 
   for (const auto& p : _system.particles) {
-    points.push_back( { ( p->head.x + (p->head.y / 2.0) ),
-                        ( p->head.y * (sqrt(3.0) / 2.0) ) } );
+    points.push_back({(p->head.x + (p->head.y / 2.0)),
+                      (p->head.y * (sqrt(3.0) / 2.0))});
   }
 
   std::sort(points.begin(), points.end());
   points.erase(std::unique(points.begin(), points.end()), points.end());
 
   int n = points.size();
-
-
   int l = 0;
   for (int i = 0; i < n; i++) {
     if (points[i][0] <= points[l][0]) {
@@ -363,7 +356,7 @@ double ConvexHullMeasure::calculate() const {
   QVector<double> endpoint;
   QVector<double> beforeInitialPoint;
   double a, b, c, theta, maxTheta;
-  QVector< QVector<double> > maxThetaCandidates;
+  QVector<QVector<double>> maxThetaCandidates;
 
   int i = 0;
   do {
@@ -377,16 +370,15 @@ double ConvexHullMeasure::calculate() const {
     n = points.size();
     for (int j = 0; j < n; j++) {
       if (i == 0) {
-        beforeInitialPoint = { hull[i][0], hull[i][1] - 10.0 };
+        beforeInitialPoint = {hull[i][0], hull[i][1] - 10.0};
         a = dist(hull[i], points[j]);
         b = dist(beforeInitialPoint, points[j]);
         c = dist(beforeInitialPoint, hull[i]);
         if (a != 0 && b != 0 && c != 0) {
-          if ( (c+a) == b ) {
+          if ((c + a) == b) {
             theta = M_PI;
-          }
-          else {
-            theta = acos( ((a*a) + (c*c) - (b*b)) / (2 * a * c) );
+          } else {
+            theta = acos(((a*a) + (c*c) - (b*b)) / (2 * a * c));
           }
         }
       } else {
@@ -394,49 +386,41 @@ double ConvexHullMeasure::calculate() const {
         b = dist(hull[i-1], points[j]);
         c = dist(hull[i-1], hull[i]);
         if (a != 0 && b != 0 && c != 0) {
-          if ( (c+a) == b ) {
+          if ((c + a) == b) {
             theta = M_PI;
-          }
-          else if ( (a+b) == c ) {
+          } else if ((a + b) == c) {
             theta = 0.0;
-          }
-          else {
-            if ( ( ((a*a) + (c*c) - (b*b)) / (2 * a * c) ) > 1 &&
-                 ( ((a*a) + (c*c) - (b*b)) / (2 * a * c) ) < 1.005 ) {
+          } else {
+            if ((((a*a) + (c*c) - (b*b)) / (2 * a * c)) > 1 &&
+                (((a*a) + (c*c) - (b*b)) / (2 * a * c)) < 1.005) {
               theta = 0.0;
-            }
-            else if ( ( ((a*a) + (c*c) - (b*b)) / (2 * a * c) ) < -1 &&
-                      ( ((a*a) + (c*c) - (b*b)) / (2 * a * c) ) > -1.005 ) {
+            } else if ((((a*a) + (c*c) - (b*b)) / (2 * a * c)) < -1 &&
+                       (((a*a) + (c*c) - (b*b)) / (2 * a * c)) > -1.005) {
               theta = M_PI;
-            }
-            else {
-              theta = acos( ((a*a) + (c*c) - (b*b)) / (2 * a * c) );
+            } else {
+              theta = acos(((a*a) + (c*c) - (b*b)) / (2 * a * c));
             }
           }
         }
 
-        if (i == 1) {
-          if (points[j] == firstPoint) {
-            theta = 0.0;
-          }
+        if (i == 1 && points[j] == firstPoint) {
+          theta = 0.0;
         }
       }
 
       if (endpoint == pointOnHull) {
         endpoint = points[j];
-      }
-      else if (theta > maxTheta) {
+      } else if (theta > maxTheta) {
         maxTheta = theta;
         endpoint = points[j];
         maxThetaCandidates.clear();
         maxThetaCandidates.push_back(points[j]);
-      }
-      else if (theta == maxTheta) {
+      } else if (theta == maxTheta) {
         maxThetaCandidates.push_back(points[j]);
         int numCandidates = maxThetaCandidates.size();
         double maximumDist = 0.0;
         for (int z = 0; z < numCandidates; z++) {
-          if ( dist(hull[i], maxThetaCandidates[z]) > maximumDist ) {
+          if (dist(hull[i], maxThetaCandidates[z]) > maximumDist) {
             endpoint = maxThetaCandidates[z];
           }
         }
@@ -444,7 +428,7 @@ double ConvexHullMeasure::calculate() const {
     }
 
     pointOnHull = endpoint;
-    i += 1;
+    i++;
   } while (endpoint != hull[0]);
 
   int hn = hull.size();
@@ -461,7 +445,7 @@ double ConvexHullMeasure::calculate() const {
 }
 
 DispersionMeasure::DispersionMeasure(const QString name, const unsigned int freq,
-                                           AggregateSystem& system)
+                                     AggregateSystem& system)
   : Measure(name, freq),
     _system(system) {}
 
@@ -469,12 +453,11 @@ double DispersionMeasure::calculate() const {
   QVector< QVector<double> > points;
 
   for (const auto& p : _system.particles) {
-    points.push_back( { ( p->head.x + (p->head.y / 2.0) ),
-                        ( p->head.y * (sqrt(3.0) / 2.0) ) } );
+    points.push_back({(p->head.x + (p->head.y / 2.0)),
+                      (p->head.y * (sqrt(3.0) / 2.0))});
   }
 
   int n = points.length();
-
   double xSum = 0;
   double ySum = 0;
   for (int i = 0; i < n; i++) {
@@ -491,26 +474,28 @@ double DispersionMeasure::calculate() const {
   return dispersionSum;
 }
 
-void AggregateSystem::DFS(AggregateParticle& particle, const AggregateSystem& system,
-         std::vector<AggregateParticle>& clusterVec) {
+void AggregateSystem::DFS(AggregateParticle& particle,
+                          const AggregateSystem& system,
+                          std::vector<AggregateParticle>& clusterVec) {
   particle.visited = true;
   clusterVec.push_back(particle);
 
   for (int j = 0; j < 6; j++) {
-    if ( particle.hasNbrAtLabel(j) == true &&
-         particle.nbrAtLabel(j).visited == false ) {
+    if (particle.hasNbrAtLabel(j) == true &&
+        particle.nbrAtLabel(j).visited == false) {
       DFS(particle.nbrAtLabel(j), system, clusterVec);
     }
   }
 }
 
-ClusterFractionMeasure::ClusterFractionMeasure(const QString name, const unsigned int freq,
-                                           AggregateSystem& system)
+ClusterFractionMeasure::ClusterFractionMeasure(const QString name,
+                                               const unsigned int freq,
+                                               AggregateSystem& system)
   : Measure(name, freq),
     _system(system) {}
 
 double ClusterFractionMeasure::calculate() const {
-  std::vector< std::vector<AggregateParticle> > allClusterList;
+  std::vector<std::vector<AggregateParticle>> allClusterList;
 
   for (auto& p : _system.particles) {
     auto aggr_p = dynamic_cast<AggregateParticle*>(p);
@@ -529,7 +514,7 @@ double ClusterFractionMeasure::calculate() const {
   int numInMaxCluster = allClusterList[0].size();
   int cn = allClusterList.size();
   for (int i = 0; i < cn; i++) {
-    if (int( allClusterList[i].size() ) > numInMaxCluster) {
+    if (int(allClusterList[i].size()) > numInMaxCluster) {
       numInMaxCluster = allClusterList[i].size();
     }
   }
@@ -540,5 +525,5 @@ double ClusterFractionMeasure::calculate() const {
 }
 
 bool AggregateSystem::hasTerminated() const {
-    return false;
+  return false;
 }
