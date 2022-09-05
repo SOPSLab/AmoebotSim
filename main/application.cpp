@@ -12,7 +12,7 @@
 
 #include "ui/visitem.h"
 
-Application::Application(int argc, char *argv[])
+Application::Application(int &argc, char *argv[])
     : QGuiApplication(argc, argv) {
   // Setup the parameter list model.
   parameterModel = new ParameterListModel();
