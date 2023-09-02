@@ -19,6 +19,7 @@ HEADERS += \
     alg/energyshape.h \
     alg/energysharing.h \
     alg/infobjcoating.h \
+    alg/leaderelectionbyerosion.h \
     alg/shapeformation.h \
     core/amoebotparticle.h \
     core/amoebotsystem.h \
@@ -51,6 +52,7 @@ SOURCES += \
     alg/energyshape.cpp \
     alg/energysharing.cpp \
     alg/infobjcoating.cpp \
+    alg/leaderelectionbyerosion.cpp \
     alg/shapeformation.cpp \
     core/amoebotparticle.cpp \
     core/amoebotsystem.cpp \

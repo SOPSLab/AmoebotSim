@@ -112,6 +112,9 @@ void ParameterListModel::createSystem(QString algName) {
   } else if (signature == "leaderelection") {
     dynamic_cast<LeaderElectionAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toDouble());
+  } else if (signature == "leaderelectionbyerosion") {
+    dynamic_cast<LeaderElectionByErosionAlg*>(alg)->
+        instantiate(params[0].toInt());
   } else if (signature == "shapeformation") {
     dynamic_cast<ShapeFormationAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toDouble(), params[2]);
