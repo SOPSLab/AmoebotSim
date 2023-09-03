@@ -25,10 +25,11 @@ void LeaderElectionByErosionParticle::activate() {
 
 int LeaderElectionByErosionParticle::headMarkColor() const {
   switch(_state) {
+    case State::Null:      return -1;
     case State::Candidate: return 0x0000ff;
     case State::Eroded:    return 0x000000;
-    case State::Leader:    return 0x00ffff;
-    default:               return -1;  // State::Null particles get no color.
+    case State::Leader:    return 0x00ff00;
+    default:               return -1;
   }
 }
 
@@ -85,30 +86,30 @@ bool LeaderElectionByErosionParticle::hasNbrInState(
 
 bool LeaderElectionByErosionParticle::canErode() const {
   // First, count the number of candidate neighbors.
-  uint num_cand_nbrs = 0;
+  uint numCandNbrs = 0;
   for (int label : uniqueLabels()) {
     if (hasNbrAtLabel(label) && nbrAtLabel(label)._state == State::Candidate)
-      ++num_cand_nbrs;
+      ++numCandNbrs;
   }
 
   // Rule 1: Return true if there is exactly one candidate neighbor.
-  if (num_cand_nbrs == 1)
+  if (numCandNbrs == 1)
     return true;
 
   // Otherwise, determine if the candidate neighbors form a connected component.
-  if (num_cand_nbrs > 0) {
+  if (numCandNbrs > 0) {
     // Find any candidate neighbor.
-    int cand_label = labelOfFirstNbrInState({State::Candidate});
-    std::set<int> connected_cand_labels = {cand_label};
+    int candLabel = labelOfFirstNbrInState({State::Candidate});
+    std::set<int> connectedCandLabels = {candLabel};
 
     // Sweep counter-clockwise from this candidate, stopping when an unoccupied
     // position or non-candidate neighbor is encountered. Note that it's okay in
     // this particular case to hardcode the upper limit of 6 (distinct) labels
     // since particles are instantiated as contracted and never move.
     for (uint offset = 1; offset < 6; ++offset) {
-      int label = (cand_label + offset) % 6;
+      int label = (candLabel + offset) % 6;
       if (hasNbrAtLabel(label) && nbrAtLabel(label)._state == State::Candidate){
-        connected_cand_labels.insert(label);
+        connectedCandLabels.insert(label);
       } else {
         break;
       }
@@ -116,9 +117,9 @@ bool LeaderElectionByErosionParticle::canErode() const {
 
     // Then do the same but in the clockwise direction.
     for (uint offset = 1; offset < 6; ++offset) {
-      int label = (cand_label - offset + 6) % 6;
+      int label = (candLabel - offset + 6) % 6;
       if (hasNbrAtLabel(label) && nbrAtLabel(label)._state == State::Candidate){
-        connected_cand_labels.insert(label);
+        connectedCandLabels.insert(label);
       } else {
         break;
       }
@@ -126,8 +127,8 @@ bool LeaderElectionByErosionParticle::canErode() const {
 
     // Rule 2: Return true if there are 2 to 5 candidate neighbors that form a
     // connected component.
-    return num_cand_nbrs >= 2 && num_cand_nbrs <= 5
-           && num_cand_nbrs == connected_cand_labels.size();
+    return numCandNbrs >= 2 && numCandNbrs <= 5
+           && numCandNbrs == connectedCandLabels.size();
   }
 
   // Otherwise, this particle cannot erode.

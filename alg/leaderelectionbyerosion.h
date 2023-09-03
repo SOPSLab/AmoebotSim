@@ -32,19 +32,18 @@ class LeaderElectionByErosionParticle : public AmoebotParticle {
   LeaderElectionByErosionParticle(const Node head, AmoebotSystem& system);
 
   // Executes one particle activation.
-  virtual void activate();
+  void activate() override;
 
   // Functions for altering a particle's cosmetic appearance; headMarkColor
   // (respectively, tailMarkColor) returns the color to be used for the ring
   // drawn around the head (respectively, tail) node. Tail color is not shown
-  // when the particle is contracted. headMarkDir returns the label of the port
-  // on which the black head marker is drawn.
-  virtual int headMarkColor() const;
-  virtual int tailMarkColor() const;
+  // when the particle is contracted.
+  int headMarkColor() const override;
+  int tailMarkColor() const override;
 
   // Returns the string to be displayed when this particle is inspected; used
   // to snapshot the current values of this particle's memory at runtime.
-  virtual QString inspectionText() const;
+  QString inspectionText() const override;
 
   // Gets a reference to the neighboring particle incident to the specified port
   // label. Crashes if no such particle exists at this label; consider using
@@ -60,10 +59,10 @@ class LeaderElectionByErosionParticle : public AmoebotParticle {
   // Checks whether this particle has a neighbor in any of the given states.
   bool hasNbrInState(std::initializer_list<State> states) const;
 
- protected:
   // Determines if a candidate can erode based on the erosion rules.
   bool canErode() const;
 
+ protected:
   // Particle memory.
   State _state;
 
@@ -78,8 +77,8 @@ class LeaderElectionByErosionSystem : public AmoebotSystem {
   // cannot handle holes.
   LeaderElectionByErosionSystem(int numParticles = 91);
 
-  // Checks whether or not the system has completed leader election, i.e., there
-  // exists an particle in State::Leader.
+  // Checks whether the system has completed leader election, i.e., there exists
+  // a particle in State::Leader.
   bool hasTerminated() const override;
 };
 
