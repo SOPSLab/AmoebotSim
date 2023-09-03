@@ -179,11 +179,24 @@ class LeaderElectionAlg : public Algorithm {
 class LeaderElectionByErosionAlg : public Algorithm {
   Q_OBJECT
 
-  public:
+ public:
   LeaderElectionByErosionAlg();
 
-  public slots:
+ public slots:
   void instantiate(const int numParticles = 91);
+};
+
+// Energy Distribution Framework + Leader Election by Erosion.
+class EDFLeaderElectionByErosionAlg : public Algorithm {
+  Q_OBJECT
+
+  public:
+  EDFLeaderElectionByErosionAlg();
+
+  public slots:
+  void instantiate(const int numParticles = 91, const int numEnergyRoots = 1,
+                   const int capacity = 10, const int transferRate = 1,
+                   const int demand = 5);
 };
 
 // Basic Shape Formation.

@@ -16,6 +16,7 @@ HEADERS += \
     alg/demo/tokendemo.h \
     alg/aggregation.h \
     alg/compression.h \
+    alg/edfleaderelectionbyerosion.h \
     alg/energyshape.h \
     alg/energysharing.h \
     alg/infobjcoating.h \
@@ -49,6 +50,7 @@ SOURCES += \
     alg/demo/tokendemo.cpp \
     alg/aggregation.cpp \
     alg/compression.cpp \
+    alg/edfleaderelectionbyerosion.cpp \
     alg/energyshape.cpp \
     alg/energysharing.cpp \
     alg/infobjcoating.cpp \

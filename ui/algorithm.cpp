@@ -16,6 +16,7 @@
 #include "alg/infobjcoating.h"
 #include "alg/leaderelection.h"
 #include "alg/leaderelectionbyerosion.h"
+#include "alg/edfleaderelectionbyerosion.h"
 #include "alg/shapeformation.h"
 
 Algorithm::Algorithm(QString name, QString signature)
@@ -288,6 +289,36 @@ void LeaderElectionByErosionAlg::instantiate(const int numParticles) {
   }
 }
 
+EDFLeaderElectionByErosionAlg::EDFLeaderElectionByErosionAlg()
+    : Algorithm("EDF + Leader Election by Erosion", "edfleaderelectionbyerosion") {
+  addParameter("# Particles", "91");
+  addParameter("# Energy Roots", "1");
+  addParameter("Capacity", "10");
+  addParameter("Transfer Rate", "1");
+  addParameter("Demand", "5");
+}
+
+void EDFLeaderElectionByErosionAlg::instantiate(const int numParticles,
+                                                const int numEnergyRoots,
+                                                const int capacity,
+                                                const int transferRate,
+                                                const int demand) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (numEnergyRoots <= 0 || numEnergyRoots > numParticles) {
+    emit log("# energy roots must be in (0, #particles]", true);
+  } else if (capacity <= 0) {
+    emit log("capacity must be > 0", true);
+  } else if (transferRate <= 0 || capacity % transferRate != 0) {
+    emit log("transferRate must be > 0 and evenly divide capacity", true);
+  } else if (demand <= 0 || demand > capacity || demand % transferRate != 0) {
+    emit log("demand must be a multiple of transferRate, <= capacity", true);
+  } else {
+    emit setSystem(std::make_shared<EDFLeaderElectionByErosionSystem>(
+        numParticles, numEnergyRoots, capacity, transferRate, demand));
+  }
+}
+
 ShapeFormationAlg::ShapeFormationAlg() :
   Algorithm("Basic Shape Formation", "shapeformation") {
   addParameter("# Particles", "200");
@@ -331,6 +362,7 @@ AlgorithmList::AlgorithmList() {
   _algorithms.push_back(new InfObjCoatingAlg());
   _algorithms.push_back(new LeaderElectionAlg());
   _algorithms.push_back(new LeaderElectionByErosionAlg());
+  _algorithms.push_back(new EDFLeaderElectionByErosionAlg());
   _algorithms.push_back(new ShapeFormationAlg());
 }
 
