@@ -126,6 +126,19 @@ class CompressionAlg : public Algorithm {
   void instantiate(const int numParticles = 100, const double lambda = 4.0);
 };
 
+// Energy Distribution Framework + Leader Election by Erosion.
+class EDFLeaderElectionByErosionAlg : public Algorithm {
+  Q_OBJECT
+
+  public:
+  EDFLeaderElectionByErosionAlg();
+
+  public slots:
+  void instantiate(const int numParticles = 91, const int numEnergyRoots = 1,
+                   const int capacity = 10, const int transferRate = 1,
+                   const int demand = 5);
+};
+
 // Energy Distribution + Hexagon Formation.
 class EnergyShapeAlg : public Algorithm {
   Q_OBJECT
@@ -184,19 +197,6 @@ class LeaderElectionByErosionAlg : public Algorithm {
 
  public slots:
   void instantiate(const int numParticles = 91);
-};
-
-// Energy Distribution Framework + Leader Election by Erosion.
-class EDFLeaderElectionByErosionAlg : public Algorithm {
-  Q_OBJECT
-
-  public:
-  EDFLeaderElectionByErosionAlg();
-
-  public slots:
-  void instantiate(const int numParticles = 91, const int numEnergyRoots = 1,
-                   const int capacity = 10, const int transferRate = 1,
-                   const int demand = 5);
 };
 
 // Basic Shape Formation.
