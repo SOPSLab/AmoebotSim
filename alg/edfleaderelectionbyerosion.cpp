@@ -9,14 +9,13 @@ EDFLeaderElectionByErosionParticle::EDFLeaderElectionByErosionParticle(
     AmoebotSystem& system,
     const int capacity,
     const int transferRate,
-    const int demand,
-    const EnergyState eState)
+    const int demand)
     : AmoebotParticle(head, -1, randDir(), system),
       _capacity(capacity),
       _transferRate(transferRate),
       _demand(demand),
-      _eState(eState),
-      _parent(-1),
+      _eState(EnergyState::Idle),
+      _eParentDir(-1),
       _battery(0),
       _lState(LeaderState::Null) {}
 
@@ -73,8 +72,8 @@ void EDFLeaderElectionByErosionParticle::activate() {
       || _eState == EnergyState::Growing) {  // GrowForest
     // Adopt idle neighbors as active children.
     for (int label : idleNbrLabels) {
-      nbrAtLabel(label)._parent = dirToNbrDir(nbrAtLabel(label),
-                                              (labelToDir(label) + 3) % 6);
+      nbrAtLabel(label)._eParentDir = dirToNbrDir(nbrAtLabel(label),
+                                                  (labelToDir(label) + 3) % 6);
       nbrAtLabel(label)._eState = EnergyState::Active;
     }
 
@@ -113,7 +112,7 @@ int EDFLeaderElectionByErosionParticle::headMarkColor() const {
   /* switch(_lState) {
     case LeaderState::Null:      return -1;
     case LeaderState::Candidate: return 0x0000ff;
-    case LeaderState::Eroded:    return 0x000000;
+    case LeaderState::Eroded:    return 0x333333;
     case LeaderState::Leader:    return 0x00ff00;
     default:                     return -1;
   } */
@@ -124,7 +123,7 @@ int EDFLeaderElectionByErosionParticle::tailMarkColor() const {
 }
 
 int EDFLeaderElectionByErosionParticle::headMarkDir() const {
-  return _parent == -1 ? -1 : labelToDir(_parent);
+  return _eParentDir == -1 ? -1 : labelToDir(_eParentDir);
 }
 
 QString EDFLeaderElectionByErosionParticle::inspectionText() const {
@@ -147,7 +146,7 @@ QString EDFLeaderElectionByErosionParticle::inspectionText() const {
       default:                    return "no state\n";
     }
   }();
-  text += "  parent: " + QString::number(_parent) + "\n";
+  text += "  parentDir: " + QString::number(_eParentDir) + "\n";
   text += "  battery: " + QString::number(_battery) + " / "
           + QString::number(_capacity) + "\n\n";
   text += "Local Info (LE):\n";
@@ -212,11 +211,11 @@ bool EDFLeaderElectionByErosionParticle::hasNbrInState(
 
 const std::vector<int> EDFLeaderElectionByErosionParticle::childLabels() const {
   std::vector<int> labels;
-  for (int label : uniqueLabels()) {
-    if (hasNbrAtLabel(label) && nbrAtLabel(label)._parent != -1
-        && pointsAtMe(nbrAtLabel(label), nbrAtLabel(label)._parent))
+  for (int label : uniqueLabels())
+    if (hasNbrAtLabel(label)
+        && nbrAtLabel(label)._eParentDir != -1
+        && pointsAtMe(nbrAtLabel(label), nbrAtLabel(label)._eParentDir))
       labels.push_back(label);
-  }
 
   return labels;
 }
@@ -224,7 +223,7 @@ const std::vector<int> EDFLeaderElectionByErosionParticle::childLabels() const {
 void EDFLeaderElectionByErosionParticle::prune() {
   for (int childLabel : childLabels()) {
     nbrAtLabel(childLabel)._eState = EnergyState::Pruning;
-    nbrAtLabel(childLabel)._parent = -1;
+    nbrAtLabel(childLabel)._eParentDir = -1;
   }
 
   if (_eState != EnergyState::Source) {
@@ -308,7 +307,7 @@ bool EDFLeaderElectionByErosionParticle::canErode() const {
 
 EDFLeaderElectionByErosionSystem::EDFLeaderElectionByErosionSystem(
     int numParticles,
-    int numEnergyRoots,
+    int numEnergySources,
     int capacity,
     int transferRate,
     int demand) {
@@ -356,9 +355,8 @@ EDFLeaderElectionByErosionSystem::EDFLeaderElectionByErosionSystem(
       }
     }
 
-    insert(new EDFLeaderElectionByErosionParticle(
-        Node(x, y), *this, capacity, transferRate, demand,
-        EDFLeaderElectionByErosionParticle::EnergyState::Idle));
+    insert(new EDFLeaderElectionByErosionParticle(Node(x, y), *this, capacity,
+                                                  transferRate, demand));
   }
 
   // Choose source particles uniformly at random.
@@ -367,7 +365,7 @@ EDFLeaderElectionByErosionSystem::EDFLeaderElectionByErosionSystem(
     indices.push_back(i);
   }
   shuffle(indices.begin(), indices.end());
-  for (int i = 0; i < numEnergyRoots; ++i) {
+  for (int i = 0; i < numEnergySources; ++i) {
     auto elp = dynamic_cast<EDFLeaderElectionByErosionParticle*>(
         particles[indices[i]]);
     elp->_eState = EDFLeaderElectionByErosionParticle::EnergyState::Source;

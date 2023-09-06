@@ -33,13 +33,11 @@ class EDFLeaderElectionByErosionParticle : public AmoebotParticle {
 
   // Constructs a new contracted, LeaderState::Null particle with a node
   // position for its head and a particle system it belongs to. Also sets the
-  // energy distribution framework's parameters, initializes the particle's
-  // energy state (either EnergyState::Source or EnergyState::Idle), and starts
-  // the particle with no parent and an empty battery.
+  // energy distribution framework's parameters and starts the particle with no
+  // parent and an empty battery.
   EDFLeaderElectionByErosionParticle(const Node head, AmoebotSystem& system,
                                      const int capacity, const int transferRate,
-                                     const int demand,
-                                     const EnergyState eState);
+                                     const int demand);
 
   // Executes one particle activation.
   void activate() override;
@@ -103,7 +101,7 @@ class EDFLeaderElectionByErosionParticle : public AmoebotParticle {
 
   // Energy distribution framework variables.
   EnergyState _eState;
-  int _parent;
+  int _eParentDir;
   double _battery;
 
   // Leader-Election-By-Erosion variables.
@@ -117,9 +115,10 @@ class EDFLeaderElectionByErosionSystem : public AmoebotSystem {
   public:
   // Constructs a system of EDFLeaderElectionByErosionParticles with an
   // optionally specified size (#particles) in the shape of a hexagon, since
-  // Leader-Election-By-Erosion cannot handle holes.
+  // Leader-Election-By-Erosion cannot handle holes. Also sets the number of
+  // source amoebots.
   EDFLeaderElectionByErosionSystem(int numParticles = 91,
-                                   int numEnergyRoots = 1, int capacity = 10,
+                                   int numEnergySources = 1, int capacity = 10,
                                    int transferRate = 1, int demand = 5);
 
   // Checks whether all particles belong to the energy distribution spanning

@@ -27,7 +27,7 @@ int LeaderElectionByErosionParticle::headMarkColor() const {
   switch(_state) {
     case State::Null:      return -1;
     case State::Candidate: return 0x0000ff;
-    case State::Eroded:    return 0x000000;
+    case State::Eroded:    return 0x333333;
     case State::Leader:    return 0x00ff00;
     default:               return -1;
   }

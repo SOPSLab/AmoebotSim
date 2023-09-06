@@ -16,9 +16,11 @@ HEADERS += \
     alg/demo/tokendemo.h \
     alg/aggregation.h \
     alg/compression.h \
+    alg/edfhexagonformation.h \
     alg/edfleaderelectionbyerosion.h \
     alg/energyshape.h \
     alg/energysharing.h \
+    alg/hexagonformation.h \
     alg/infobjcoating.h \
     alg/leaderelectionbyerosion.h \
     alg/shapeformation.h \
@@ -50,9 +52,11 @@ SOURCES += \
     alg/demo/tokendemo.cpp \
     alg/aggregation.cpp \
     alg/compression.cpp \
+    alg/edfhexagonformation.cpp \
     alg/edfleaderelectionbyerosion.cpp \
     alg/energyshape.cpp \
     alg/energysharing.cpp \
+    alg/hexagonformation.cpp \
     alg/infobjcoating.cpp \
     alg/leaderelectionbyerosion.cpp \
     alg/shapeformation.cpp \
