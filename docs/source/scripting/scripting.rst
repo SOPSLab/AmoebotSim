@@ -156,6 +156,13 @@ All algorithms are instantiated based on their signatures and parameters defined
 
   Instantiates a system running the **Energy Sharing** algorithm (`Daymude et al., ICDCN 2021 <https://doi.org/10.1145/3427796.3427835>`_) with the given parameters.
 
+.. js:function:: hexagonformation(numParticles, holeProb)
+
+  :param int numParticles: The number of particles in the system.
+  :param float holeProb: The system's hole probability capturing how spread out the initial configuration is.
+
+  Instantiates a system running the canonical version of the **Hexagon Formation** algorithm (`Daymude et al., Distributed Computing 2023 <https://doi.org/10.1007/s00446-023-00443-3>`_) with the given parameters.
+
 .. js:function:: infobjcoating(numParticles, holeProb)
 
   :param int numParticles: The number of particles in the system.
