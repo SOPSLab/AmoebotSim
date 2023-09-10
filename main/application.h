@@ -17,7 +17,7 @@
 class Application : public QGuiApplication {
   Q_OBJECT
  public:
-  explicit Application(int argc, char *argv[]);
+  explicit Application(int &argc, char *argv[]);
 
  protected:
   QQmlApplicationEngine engine;
