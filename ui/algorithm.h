@@ -126,6 +126,32 @@ class CompressionAlg : public Algorithm {
   void instantiate(const int numParticles = 100, const double lambda = 4.0);
 };
 
+// Energy Distribution Framework + Hexagon Formation (canonical).
+class EDFHexagonFormationAlg : public Algorithm {
+  Q_OBJECT
+
+ public:
+  EDFHexagonFormationAlg();
+
+ public slots:
+  void instantiate(const int numParticles = 200, const int numEnergySources = 1,
+                   const double holeProb = 0.2, const int capacity = 10,
+                   const int transferRate = 1, const int demand = 5);
+};
+
+// Energy Distribution Framework + Leader Election by Erosion.
+class EDFLeaderElectionByErosionAlg : public Algorithm {
+  Q_OBJECT
+
+ public:
+  EDFLeaderElectionByErosionAlg();
+
+ public slots:
+  void instantiate(const int numParticles = 91, const int numEnergySources = 1,
+                   const int capacity = 10, const int transferRate = 1,
+                   const int demand = 5);
+};
+
 // Energy Distribution + Hexagon Formation.
 class EnergyShapeAlg : public Algorithm {
   Q_OBJECT
@@ -152,6 +178,17 @@ class EnergySharingAlg : public Algorithm {
                    const double demand = 5, const double transferRate = 1);
 };
 
+// Hexagon Formation (canonical).
+class HexagonFormationAlg : public Algorithm {
+  Q_OBJECT
+
+ public:
+  HexagonFormationAlg();
+
+ public slots:
+  void instantiate(const int numParticles = 200, const double holeProb = 0.2);
+};
+
 // Infinite Object Coating.
 class InfObjCoatingAlg : public Algorithm {
   Q_OBJECT
@@ -172,6 +209,18 @@ class LeaderElectionAlg : public Algorithm {
 
  public slots:
   void instantiate(const int numParticles = 100, const double holeProb = 0.2);
+};
+
+
+// Leader Election by Erosion.
+class LeaderElectionByErosionAlg : public Algorithm {
+  Q_OBJECT
+
+ public:
+  LeaderElectionByErosionAlg();
+
+ public slots:
+  void instantiate(const int numParticles = 91);
 };
 
 // Basic Shape Formation.

@@ -11,10 +11,14 @@
 #include "alg/demo/tokendemo.h"
 #include "alg/aggregation.h"
 #include "alg/compression.h"
+#include "alg/edfhexagonformation.h"
+#include "alg/edfleaderelectionbyerosion.h"
 #include "alg/energyshape.h"
 #include "alg/energysharing.h"
+#include "alg/hexagonformation.h"
 #include "alg/infobjcoating.h"
 #include "alg/leaderelection.h"
+#include "alg/leaderelectionbyerosion.h"
 #include "alg/shapeformation.h"
 
 Algorithm::Algorithm(QString name, QString signature)
@@ -168,6 +172,70 @@ void CompressionAlg::instantiate(const int numParticles, const double lambda) {
   }
 }
 
+EDFHexagonFormationAlg::EDFHexagonFormationAlg()
+    : Algorithm("EDF + Hexagon Formation", "edfhexagonformation") {
+  addParameter("# Particles", "200");
+  addParameter("# Energy Sources", "1");
+  addParameter("Hole Prob.", "0.2");
+  addParameter("Capacity", "10");
+  addParameter("Transfer Rate", "1");
+  addParameter("Demand", "5");
+}
+
+void EDFHexagonFormationAlg::instantiate(const int numParticles,
+                                         const int numEnergySources,
+                                         const double holeProb,
+                                         const int capacity,
+                                         const int transferRate,
+                                         const int demand) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (numEnergySources <= 0 || numEnergySources > numParticles) {
+    emit log("# energy sources must be in (0, #particles]", true);
+  } else if (holeProb < 0 || holeProb >= 1) {
+    emit log("holeProb in [0,1) required", true);
+  } else if (capacity <= 0) {
+    emit log("capacity must be > 0", true);
+  } else if (transferRate <= 0 || capacity % transferRate != 0) {
+    emit log("transferRate must be > 0 and evenly divide capacity", true);
+  } else if (demand <= 0 || demand > capacity || demand % transferRate != 0) {
+    emit log("demand must be a multiple of transferRate, <= capacity", true);
+  } else {
+    emit setSystem(std::make_shared<EDFHexagonFormationSystem>(
+        numParticles, numEnergySources, holeProb, capacity, transferRate, demand));
+  }
+}
+
+EDFLeaderElectionByErosionAlg::EDFLeaderElectionByErosionAlg()
+    : Algorithm("EDF + Leader Election by Erosion", "edfleaderelectionbyerosion") {
+  addParameter("# Particles", "91");
+  addParameter("# Energy Sources", "1");
+  addParameter("Capacity", "10");
+  addParameter("Transfer Rate", "1");
+  addParameter("Demand", "5");
+}
+
+void EDFLeaderElectionByErosionAlg::instantiate(const int numParticles,
+                                                const int numEnergySources,
+                                                const int capacity,
+                                                const int transferRate,
+                                                const int demand) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (numEnergySources <= 0 || numEnergySources > numParticles) {
+    emit log("# energy sources must be in (0, #particles]", true);
+  } else if (capacity <= 0) {
+    emit log("capacity must be > 0", true);
+  } else if (transferRate <= 0 || capacity % transferRate != 0) {
+    emit log("transferRate must be > 0 and evenly divide capacity", true);
+  } else if (demand <= 0 || demand > capacity || demand % transferRate != 0) {
+    emit log("demand must be a multiple of transferRate, <= capacity", true);
+  } else {
+    emit setSystem(std::make_shared<EDFLeaderElectionByErosionSystem>(
+        numParticles, numEnergySources, capacity, transferRate, demand));
+  }
+}
+
 EnergyShapeAlg::EnergyShapeAlg()
     : Algorithm("Energy + Hexagon Formation", "energyshape") {
   addParameter("# Particles", "200");
@@ -238,6 +306,24 @@ void EnergySharingAlg::instantiate(int numParticles,
   }
 }
 
+HexagonFormationAlg::HexagonFormationAlg()
+    : Algorithm("Hexagon Formation", "hexagonformation") {
+  addParameter("# Particles", "200");
+  addParameter("Hole Prob.", "0.2");
+}
+
+void HexagonFormationAlg::instantiate(const int numParticles,
+                                      const double holeProb) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else if (holeProb < 0 || holeProb >= 1) {
+    emit log("holeProb in [0,1) required", true);
+  } else {
+    emit setSystem(std::make_shared<HexagonFormationSystem>(numParticles,
+                                                            holeProb));
+  }
+}
+
 InfObjCoatingAlg::InfObjCoatingAlg() :
   Algorithm("Infinite Object Coating", "infobjcoating") {
   addParameter("# Particles", "100");
@@ -271,6 +357,19 @@ void LeaderElectionAlg::instantiate(const int numParticles,
   } else {
     emit setSystem(std::make_shared<LeaderElectionSystem>(numParticles,
                                                           holeProb));
+  }
+}
+
+LeaderElectionByErosionAlg::LeaderElectionByErosionAlg() :
+    Algorithm("Leader Election by Erosion", "leaderelectionbyerosion") {
+  addParameter("# Particles", "91");
+}
+
+void LeaderElectionByErosionAlg::instantiate(const int numParticles) {
+  if (numParticles <= 0) {
+    emit log("# particles must be > 0", true);
+  } else {
+    emit setSystem(std::make_shared<LeaderElectionByErosionSystem>(numParticles));
   }
 }
 
@@ -312,10 +411,14 @@ AlgorithmList::AlgorithmList() {
   // General algorithms.
   _algorithms.push_back(new AggregationAlg());
   _algorithms.push_back(new CompressionAlg());
+  _algorithms.push_back(new EDFHexagonFormationAlg());
+  _algorithms.push_back(new EDFLeaderElectionByErosionAlg());
   _algorithms.push_back(new EnergyShapeAlg());
   _algorithms.push_back(new EnergySharingAlg());
+  _algorithms.push_back(new HexagonFormationAlg());
   _algorithms.push_back(new InfObjCoatingAlg());
   _algorithms.push_back(new LeaderElectionAlg());
+  _algorithms.push_back(new LeaderElectionByErosionAlg());
   _algorithms.push_back(new ShapeFormationAlg());
 }
 

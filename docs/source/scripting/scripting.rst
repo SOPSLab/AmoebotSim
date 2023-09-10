@@ -98,12 +98,41 @@ All algorithms are instantiated based on their signatures and parameters defined
 
   Instantiates a system running the **DynamicDemo** algorithm with the given parameters.
 
+.. js:function:: aggregation(numParticles, lambda)
+
+  :param int numParticles: The number of particles in the system.
+  :param string mode: The noise mode: ``"d"`` for deadlock perturbation, ``"e"`` for error probability.
+  :param float noiseVal: The noise magnitude, which is either an integer number of steps to wait before rotating in place (deadlock perturbation) or a float probability of receiving the wrong signal from the sight sensor (error probability).
+
+  Instantiates a system running the **Swarm Aggregation** algorithm (`Daymude et al., SSS 2021 <https://arxiv.org/abs/2108.09403>`_) with the given parameters.
+
 .. js:function:: compression(numParticles, lambda)
 
   :param int numParticles: The number of particles in the system.
   :param int lambda: The bias parameter.
 
-  Instantiates a system running the **Compression** algorithm with the given parameters.
+  Instantiates a system running the **Compression** algorithm (`Cannon et al., PODC 2016 <https://doi.org/10.1145/2933057.2933107>`_) with the given parameters.
+
+.. js:function:: edfhexagonformation(numParticles, numEnergySources, holeProb, capacity, transferRate, demand)
+
+  :param int numParticles: The number of particles in the system.
+  :param int numEnergySources: The number of particles with access to external energy sources.
+  :param float holeProb: The system's hole probability capturing how spread out the initial configuration is.
+  :param float capacity: The capacity of each particle's battery.
+  :param float transferRate: The maximum amount of energy a particle can transfer to a neighbor.
+  :param float demand: The energy cost for each particle's actions.
+
+  Instantiates a system running the energy-constrained version of the **Hexagon Formation** algorithm produced by the **Energy Distribution Framework** (Weber et al., Under Review, 2023) with the given parameters.
+
+.. js:function:: edfleaderelectionbyerosion(numParticles, numEnergySources, capacity, transferRate, demand)
+
+  :param int numParticles: The number of particles in the system.
+  :param int numEnergySources: The number of particles with access to external energy sources.
+  :param float capacity: The capacity of each particle's battery.
+  :param float transferRate: The maximum amount of energy a particle can transfer to a neighbor.
+  :param float demand: The energy cost for each particle's actions.
+
+  Instantiates a system running the energy-constrained version of the **Leader Election by Erosion** algorithm produced by the **Energy Distribution Framework** (Weber et al., Under Review, 2023) with the given parameters.
 
 .. js:function:: energyshape(numParticles, numEnergyRoots, holeProb, capacity, demand, transferRate)
 
@@ -114,7 +143,7 @@ All algorithms are instantiated based on their signatures and parameters defined
   :param float demand: The energy cost for each particle's actions.
   :param float transferRate: The maximum amount of energy a particle can transfer to a neighbor.
 
-  Instantiates a system running the **Energy Sharing** algorithm composed with **Hexagon Formation** with the given parameters.
+  Instantiates a system running the **Energy Sharing** algorithm (`Daymude et al., ICDCN 2021 <https://doi.org/10.1145/3427796.3427835>`_) composed with **Hexagon Formation** with the given parameters.
 
 .. js:function:: energysharing(numParticles, numEnergyRoots, usage, capacity, demand, transferRate)
 
@@ -125,21 +154,34 @@ All algorithms are instantiated based on their signatures and parameters defined
   :param float demand: The energy cost for each particle's actions.
   :param float transferRate: The maximum amount of energy a particle can transfer to a neighbor.
 
-  Instantiates a system running the **Energy Sharing** algorithm with the given parameters.
+  Instantiates a system running the **Energy Sharing** algorithm (`Daymude et al., ICDCN 2021 <https://doi.org/10.1145/3427796.3427835>`_) with the given parameters.
+
+.. js:function:: hexagonformation(numParticles, holeProb)
+
+  :param int numParticles: The number of particles in the system.
+  :param float holeProb: The system's hole probability capturing how spread out the initial configuration is.
+
+  Instantiates a system running the canonical version of the **Hexagon Formation** algorithm (`Daymude et al., Distributed Computing 2023 <https://doi.org/10.1007/s00446-023-00443-3>`_) with the given parameters.
 
 .. js:function:: infobjcoating(numParticles, holeProb)
 
   :param int numParticles: The number of particles in the system.
   :param float holeProb: The system's hole probability capturing how spread out the initial configuration is.
 
-  Instantiates a system running the **Infinite Object Coating** algorithm with the given parameters.
+  Instantiates a system running the **Infinite Object Coating** algorithm (`Derakhshandeh et al., arXiv 2014 <https://arxiv.org/abs/1411.2356>`_) with the given parameters.
 
 .. js:function:: leaderelection(numParticles, holeProb)
 
   :param int numParticles: The number of particles in the system.
   :param float holeProb: The system's hole probability capturing how spread out the initial configuration is.
 
-  Instantiates a system running the **Leader Election** algorithm with the given parameters.
+  Instantiates a system running the **Leader Election** (`Daymude et al., arXiv 2015 <https://arxiv.org/abs/1503.07991>`_) algorithm with the given parameters.
+
+.. js:function:: leaderelectionbyerosion(numParticles)
+
+  :param int numParticles: The number of particles in the system.
+
+  Instantiates a system running the **Leader Election by Erosion** (`Briones et al., ICDCN 2023 <https://doi.org/10.1145/3571306.3571389>`_) algorithm with the given parameters.
 
 .. js:function:: shapeformation(numParticles, holeProb, mode)
 
@@ -147,7 +189,7 @@ All algorithms are instantiated based on their signatures and parameters defined
   :param float holeProb: The system's hole probability capturing how spread out the initial configuration is.
   :param string mode: The desired shape to form: ``"h"`` for hexagon, ``"s"`` for square, ``"t1"`` for vertex triangle, ``"t2"`` for centered triangle, and ``"l"`` for line.
 
-  Instantiates a system running the **Basic Shape Formation** algorithm with the given parameters.
+  Instantiates a system running the **Basic Shape Formation** algorithm (`Derakhshandeh et al., NANOCOM 2015 <https://doi.org/10.1145/2800795.2800829>`_) with the given parameters.
 
 
 Scripting Commands

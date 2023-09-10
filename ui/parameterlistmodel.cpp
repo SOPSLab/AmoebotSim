@@ -96,6 +96,14 @@ void ParameterListModel::createSystem(QString algName) {
   } else if (signature == "compression") {
     dynamic_cast<CompressionAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toDouble());
+  } else if (signature == "edfhexagonformation") {
+    dynamic_cast<EDFHexagonFormationAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toInt(), params[2].toDouble(),
+                    params[3].toInt(), params[4].toInt(), params[5].toInt());
+  } else if (signature == "edfleaderelectionbyerosion") {
+    dynamic_cast<EDFLeaderElectionByErosionAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toInt(), params[2].toInt(),
+                    params[3].toInt(), params[4].toInt());
   } else if (signature == "energyshape") {
     dynamic_cast<EnergyShapeAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toInt(), params[2].toDouble(),
@@ -106,12 +114,18 @@ void ParameterListModel::createSystem(QString algName) {
         instantiate(params[0].toInt(), params[1].toInt(), params[2].toInt(),
                     params[3].toDouble(), params[4].toDouble(),
                     params[5].toDouble());
+  } else if (signature == "hexagonformation") {
+    dynamic_cast<HexagonFormationAlg*>(alg)->
+        instantiate(params[0].toInt(), params[1].toDouble());
   } else if (signature == "infobjcoating") {
     dynamic_cast<InfObjCoatingAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toDouble());
   } else if (signature == "leaderelection") {
     dynamic_cast<LeaderElectionAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toDouble());
+  } else if (signature == "leaderelectionbyerosion") {
+    dynamic_cast<LeaderElectionByErosionAlg*>(alg)->
+        instantiate(params[0].toInt());
   } else if (signature == "shapeformation") {
     dynamic_cast<ShapeFormationAlg*>(alg)->
         instantiate(params[0].toInt(), params[1].toDouble(), params[2]);
