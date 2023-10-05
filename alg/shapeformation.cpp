@@ -276,7 +276,18 @@ void ShapeFormationParticle::updateConstructionDir() {
     }
   } else if (mode == "l") {  // Line construction.
     constructionDir = (constructionReceiveDir() + 3) % 6;
-  } else {
+  } else if (mode == "z") {
+    auto nbr = nbrAtLabel(constructionReceiveDir());
+    std::pair <int, int> amp = amplitudeAndOffset(nbr);
+    if (abs(amp.first + amp.second) == amplitutde) {
+      particleAmplitudeAndOffset = std::make_pair(amp.first + amp.second, -amp.second);
+      constructionDir = (constructionReceiveDir() + 3) % 6;
+    } else {
+      particleAmplitudeAndOffset = std::make_pair(amp.first + amp.second, amp.second);
+      constructionDir = (constructionReceiveDir() + 3) % 6;
+    }
+    }
+    else {
     // This is executing in an invalid mode.
     Q_ASSERT(false);
   }
