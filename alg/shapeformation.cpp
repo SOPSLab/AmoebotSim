@@ -283,14 +283,16 @@ void ShapeFormationParticle::updateConstructionDir() {
   } else if (mode == "l") {  // Line construction.
     constructionDir = (constructionReceiveDir() + 3) % 6;
   } else if (mode == "z") {
-    auto nbr = nbrAtLabel(constructionReceiveDir());
-    std::pair <int, int> amp = amplitudeAndOffset(nbr);
-    if (abs(amp.first + amp.second) == 1) {
-      ampOff = std::make_pair(amp.first + amp.second, -amp.second);
-      constructionDir = (constructionReceiveDir() + 3) % 6;
-    } else {
-      ampOff = std::make_pair(amp.first + amp.second, amp.second);
-      constructionDir = (constructionReceiveDir() + 3) % 6;
+    constructionDir = (constructionReceiveDir() + 3) % 6;
+    if (hasNbrAtLabel(constructionReceiveDir())) {
+      auto nbr = nbrAtLabel(constructionReceiveDir());
+      std::pair <int, int> amp = amplitudeAndOffset(nbr);
+      if (abs(amp.first + amp.second) == 1) {
+        ampOff = std::make_pair(amp.first + amp.second, -amp.second);
+        constructionDir = (constructionReceiveDir() + amp.second) % 6;
+      } else {
+        ampOff = std::make_pair(amp.first + amp.second, amp.second);
+      }
     }
     }
     else {
@@ -327,7 +329,7 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, double holeProb,
   // Insert the seed at (0,0).
   std::set<Node> occupied;
   insert(new ShapeFormationParticle(Node(0, 0), -1, randDir(), *this,
-                                    ShapeFormationParticle::State::Seed, mode, std::make_pair(1, 1)));
+                                    ShapeFormationParticle::State::Seed, mode, std::make_pair(0, 1)));
   occupied.insert(Node(0, 0));
 
   std::set<Node> candidates;
@@ -355,7 +357,7 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, double holeProb,
     if (randBool(1.0 - holeProb)) {
       insert(new ShapeFormationParticle(randCand, -1, randDir(), *this,
                                         ShapeFormationParticle::State::Idle,
-                                        mode, std::make_pair(1, 1)));
+                                        mode, std::make_pair(0, 1)));
       occupied.insert(randCand);
       particlesAdded++;
 
