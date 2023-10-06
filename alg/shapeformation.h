@@ -39,7 +39,8 @@ class ShapeFormationParticle : public AmoebotParticle {
   // a string to determine what shape to form.
   ShapeFormationParticle(const Node head, const int globalTailDir,
                          const int orientation, AmoebotSystem& system,
-                         State state, const QString mode);
+                         State state, const QString mode,
+                         std::pair<int, int> ampOff);
 
   // Executes one particle activation.
   virtual void activate();
@@ -76,6 +77,8 @@ class ShapeFormationParticle : public AmoebotParticle {
   // -1 if such a neighbor does not exist.
   int constructionReceiveDir() const;
 
+  std::pair<int, int> amplitudeAndOffset(ShapeFormationParticle particle) const;
+
   // Checks whether this particle is occupying the next position to be filled.
   bool canFinish() const;
 
@@ -94,6 +97,7 @@ class ShapeFormationParticle : public AmoebotParticle {
  protected:
   State state;
   QString mode;
+  std::pair<int, int> ampOff;
   int turnSignal;
   int constructionDir;
   int moveDir;

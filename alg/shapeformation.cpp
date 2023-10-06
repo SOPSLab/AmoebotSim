@@ -10,10 +10,12 @@ ShapeFormationParticle::ShapeFormationParticle(const Node head,
                                                const int globalTailDir,
                                                const int orientation,
                                                AmoebotSystem& system,
-                                               State state, const QString mode)
+                                               State state, const QString mode,
+                                               std::pair<int, int> ampOff)
   : AmoebotParticle(head, globalTailDir, orientation, system),
     state(state),
     mode(mode),
+    ampOff(ampOff),
     constructionDir(-1),
     moveDir(-1),
     followDir(-1) {
@@ -192,6 +194,10 @@ int ShapeFormationParticle::constructionReceiveDir() const {
   return labelOfFirstNbrWithProperty<ShapeFormationParticle>(prop);
 }
 
+std::pair<int, int> ShapeFormationParticle::amplitudeAndOffset(ShapeFormationParticle particle) const {
+  return particle.ampOff;
+}
+
 bool ShapeFormationParticle::canFinish() const {
   return constructionReceiveDir() != -1;
 }
@@ -279,11 +285,11 @@ void ShapeFormationParticle::updateConstructionDir() {
   } else if (mode == "z") {
     auto nbr = nbrAtLabel(constructionReceiveDir());
     std::pair <int, int> amp = amplitudeAndOffset(nbr);
-    if (abs(amp.first + amp.second) == amplitutde) {
-      particleAmplitudeAndOffset = std::make_pair(amp.first + amp.second, -amp.second);
+    if (abs(amp.first + amp.second) == 1) {
+      ampOff = std::make_pair(amp.first + amp.second, -amp.second);
       constructionDir = (constructionReceiveDir() + 3) % 6;
     } else {
-      particleAmplitudeAndOffset = std::make_pair(amp.first + amp.second, amp.second);
+      ampOff = std::make_pair(amp.first + amp.second, amp.second);
       constructionDir = (constructionReceiveDir() + 3) % 6;
     }
     }
@@ -314,14 +320,14 @@ bool ShapeFormationParticle::hasTailFollower() const {
 ShapeFormationSystem::ShapeFormationSystem(int numParticles, double holeProb,
                                            QString mode) {
   Q_ASSERT(mode == "h" || mode == "s" || mode == "t1" || mode == "t2" ||
-           mode == "l");
+           mode == "l" || mode == "z");
   Q_ASSERT(numParticles > 0);
   Q_ASSERT(0 <= holeProb && holeProb <= 1);
 
   // Insert the seed at (0,0).
   std::set<Node> occupied;
   insert(new ShapeFormationParticle(Node(0, 0), -1, randDir(), *this,
-                                    ShapeFormationParticle::State::Seed, mode));
+                                    ShapeFormationParticle::State::Seed, mode, std::make_pair(1, 1)));
   occupied.insert(Node(0, 0));
 
   std::set<Node> candidates;
@@ -349,7 +355,7 @@ ShapeFormationSystem::ShapeFormationSystem(int numParticles, double holeProb,
     if (randBool(1.0 - holeProb)) {
       insert(new ShapeFormationParticle(randCand, -1, randDir(), *this,
                                         ShapeFormationParticle::State::Idle,
-                                        mode));
+                                        mode, std::make_pair(1, 1)));
       occupied.insert(randCand);
       particlesAdded++;
 
@@ -382,6 +388,6 @@ bool ShapeFormationSystem::hasTerminated() const {
 }
 
 std::set<QString> ShapeFormationSystem::getAcceptedModes() {
-  std::set<QString> set = {"h", "t1", "t2", "s", "l"};
+  std::set<QString> set = {"h", "t1", "t2", "s", "l", "z"};
   return set;
 }
